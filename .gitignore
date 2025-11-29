@@ -98,9 +98,12 @@ dmypy.json
 .LSOverride
 ._*
 
-# Obsidian
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
+# Obsidian (exclude entire directory)
+.obsidian/
+
+# Trash directories
+.trash/
+.Trash/
 
 # =============================================================================
 # AI/LLM SPECIFIC
