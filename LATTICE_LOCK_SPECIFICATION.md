@@ -42,7 +42,7 @@ This specification is the **authoritative reference** for the Lattice-Lock syste
 ## Layered Architecture
 
 ### Architecture Diagram
-
+```
 ┌────────────────────────────────────────────────────────────────────┐
 │                    ENGINEERING FRAMEWORK                           │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │
@@ -68,7 +68,7 @@ This specification is the **authoritative reference** for the Lattice-Lock syste
 │  │   Schema    │  │  Compiler   │  │    (AST)    │  │  Gauntlet  │ │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘ │
 └────────────────────────────────────────────────────────────────────┘
-
+```
 
 ### Layer Responsibilities
 
