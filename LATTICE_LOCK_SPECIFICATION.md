@@ -1,7 +1,6 @@
 # Lattice-Lock Framework Specification
 
 **Version:** 1.0.0  
-**Status:** Authoritative  
 **Last Updated:** 2025-11-30  
 **Author:** Kevin Lappe
 
@@ -44,9 +43,8 @@ This specification is the **authoritative reference** for the Lattice-Lock syste
 
 ### Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    ENGINEERING FRAMEWORK                             │
+┌────────────────────────────────────────────────────────────────────┐
+│                    ENGINEERING FRAMEWORK                           │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │
 │  │ Scaffolding │  │   CI/CD     │  │ Validation  │  │   Admin    │ │
 │  │    CLI      │  │   Hooks     │  │   Engine    │  │    API     │ │
@@ -54,8 +52,8 @@ This specification is the **authoritative reference** for the Lattice-Lock syste
 └─────────┼────────────────┼────────────────┼───────────────┼────────┘
           │                │                │               │
           ▼                ▼                ▼               ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                     MODEL ORCHESTRATOR                               │
+┌────────────────────────────────────────────────────────────────────┐
+│                     MODEL ORCHESTRATOR                             │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │
 │  │    Task     │  │   Model     │  │   Cost      │  │  Provider  │ │
 │  │  Analyzer   │  │   Scorer    │  │  Tracker    │  │  Clients   │ │
@@ -63,14 +61,14 @@ This specification is the **authoritative reference** for the Lattice-Lock syste
 └─────────┼────────────────┼────────────────┼───────────────┼────────┘
           │                │                │               │
           ▼                ▼                ▼               ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                     GOVERNANCE CORE                                  │
+┌────────────────────────────────────────────────────────────────────┐
+│                     GOVERNANCE CORE                                │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │
 │  │   Lattice   │  │  Polyglot   │  │   Sheriff   │  │    The     │ │
 │  │   Schema    │  │  Compiler   │  │    (AST)    │  │  Gauntlet  │ │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
-```
+└────────────────────────────────────────────────────────────────────┘
+
 
 ### Layer Responsibilities
 
