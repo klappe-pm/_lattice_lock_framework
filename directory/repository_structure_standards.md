@@ -62,7 +62,7 @@ Lattice Lock Framework/
 
 ├── instructions/ # AI/LLM specific instructions
 
-├── research/ # General research documents
+├── specifications/ # Framework specifications
 
 ├── scripts/ # Utility and automation scripts
 
@@ -263,12 +263,12 @@ All Markdown documentation must include:
 
 ## Legacy and Migration
 
-### Legacy Directory (`vibelocity-orchestrator/`)
+### Legacy Repository (`power-prompts`)
 
-**Status:** LEGACY / REFERENCE
-- This directory contains the previous version of the project structure.
-- **DO NOT** add new work here.
-- **DO NOT** modify files here unless for migration purposes.
+**Status:** LEGACY / EXTERNAL REFERENCE
+- The original implementation lives in the external [power-prompts repository](https://github.com/klappe-pm/power-prompts).
+- **DO NOT** add new work there.
+- Reference only for historical context on original design decisions.
 
 ## Enforcement
 
