@@ -22,7 +22,13 @@ class GrokAPI:
             raise ValueError("XAI_API_KEY environment variable not set")
         
         # Load configuration
-        self.config_path = config_path or Path(__file__).parent / "grok_models_config.yaml"
+        if config_path:
+            self.config_path = Path(config_path)
+        else:
+            # Look for config in models directory relative to project root
+            project_root = Path(__file__).parent.parent.parent
+            self.config_path = project_root / "models" / "grok-models-config.yaml"
+        
         self.config = self._load_config()
         self.base_url = self.config['api']['base_url']
         
