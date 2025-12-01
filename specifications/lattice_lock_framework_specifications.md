@@ -33,9 +33,9 @@ This specification is the **authoritative reference** for the Lattice-Lock syste
 
 | Layer | Status | Location |
 |-------|--------|----------|
-| Governance Core | Specified (reference implementation in research/) | `research/lattice_lock_llm_specification.txt` |
-| Model Orchestrator | **Implemented** | `scripts/core.py`, `registry.py`, `scorer.py` |
-| Engineering Framework | Planned | This specification |
+| Governance Core | Specified | This specification (Section 3.1) |
+| Model Orchestrator | **Implemented** | `src/lattice_lock_orchestrator/core.py`, `registry.py`, `scorer.py` |
+| Engineering Framework | Planned | This specification (Section 3.3) |
 
 ---
 
@@ -506,7 +506,7 @@ jobs:
 |-----------|--------|-------|
 | Model Orchestrator | Implemented | Core routing, 63 models, CLI |
 | Agent Definitions | Implemented | YAML specs, workflows, memory directive |
-| Governance Core | Specified | Reference code in research/, not productionized |
+| Governance Core | Specified | Defined in this specification (Section 3.1), not yet productionized |
 | Engineering Framework | Not Started | This spec defines requirements |
 
 ### Phase 1: Foundation (Week 1-2)
@@ -675,10 +675,11 @@ The following documents are superseded by this specification for architectural d
 
 | Document | New Role |
 |----------|----------|
-| `research/lattice_lock_llm_specification.txt` | Background/appendix (reference implementation) |
 | `agent_specifications/agent_instructions_file_format_v2_1.md` | Normative agent spec (aligned with this doc) |
 | `directory/repository_structure_standards.md` | Normative structure spec (aligned with this doc) |
 | `developer_documentation/*` | How-to guides (must align with this spec) |
+
+**Note:** The original reference implementation (`research/lattice_lock_llm_specification.txt`) has been archived. For historical context on the original design, see the [power-prompts repository](https://github.com/klappe-pm/power-prompts).
 
 ### Future Documentation
 

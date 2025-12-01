@@ -284,8 +284,8 @@ The **governance cage** integrity must be maintained across all version changes 
 ## References
 
 - [Semantic Versioning 2.0.0](https://semver.org/)
-- [Lattice-Lock Project Context](../context/Lattice-Lock_Project_Context.md)
-- [Framework Specification](../research/Lattice-Lock%20LLM%20Specification.txt)
+- [Framework Specification](lattice_lock_framework_specifications.md)
+- [Original Design Reference](https://github.com/klappe-pm/power-prompts) - Historical context
 
 ---
 

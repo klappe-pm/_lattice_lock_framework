@@ -257,43 +257,8 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
         #     console.print(table)
     
     def create_consensus_group(self, prompt: str, num_models: int = 3):
-        """Create a consensus group for the prompt"""
+        """Create a consensus group for the prompt (not yet implemented)."""
         console.print("[yellow]Consensus groups not yet implemented in v3.1[/yellow]")
-        return
-
-        # models = self.orchestrator.create_consensus_group(prompt, num_models, diverse=True)
-        
-        console.print(f"\n[bold]Consensus Group ({num_models} models):[/bold]\n")
-        
-        table = Table(show_header=True)
-        table.add_column("#", justify="center", style="cyan")
-        table.add_column("Model", style="green")
-        table.add_column("Provider", style="blue")
-        table.add_column("Strength", style="yellow")
-        
-        for i, (model_id, model) in enumerate(models, 1):
-            # Determine model's main strength
-            strength = "General"
-            if model.supports_reasoning:
-                strength = "Reasoning"
-            elif model.code_specialized:
-                strength = "Code"
-            elif model.speed > 0.8:
-                strength = "Speed"
-            elif model.accuracy > 0.85:
-                strength = "Accuracy"
-            
-            table.add_row(str(i), model_id, model.provider.value, strength)
-        
-        console.print(table)
-        
-        # Show estimated consensus cost
-        total_cost = sum(
-            self.orchestrator.estimate_cost(m[0], 1000, 500) 
-            for m in models
-        )
-        
-        console.print(f"\n[red]Estimated consensus cost:[/red] ${total_cost:.4f}")
     
     def test_integration(self):
         """Test the complete integration"""

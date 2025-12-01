@@ -41,7 +41,10 @@ response = await orchestrator.route_request(
 
 ```
 lattice-lock-framework/
-├── LATTICE_LOCK_SPECIFICATION.md    # Authoritative specification
+├── version.txt                      # Framework version (2.1.0)
+├── specifications/                  # Authoritative specifications
+│   ├── lattice_lock_framework_specifications.md
+│   └── lattice_lock_versioning_strategy.md
 ├── src/
 │   └── lattice_lock_orchestrator/   # Core library
 │       ├── core.py                  # ModelOrchestrator class
@@ -61,7 +64,7 @@ lattice-lock-framework/
 ├── agent_memory/                    # Memory directives
 ├── developer_documentation/         # How-to guides
 ├── models/                          # Model configuration and guides
-└── research/                        # Research and specifications
+└── directory/                       # Repository standards
 ```
 
 ## Supported Providers
@@ -79,10 +82,10 @@ lattice-lock-framework/
 
 ## Documentation
 
-- [Lattice-Lock Specification](lattice_lock_framework_specifications.md) - Authoritative reference
+- [Lattice-Lock Specification](specifications/lattice_lock_framework_specifications.md) - Authoritative reference
 - [Agent Specification v2.1](agent_specifications/agent_instructions_file_format_v2_1.md) - Agent definition format
 - [Repository Structure Standards](directory/repository_structure_standards.md) - File organization rules
-- [Model Usage Guide](model_usage_guide.md) - Model selection guidance
+- [Model Usage Guide](models/MODEL_USAGE_GUIDE.md) - Model selection guidance
 
 ## License
 
