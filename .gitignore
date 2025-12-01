@@ -29,6 +29,7 @@ secrets.json
 api_keys.txt
 *keychain*.txt
 *security-report*.txt
+# NOTE: See CREDENTIALS_SETUP.md for instructions on using global Keychain credentials
 
 # AWS Credentials
 .aws/credentials
@@ -187,3 +188,6 @@ coverage_reports/
 *.bak
 *.backup
 *~
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md
