@@ -17,21 +17,18 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 from rich import print as rprint
 
-# Import orchestration components
-import sys
-from pathlib import Path
-
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lattice_lock_orchestrator import ModelOrchestrator, TaskType
+# Import orchestration components from lattice_lock package
+from lattice_lock import ModelOrchestrator, TaskType
 
 try:
     from lattice_lock_orchestrator.zen_mcp_bridge import ZenMCPBridge, ModelRouter
 except ImportError:
     ZenMCPBridge = None
     ModelRouter = None
-    
+
 try:
     from lattice_lock_orchestrator.grok_api import GrokAPI
 except ImportError:
