@@ -63,6 +63,21 @@ The Lattice Lock Framework is a governance-first framework for AI-assisted softw
 | 4.3 | Pilot Projects | Devin AI |
 | 4.4 | Feedback Integration | Claude Code App |
 
+### Phase 5: Prompt Automation (Week 5)
+
+**Exit Criteria:**
+- Prompt Architect Agent can generate prompts from specifications
+- Generated prompts pass validation against v2.1 spec
+- Integration with prompt_tracker.py complete
+- Agent can update existing prompts based on spec changes
+
+| Epic | Description | Owner Tools |
+|------|-------------|-------------|
+| 5.1 | Prompt Architect Core | Devin AI |
+| 5.2 | Specification Analysis | Gemini CLI |
+| 5.3 | Prompt Generation Engine | Codex CLI |
+| 5.4 | Tracker Integration | Claude Code App |
+
 ## Tool Ownership Matrix
 
 | Tool | Primary Files | Do NOT Touch |
@@ -101,3 +116,9 @@ Example: `1.1.1_devin.md` = Phase 1, Epic 1.1, Task 1, assigned to Devin AI
 ### Phase 4 Dependencies
 - All Phase 4 epics depend on Phase 3 completion
 - Epic 4.3 (Pilots) depends on 4.1 (Documentation)
+
+### Phase 5 Dependencies
+- All Phase 5 epics depend on Phase 1 completion (agent definitions structure)
+- Epic 5.2 (Specification Analysis) depends on 5.1 (Core Agent)
+- Epic 5.3 (Prompt Generation) depends on 5.1 and 5.2
+- Epic 5.4 (Tracker Integration) depends on 5.3
