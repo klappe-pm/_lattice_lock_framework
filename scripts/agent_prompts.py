@@ -114,7 +114,7 @@ Goals:
        error_code: str
        severity: Severity
        category: Category
-   
+
    class SchemaValidationError(LatticeError): ...
    class SheriffViolationError(LatticeError): ...
    class GauntletFailureError(LatticeError): ...
@@ -129,13 +129,13 @@ Goals:
        HIGH = "high"
        MEDIUM = "medium"
        LOW = "low"
-   
+
    class Category(Enum):
        VALIDATION = "validation"
        RUNTIME = "runtime"
        CONFIGURATION = "configuration"
        NETWORK = "network"
-   
+
    class Recoverability(Enum):
        RECOVERABLE = "recoverable"
        MANUAL_INTERVENTION = "manual_intervention"
@@ -171,15 +171,15 @@ Goals:
    class ErrorMiddleware:
        def __init__(self, logger=None, telemetry=None):
            ...
-       
+
        def catch_and_classify(self, func):
            """Decorator to catch and classify errors."""
            ...
-       
+
        def handle_error(self, error: Exception) -> ErrorContext:
            """Classify error and generate context."""
            ...
-       
+
        def log_error(self, context: ErrorContext):
            """Log error with appropriate level."""
            ...
@@ -924,11 +924,11 @@ with open('project_prompts/project_prompts_state.json') as f:
 
 def get_prompt(tool: str, task_id: str) -> Optional[str]:
     """Get a prompt for a specific tool and task ID.
-    
+
     Args:
         tool: One of 'claude_code', 'gemini_antimatter', 'gemini_cli'
         task_id: Task ID like '2.2.1', '3.1.1', etc.
-    
+
     Returns:
         The prompt text, or None if not found.
     """
@@ -937,19 +937,19 @@ def get_prompt(tool: str, task_id: str) -> Optional[str]:
         "gemini_antimatter": GEMINI_ANTIMATTER_PROMPTS,
         "gemini_cli": GEMINI_CLI_PROMPTS,
     }
-    
+
     if tool not in prompts_map:
         return None
-    
+
     return prompts_map[tool].get(task_id)
 
 
 def list_tasks(tool: str) -> list[str]:
     """List all available task IDs for a tool.
-    
+
     Args:
         tool: One of 'claude_code', 'gemini_antimatter', 'gemini_cli'
-    
+
     Returns:
         List of task IDs.
     """
@@ -958,10 +958,10 @@ def list_tasks(tool: str) -> list[str]:
         "gemini_antimatter": GEMINI_ANTIMATTER_PROMPTS,
         "gemini_cli": GEMINI_CLI_PROMPTS,
     }
-    
+
     if tool not in prompts_map:
         return []
-    
+
     return sorted(prompts_map[tool].keys())
 
 

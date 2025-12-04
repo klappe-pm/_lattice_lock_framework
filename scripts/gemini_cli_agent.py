@@ -22,14 +22,14 @@ from agent_prompts import get_prompt, list_tasks
 def cmd_get_prompt(task_id: str) -> None:
     """Get and display the Gemini CLI prompt for a task."""
     prompt = get_prompt("gemini_cli", task_id)
-    
+
     if not prompt:
         print(f"Error: No Gemini CLI prompt found for task '{task_id}'", file=sys.stderr)
         print("\nAvailable tasks:", file=sys.stderr)
         for tid in list_tasks("gemini_cli"):
             print(f"  - {tid}", file=sys.stderr)
         sys.exit(1)
-    
+
     print("\n" + "=" * 70)
     print(f"GEMINI CLI PROMPT - Task {task_id}")
     print("=" * 70)
@@ -49,15 +49,15 @@ def cmd_get_prompt(task_id: str) -> None:
 def cmd_list() -> None:
     """List all available Gemini CLI tasks."""
     tasks = list_tasks("gemini_cli")
-    
+
     print("\n" + "=" * 60)
     print("GEMINI CLI AGENT - Available Tasks")
     print("=" * 60 + "\n")
-    
+
     if not tasks:
         print("No Gemini CLI tasks available.")
         return
-    
+
     task_descriptions = {
         "2.2.1": "AWS CodePipeline bootstrap commands",
         "2.3.1": "GCP Cloud Build bootstrap commands",
@@ -68,14 +68,14 @@ def cmd_list() -> None:
         "5.1.1": "Prompt Architect Agent setup commands",
         "5.1.2": "Prompt Architect integration commands",
     }
-    
+
     print(f"{'Task ID':<10} {'Description':<50}")
     print("-" * 60)
-    
+
     for task_id in tasks:
         desc = task_descriptions.get(task_id, "No description")
         print(f"{task_id:<10} {desc:<50}")
-    
+
     print("\n" + "-" * 60)
     print(f"Total: {len(tasks)} tasks")
     print("\nUsage: python scripts/gemini_cli_agent.py <task_id>")
@@ -83,6 +83,7 @@ def cmd_list() -> None:
 
 
 def main():
+    """Entry point for the Gemini CLI agent script."""
     parser = argparse.ArgumentParser(
         description="Gemini CLI Agent - Generate prompts for terminal commands and scripts",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -106,19 +107,19 @@ WARNING:
   Always review before executing!
         """
     )
-    
+
     parser.add_argument(
         "task_id",
         nargs="?",
         help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
     )
-    
+
     args = parser.parse_args()
-    
+
     if not args.task_id:
         parser.print_help()
         sys.exit(1)
-    
+
     if args.task_id == "list":
         cmd_list()
     else:

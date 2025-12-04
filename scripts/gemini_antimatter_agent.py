@@ -22,14 +22,14 @@ from agent_prompts import get_prompt, list_tasks
 def cmd_get_prompt(task_id: str) -> None:
     """Get and display the Gemini Antimatter prompt for a task."""
     prompt = get_prompt("gemini_antimatter", task_id)
-    
+
     if not prompt:
         print(f"Error: No Gemini Antimatter prompt found for task '{task_id}'", file=sys.stderr)
         print("\nAvailable tasks:", file=sys.stderr)
         for tid in list_tasks("gemini_antimatter"):
             print(f"  - {tid}", file=sys.stderr)
         sys.exit(1)
-    
+
     print("\n" + "=" * 70)
     print(f"GEMINI ANTIMATTER PROMPT - Task {task_id}")
     print("=" * 70)
@@ -48,15 +48,15 @@ def cmd_get_prompt(task_id: str) -> None:
 def cmd_list() -> None:
     """List all available Gemini Antimatter tasks."""
     tasks = list_tasks("gemini_antimatter")
-    
+
     print("\n" + "=" * 60)
     print("GEMINI ANTIMATTER AGENT - Available Tasks")
     print("=" * 60 + "\n")
-    
+
     if not tasks:
         print("No Gemini Antimatter tasks available.")
         return
-    
+
     task_descriptions = {
         "2.2.1": "AWS CodePipeline design document",
         "2.3.1": "GCP Cloud Build design document",
@@ -67,14 +67,14 @@ def cmd_list() -> None:
         "5.1.1": "Prompt Architect Agent specification",
         "5.1.2": "Prompt Architect integration specification",
     }
-    
+
     print(f"{'Task ID':<10} {'Description':<50}")
     print("-" * 60)
-    
+
     for task_id in tasks:
         desc = task_descriptions.get(task_id, "No description")
         print(f"{task_id:<10} {desc:<50}")
-    
+
     print("\n" + "-" * 60)
     print(f"Total: {len(tasks)} tasks")
     print("\nUsage: python scripts/gemini_antimatter_agent.py <task_id>")
@@ -82,6 +82,7 @@ def cmd_list() -> None:
 
 
 def main():
+    """Entry point for the Gemini Antimatter agent script."""
     parser = argparse.ArgumentParser(
         description="Gemini Antimatter Agent - Generate prompts for design docs and specifications",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -99,19 +100,19 @@ Workflow:
   5. Save the design document to the repo
         """
     )
-    
+
     parser.add_argument(
         "task_id",
         nargs="?",
         help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
     )
-    
+
     args = parser.parse_args()
-    
+
     if not args.task_id:
         parser.print_help()
         sys.exit(1)
-    
+
     if args.task_id == "list":
         cmd_list()
     else:
