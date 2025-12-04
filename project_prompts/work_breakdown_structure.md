@@ -16,8 +16,8 @@ The Lattice Lock Framework is a governance-first framework for AI-assisted softw
 | Epic | Description | Owner Tools |
 |------|-------------|-------------|
 | 1.1 | Package Model Orchestrator | Devin AI |
-| 1.2 | Configuration Validator | Gemini CLI, Codex CLI |
-| 1.3 | Repository Structure Enforcement | Codex CLI |
+| 1.2 | Configuration Validator | Devin AI |
+| 1.3 | Repository Structure Enforcement | Devin AI |
 | 1.4 | Scaffolding CLI | Claude Code CLI, Claude Code App |
 
 ### Phase 2: CI/CD Integration (Week 2-3)
@@ -32,8 +32,8 @@ The Lattice Lock Framework is a governance-first framework for AI-assisted softw
 | 2.1 | GitHub Actions Integration | Claude Code CLI |
 | 2.2 | AWS CodePipeline Integration | Devin AI |
 | 2.3 | GCP Cloud Build Integration | Devin AI |
-| 2.4 | Sheriff CLI Wrapper | Gemini CLI |
-| 2.5 | Gauntlet Test Runner | Codex CLI |
+| 2.4 | Sheriff CLI Wrapper | Claude Code CLI (command), Devin AI (module) |
+| 2.5 | Gauntlet Test Runner | Claude Code CLI (command), Devin AI (module) |
 
 ### Phase 3: Error Handling & Admin (Week 3-4)
 
@@ -45,9 +45,9 @@ The Lattice Lock Framework is a governance-first framework for AI-assisted softw
 | Epic | Description | Owner Tools |
 |------|-------------|-------------|
 | 3.1 | Error Boundary System | Devin AI |
-| 3.2 | Automatic Rollback Mechanism | Gemini CLI |
+| 3.2 | Automatic Rollback Mechanism | Devin AI |
 | 3.3 | Admin API | Claude Code App |
-| 3.4 | Status Dashboard | Codex CLI |
+| 3.4 | Status Dashboard | Claude Code App |
 
 ### Phase 4: Documentation & Pilot (Week 4)
 
@@ -74,19 +74,19 @@ The Lattice Lock Framework is a governance-first framework for AI-assisted softw
 | Epic | Description | Owner Tools |
 |------|-------------|-------------|
 | 5.1 | Prompt Architect Core | Devin AI |
-| 5.2 | Specification Analysis | Gemini CLI |
-| 5.3 | Prompt Generation Engine | Codex CLI |
+| 5.2 | Specification Analysis | Devin AI |
+| 5.3 | Prompt Generation Engine | Devin AI |
 | 5.4 | Tracker Integration | Claude Code App |
 
-## Tool Ownership Matrix
+## Tool Ownership Matrix (v2 - Updated December 2025)
+
+**Note:** Gemini CLI and Codex CLI have been retired. All assignments have been redistributed to Devin AI and Claude Code.
 
 | Tool | Primary Files | Do NOT Touch |
 |------|---------------|--------------|
-| Devin AI | `pyproject.toml`, `version.txt`, `src/lattice_lock/__init__.py`, `scripts/orchestrator_cli.py`, CI templates (AWS/GCP), error boundaries | `src/lattice_lock_cli/`, `src/lattice_lock_validator/schema.py`, `src/lattice_lock_validator/env.py`, `developer_documentation/` |
-| Gemini CLI | `src/lattice_lock_validator/schema.py`, `src/lattice_lock_validator/env.py`, Sheriff CLI, rollback system | `src/lattice_lock_validator/agents.py`, `src/lattice_lock_validator/structure.py`, `pyproject.toml`, `src/lattice_lock_cli/` |
-| Codex CLI | `src/lattice_lock_validator/agents.py`, `src/lattice_lock_validator/structure.py`, `.pre-commit-config.yaml`, Gauntlet, dashboard | `src/lattice_lock_validator/schema.py`, `src/lattice_lock_validator/env.py`, `pyproject.toml`, `src/lattice_lock_cli/commands/` |
-| Claude Code CLI | `src/lattice_lock_cli/__main__.py`, `src/lattice_lock_cli/commands/init.py`, `src/lattice_lock_cli/templates/`, GitHub Actions | `src/lattice_lock_cli/commands/validate.py`, `src/lattice_lock_cli/commands/doctor.py`, `src/lattice_lock_validator/`, `pyproject.toml` |
-| Claude Code App | `src/lattice_lock_cli/commands/validate.py`, `src/lattice_lock_cli/commands/doctor.py`, `tests/integration/`, Admin API | `src/lattice_lock_cli/__main__.py`, `src/lattice_lock_cli/commands/init.py`, `src/lattice_lock_cli/templates/`, `pyproject.toml` |
+| Devin AI | `pyproject.toml`, `version.txt`, `src/lattice_lock/__init__.py`, `scripts/orchestrator_cli.py`, CI templates (AWS/GCP), `src/lattice_lock_validator/*`, `src/lattice_lock_sheriff/*`, `src/lattice_lock_gauntlet/*`, error boundaries, rollback system | `src/lattice_lock_cli/commands/*`, `developer_documentation/` |
+| Claude Code CLI | `src/lattice_lock_cli/__main__.py`, `src/lattice_lock_cli/commands/*`, `src/lattice_lock_cli/templates/`, GitHub Actions workflows | `src/lattice_lock_validator/`, `src/lattice_lock_sheriff/`, `src/lattice_lock_gauntlet/`, `pyproject.toml` |
+| Claude Code App | `tests/integration/`, Admin API, Status Dashboard, Feedback Integration | `src/lattice_lock_cli/__main__.py`, `src/lattice_lock_cli/templates/`, `pyproject.toml` |
 | Claude Code Website | `developer_documentation/` | All `src/` files, `pyproject.toml`, `tests/` |
 
 ## Prompt Numbering Convention
