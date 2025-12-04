@@ -80,7 +80,7 @@ def create_project_structure(
         ("base/lattice.yaml.j2", project_dir / "lattice.yaml"),
         ("base/readme.md.j2", project_dir / "README.md"),
         ("base/gitignore.j2", project_dir / ".gitignore"),
-        ("ci/github_workflow.yml.j2", project_dir / ".github" / "workflows" / "lattice-lock.yml"),
+        ("ci/github_actions/lattice-lock.yml.j2", project_dir / ".github" / "workflows" / "lattice-lock.yml"),
     ]
 
     # Add type-specific files
