@@ -1,55 +1,31 @@
-# AWS CodePipeline CloudFormation Template for Lattice Lock
-# Generated for: {{ project_name }}
-
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Lattice Lock CI/CD Pipeline - {{ project_name }}'
+Description: AWS CodePipeline for Lattice Lock Framework
 
 Parameters:
-  ProjectName:
+  PipelineName:
     Type: String
-    Default: '{{ project_name | default("lattice-lock-project") }}'
-    Description: Name of the project
-
+    Default: lattice-lock-pipeline
   RepositoryName:
     Type: String
-    Default: '{{ repository_name | default("lattice-lock-repo") }}'
-    Description: Name of the CodeCommit repository
-
+    Description: Name of the CodeCommit repository (if using CodeCommit)
   BranchName:
     Type: String
-    Default: '{{ branch_name | default("main") }}'
-    Description: Branch to build from
-
-  CodeBuildProjectArn:
+    Default: main
+  ArtifactBucketName:
     Type: String
-    Description: ARN of the CodeBuild project for validation
+    Description: Name of the S3 bucket for pipeline artifacts
 
 Resources:
-  ArtifactBucket:
+  PipelineArtifactBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${ProjectName}-pipeline-artifacts-${AWS::AccountId}'
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+      BucketName: !Ref ArtifactBucketName
       VersioningConfiguration:
         Status: Enabled
-      LifecycleConfiguration:
-        Rules:
-          - Id: CleanupOldArtifacts
-            Status: Enabled
-            ExpirationInDays: 30
 
-  PipelineRole:
+  CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${ProjectName}-pipeline-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -58,7 +34,7 @@ Resources:
               Service: codepipeline.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: PipelinePolicy
+        - PolicyName: CodePipelineBasePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -67,10 +43,16 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                   - s3:GetBucketVersioning
+                  - s3:PutObjectAcl
                   - s3:PutObject
                 Resource:
-                  - !GetAtt ArtifactBucket.Arn
-                  - !Sub '${ArtifactBucket.Arn}/*'
+                  - !Sub arn:aws:s3:::${PipelineArtifactBucket}
+                  - !Sub arn:aws:s3:::${PipelineArtifactBucket}/*
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource: "*" # Should restrict to specific project ARN if possible
               - Effect: Allow
                 Action:
                   - codecommit:GetBranch
@@ -78,25 +60,20 @@ Resources:
                   - codecommit:UploadArchive
                   - codecommit:GetUploadArchiveStatus
                   - codecommit:CancelUploadArchive
-                Resource: !Sub 'arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${RepositoryName}'
-              - Effect: Allow
-                Action:
-                  - codebuild:BatchGetBuilds
-                  - codebuild:StartBuild
-                Resource: !Ref CodeBuildProjectArn
+                Resource: "*"
 
-  Pipeline:
+  LatticeLockPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub '${ProjectName}-pipeline'
-      RoleArn: !GetAtt PipelineRole.Arn
+      Name: !Ref PipelineName
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
       ArtifactStore:
         Type: S3
-        Location: !Ref ArtifactBucket
+        Location: !Ref PipelineArtifactBucket
       Stages:
         - Name: Source
           Actions:
-            - Name: SourceAction
+            - Name: Source
               ActionTypeId:
                 Category: Source
                 Owner: AWS
@@ -105,86 +82,31 @@ Resources:
               Configuration:
                 RepositoryName: !Ref RepositoryName
                 BranchName: !Ref BranchName
-                PollForSourceChanges: false
               OutputArtifacts:
                 - Name: SourceOutput
               RunOrder: 1
 
         - Name: Build
           Actions:
-            - Name: LatticeValidation
+            - Name: Build
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Sub '${ProjectName}-codebuild'
+                ProjectName: !ImportValue LatticeLockBuildProjectName # Assuming exported from build stack or passed in
               InputArtifacts:
                 - Name: SourceOutput
               OutputArtifacts:
                 - Name: BuildOutput
               RunOrder: 1
 
-  SourceEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      Name: !Sub '${ProjectName}-source-trigger'
-      Description: Trigger pipeline on repository changes
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - CodeCommit Repository State Change
-        resources:
-          - !Sub 'arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${RepositoryName}'
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - !Ref BranchName
-      State: ENABLED
-      Targets:
-        - Arn: !Sub 'arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}'
-          Id: !Sub '${ProjectName}-pipeline-target'
-          RoleArn: !GetAtt EventBridgeRole.Arn
-
-  EventBridgeRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${ProjectName}-eventbridge-role'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: events.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: StartPipelinePolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: codepipeline:StartPipelineExecution
-                Resource: !Sub 'arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}'
+        # Optional Deploy Stage Placeholder
+        # - Name: Deploy
+        #   Actions: ...
 
 Outputs:
-  PipelineArn:
-    Description: ARN of the CodePipeline
-    Value: !Sub 'arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}'
-    Export:
-      Name: !Sub '${ProjectName}-pipeline-arn'
-
-  ArtifactBucketName:
-    Description: Name of the S3 bucket for pipeline artifacts
-    Value: !Ref ArtifactBucket
-    Export:
-      Name: !Sub '${ProjectName}-artifact-bucket'
-
   PipelineUrl:
-    Description: URL to the CodePipeline console
-    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${Pipeline}/view'
+    Description: The URL of the created pipeline
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PipelineName}/view
