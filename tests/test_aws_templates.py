@@ -6,8 +6,11 @@ Tests template loading, rendering, and CloudFormation validity.
 
 import pytest
 import yaml
+from pathlib import Path
+from click.testing import CliRunner
 
-from lattice_lock_cli.templates import get_template, render_template
+from lattice_lock_cli.__main__ import cli
+from lattice_lock_cli.templates import get_template, render_template, TEMPLATES_DIR
 
 
 def get_cfn_loader():
@@ -328,3 +331,133 @@ class TestAWSTemplateIntegration:
 
         assert "consistent-naming-test" in pipeline_output
         assert "consistent-naming-test" in codebuild_output
+
+
+class TestAWSTemplatesExist:
+    """Tests that AWS template files exist."""
+
+    def test_aws_templates_directory_exists(self) -> None:
+        """Test that AWS templates directory exists."""
+        aws_dir = TEMPLATES_DIR / "ci" / "aws"
+        assert aws_dir.exists()
+        assert aws_dir.is_dir()
+
+    def test_buildspec_template_exists(self) -> None:
+        """Test that buildspec.yml.j2 exists."""
+        template_path = TEMPLATES_DIR / "ci" / "aws" / "buildspec.yml.j2"
+        assert template_path.exists()
+
+    def test_pipeline_template_exists(self) -> None:
+        """Test that pipeline.yml.j2 exists."""
+        template_path = TEMPLATES_DIR / "ci" / "aws" / "pipeline.yml.j2"
+        assert template_path.exists()
+
+    def test_codebuild_project_template_exists(self) -> None:
+        """Test that codebuild-project.yml.j2 exists."""
+        template_path = TEMPLATES_DIR / "ci" / "aws" / "codebuild-project.yml.j2"
+        assert template_path.exists()
+
+
+class TestInitCommandWithAWSCI:
+    """Tests for init command with --ci aws flag."""
+
+    @pytest.fixture
+    def runner(self) -> CliRunner:
+        """Create a CLI test runner."""
+        return CliRunner()
+
+    def test_init_with_aws_ci_creates_aws_directory(self, runner: CliRunner, tmp_path: Path) -> None:
+        """Test that --ci aws creates ci/aws directory."""
+        result = runner.invoke(cli, [
+            "init", "my_aws_project",
+            "--ci", "aws",
+            "--output-dir", str(tmp_path),
+        ])
+
+        assert result.exit_code == 0
+        aws_dir = tmp_path / "my_aws_project" / "ci" / "aws"
+        assert aws_dir.exists()
+        assert aws_dir.is_dir()
+
+    def test_init_with_aws_ci_creates_buildspec(self, runner: CliRunner, tmp_path: Path) -> None:
+        """Test that --ci aws creates buildspec.yml."""
+        result = runner.invoke(cli, [
+            "init", "my_aws_project",
+            "--ci", "aws",
+            "--output-dir", str(tmp_path),
+        ])
+
+        assert result.exit_code == 0
+        buildspec = tmp_path / "my_aws_project" / "ci" / "aws" / "buildspec.yml"
+        assert buildspec.exists()
+
+        content = buildspec.read_text()
+        parsed = yaml.safe_load(content)
+        assert "phases" in parsed
+
+    def test_init_with_aws_ci_creates_pipeline(self, runner: CliRunner, tmp_path: Path) -> None:
+        """Test that --ci aws creates pipeline.yml."""
+        result = runner.invoke(cli, [
+            "init", "my_aws_project",
+            "--ci", "aws",
+            "--output-dir", str(tmp_path),
+        ])
+
+        assert result.exit_code == 0
+        pipeline = tmp_path / "my_aws_project" / "ci" / "aws" / "pipeline.yml"
+        assert pipeline.exists()
+
+        content = pipeline.read_text()
+        parsed = cfn_safe_load(content)
+        assert "AWSTemplateFormatVersion" in parsed
+
+    def test_init_with_aws_ci_creates_codebuild_project(self, runner: CliRunner, tmp_path: Path) -> None:
+        """Test that --ci aws creates codebuild-project.yml."""
+        result = runner.invoke(cli, [
+            "init", "my_aws_project",
+            "--ci", "aws",
+            "--output-dir", str(tmp_path),
+        ])
+
+        assert result.exit_code == 0
+        codebuild = tmp_path / "my_aws_project" / "ci" / "aws" / "codebuild-project.yml"
+        assert codebuild.exists()
+
+        content = codebuild.read_text()
+        parsed = cfn_safe_load(content)
+        assert "Resources" in parsed
+
+    def test_init_default_ci_is_github(self, runner: CliRunner, tmp_path: Path) -> None:
+        """Test that default CI provider is github (no aws directory)."""
+        result = runner.invoke(cli, [
+            "init", "my_default_project",
+            "--output-dir", str(tmp_path),
+        ])
+
+        assert result.exit_code == 0
+        github_workflow = tmp_path / "my_default_project" / ".github" / "workflows" / "lattice-lock.yml"
+        assert github_workflow.exists()
+
+        aws_dir = tmp_path / "my_default_project" / "ci" / "aws"
+        assert not aws_dir.exists()
+
+    def test_init_help_shows_ci_option(self, runner: CliRunner) -> None:
+        """Test that init --help shows --ci option."""
+        result = runner.invoke(cli, ["init", "--help"])
+
+        assert result.exit_code == 0
+        assert "--ci" in result.output
+        assert "github" in result.output
+        assert "aws" in result.output
+
+    def test_init_with_aws_ci_still_creates_github_workflow(self, runner: CliRunner, tmp_path: Path) -> None:
+        """Test that --ci aws still creates github workflow."""
+        result = runner.invoke(cli, [
+            "init", "my_aws_project",
+            "--ci", "aws",
+            "--output-dir", str(tmp_path),
+        ])
+
+        assert result.exit_code == 0
+        github_workflow = tmp_path / "my_aws_project" / ".github" / "workflows" / "lattice-lock.yml"
+        assert github_workflow.exists()
