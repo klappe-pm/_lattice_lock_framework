@@ -1,0 +1,91 @@
+# GCP Cloud Build Configuration for Lattice Lock
+# Generated for: {{ project_name }}
+
+steps:
+  # Step 1: Install Python dependencies
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'install-dependencies'
+    entrypoint: 'pip'
+    args:
+      - 'install'
+      - '--user'
+      - 'lattice-lock'
+      - '-e'
+      - '.[dev]'
+      - 'pytest'
+      - 'pytest-cov'
+
+  # Step 2: Run Lattice Lock schema validation
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'validate-schema'
+    entrypoint: 'python'
+    args:
+      - '-m'
+      - 'lattice_lock_cli'
+      - 'validate'
+    waitFor:
+      - 'install-dependencies'
+
+  # Step 3: Run Sheriff AST validation
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'run-sheriff'
+    entrypoint: 'python'
+    args:
+      - '-m'
+      - 'lattice_lock_cli'
+      - 'sheriff'
+    waitFor:
+      - 'validate-schema'
+
+  # Step 4: Run Gauntlet semantic contracts
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'run-gauntlet'
+    entrypoint: 'python'
+    args:
+      - '-m'
+      - 'lattice_lock_cli'
+      - 'gauntlet'
+    waitFor:
+      - 'run-sheriff'
+
+  # Step 5: Run pytest with coverage
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'run-tests'
+    entrypoint: 'pytest'
+    args:
+      - 'tests/'
+      - '-v'
+      - '--tb=short'
+      - '--junitxml=test-results/pytest.xml'
+      - '--cov=src'
+      - '--cov-report=xml:coverage/coverage.xml'
+      - '--cov-report=html:coverage/htmlcov'
+    waitFor:
+      - 'run-gauntlet'
+
+# Artifacts to upload to Cloud Storage
+artifacts:
+  objects:
+    location: 'gs://${_ARTIFACT_BUCKET}/builds/${BUILD_ID}/'
+    paths:
+      - 'test-results/**'
+      - 'coverage/**'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_MEDIUM'
+
+# Substitution variables
+substitutions:
+  _ARTIFACT_BUCKET: '{{ artifact_bucket | default("${PROJECT_ID}-build-artifacts") }}'
+  _PYTHON_VERSION: '{{ python_version | default("3.11") }}'
+
+# Build timeout (30 minutes)
+timeout: '1800s'
+
+# Tags for filtering builds
+tags:
+  - 'lattice-lock'
+  - '{{ project_name }}'
+  - 'validation'

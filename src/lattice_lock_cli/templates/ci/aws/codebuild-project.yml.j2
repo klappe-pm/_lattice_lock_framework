@@ -1,0 +1,149 @@
+# AWS CodeBuild Project CloudFormation Template for Lattice Lock
+# Generated for: {{ project_name }}
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lattice Lock CodeBuild Project - {{ project_name }}'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: '{{ project_name | default("lattice-lock-project") }}'
+    Description: Name of the project
+
+  PythonVersion:
+    Type: String
+    Default: '{{ python_version | default("3.11") }}'
+    AllowedValues:
+      - '3.10'
+      - '3.11'
+      - '3.12'
+    Description: Python version for the build environment
+
+  ComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    AllowedValues:
+      - BUILD_GENERAL1_SMALL
+      - BUILD_GENERAL1_MEDIUM
+      - BUILD_GENERAL1_LARGE
+    Description: CodeBuild compute type
+
+  BuildTimeout:
+    Type: Number
+    Default: 30
+    MinValue: 5
+    MaxValue: 480
+    Description: Build timeout in minutes
+
+Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-codebuild-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Policies:
+        - PolicyName: CodeBuildBasePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}-codebuild'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ProjectName}-codebuild:*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${ProjectName}-pipeline-artifacts-${AWS::AccountId}/*'
+              - Effect: Allow
+                Action:
+                  - codebuild:CreateReportGroup
+                  - codebuild:CreateReport
+                  - codebuild:UpdateReport
+                  - codebuild:BatchPutTestCases
+                  - codebuild:BatchPutCodeCoverages
+                Resource:
+                  - !Sub 'arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/${ProjectName}-*'
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${ProjectName}-codebuild'
+      Description: 'Lattice Lock validation build for {{ project_name }}'
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      TimeoutInMinutes: !Ref BuildTimeout
+      QueuedTimeoutInMinutes: 60
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: !Ref ComputeType
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: PYTHON_VERSION
+            Value: !Ref PythonVersion
+            Type: PLAINTEXT
+          - Name: PROJECT_NAME
+            Value: !Ref ProjectName
+            Type: PLAINTEXT
+      Artifacts:
+        Type: CODEPIPELINE
+      Cache:
+        Type: LOCAL
+        Modes:
+          - LOCAL_CUSTOM_CACHE
+          - LOCAL_SOURCE_CACHE
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Sub '/aws/codebuild/${ProjectName}-codebuild'
+          StreamName: build-log
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Framework
+          Value: LatticeL
+
+  BuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/codebuild/${ProjectName}-codebuild'
+      RetentionInDays: 14
+
+Outputs:
+  CodeBuildProjectArn:
+    Description: ARN of the CodeBuild project
+    Value: !GetAtt CodeBuildProject.Arn
+    Export:
+      Name: !Sub '${ProjectName}-codebuild-arn'
+
+  CodeBuildProjectName:
+    Description: Name of the CodeBuild project
+    Value: !Ref CodeBuildProject
+    Export:
+      Name: !Sub '${ProjectName}-codebuild-name'
+
+  CodeBuildServiceRoleArn:
+    Description: ARN of the CodeBuild service role
+    Value: !GetAtt CodeBuildServiceRole.Arn
+    Export:
+      Name: !Sub '${ProjectName}-codebuild-role-arn'
+
+  BuildLogsUrl:
+    Description: URL to CloudWatch Logs for builds
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#logsV2:log-groups/log-group/$252Faws$252Fcodebuild$252F${ProjectName}-codebuild'
