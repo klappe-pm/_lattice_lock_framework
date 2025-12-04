@@ -83,9 +83,8 @@ lattice-lock-framework/
 ## Documentation
 
 - [Lattice-Lock Specification](specifications/lattice_lock_framework_specifications.md) - Authoritative reference
-- [Agent Specification v2.1](agent_specifications/agent_instructions_file_format_v2_1.md) - Agent definition format
-- [Repository Structure Standards](directory/repository_structure_standards.md) - File organization rules
-- [Model Usage Guide](models/MODEL_USAGE_GUIDE.md) - Model selection guidance
+- [Agent Specification](agent_specifications/agent_instructions_file_format_v2_1.md) - Agent definition format
+
 
 ## License
 

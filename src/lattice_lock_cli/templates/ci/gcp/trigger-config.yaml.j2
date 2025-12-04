@@ -1,0 +1,54 @@
+# GCP Cloud Build Trigger Configuration for Lattice Lock
+# Generated for: {{ project_name }}
+# Deploy this using: gcloud builds triggers create github --trigger-config=trigger-config.yaml
+
+# Trigger name
+name: '{{ project_name }}-lattice-lock-validation'
+
+# Description
+description: 'Lattice Lock validation pipeline for {{ project_name }}'
+
+# GitHub repository configuration
+github:
+  owner: '{{ github_owner | default("OWNER") }}'
+  name: '{{ repository_name | default("REPO") }}'
+
+  # Trigger on push to main/develop branches
+  push:
+    branch: '{{ branch_pattern | default("^(main|develop)$") }}'
+
+# Build configuration file location
+filename: 'cloudbuild.yaml'
+
+# Substitution variables passed to the build
+substitutions:
+  _ARTIFACT_BUCKET: '{{ artifact_bucket | default("${PROJECT_ID}-build-artifacts") }}'
+  _PYTHON_VERSION: '{{ python_version | default("3.11") }}'
+
+# Include build logs in GitHub
+includeBuildLogs: INCLUDE_BUILD_LOGS_WITH_STATUS
+
+---
+# PR Trigger Configuration
+# Separate trigger for pull request validation
+
+name: '{{ project_name }}-lattice-lock-pr-validation'
+
+description: 'Lattice Lock PR validation for {{ project_name }}'
+
+github:
+  owner: '{{ github_owner | default("OWNER") }}'
+  name: '{{ repository_name | default("REPO") }}'
+
+  # Trigger on pull requests
+  pullRequest:
+    branch: '{{ branch_pattern | default("^(main|develop)$") }}'
+    commentControl: COMMENTS_ENABLED
+
+# Use lightweight PR build configuration
+filename: 'cloudbuild-pr.yaml'
+
+substitutions:
+  _PYTHON_VERSION: '{{ python_version | default("3.11") }}'
+
+includeBuildLogs: INCLUDE_BUILD_LOGS_WITH_STATUS

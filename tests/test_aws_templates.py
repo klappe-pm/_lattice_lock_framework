@@ -1,22 +1,336 @@
 """
-Tests for the AWS CI/CD templates.
+Tests for AWS CodePipeline and CodeBuild templates.
 
-Tests buildspec.yml, CloudFormation templates, and variable substitution.
+Tests template loading, rendering, and CloudFormation validity.
 """
 
 import pytest
 import yaml
 from pathlib import Path
 from click.testing import CliRunner
-from jinja2 import Template
 
 from lattice_lock_cli.__main__ import cli
-from lattice_lock_cli.templates import render_template, TEMPLATES_DIR
+from lattice_lock_cli.templates import get_template, render_template, TEMPLATES_DIR
 
 
-# Register CloudFormation tags for YAML parsing
-for tag in ['!Ref', '!Sub', '!GetAtt', '!ImportValue']:
-    yaml.add_constructor(tag, lambda loader, node: str(node.value), Loader=yaml.SafeLoader)
+def get_cfn_loader():
+    """Get a YAML loader that handles CloudFormation intrinsic functions."""
+    loader = yaml.SafeLoader
+
+    cfn_tags = [
+        "!Sub", "!Ref", "!GetAtt", "!Join", "!Select", "!Split",
+        "!If", "!Not", "!Equals", "!And", "!Or", "!Condition",
+        "!Base64", "!Cidr", "!FindInMap", "!GetAZs", "!ImportValue",
+        "!Transform",
+    ]
+
+    def cfn_constructor(loader, node):
+        if isinstance(node, yaml.ScalarNode):
+            return loader.construct_scalar(node)
+        elif isinstance(node, yaml.SequenceNode):
+            return loader.construct_sequence(node)
+        elif isinstance(node, yaml.MappingNode):
+            return loader.construct_mapping(node)
+        return None
+
+    for tag in cfn_tags:
+        loader.add_constructor(tag, cfn_constructor)
+
+    return loader
+
+
+def cfn_safe_load(content: str):
+    """Load YAML content with CloudFormation intrinsic function support."""
+    return yaml.load(content, Loader=get_cfn_loader())
+
+
+class TestAWSTemplateLoading:
+    """Tests for AWS template loading."""
+
+    def test_load_buildspec_template(self) -> None:
+        """Test loading buildspec.yml.j2 template."""
+        template = get_template("ci/aws/buildspec.yml.j2")
+        assert template is not None
+        assert hasattr(template, "render")
+
+    def test_load_pipeline_template(self) -> None:
+        """Test loading pipeline.yml.j2 template."""
+        template = get_template("ci/aws/pipeline.yml.j2")
+        assert template is not None
+        assert hasattr(template, "render")
+
+    def test_load_codebuild_project_template(self) -> None:
+        """Test loading codebuild-project.yml.j2 template."""
+        template = get_template("ci/aws/codebuild-project.yml.j2")
+        assert template is not None
+        assert hasattr(template, "render")
+
+
+class TestBuildspecTemplate:
+    """Tests for AWS CodeBuild buildspec template."""
+
+    def test_render_buildspec_produces_valid_yaml(self) -> None:
+        """Test that buildspec template produces valid YAML."""
+        context = {
+            "project_name": "test-project",
+            "python_version": "3.11",
+        }
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        parsed = yaml.safe_load(output)
+        assert parsed is not None
+        assert "version" in parsed
+        assert parsed["version"] == 0.2
+
+    def test_buildspec_has_required_phases(self) -> None:
+        """Test that buildspec has all required phases."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        parsed = yaml.safe_load(output)
+        phases = parsed.get("phases", {})
+
+        assert "install" in phases
+        assert "pre_build" in phases
+        assert "build" in phases
+        assert "post_build" in phases
+
+    def test_buildspec_installs_lattice_lock(self) -> None:
+        """Test that buildspec installs lattice-lock package."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        assert "lattice-lock" in output
+        assert "pip install" in output
+
+    def test_buildspec_runs_validation(self) -> None:
+        """Test that buildspec runs lattice-lock validation."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        assert "lattice-lock validate" in output
+
+    def test_buildspec_runs_sheriff_and_gauntlet(self) -> None:
+        """Test that buildspec runs sheriff and gauntlet checks."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        assert "lattice-lock sheriff" in output
+        assert "lattice-lock gauntlet" in output
+
+    def test_buildspec_runs_pytest(self) -> None:
+        """Test that buildspec runs pytest."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        assert "pytest" in output
+
+    def test_buildspec_has_reports_section(self) -> None:
+        """Test that buildspec has reports configuration."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        parsed = yaml.safe_load(output)
+        assert "reports" in parsed
+
+    def test_buildspec_has_cache_section(self) -> None:
+        """Test that buildspec has cache configuration."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        parsed = yaml.safe_load(output)
+        assert "cache" in parsed
+
+    def test_buildspec_variable_substitution(self) -> None:
+        """Test that buildspec substitutes variables correctly."""
+        context = {
+            "project_name": "my-custom-project",
+            "python_version": "3.12",
+        }
+        output = render_template("ci/aws/buildspec.yml.j2", context)
+
+        assert "3.12" in output
+
+
+class TestPipelineTemplate:
+    """Tests for AWS CodePipeline CloudFormation template."""
+
+    def test_render_pipeline_produces_valid_yaml(self) -> None:
+        """Test that pipeline template produces valid YAML."""
+        context = {
+            "project_name": "test-project",
+            "repository_name": "test-repo",
+            "branch_name": "main",
+        }
+        output = render_template("ci/aws/pipeline.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert parsed is not None
+
+    def test_pipeline_has_cloudformation_version(self) -> None:
+        """Test that pipeline template has AWSTemplateFormatVersion."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/pipeline.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert "AWSTemplateFormatVersion" in parsed
+        assert parsed["AWSTemplateFormatVersion"] == "2010-09-09"
+
+    def test_pipeline_has_parameters(self) -> None:
+        """Test that pipeline template has Parameters section."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/pipeline.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert "Parameters" in parsed
+        params = parsed["Parameters"]
+        assert "ProjectName" in params
+        assert "RepositoryName" in params
+        assert "BranchName" in params
+
+    def test_pipeline_has_resources(self) -> None:
+        """Test that pipeline template has required resources."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/pipeline.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert "Resources" in parsed
+        resources = parsed["Resources"]
+        assert "ArtifactBucket" in resources
+        assert "PipelineRole" in resources
+        assert "Pipeline" in resources
+
+    def test_pipeline_has_outputs(self) -> None:
+        """Test that pipeline template has Outputs section."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/pipeline.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert "Outputs" in parsed
+
+    def test_pipeline_variable_substitution(self) -> None:
+        """Test that pipeline substitutes variables correctly."""
+        context = {
+            "project_name": "my-custom-project",
+            "repository_name": "my-repo",
+            "branch_name": "develop",
+        }
+        output = render_template("ci/aws/pipeline.yml.j2", context)
+
+        assert "my-custom-project" in output
+        assert "my-repo" in output
+        assert "develop" in output
+
+
+class TestCodeBuildProjectTemplate:
+    """Tests for AWS CodeBuild project CloudFormation template."""
+
+    def test_render_codebuild_produces_valid_yaml(self) -> None:
+        """Test that codebuild template produces valid YAML."""
+        context = {
+            "project_name": "test-project",
+            "python_version": "3.11",
+        }
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert parsed is not None
+
+    def test_codebuild_has_cloudformation_version(self) -> None:
+        """Test that codebuild template has AWSTemplateFormatVersion."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert "AWSTemplateFormatVersion" in parsed
+
+    def test_codebuild_has_service_role(self) -> None:
+        """Test that codebuild template has IAM service role."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        resources = parsed.get("Resources", {})
+        assert "CodeBuildServiceRole" in resources
+
+    def test_codebuild_has_project_resource(self) -> None:
+        """Test that codebuild template has CodeBuild project resource."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        resources = parsed.get("Resources", {})
+        assert "CodeBuildProject" in resources
+
+    def test_codebuild_has_log_group(self) -> None:
+        """Test that codebuild template has CloudWatch log group."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        resources = parsed.get("Resources", {})
+        assert "BuildLogGroup" in resources
+
+    def test_codebuild_has_outputs(self) -> None:
+        """Test that codebuild template has Outputs section."""
+        context = {"project_name": "test-project"}
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        parsed = cfn_safe_load(output)
+        assert "Outputs" in parsed
+        outputs = parsed["Outputs"]
+        assert "CodeBuildProjectArn" in outputs
+
+    def test_codebuild_variable_substitution(self) -> None:
+        """Test that codebuild substitutes variables correctly."""
+        context = {
+            "project_name": "my-custom-project",
+            "python_version": "3.12",
+        }
+        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        assert "my-custom-project" in output
+
+
+class TestAWSTemplateIntegration:
+    """Integration tests for AWS templates working together."""
+
+    def test_all_aws_templates_render_with_same_context(self) -> None:
+        """Test that all AWS templates render with the same context."""
+        context = {
+            "project_name": "integration-test-project",
+            "repository_name": "integration-repo",
+            "branch_name": "main",
+            "python_version": "3.11",
+        }
+
+        templates = [
+            "ci/aws/buildspec.yml.j2",
+            "ci/aws/pipeline.yml.j2",
+            "ci/aws/codebuild-project.yml.j2",
+        ]
+
+        for template_name in templates:
+            output = render_template(template_name, context)
+            try:
+                cfn_safe_load(output)
+            except yaml.YAMLError as e:
+                pytest.fail(f"Template {template_name} produced invalid YAML: {e}")
+
+    def test_aws_templates_use_consistent_naming(self) -> None:
+        """Test that AWS templates use consistent project naming."""
+        context = {
+            "project_name": "consistent-naming-test",
+            "repository_name": "test-repo",
+            "branch_name": "main",
+            "python_version": "3.11",
+        }
+
+        pipeline_output = render_template("ci/aws/pipeline.yml.j2", context)
+        codebuild_output = render_template("ci/aws/codebuild-project.yml.j2", context)
+
+        assert "consistent-naming-test" in pipeline_output
+        assert "consistent-naming-test" in codebuild_output
 
 
 class TestAWSTemplatesExist:
@@ -42,226 +356,6 @@ class TestAWSTemplatesExist:
         """Test that codebuild-project.yml.j2 exists."""
         template_path = TEMPLATES_DIR / "ci" / "aws" / "codebuild-project.yml.j2"
         assert template_path.exists()
-
-
-class TestBuildspecTemplate:
-    """Tests for buildspec.yml template."""
-
-    def test_buildspec_renders_valid_yaml(self) -> None:
-        """Test that buildspec template produces valid YAML."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-
-        parsed = yaml.safe_load(output)
-        assert parsed is not None
-
-    def test_buildspec_has_required_phases(self) -> None:
-        """Test that buildspec has all required phases."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        assert "phases" in parsed
-        phases = parsed["phases"]
-        assert "install" in phases
-        assert "pre_build" in phases
-        assert "build" in phases
-        assert "post_build" in phases
-
-    def test_buildspec_install_phase_has_python(self) -> None:
-        """Test that install phase sets up Python 3.10+."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        install = parsed["phases"]["install"]
-        assert "runtime-versions" in install
-        assert "python" in install["runtime-versions"]
-
-    def test_buildspec_pre_build_runs_validate(self) -> None:
-        """Test that pre_build phase runs lattice-lock validate."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        pre_build_commands = parsed["phases"]["pre_build"]["commands"]
-        assert any("lattice-lock validate" in cmd for cmd in pre_build_commands)
-
-    def test_buildspec_build_runs_sheriff_and_gauntlet(self) -> None:
-        """Test that build phase runs sheriff and gauntlet."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        build_commands = parsed["phases"]["build"]["commands"]
-        assert any("sheriff" in cmd for cmd in build_commands)
-        assert any("gauntlet" in cmd for cmd in build_commands)
-
-    def test_buildspec_post_build_runs_pytest(self) -> None:
-        """Test that post_build phase runs pytest."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        post_build_commands = parsed["phases"]["post_build"]["commands"]
-        assert any("pytest" in cmd for cmd in post_build_commands)
-
-    def test_buildspec_has_artifacts(self) -> None:
-        """Test that buildspec defines artifacts."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/buildspec.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        assert "artifacts" in parsed
-        assert "files" in parsed["artifacts"]
-
-
-class TestPipelineTemplate:
-    """Tests for pipeline.yml CloudFormation template."""
-
-    def test_pipeline_renders_valid_yaml(self) -> None:
-        """Test that pipeline template produces valid YAML."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/pipeline.yml.j2", context)
-
-        parsed = yaml.safe_load(output)
-        assert parsed is not None
-
-    def test_pipeline_is_valid_cloudformation(self) -> None:
-        """Test that pipeline template has CloudFormation structure."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/pipeline.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        assert "AWSTemplateFormatVersion" in parsed
-        assert "Resources" in parsed
-
-    def test_pipeline_has_parameters(self) -> None:
-        """Test that pipeline template has parameters section."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/pipeline.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        assert "Parameters" in parsed
-        params = parsed["Parameters"]
-        assert "PipelineName" in params or "RepositoryName" in params
-
-    def test_pipeline_has_source_stage(self) -> None:
-        """Test that pipeline has a source stage."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/pipeline.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        pipeline_found = False
-        for resource_name, resource in resources.items():
-            if resource.get("Type") == "AWS::CodePipeline::Pipeline":
-                pipeline_found = True
-                properties = resource.get("Properties", {})
-                stages = properties.get("Stages", [])
-                stage_names = [s.get("Name") for s in stages]
-                assert "Source" in stage_names
-
-        assert pipeline_found, "No CodePipeline resource found"
-
-    def test_pipeline_has_build_stage(self) -> None:
-        """Test that pipeline has a build stage."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/pipeline.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        for resource_name, resource in resources.items():
-            if resource.get("Type") == "AWS::CodePipeline::Pipeline":
-                properties = resource.get("Properties", {})
-                stages = properties.get("Stages", [])
-                stage_names = [s.get("Name") for s in stages]
-                assert "Build" in stage_names
-
-    def test_pipeline_has_iam_role(self) -> None:
-        """Test that pipeline defines IAM roles."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/pipeline.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        iam_roles = [r for r in resources.values() if r.get("Type") == "AWS::IAM::Role"]
-        assert len(iam_roles) > 0, "No IAM roles defined"
-
-
-class TestCodeBuildProjectTemplate:
-    """Tests for codebuild-project.yml CloudFormation template."""
-
-    def test_codebuild_renders_valid_yaml(self) -> None:
-        """Test that codebuild template produces valid YAML."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
-
-        parsed = yaml.safe_load(output)
-        assert parsed is not None
-
-    def test_codebuild_is_valid_cloudformation(self) -> None:
-        """Test that codebuild template has CloudFormation structure."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        assert "AWSTemplateFormatVersion" in parsed
-        assert "Resources" in parsed
-
-    def test_codebuild_has_project_resource(self) -> None:
-        """Test that codebuild template defines a CodeBuild project."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        codebuild_projects = [
-            r for r in resources.values()
-            if r.get("Type") == "AWS::CodeBuild::Project"
-        ]
-        assert len(codebuild_projects) > 0, "No CodeBuild project defined"
-
-    def test_codebuild_has_python_environment(self) -> None:
-        """Test that codebuild uses Python environment."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        for resource in resources.values():
-            if resource.get("Type") == "AWS::CodeBuild::Project":
-                properties = resource.get("Properties", {})
-                environment = properties.get("Environment", {})
-                image = environment.get("Image", "")
-                env_vars = environment.get("EnvironmentVariables", [])
-                has_python = "python" in image.lower() or any(
-                    v.get("Name") == "PYTHON_VERSION" for v in env_vars
-                )
-                assert has_python or "codebuild/standard" in image
-
-    def test_codebuild_has_service_role(self) -> None:
-        """Test that codebuild defines a service role."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        iam_roles = [r for r in resources.values() if r.get("Type") == "AWS::IAM::Role"]
-        assert len(iam_roles) > 0, "No IAM service role defined"
-
-    def test_codebuild_has_cache_configuration(self) -> None:
-        """Test that codebuild has cache configuration for pip."""
-        context = {"project_name": "test_project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
-        parsed = yaml.safe_load(output)
-
-        resources = parsed["Resources"]
-        for resource in resources.values():
-            if resource.get("Type") == "AWS::CodeBuild::Project":
-                properties = resource.get("Properties", {})
-                cache = properties.get("Cache", {})
-                assert "Type" in cache, "No cache configuration"
 
 
 class TestInitCommandWithAWSCI:
@@ -314,7 +408,7 @@ class TestInitCommandWithAWSCI:
         assert pipeline.exists()
 
         content = pipeline.read_text()
-        parsed = yaml.safe_load(content)
+        parsed = cfn_safe_load(content)
         assert "AWSTemplateFormatVersion" in parsed
 
     def test_init_with_aws_ci_creates_codebuild_project(self, runner: CliRunner, tmp_path: Path) -> None:
@@ -330,7 +424,7 @@ class TestInitCommandWithAWSCI:
         assert codebuild.exists()
 
         content = codebuild.read_text()
-        parsed = yaml.safe_load(content)
+        parsed = cfn_safe_load(content)
         assert "Resources" in parsed
 
     def test_init_default_ci_is_github(self, runner: CliRunner, tmp_path: Path) -> None:

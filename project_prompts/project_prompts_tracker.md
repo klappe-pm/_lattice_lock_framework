@@ -1,15 +1,15 @@
 # Lattice Lock Framework - Project Prompts Tracker
 
-**Last Updated:** 2025-12-01 06:13:14
+**Last Updated:** 2025-12-04 21:24:46
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
 | Total Prompts | 46 |
-| Delivered (Merged) | 0 |
+| Delivered (Merged) | 2 |
 | In Progress | 0 |
-| Pending | 46 |
+| Pending | 45 |
 
 ---
 
@@ -17,8 +17,8 @@
 
 | ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |
 |:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|
-| 1.1.1 | Package infrastructure setup | Devin AI | - | - | - | - | - | - | - | - |
-| 1.1.2 | Package exports and imports | Devin AI | - | - | - | - | - | - | - | - |
+| 1.1.1 | Package infrastructure setup | Devin AI | Yes | Yes | Yes | - | 2025-12-04 21:15:28 | 2025-12-04 21:17:19 | 2 | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/6) |
+| 1.1.2 | Package exports and imports | Devin AI | - | Yes | Yes | - | - | 2025-12-04 21:17:19 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/6) |
 | 1.2.1 | Schema validation core | Gemini CLI | - | - | - | - | - | - | - | - |
 | 1.2.2 | Environment validation | Gemini CLI | - | - | - | - | - | - | - | - |
 | 1.2.3 | Agent manifest validation | Codex CLI | - | - | - | - | - | - | - | - |
@@ -38,8 +38,8 @@
 |:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|
 | 2.1.1 | GitHub Actions workflow template | Claude Code CLI | - | - | - | - | - | - | - | - |
 | 2.1.2 | Reusable workflow components | Claude Code CLI | - | - | - | - | - | - | - | - |
-| 2.2.1 | AWS CodePipeline template | Devin AI | - | - | - | - | - | - | - | - |
-| 2.3.1 | GCP Cloud Build template | Devin AI | - | - | - | - | - | - | - | - |
+| 2.2.1 | AWS CodePipeline template | Devin AI | - | Yes | - | - | - | - | - | - |
+| 2.3.1 | GCP Cloud Build template | Devin AI | - | Yes | - | - | - | - | - | - |
 | 2.4.1 | Sheriff CLI implementation | Gemini CLI | - | - | - | - | - | - | - | - |
 | 2.4.2 | Sheriff AST rules engine | Gemini CLI | - | - | - | - | - | - | - | - |
 | 2.4.3 | Sheriff CI integration | Gemini CLI | - | - | - | - | - | - | - | - |

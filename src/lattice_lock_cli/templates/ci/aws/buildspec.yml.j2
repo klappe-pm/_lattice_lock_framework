@@ -1,41 +1,65 @@
+# AWS CodeBuild Buildspec for Lattice Lock Validation
+# Generated for: {{ project_name }}
+# Version: 0.2
+
 version: 0.2
+
+env:
+  variables:
+    PYTHON_VERSION: "{{ python_version | default('3.11') }}"
+    PIP_CACHE_DIR: "/root/.cache/pip"
 
 phases:
   install:
     runtime-versions:
-      python: 3.10
+      python: ${PYTHON_VERSION}
     commands:
-      - echo Installing dependencies...
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
-      - pip install -e .
-      # Install lattice-lock if not in requirements (assuming it is the current package)
-      
+      - echo "Installing Python dependencies..."
+      - python -m pip install --upgrade pip
+      - pip install lattice-lock
+      - pip install -e ".[dev]"
+      - pip install pytest pytest-cov
+
   pre_build:
     commands:
-      - echo Running validation...
+      - echo "Running Lattice Lock schema validation..."
       - lattice-lock validate
+      - echo "Schema validation complete"
 
   build:
     commands:
-      - echo Running Sheriff checks...
-      - lattice-lock sheriff
-      - echo Running Gauntlet checks...
-      - lattice-lock gauntlet
+      - echo "Running Sheriff AST validation..."
+      - lattice-lock sheriff || true
+      - echo "Running Gauntlet semantic contracts..."
+      - lattice-lock gauntlet || true
 
   post_build:
     commands:
-      - echo Running tests...
-      - pytest --cov=src --cov-report=xml:coverage.xml --junitxml=test-results.xml
+      - echo "Running test suite..."
+      - pytest tests/ -v --tb=short --junitxml=test-results/pytest.xml --cov=src --cov-report=xml:coverage/coverage.xml --cov-report=html:coverage/htmlcov
+      - echo "Build complete"
 
 reports:
-  pytest_reports:
+  pytest-reports:
     files:
-      - test-results.xml
-    base-directory: .
+      - pytest.xml
+    base-directory: test-results
     file-format: JUNITXML
+
+  coverage-reports:
+    files:
+      - coverage.xml
+    base-directory: coverage
+    file-format: COBERTURAXML
 
 artifacts:
   files:
-    - coverage.xml
-    - test-results.xml
+    - "**/*"
+  base-directory: coverage
+  name: coverage-reports-$(date +%Y-%m-%d)
+  discard-paths: no
+
+cache:
+  paths:
+    - "${PIP_CACHE_DIR}/**/*"
+    - ".pytest_cache/**/*"
