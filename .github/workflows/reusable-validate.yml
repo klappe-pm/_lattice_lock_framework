@@ -1,0 +1,122 @@
+# Reusable Lattice Lock Validation Workflow
+# Validates lattice.yaml, environment files, agent manifests, and repository structure
+#
+# Usage from another repository:
+#   jobs:
+#     validate:
+#       uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-validate.yml@main
+#       with:
+#         python-version: "3.11"
+#         working-directory: "."
+
+name: Reusable Lattice Lock Validate
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      working-directory:
+        description: 'Working directory for validation'
+        required: false
+        type: string
+        default: '.'
+      fail-on-warning:
+        description: 'Fail validation if warnings are found'
+        required: false
+        type: boolean
+        default: false
+      schema-only:
+        description: 'Only validate lattice.yaml schema'
+        required: false
+        type: boolean
+        default: false
+      lattice-lock-version:
+        description: 'Version of lattice-lock to install (empty for latest)'
+        required: false
+        type: string
+        default: ''
+
+    outputs:
+      validation-passed:
+        description: 'Whether validation passed'
+        value: ${{ jobs.validate.outputs.validation-passed }}
+      error-count:
+        description: 'Number of validation errors found'
+        value: ${{ jobs.validate.outputs.error-count }}
+      warning-count:
+        description: 'Number of validation warnings found'
+        value: ${{ jobs.validate.outputs.warning-count }}
+
+jobs:
+  validate:
+    name: Lattice Lock Validate
+    runs-on: ubuntu-latest
+
+    outputs:
+      validation-passed: ${{ steps.validate.outputs.passed }}
+      error-count: ${{ steps.validate.outputs.errors }}
+      warning-count: ${{ steps.validate.outputs.warnings }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install lattice-lock
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ inputs.lattice-lock-version }}" ]; then
+            pip install "lattice-lock==${{ inputs.lattice-lock-version }}"
+          else
+            pip install lattice-lock
+          fi
+
+      - name: Run Lattice Lock validation
+        id: validate
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          set +e
+
+          # Build validation command
+          VALIDATE_CMD="lattice-lock validate --path ."
+
+          if [ "${{ inputs.schema-only }}" = "true" ]; then
+            VALIDATE_CMD="$VALIDATE_CMD --schema-only"
+          fi
+
+          # Run validation and capture output
+          OUTPUT=$($VALIDATE_CMD 2>&1)
+          EXIT_CODE=$?
+
+          echo "$OUTPUT"
+
+          # Parse output for error/warning counts
+          ERRORS=$(echo "$OUTPUT" | grep -c "ERROR" || echo 0)
+          WARNINGS=$(echo "$OUTPUT" | grep -c "WARNING" || echo 0)
+
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+          echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+
+          # Determine pass/fail status
+          if [ $EXIT_CODE -eq 0 ]; then
+            if [ "${{ inputs.fail-on-warning }}" = "true" ] && [ "$WARNINGS" -gt 0 ]; then
+              echo "passed=false" >> $GITHUB_OUTPUT
+              echo "::warning::Validation passed but $WARNINGS warning(s) found"
+              exit 1
+            fi
+            echo "passed=true" >> $GITHUB_OUTPUT
+            echo "::notice::Lattice Lock validation passed"
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            echo "::error::Lattice Lock validation failed with $ERRORS error(s)"
+            exit $EXIT_CODE
+          fi

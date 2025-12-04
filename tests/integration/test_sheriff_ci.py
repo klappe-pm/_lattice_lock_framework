@@ -48,6 +48,8 @@ def mock_validate_path():
 @pytest.fixture
 def mock_config_from_yaml():
     with patch("lattice_lock_sheriff.config.SheriffConfig.from_yaml") as mock:
+        from lattice_lock_sheriff.config import SheriffConfig
+        mock.return_value = SheriffConfig()  # Return a default config
         yield mock
 
 
@@ -94,7 +96,7 @@ class TestTextFormatter:
         assert "3 violations" in result
         assert "src/module.py" in result
         assert "ForbiddenImport" in result
-        assert "MissingTypeHint" in result
+        assert "SHERIFF_002" in result  # Updated to match sample_violations
 
     def test_exit_code_no_violations(self):
         formatter = TextFormatter()
@@ -298,7 +300,8 @@ class TestCLIFormatOptions:
         violation = Violation(
             rule_id="TestRule",
             message="Test violation",
-            line_number=10
+            line_number=10,
+            filename="test.py"
         )
         mock_validate_path.return_value = ([violation], [])
         with runner.isolated_filesystem():

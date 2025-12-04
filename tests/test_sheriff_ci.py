@@ -16,7 +16,7 @@ from click.testing import CliRunner
 from unittest.mock import patch, MagicMock
 
 from lattice_lock_cli.commands.sheriff import sheriff_command
-from lattice_lock_sheriff.sheriff import Violation
+from lattice_lock_sheriff.rules import Violation
 from lattice_lock_sheriff.formatters import (
     get_formatter,
     TextFormatter,
@@ -26,7 +26,7 @@ from lattice_lock_sheriff.formatters import (
 )
 from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
 
-# Alias for formatter tests - use the same Violation class from sheriff
+# Alias for formatter tests - use the same Violation class from rules
 FormatterViolation = Violation
 
 
@@ -70,12 +70,10 @@ def mock_config_from_yaml():
 @pytest.fixture
 def sample_violation():
     return Violation(
-        file=Path("src/module.py"),
-        line=42,
-        column=8,
+        rule_id="SHERIFF_001",
         message="Forbidden import 'os' detected",
-        rule="SHERIFF_001",
-        code="import os"
+        line_number=42,
+        filename="src/module.py"
     )
 
 
@@ -83,28 +81,22 @@ def sample_violation():
 def sample_violations():
     return [
         Violation(
-            file=Path("src/module.py"),
-            line=10,
-            column=0,
+            rule_id="SHERIFF_001",
             message="Forbidden import 'os' detected",
-            rule="SHERIFF_001",
-            code="import os"
+            line_number=10,
+            filename="src/module.py"
         ),
         Violation(
-            file=Path("src/module.py"),
-            line=25,
-            column=0,
+            rule_id="SHERIFF_002",
             message="Missing return type hint",
-            rule="SHERIFF_002",
-            code="def process_data(data):"
+            line_number=25,
+            filename="src/module.py"
         ),
         Violation(
-            file=Path("src/utils.py"),
-            line=5,
-            column=0,
+            rule_id="SHERIFF_001",
             message="Forbidden import 'subprocess' detected",
-            rule="SHERIFF_001",
-            code="import subprocess"
+            line_number=5,
+            filename="src/utils.py"
         ),
     ]
 
@@ -135,7 +127,7 @@ class TestTextFormat:
         assert result.exit_code == 1
         assert "Sheriff found 1 violations" in result.output
         assert "src/module.py" in result.output
-        assert "42:8" in result.output
+        assert "42" in result.output
         assert "SHERIFF_001" in result.output
 
     def test_text_format_with_ignored(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
@@ -175,8 +167,8 @@ class TestJSONFormat:
         assert data["count"] == 1
         assert data["success"] is False
         assert len(data["violations"]) == 1
-        assert data["violations"][0]["rule"] == "SHERIFF_001"
-        assert data["violations"][0]["line"] == 42
+        assert data["violations"][0]["rule_id"] == "SHERIFF_001"
+        assert data["violations"][0]["line_number"] == 42
 
     def test_json_format_with_ignored(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
         mock_validate_path.return_value = ([], [sample_violation])
@@ -222,18 +214,17 @@ class TestGitHubFormat:
 
         assert result.exit_code == 1
         # Check GitHub Actions annotation format
-        assert "::error file=src/module.py,line=42,col=8::" in result.output
+        assert "::error file=src/module.py,line=42,title=SHERIFF_001::" in result.output
         assert "[SHERIFF_001]" in result.output
 
     def test_github_format_warning_annotation(self, runner, mock_validate_path, mock_config_from_yaml):
         """Test that certain rules produce warnings instead of errors."""
+        # SHERIFF_002 is configured as a warning rule in GitHubFormatter
         warning_violation = Violation(
-            file=Path("src/module.py"),
-            line=10,
-            column=0,
+            rule_id="SHERIFF_002",
             message="Missing type hint on parameter",
-            rule="MissingTypeHint",
-            code="def foo(x):"
+            line_number=10,
+            filename="src/module.py"
         )
         mock_validate_path.return_value = ([warning_violation], [])
         with runner.isolated_filesystem():
@@ -242,7 +233,7 @@ class TestGitHubFormat:
 
         # Warnings should not fail the check
         assert result.exit_code == 0
-        assert "::warning file=src/module.py,line=10,col=0::" in result.output
+        assert "::warning file=src/module.py,line=10,title=SHERIFF_002::" in result.output
 
     def test_github_format_multiple_annotations(self, runner, mock_validate_path, mock_config_from_yaml, sample_violations):
         mock_validate_path.return_value = (sample_violations, [])
@@ -319,11 +310,10 @@ class TestGitHubAnnotationFormat:
         """Test that special characters are properly escaped."""
         formatter = GitHubFormatter()
         violation = FormatterViolation(
-            file=Path("test.py"),
-            line=10,
-            column=0,
+            rule_id="TEST_RULE",
             message="Error with\nnewline and % percent",
-            rule="TEST_RULE",
+            line_number=10,
+            filename="test.py"
         )
         output = formatter.format([violation], Path("test.py"))
 
@@ -336,28 +326,26 @@ class TestGitHubAnnotationFormat:
         """Test exact format of GitHub annotations."""
         formatter = GitHubFormatter()
         violation = FormatterViolation(
-            file=Path("src/test.py"),
-            line=42,
-            column=8,
+            rule_id="SHERIFF_001",
             message="Test message",
-            rule="SHERIFF_001",
+            line_number=42,
+            filename="src/test.py"
         )
         output = formatter.format([violation], Path("src/"))
 
-        # Should follow exact format: ::level file=path,line=N,col=N::message
-        assert "::error file=src/test.py,line=42,col=8::[SHERIFF_001] Test message" in output
+        # Should follow exact format: ::level file=path,line=N,title=RULE::message
+        assert "::error file=src/test.py,line=42,title=SHERIFF_001::[SHERIFF_001] Test message" in output
 
     def test_warning_rules(self):
         """Test that warning rules are correctly identified."""
         formatter = GitHubFormatter()
 
-        # MissingTypeHint should be a warning
+        # SHERIFF_002 is configured as a warning rule in GitHubFormatter
         warning_violation = FormatterViolation(
-            file=Path("test.py"),
-            line=10,
-            column=0,
+            rule_id="SHERIFF_002",
             message="Missing type hint",
-            rule="MissingTypeHint",
+            line_number=10,
+            filename="test.py"
         )
         output = formatter.format([warning_violation], Path("test.py"))
         assert "::warning" in output
@@ -368,18 +356,16 @@ class TestGitHubAnnotationFormat:
         formatter = GitHubFormatter()
         violations = [
             FormatterViolation(
-                file=Path("test.py"),
-                line=10,
-                column=0,
+                rule_id="SHERIFF_001",  # Error
                 message="Forbidden import",
-                rule="SHERIFF_001",  # Error
+                line_number=10,
+                filename="test.py"
             ),
             FormatterViolation(
-                file=Path("test.py"),
-                line=20,
-                column=0,
+                rule_id="SHERIFF_002",  # Warning (configured in GitHubFormatter.WARNING_RULES)
                 message="Missing type hint",
-                rule="MissingTypeHint",  # Warning
+                line_number=20,
+                filename="test.py"
             ),
         ]
         output = formatter.format(violations, Path("test.py"))
@@ -408,18 +394,16 @@ class TestJUnitXMLFormat:
         formatter = JUnitFormatter()
         violations = [
             FormatterViolation(
-                file=Path("file1.py"),
-                line=10,
-                column=0,
+                rule_id="TEST_001",
                 message="Error 1",
-                rule="TEST_001",
+                line_number=10,
+                filename="file1.py"
             ),
             FormatterViolation(
-                file=Path("file2.py"),
-                line=20,
-                column=0,
+                rule_id="TEST_002",
                 message="Error 2",
-                rule="TEST_002",
+                line_number=20,
+                filename="file2.py"
             ),
         ]
         output = formatter.format(violations, Path("src/"))
@@ -436,12 +420,10 @@ class TestJUnitXMLFormat:
         """Test that failure elements contain complete details."""
         formatter = JUnitFormatter()
         violation = FormatterViolation(
-            file=Path("test.py"),
-            line=42,
-            column=8,
+            rule_id="SHERIFF_001",
             message="Forbidden import",
-            rule="SHERIFF_001",
-            code="import os",
+            line_number=42,
+            filename="test.py"
         )
         output = formatter.format([violation], Path("test.py"))
 
@@ -452,8 +434,6 @@ class TestJUnitXMLFormat:
         failure_text = failure.text
         assert "Rule: SHERIFF_001" in failure_text
         assert "Line: 42" in failure_text
-        assert "Column: 8" in failure_text
-        assert "Code: import os" in failure_text
 
 
 # =============================================================================
@@ -488,12 +468,10 @@ class TestCacheBehavior:
 
         # Set cached violations
         violations_data = [{
-            "file": str(test_file),
-            "line": 1,
-            "column": 0,
+            "rule_id": "SHERIFF_001",
             "message": "Forbidden import",
-            "rule": "SHERIFF_001",
-            "code": "import os",
+            "line_number": 1,
+            "filename": str(test_file),
             "ignored": False,
         }]
         cache.set_violations(test_file, violations_data)
@@ -502,7 +480,7 @@ class TestCacheBehavior:
         cached = cache.get_cached_violations(test_file)
         assert cached is not None
         assert len(cached) == 1
-        assert cached[0]["rule"] == "SHERIFF_001"
+        assert cached[0]["rule_id"] == "SHERIFF_001"
 
     def test_cache_miss_on_file_change(self, tmp_path):
         """Test that cache is invalidated when file changes."""

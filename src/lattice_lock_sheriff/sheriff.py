@@ -7,47 +7,11 @@ for import discipline, type hints, and other code quality standards.
 import ast
 import os
 from pathlib import Path
-from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from .config import SheriffConfig
 from .ast_visitor import SheriffVisitor
-from .rules import Violation as RuleViolation
-
-
-@dataclass
-class Violation:
-    """CLI-friendly violation representation with file context.
-
-    This class wraps the internal RuleViolation with additional file context
-    needed for CLI output and CI integration.
-    """
-    file: Path
-    line: int
-    column: int
-    message: str
-    rule: str
-    code: Optional[str] = None
-
-
-def _convert_rule_violation(
-    rv: RuleViolation,
-    file_path: Path,
-    file_lines: List[str]
-) -> Violation:
-    """Convert a RuleViolation to a CLI Violation with file context."""
-    code_snippet = None
-    if 0 < rv.line_number <= len(file_lines):
-        code_snippet = file_lines[rv.line_number - 1].strip()
-
-    return Violation(
-        file=file_path,
-        line=rv.line_number,
-        column=0,  # Column not currently captured by RuleViolation
-        message=rv.message,
-        rule=rv.rule_id,
-        code=code_snippet
-    )
+from .rules import Violation
 
 
 def validate_file_with_audit(
@@ -74,7 +38,6 @@ def validate_file_with_audit(
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
-            file_lines = content.splitlines()
 
         # Parse AST
         tree = ast.parse(content, filename=str(file_path))
@@ -83,37 +46,25 @@ def validate_file_with_audit(
         visitor = SheriffVisitor(str(file_path), config, content)
         visitor.visit(tree)
 
-        # Convert RuleViolations to CLI Violations
-        violations = [
-            _convert_rule_violation(rv, file_path, file_lines)
-            for rv in visitor.get_violations()
-        ]
-        ignored_violations = [
-            _convert_rule_violation(rv, file_path, file_lines)
-            for rv in visitor.get_ignored_violations()
-        ]
-
-        return violations, ignored_violations
+        # Return violations directly from visitor
+        return visitor.get_violations(), visitor.get_ignored_violations()
 
     except SyntaxError as e:
         return [
             Violation(
-                file=file_path,
-                line=e.lineno if e.lineno else 0,
-                column=e.offset if e.offset else 0,
+                rule_id="SyntaxError",
                 message=f"Syntax error: {e.msg}",
-                rule="SyntaxError",
-                code=e.text.strip() if e.text else None
+                line_number=e.lineno if e.lineno else 0,
+                filename=str(file_path)
             )
         ], []
     except Exception as e:
         return [
             Violation(
-                file=file_path,
-                line=0,
-                column=0,
+                rule_id="ParseError",
                 message=f"Error parsing file: {e}",
-                rule="ParseError"
+                line_number=0,
+                filename=str(file_path)
             )
         ], []
 

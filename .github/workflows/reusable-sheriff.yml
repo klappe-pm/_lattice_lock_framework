@@ -1,0 +1,206 @@
+# Reusable Lattice Lock Sheriff Workflow
+# Performs AST-based Python code analysis for import discipline and type hint compliance
+#
+# Usage from another repository:
+#   jobs:
+#     sheriff:
+#       uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-sheriff.yml@main
+#       with:
+#         source-directory: "src/"
+#         format: "github"
+
+name: Reusable Lattice Lock Sheriff
+
+on:
+  workflow_call:
+    inputs:
+      source-directory:
+        description: 'Directory to analyze'
+        required: false
+        type: string
+        default: 'src/'
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      lattice-config:
+        description: 'Path to lattice.yaml configuration file'
+        required: false
+        type: string
+        default: 'lattice.yaml'
+      format:
+        description: 'Output format (text, json, github, junit)'
+        required: false
+        type: string
+        default: 'github'
+      ignore-patterns:
+        description: 'Comma-separated list of glob patterns to ignore'
+        required: false
+        type: string
+        default: ''
+      enable-cache:
+        description: 'Enable Sheriff caching for performance'
+        required: false
+        type: boolean
+        default: true
+      cache-directory:
+        description: 'Directory to store cache files'
+        required: false
+        type: string
+        default: '.sheriff_cache'
+      fail-on-violation:
+        description: 'Fail the workflow if violations are found'
+        required: false
+        type: boolean
+        default: true
+      lattice-lock-version:
+        description: 'Version of lattice-lock to install (empty for latest)'
+        required: false
+        type: string
+        default: ''
+
+    outputs:
+      sheriff-passed:
+        description: 'Whether Sheriff validation passed'
+        value: ${{ jobs.sheriff.outputs.sheriff-passed }}
+      violations-count:
+        description: 'Number of violations found'
+        value: ${{ jobs.sheriff.outputs.violations-count }}
+      ignored-count:
+        description: 'Number of ignored violations'
+        value: ${{ jobs.sheriff.outputs.ignored-count }}
+      report-path:
+        description: 'Path to JUnit report (if junit format used)'
+        value: ${{ jobs.sheriff.outputs.report-path }}
+
+jobs:
+  sheriff:
+    name: Sheriff AST Validation
+    runs-on: ubuntu-latest
+
+    outputs:
+      sheriff-passed: ${{ steps.sheriff.outputs.passed }}
+      violations-count: ${{ steps.sheriff.outputs.violations }}
+      ignored-count: ${{ steps.sheriff.outputs.ignored }}
+      report-path: ${{ steps.sheriff.outputs.report-path }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install lattice-lock
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ inputs.lattice-lock-version }}" ]; then
+            pip install "lattice-lock==${{ inputs.lattice-lock-version }}"
+          else
+            pip install lattice-lock
+          fi
+
+      - name: Restore Sheriff cache
+        if: ${{ inputs.enable-cache }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ inputs.cache-directory }}
+          key: sheriff-cache-${{ hashFiles('**/*.py') }}
+          restore-keys: |
+            sheriff-cache-
+
+      - name: Build ignore arguments
+        id: ignore-args
+        run: |
+          IGNORE_ARGS=""
+          if [ -n "${{ inputs.ignore-patterns }}" ]; then
+            IFS=',' read -ra PATTERNS <<< "${{ inputs.ignore-patterns }}"
+            for pattern in "${PATTERNS[@]}"; do
+              # Trim whitespace
+              pattern=$(echo "$pattern" | xargs)
+              IGNORE_ARGS="$IGNORE_ARGS --ignore \"$pattern\""
+            done
+          fi
+          echo "args=$IGNORE_ARGS" >> $GITHUB_OUTPUT
+
+      - name: Run Sheriff AST validation
+        id: sheriff
+        run: |
+          set +e
+
+          # Build cache flags
+          CACHE_FLAG=""
+          if [ "${{ inputs.enable-cache }}" = "true" ]; then
+            CACHE_FLAG="--cache --cache-dir ${{ inputs.cache-directory }}"
+          else
+            CACHE_FLAG="--no-cache"
+          fi
+
+          # Run Sheriff with appropriate format
+          if [ "${{ inputs.format }}" = "junit" ]; then
+            # For JUnit, capture output to file
+            eval "lattice-lock sheriff \"${{ inputs.source-directory }}\" \
+              --lattice \"${{ inputs.lattice-config }}\" \
+              --format junit \
+              $CACHE_FLAG \
+              ${{ steps.ignore-args.outputs.args }}" > sheriff-report.xml 2>&1
+            EXIT_CODE=$?
+            cat sheriff-report.xml
+            echo "report-path=sheriff-report.xml" >> $GITHUB_OUTPUT
+          else
+            # For other formats, output directly
+            OUTPUT=$(eval "lattice-lock sheriff \"${{ inputs.source-directory }}\" \
+              --lattice \"${{ inputs.lattice-config }}\" \
+              --format ${{ inputs.format }} \
+              $CACHE_FLAG \
+              ${{ steps.ignore-args.outputs.args }}" 2>&1)
+            EXIT_CODE=$?
+            echo "$OUTPUT"
+            echo "report-path=" >> $GITHUB_OUTPUT
+          fi
+
+          # Parse results for outputs
+          if [ "${{ inputs.format }}" = "json" ]; then
+            VIOLATIONS=$(echo "$OUTPUT" | jq -r '.count // 0')
+            IGNORED=$(echo "$OUTPUT" | jq -r '.ignored_count // 0')
+          else
+            # For github format, count annotations
+            VIOLATIONS=$(echo "$OUTPUT" | grep -c "^::error" || echo 0)
+            IGNORED=0
+          fi
+
+          echo "violations=$VIOLATIONS" >> $GITHUB_OUTPUT
+          echo "ignored=$IGNORED" >> $GITHUB_OUTPUT
+
+          # Determine pass/fail
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+            echo "::notice::Sheriff validation passed"
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.fail-on-violation }}" = "true" ]; then
+              echo "::error::Sheriff found $VIOLATIONS violation(s)"
+              exit $EXIT_CODE
+            else
+              echo "::warning::Sheriff found $VIOLATIONS violation(s) but fail-on-violation is disabled"
+            fi
+          fi
+
+      - name: Upload JUnit Report
+        if: ${{ inputs.format == 'junit' && always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sheriff-junit-report
+          path: sheriff-report.xml
+          if-no-files-found: ignore
+
+      - name: Save Sheriff cache
+        if: ${{ inputs.enable-cache && always() }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ inputs.cache-directory }}
+          key: sheriff-cache-${{ hashFiles('**/*.py') }}

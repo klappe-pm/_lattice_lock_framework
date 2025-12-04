@@ -1,0 +1,222 @@
+# Reusable Lattice Lock Gauntlet Workflow
+# Generates and runs semantic tests based on lattice.yaml contracts
+#
+# Usage from another repository:
+#   jobs:
+#     gauntlet:
+#       uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-gauntlet.yml@main
+#       with:
+#         test-directory: "tests/"
+#         coverage-enabled: true
+
+name: Reusable Lattice Lock Gauntlet
+
+on:
+  workflow_call:
+    inputs:
+      test-directory:
+        description: 'Directory for generated tests'
+        required: false
+        type: string
+        default: 'tests/'
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      lattice-config:
+        description: 'Path to lattice.yaml configuration file'
+        required: false
+        type: string
+        default: 'lattice.yaml'
+      generate-only:
+        description: 'Generate tests without running them'
+        required: false
+        type: boolean
+        default: false
+      coverage-enabled:
+        description: 'Enable coverage reporting'
+        required: false
+        type: boolean
+        default: true
+      coverage-threshold:
+        description: 'Minimum coverage percentage required'
+        required: false
+        type: number
+        default: 80
+      fail-on-test-failure:
+        description: 'Fail the workflow if tests fail'
+        required: false
+        type: boolean
+        default: true
+      extra-pytest-args:
+        description: 'Additional arguments to pass to pytest'
+        required: false
+        type: string
+        default: ''
+      lattice-lock-version:
+        description: 'Version of lattice-lock to install (empty for latest)'
+        required: false
+        type: string
+        default: ''
+
+    outputs:
+      gauntlet-passed:
+        description: 'Whether Gauntlet tests passed'
+        value: ${{ jobs.gauntlet.outputs.gauntlet-passed }}
+      tests-generated:
+        description: 'Number of tests generated'
+        value: ${{ jobs.gauntlet.outputs.tests-generated }}
+      tests-passed:
+        description: 'Number of tests passed'
+        value: ${{ jobs.gauntlet.outputs.tests-passed }}
+      tests-failed:
+        description: 'Number of tests failed'
+        value: ${{ jobs.gauntlet.outputs.tests-failed }}
+      coverage-percentage:
+        description: 'Code coverage percentage'
+        value: ${{ jobs.gauntlet.outputs.coverage-percentage }}
+
+jobs:
+  gauntlet:
+    name: Gauntlet Semantic Tests
+    runs-on: ubuntu-latest
+
+    outputs:
+      gauntlet-passed: ${{ steps.gauntlet.outputs.passed }}
+      tests-generated: ${{ steps.gauntlet.outputs.generated }}
+      tests-passed: ${{ steps.gauntlet.outputs.passed-count }}
+      tests-failed: ${{ steps.gauntlet.outputs.failed-count }}
+      coverage-percentage: ${{ steps.coverage.outputs.percentage }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ inputs.lattice-lock-version }}" ]; then
+            pip install "lattice-lock==${{ inputs.lattice-lock-version }}"
+          else
+            pip install lattice-lock
+          fi
+          pip install pytest pytest-cov
+
+          # Install project dependencies if available
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+          if [ -f "pyproject.toml" ]; then
+            pip install -e ".[dev]" 2>/dev/null || pip install -e . 2>/dev/null || true
+          fi
+
+      - name: Generate Gauntlet tests
+        id: generate
+        run: |
+          set +e
+
+          # Run Gauntlet test generation
+          OUTPUT=$(lattice-lock gauntlet --generate \
+            --output "${{ inputs.test-directory }}" \
+            --lattice "${{ inputs.lattice-config }}" 2>&1)
+          EXIT_CODE=$?
+
+          echo "$OUTPUT"
+
+          # Parse generated test count
+          GENERATED=$(echo "$OUTPUT" | grep -oP "Generated \K\d+" || echo 0)
+          echo "generated=$GENERATED" >> $GITHUB_OUTPUT
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::Failed to generate Gauntlet tests"
+            exit $EXIT_CODE
+          fi
+
+          echo "::notice::Generated $GENERATED semantic tests"
+
+      - name: Run Gauntlet tests
+        id: gauntlet
+        if: ${{ !inputs.generate-only }}
+        run: |
+          set +e
+
+          # Build pytest command
+          PYTEST_CMD="pytest ${{ inputs.test-directory }}"
+          PYTEST_CMD="$PYTEST_CMD -v --tb=short"
+
+          if [ "${{ inputs.coverage-enabled }}" = "true" ]; then
+            PYTEST_CMD="$PYTEST_CMD --cov=src --cov-report=xml --cov-report=term"
+            PYTEST_CMD="$PYTEST_CMD --cov-fail-under=${{ inputs.coverage-threshold }}"
+          fi
+
+          if [ -n "${{ inputs.extra-pytest-args }}" ]; then
+            PYTEST_CMD="$PYTEST_CMD ${{ inputs.extra-pytest-args }}"
+          fi
+
+          # Run tests
+          OUTPUT=$($PYTEST_CMD 2>&1)
+          EXIT_CODE=$?
+
+          echo "$OUTPUT"
+
+          # Parse test results
+          PASSED=$(echo "$OUTPUT" | grep -oP "\d+(?= passed)" || echo 0)
+          FAILED=$(echo "$OUTPUT" | grep -oP "\d+(?= failed)" || echo 0)
+
+          echo "passed-count=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed-count=$FAILED" >> $GITHUB_OUTPUT
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+            echo "::notice::All Gauntlet tests passed ($PASSED tests)"
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.fail-on-test-failure }}" = "true" ]; then
+              echo "::error::Gauntlet tests failed ($FAILED failed, $PASSED passed)"
+              exit $EXIT_CODE
+            else
+              echo "::warning::Gauntlet tests failed but fail-on-test-failure is disabled"
+            fi
+          fi
+
+      - name: Parse coverage
+        id: coverage
+        if: ${{ inputs.coverage-enabled && !inputs.generate-only }}
+        run: |
+          if [ -f "coverage.xml" ]; then
+            # Parse coverage percentage from XML
+            COVERAGE=$(python -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          rate = float(root.attrib.get('line-rate', 0))
+          print(int(rate * 100))
+          " 2>/dev/null || echo "0")
+            echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+            echo "::notice::Code coverage: $COVERAGE%"
+          else
+            echo "percentage=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload coverage report
+        if: ${{ inputs.coverage-enabled && !inputs.generate-only }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gauntlet-coverage-report
+          path: coverage.xml
+          if-no-files-found: ignore
+
+      - name: Upload generated tests
+        if: ${{ inputs.generate-only }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gauntlet-generated-tests
+          path: ${{ inputs.test-directory }}
+          if-no-files-found: warn

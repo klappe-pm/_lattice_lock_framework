@@ -1,0 +1,371 @@
+# Reusable Lattice Lock Full Check Workflow
+# Combines validate, sheriff, and gauntlet checks in a single workflow
+#
+# Usage from another repository:
+#   jobs:
+#     lattice-lock:
+#       uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-full-check.yml@main
+#       with:
+#         python-version: "3.11"
+#         source-directory: "src/"
+
+name: Reusable Lattice Lock Full Check
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      working-directory:
+        description: 'Working directory for validation'
+        required: false
+        type: string
+        default: '.'
+      source-directory:
+        description: 'Source directory for Sheriff analysis'
+        required: false
+        type: string
+        default: 'src/'
+      test-directory:
+        description: 'Test directory for Gauntlet'
+        required: false
+        type: string
+        default: 'tests/'
+      lattice-config:
+        description: 'Path to lattice.yaml configuration file'
+        required: false
+        type: string
+        default: 'lattice.yaml'
+      skip-validate:
+        description: 'Skip the validate step'
+        required: false
+        type: boolean
+        default: false
+      skip-sheriff:
+        description: 'Skip the Sheriff step'
+        required: false
+        type: boolean
+        default: false
+      skip-gauntlet:
+        description: 'Skip the Gauntlet step'
+        required: false
+        type: boolean
+        default: false
+      coverage-enabled:
+        description: 'Enable coverage reporting in Gauntlet'
+        required: false
+        type: boolean
+        default: true
+      coverage-threshold:
+        description: 'Minimum coverage percentage required'
+        required: false
+        type: number
+        default: 80
+      sheriff-format:
+        description: 'Sheriff output format (text, json, github, junit)'
+        required: false
+        type: string
+        default: 'github'
+      fail-fast:
+        description: 'Stop on first failure'
+        required: false
+        type: boolean
+        default: true
+      lattice-lock-version:
+        description: 'Version of lattice-lock to install (empty for latest)'
+        required: false
+        type: string
+        default: ''
+
+    outputs:
+      validation-passed:
+        description: 'Whether validation passed'
+        value: ${{ jobs.validate.outputs.validation-passed }}
+      sheriff-passed:
+        description: 'Whether Sheriff passed'
+        value: ${{ jobs.sheriff.outputs.sheriff-passed }}
+      gauntlet-passed:
+        description: 'Whether Gauntlet passed'
+        value: ${{ jobs.gauntlet.outputs.gauntlet-passed }}
+      all-passed:
+        description: 'Whether all checks passed'
+        value: ${{ jobs.summary.outputs.all-passed }}
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip-validate }}
+
+    outputs:
+      validation-passed: ${{ steps.validate.outputs.passed }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install lattice-lock
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ inputs.lattice-lock-version }}" ]; then
+            pip install "lattice-lock==${{ inputs.lattice-lock-version }}"
+          else
+            pip install lattice-lock
+          fi
+
+      - name: Run Lattice Lock validation
+        id: validate
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          set +e
+          lattice-lock validate --path .
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+            echo "::notice::Lattice Lock validation passed"
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            echo "::error::Lattice Lock validation failed"
+            exit $EXIT_CODE
+          fi
+
+  sheriff:
+    name: Sheriff
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip-sheriff }}
+    needs: [validate]
+    # Continue even if validate is skipped or fails (unless fail-fast)
+    # The conditional handles this based on fail-fast setting
+
+    outputs:
+      sheriff-passed: ${{ steps.sheriff.outputs.passed }}
+      violations-count: ${{ steps.sheriff.outputs.violations }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install lattice-lock
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ inputs.lattice-lock-version }}" ]; then
+            pip install "lattice-lock==${{ inputs.lattice-lock-version }}"
+          else
+            pip install lattice-lock
+          fi
+
+      - name: Restore Sheriff cache
+        uses: actions/cache@v4
+        with:
+          path: .sheriff_cache
+          key: sheriff-cache-${{ hashFiles('**/*.py') }}
+          restore-keys: |
+            sheriff-cache-
+
+      - name: Run Sheriff AST validation
+        id: sheriff
+        run: |
+          set +e
+
+          OUTPUT=$(lattice-lock sheriff "${{ inputs.source-directory }}" \
+            --lattice "${{ inputs.lattice-config }}" \
+            --format ${{ inputs.sheriff-format }} \
+            --cache --cache-dir .sheriff_cache 2>&1)
+          EXIT_CODE=$?
+
+          echo "$OUTPUT"
+
+          # Count violations for github format
+          VIOLATIONS=$(echo "$OUTPUT" | grep -c "^::error" || echo 0)
+          echo "violations=$VIOLATIONS" >> $GITHUB_OUTPUT
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+            echo "::notice::Sheriff validation passed"
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            echo "::error::Sheriff found $VIOLATIONS violation(s)"
+            exit $EXIT_CODE
+          fi
+
+  gauntlet:
+    name: Gauntlet
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip-gauntlet }}
+    needs: [validate, sheriff]
+    # Continue even if previous jobs are skipped (unless fail-fast)
+
+    outputs:
+      gauntlet-passed: ${{ steps.gauntlet.outputs.passed }}
+      coverage-percentage: ${{ steps.coverage.outputs.percentage }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ inputs.lattice-lock-version }}" ]; then
+            pip install "lattice-lock==${{ inputs.lattice-lock-version }}"
+          else
+            pip install lattice-lock
+          fi
+          pip install pytest pytest-cov
+
+          # Install project dependencies
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+          if [ -f "pyproject.toml" ]; then
+            pip install -e ".[dev]" 2>/dev/null || pip install -e . 2>/dev/null || true
+          fi
+
+      - name: Run Gauntlet semantic tests
+        id: gauntlet
+        run: |
+          set +e
+
+          # Build gauntlet command
+          GAUNTLET_CMD="lattice-lock gauntlet"
+          GAUNTLET_CMD="$GAUNTLET_CMD --lattice ${{ inputs.lattice-config }}"
+
+          if [ "${{ inputs.coverage-enabled }}" = "true" ]; then
+            GAUNTLET_CMD="$GAUNTLET_CMD --coverage"
+          fi
+
+          OUTPUT=$($GAUNTLET_CMD 2>&1)
+          EXIT_CODE=$?
+
+          echo "$OUTPUT"
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+            echo "::notice::Gauntlet tests passed"
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+            echo "::error::Gauntlet tests failed"
+            exit $EXIT_CODE
+          fi
+
+      - name: Parse coverage
+        id: coverage
+        if: ${{ inputs.coverage-enabled }}
+        run: |
+          if [ -f "coverage.xml" ]; then
+            COVERAGE=$(python -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          rate = float(root.attrib.get('line-rate', 0))
+          print(int(rate * 100))
+          " 2>/dev/null || echo "0")
+            echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+          else
+            echo "percentage=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload coverage report
+        if: ${{ inputs.coverage-enabled }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          if-no-files-found: ignore
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [validate, sheriff, gauntlet]
+    if: always()
+
+    outputs:
+      all-passed: ${{ steps.summary.outputs.all-passed }}
+
+    steps:
+      - name: Generate summary
+        id: summary
+        run: |
+          echo "## Lattice Lock Full Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Determine status for each check
+          VALIDATE_STATUS="${{ needs.validate.outputs.validation-passed }}"
+          SHERIFF_STATUS="${{ needs.sheriff.outputs.sheriff-passed }}"
+          GAUNTLET_STATUS="${{ needs.gauntlet.outputs.gauntlet-passed }}"
+
+          VALIDATE_SKIPPED="${{ inputs.skip-validate }}"
+          SHERIFF_SKIPPED="${{ inputs.skip-sheriff }}"
+          GAUNTLET_SKIPPED="${{ inputs.skip-gauntlet }}"
+
+          # Build summary table
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$VALIDATE_SKIPPED" = "true" ]; then
+            echo "| Validate | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$VALIDATE_STATUS" = "true" ]; then
+            echo "| Validate | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Validate | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$SHERIFF_SKIPPED" = "true" ]; then
+            echo "| Sheriff | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$SHERIFF_STATUS" = "true" ]; then
+            echo "| Sheriff | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Sheriff | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$GAUNTLET_SKIPPED" = "true" ]; then
+            echo "| Gauntlet | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$GAUNTLET_STATUS" = "true" ]; then
+            echo "| Gauntlet | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Gauntlet | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Determine overall status
+          ALL_PASSED="true"
+
+          if [ "$VALIDATE_SKIPPED" != "true" ] && [ "$VALIDATE_STATUS" != "true" ]; then
+            ALL_PASSED="false"
+          fi
+          if [ "$SHERIFF_SKIPPED" != "true" ] && [ "$SHERIFF_STATUS" != "true" ]; then
+            ALL_PASSED="false"
+          fi
+          if [ "$GAUNTLET_SKIPPED" != "true" ] && [ "$GAUNTLET_STATUS" != "true" ]; then
+            ALL_PASSED="false"
+          fi
+
+          echo "all-passed=$ALL_PASSED" >> $GITHUB_OUTPUT
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$ALL_PASSED" = "true" ]; then
+            echo "### ✅ All checks passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Some checks failed" >> $GITHUB_STEP_SUMMARY
+          fi
