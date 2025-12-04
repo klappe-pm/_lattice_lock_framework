@@ -1,0 +1,55 @@
+# GCP Cloud Build PR Validation Configuration for Lattice Lock
+# Generated for: {{ project_name }}
+# Lightweight validation for pull requests - fast feedback loop
+
+steps:
+  # Step 1: Install Python dependencies
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'install-dependencies'
+    entrypoint: 'pip'
+    args:
+      - 'install'
+      - '--user'
+      - 'lattice-lock'
+      - '-e'
+      - '.[dev]'
+
+  # Step 2: Run Lattice Lock schema validation
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'validate-schema'
+    entrypoint: 'python'
+    args:
+      - '-m'
+      - 'lattice_lock_cli'
+      - 'validate'
+    waitFor:
+      - 'install-dependencies'
+
+  # Step 3: Run Sheriff AST validation (quick structural check)
+  - name: 'python:{{ python_version | default("3.11") }}'
+    id: 'run-sheriff'
+    entrypoint: 'python'
+    args:
+      - '-m'
+      - 'lattice_lock_cli'
+      - 'sheriff'
+    waitFor:
+      - 'validate-schema'
+
+# Build options - optimized for speed
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_SMALL'
+
+# Substitution variables
+substitutions:
+  _PYTHON_VERSION: '{{ python_version | default("3.11") }}'
+
+# Build timeout (10 minutes for PR validation)
+timeout: '600s'
+
+# Tags for filtering builds
+tags:
+  - 'lattice-lock'
+  - '{{ project_name }}'
+  - 'pr-validation'

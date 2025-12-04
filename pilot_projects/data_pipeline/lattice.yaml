@@ -1,0 +1,233 @@
+# Lattice Lock Schema Definition for Data Pipeline Pilot Project
+# This schema defines the entities for a data processing pipeline with
+# extraction, transformation, loading, and validation stages.
+
+version: v2.1
+generated_module: data_pipeline_types
+
+database:
+  backend: postgresql
+  connection_string: ${DATABASE_URL}
+
+entities:
+  DataSource:
+    description: "Configuration for a data extraction source"
+    fields:
+      id: int
+      name: str
+      source_type: str
+      connection_config: str
+      schema_definition: str
+      is_active: bool
+      last_sync_at: datetime
+      created_at: datetime
+      updated_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      name: {unique: true, max_length: 100}
+      source_type: {enum: [database, api, file, stream]}
+      connection_config: {max_length: 2000}
+    ensures:
+      - "source_type in ['database', 'api', 'file', 'stream']"
+      - "len(name) >= 1"
+    indexes:
+      - {fields: [name], unique: true}
+      - {fields: [source_type]}
+      - {fields: [is_active]}
+
+  DataRecord:
+    description: "Individual data record extracted from a source"
+    fields:
+      id: int
+      source_id: int
+      record_key: str
+      raw_data: str
+      extracted_at: datetime
+      status: str
+      error_message: str
+      created_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      source_id: {foreign_key: DataSource.id}
+      record_key: {max_length: 255}
+      status: {enum: [pending, extracted, transformed, loaded, failed]}
+    ensures:
+      - "status in ['pending', 'extracted', 'transformed', 'loaded', 'failed']"
+    indexes:
+      - {fields: [source_id]}
+      - {fields: [record_key]}
+      - {fields: [status]}
+      - {fields: [extracted_at]}
+
+  TransformationRule:
+    description: "Rule defining how to transform data"
+    fields:
+      id: int
+      name: str
+      source_field: str
+      target_field: str
+      transform_type: str
+      transform_config: str
+      priority: int
+      is_active: bool
+      created_at: datetime
+      updated_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      name: {unique: true, max_length: 100}
+      source_field: {max_length: 100}
+      target_field: {max_length: 100}
+      transform_type: {enum: [map, filter, aggregate, join, custom]}
+      priority: {gte: 0}
+    ensures:
+      - "transform_type in ['map', 'filter', 'aggregate', 'join', 'custom']"
+      - "priority >= 0"
+    indexes:
+      - {fields: [name], unique: true}
+      - {fields: [transform_type]}
+      - {fields: [priority]}
+
+  TransformedRecord:
+    description: "Data record after transformation"
+    fields:
+      id: int
+      source_record_id: int
+      transformed_data: str
+      applied_rules: str
+      transformed_at: datetime
+      validation_status: str
+      validation_errors: str
+      created_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      source_record_id: {foreign_key: DataRecord.id}
+      validation_status: {enum: [pending, valid, invalid, skipped]}
+    ensures:
+      - "validation_status in ['pending', 'valid', 'invalid', 'skipped']"
+    indexes:
+      - {fields: [source_record_id]}
+      - {fields: [validation_status]}
+      - {fields: [transformed_at]}
+
+  LoadTarget:
+    description: "Configuration for a data load destination"
+    fields:
+      id: int
+      name: str
+      target_type: str
+      connection_config: str
+      table_name: str
+      load_mode: str
+      is_active: bool
+      created_at: datetime
+      updated_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      name: {unique: true, max_length: 100}
+      target_type: {enum: [database, data_warehouse, file, api]}
+      table_name: {max_length: 100}
+      load_mode: {enum: [append, upsert, replace, merge]}
+    ensures:
+      - "target_type in ['database', 'data_warehouse', 'file', 'api']"
+      - "load_mode in ['append', 'upsert', 'replace', 'merge']"
+    indexes:
+      - {fields: [name], unique: true}
+      - {fields: [target_type]}
+      - {fields: [is_active]}
+
+  LoadJob:
+    description: "Record of a data load operation"
+    fields:
+      id: int
+      target_id: int
+      records_loaded: int
+      records_failed: int
+      started_at: datetime
+      completed_at: datetime
+      status: str
+      error_message: str
+      created_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      target_id: {foreign_key: LoadTarget.id}
+      records_loaded: {gte: 0}
+      records_failed: {gte: 0}
+      status: {enum: [pending, running, completed, failed, cancelled]}
+    ensures:
+      - "records_loaded >= 0"
+      - "records_failed >= 0"
+      - "status in ['pending', 'running', 'completed', 'failed', 'cancelled']"
+    indexes:
+      - {fields: [target_id]}
+      - {fields: [status]}
+      - {fields: [started_at]}
+
+  ValidationRule:
+    description: "Rule for validating transformed data"
+    fields:
+      id: int
+      name: str
+      rule_type: str
+      field_name: str
+      rule_config: str
+      severity: str
+      is_active: bool
+      created_at: datetime
+      updated_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      name: {unique: true, max_length: 100}
+      rule_type: {enum: [required, type_check, range, regex, custom]}
+      field_name: {max_length: 100}
+      severity: {enum: [error, warning, info]}
+    ensures:
+      - "rule_type in ['required', 'type_check', 'range', 'regex', 'custom']"
+      - "severity in ['error', 'warning', 'info']"
+    indexes:
+      - {fields: [name], unique: true}
+      - {fields: [rule_type]}
+      - {fields: [severity]}
+
+  PipelineRun:
+    description: "Record of a complete pipeline execution"
+    fields:
+      id: int
+      pipeline_name: str
+      source_id: int
+      target_id: int
+      records_extracted: int
+      records_transformed: int
+      records_loaded: int
+      records_failed: int
+      started_at: datetime
+      completed_at: datetime
+      status: str
+      error_message: str
+      created_at: datetime
+    constraints:
+      id: {primary_key: true, auto_increment: true}
+      pipeline_name: {max_length: 100}
+      source_id: {foreign_key: DataSource.id}
+      target_id: {foreign_key: LoadTarget.id}
+      records_extracted: {gte: 0}
+      records_transformed: {gte: 0}
+      records_loaded: {gte: 0}
+      records_failed: {gte: 0}
+      status: {enum: [pending, extracting, transforming, loading, completed, failed]}
+    ensures:
+      - "records_extracted >= 0"
+      - "records_transformed >= 0"
+      - "records_loaded >= 0"
+      - "records_failed >= 0"
+      - "status in ['pending', 'extracting', 'transforming', 'loading', 'completed', 'failed']"
+    indexes:
+      - {fields: [pipeline_name]}
+      - {fields: [source_id]}
+      - {fields: [target_id]}
+      - {fields: [status]}
+      - {fields: [started_at]}
+
+validation:
+  strict_mode: true
+  fail_fast: false
+  generate_contracts: true
