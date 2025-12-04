@@ -33,6 +33,7 @@ def create_project_structure(
     project_type: str,
     output_dir: Path,
     verbose: bool = False,
+    ci_provider: str | None = None,
 ) -> list[Path]:
     """Create the project directory structure.
 
@@ -41,6 +42,7 @@ def create_project_structure(
         project_type: Type of project (agent, service, library).
         output_dir: Base directory to create project in.
         verbose: Whether to print verbose output.
+        ci_provider: Optional CI provider ('aws' or 'github'). Defaults to 'github'.
 
     Returns:
         List of created file paths.
@@ -63,6 +65,10 @@ def create_project_structure(
         project_dir / "tests",
         project_dir / ".github" / "workflows",
     ]
+
+    # Add AWS CI directory if aws provider selected
+    if ci_provider == "aws":
+        directories.append(project_dir / "ci" / "aws")
 
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
@@ -92,6 +98,14 @@ def create_project_structure(
         )
         # Create the library package directory
         (project_dir / "src" / project_name).mkdir(parents=True, exist_ok=True)
+
+    # Add AWS CI templates if aws provider selected
+    if ci_provider == "aws":
+        file_mappings.extend([
+            ("ci/aws/buildspec.yml.j2", project_dir / "ci" / "aws" / "buildspec.yml"),
+            ("ci/aws/pipeline.yml.j2", project_dir / "ci" / "aws" / "pipeline.yml"),
+            ("ci/aws/codebuild-project.yml.j2", project_dir / "ci" / "aws" / "codebuild-project.yml"),
+        ])
 
     # Render and write templates
     for template_name, output_path in file_mappings:
@@ -162,12 +176,19 @@ def test_project_name_valid() -> None:
     default=".",
     help="Output directory for the project",
 )
+@click.option(
+    "--ci",
+    type=click.Choice(["github", "aws"]),
+    default="github",
+    help="CI/CD provider (github or aws)",
+)
 @click.pass_context
 def init_command(
     ctx: click.Context,
     project_name: str,
     template: str,
     output_dir: Path,
+    ci: str,
 ) -> None:
     """Initialize a new Lattice Lock project.
 
@@ -200,6 +221,7 @@ def init_command(
             project_type=template,
             output_dir=output_dir,
             verbose=verbose,
+            ci_provider=ci if ci != "github" else None,
         )
 
         click.echo()
