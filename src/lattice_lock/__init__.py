@@ -12,6 +12,8 @@ Usage:
     response = await orchestrator.route_request(prompt="...", task_type=TaskType.CODE_GENERATION)
 """
 
+from pathlib import Path
+
 from lattice_lock_orchestrator import (
     ModelOrchestrator,
     TaskType,
@@ -23,7 +25,21 @@ from lattice_lock_orchestrator import (
 )
 from lattice_lock_orchestrator.types import TaskRequirements, ModelCapabilities
 
-__version__ = "1.0.0"
+
+def _get_version() -> str:
+    """Read version from version.txt file.
+
+    Looks for version.txt in the project root (two levels up from this file).
+    Falls back to a default version if the file cannot be found.
+    """
+    version_file = Path(__file__).parent.parent.parent / "version.txt"
+    try:
+        return version_file.read_text().strip()
+    except FileNotFoundError:
+        return "0.0.0"
+
+
+__version__ = _get_version()
 
 __all__ = [
     "ModelOrchestrator",
