@@ -14,6 +14,7 @@ class Violation:
     rule_id: str
     message: str
     line_number: int
+    filename: str # Added filename to Violation
 
 class Rule(ABC):
     @abstractmethod
@@ -44,7 +45,8 @@ class ImportDisciplineRule(Rule):
                 violations.append(Violation(
                     rule_id="SHERIFF_001",
                     message=f"Forbidden import detected: {module_name}",
-                    line_number=node.lineno
+                    line_number=node.lineno,
+                    filename=context.filename
                 ))
 
 class TypeHintRule(Rule):
@@ -59,7 +61,8 @@ class TypeHintRule(Rule):
                 violations.append(Violation(
                     rule_id="SHERIFF_002",
                     message=f"Missing return type hint for function '{node.name}'",
-                    line_number=node.lineno
+                    line_number=node.lineno,
+                    filename=context.filename
                 ))
         return violations
 

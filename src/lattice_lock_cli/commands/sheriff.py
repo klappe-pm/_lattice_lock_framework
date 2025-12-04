@@ -10,17 +10,18 @@ Provides:
 import click
 import json
 import sys
+import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any # Added Any for broader compatibility
 
 from lattice_lock_sheriff.sheriff import (
     validate_path_with_audit,
     validate_file_with_audit,
-    Violation,
 )
 from lattice_lock_sheriff.config import SheriffConfig
-from lattice_lock_sheriff.formatters import get_formatter
+from lattice_lock_sheriff.formatters import get_formatter, OutputFormatter # Import OutputFormatter
 from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
+from lattice_lock_sheriff.rules import Violation # Import Violation from rules.py
 
 
 @click.command("sheriff")
@@ -95,6 +96,7 @@ def sheriff_command(
     --format text    Human-readable terminal output (default)
     --format json    Machine-readable JSON output
     --format github  GitHub Actions annotations
+    \b
     --format junit   JUnit XML reports for CI tools
 
     Caching is enabled by default to improve CI performance. Use --no-cache to
@@ -113,9 +115,31 @@ def sheriff_command(
         _handle_error(output_format, f"Path '{path}' does not exist.")
         sys.exit(1)
 
+    actual_lattice_path = lattice
+
+    # If --lattice was not explicitly provided, try to auto-detect
+    if lattice == Path("lattice.yaml"): # This indicates the default value
+        current_dir = Path.cwd()
+        found_lattice = None
+        for parent in [current_dir] + list(current_dir.parents):
+            potential_lattice = parent / "lattice.yaml"
+            if potential_lattice.exists():
+                found_lattice = potential_lattice
+                break
+        
+        if found_lattice:
+            actual_lattice_path = found_lattice
+        else:
+            if not (output_format == "json"): # Only warn if not JSON output, as JSON output will not be read by humans
+                click.echo(click.style(
+                    "Warning: lattice.yaml not found. Using default Sheriff configuration.",
+                    fg="yellow"
+                ), err=True)
+            # SheriffConfig.from_yaml will handle the non-existent file by returning a default config
+    
     # Load Sheriff configuration
     try:
-        sheriff_config = SheriffConfig.from_yaml(str(lattice))
+        sheriff_config = SheriffConfig.from_yaml(str(actual_lattice_path))
     except Exception as e:
         _handle_error(output_format, f"Failed to load lattice.yaml: {e}")
         sys.exit(1)
@@ -141,21 +165,42 @@ def sheriff_command(
         cache.save()
 
     # Output results based on format
-    if output_format in ("github", "junit"):
-        # Use formatters for GitHub and JUnit
-        formatter = get_formatter(output_format)
+    formatter: OutputFormatter = get_formatter(output_format)
+    # Formatter should ideally handle ignored violations internally if it supports auditing.
+    # For now, we only pass non-ignored violations to the formatters, and handle ignored auding in text mode
+    
+    # For text output, we want to audit ignored violations separately
+    if output_format == "text":
         output = formatter.format(violations, path_obj)
         click.echo(output)
-        exit_code = formatter.get_exit_code(violations)
+        if ignored_violations:
+            click.echo(click.style(
+                f"\nSheriff audited {len(ignored_violations)} ignored violations in {path_obj}:",
+                fg="yellow", bold=True
+            ), err=True)
+            for v in ignored_violations:
+                click.echo(
+                    f"  {click.style(str(v.filename), fg='cyan')}:"
+                    f"{click.style(str(v.line_number), fg='yellow')} - "
+                    f"{click.style(v.rule_id, fg='magenta')} - {v.message} (IGNORED)"
+                , err=True)
     elif output_format == "json":
-        # JSON with audit information
-        _print_json_output(violations, ignored_violations, path_obj)
-        exit_code = 1 if violations else 0
+        # JsonFormatter can include ignored_violations for a complete audit in machine-readable format
+        all_results = {
+            "violations": [v.__dict__ for v in violations],
+            "ignored_violations": [v.__dict__ for v in ignored_violations],
+            "count": len(violations),
+            "ignored_count": len(ignored_violations),
+            "target": str(path_obj),
+            "success": len(violations) == 0
+        }
+        click.echo(json.dumps(all_results, indent=2))
     else:
-        # Text format with colors and audit
-        _print_text_output(violations, ignored_violations, path_obj)
-        exit_code = 1 if violations else 0
+        # Other formatters only care about actual violations for exit code and primary reporting
+        output = formatter.format(violations, path_obj)
+        click.echo(output)
 
+    exit_code = formatter.get_exit_code(violations)
     sys.exit(exit_code)
 
 
@@ -184,12 +229,11 @@ def _validate_with_cache(
     ignored_violations: List[Violation] = []
 
     if path.is_file():
-        v, iv = _validate_file_with_cache(path, config, ignore_patterns, cache)
+        v, iv = _validate_file_with_cache(path, config, cache) # ignore_patterns handled by ast_visitor
         violations.extend(v)
         ignored_violations.extend(iv)
     elif path.is_dir():
         # Walk directory and validate each file with caching
-        import os
         for root, _, files in os.walk(path):
             current_dir = Path(root)
 
@@ -216,8 +260,8 @@ def _validate_with_cache(
                         continue
 
                     v, iv = _validate_file_with_cache(
-                        file_path, config, ignore_patterns, cache
-                    )
+                        file_path, config, cache
+                    ) # ignore_patterns handled by ast_visitor
                     violations.extend(v)
                     ignored_violations.extend(iv)
 
@@ -227,7 +271,6 @@ def _validate_with_cache(
 def _validate_file_with_cache(
     file_path: Path,
     config: SheriffConfig,
-    ignore_patterns: List[str],
     cache: SheriffCache
 ) -> Tuple[List[Violation], List[Violation]]:
     """Validate a single file with caching.
@@ -235,7 +278,6 @@ def _validate_file_with_cache(
     Args:
         file_path: Path to the Python file
         config: Sheriff configuration
-        ignore_patterns: Glob patterns to ignore
         cache: Cache instance
 
     Returns:
@@ -247,44 +289,40 @@ def _validate_file_with_cache(
         # Reconstruct Violation objects from cached data
         violations = []
         ignored_violations = []
-        for v in cached_data:
+        for v_data in cached_data:
+            # The Violation from rules.py needs filename
             violation = Violation(
-                file=Path(v["file"]),
-                line=v["line"],
-                column=v["column"],
-                message=v["message"],
-                rule=v["rule"],
-                code=v.get("code")
+                rule_id=v_data["rule_id"],
+                message=v_data["message"],
+                line_number=v_data["line_number"],
+                filename=Path(v_data["filename"]) if "filename" in v_data else file_path # Handle older cache if no filename
             )
-            if v.get("ignored", False):
+            if v_data.get("ignored", False):
                 ignored_violations.append(violation)
             else:
                 violations.append(violation)
         return violations, ignored_violations
 
     # Not cached, validate and cache result
-    violations, ignored_violations = validate_file_with_audit(file_path, config, ignore_patterns)
+    # The SheriffVisitor (via validate_file_with_audit) handles ignore_patterns internally
+    violations, ignored_violations = validate_file_with_audit(file_path, config) 
 
     # Cache the results (include ignored flag)
     violations_data = []
     for v in violations:
         violations_data.append({
-            "file": str(v.file),
-            "line": v.line,
-            "column": v.column,
+            "rule_id": v.rule_id,
             "message": v.message,
-            "rule": v.rule,
-            "code": v.code,
+            "line_number": v.line_number,
+            "filename": str(v.filename),
             "ignored": False
         })
     for v in ignored_violations:
         violations_data.append({
-            "file": str(v.file),
-            "line": v.line,
-            "column": v.column,
+            "rule_id": v.rule_id,
             "message": v.message,
-            "rule": v.rule,
-            "code": v.code,
+            "line_number": v.line_number,
+            "filename": str(v.filename),
             "ignored": True
         })
     cache.set_violations(file_path, violations_data)
@@ -299,112 +337,53 @@ def _handle_error(output_format: str, message: str) -> None:
         output_format: The output format being used
         message: The error message
     """
-    if output_format == "json":
-        click.echo(json.dumps({"error": message, "success": False}))
-    elif output_format == "github":
-        click.echo(f"::error::{message}")
-    elif output_format == "junit":
-        # Output minimal JUnit XML with error
-        xml = f'''<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Sheriff Validation" tests="1" failures="1" errors="1">
-  <testsuite name="Sheriff" tests="1" failures="1" errors="1">
-    <testcase name="Configuration" classname="sheriff">
-      <error message="{message}" type="ConfigurationError">{message}</error>
-    </testcase>
-  </testsuite>
-</testsuites>'''
-        click.echo(xml)
-    else:
-        click.echo(click.style(f"Error: {message}", fg="red"), err=True)
+    formatter: OutputFormatter = get_formatter(output_format)
+    # The formatters handle error messages
+    click.echo(formatter.format_error(message)) # Assuming formatters have a format_error method
+    
 
 
+# The _print_json_output and _print_text_output are now handled by formatters.
+# Keeping them here for reference or if specific audit details are needed beyond formatters.
 def _print_json_output(
     violations: List[Violation],
     ignored_violations: List[Violation],
     target_path: Path
 ) -> None:
-    """Print JSON output with audit information.
-
-    Args:
-        violations: List of violations
-        ignored_violations: List of ignored violations
-        target_path: The path that was validated
-    """
-    violations_data = []
-    for v in violations:
-        violation_dict = v.__dict__.copy()
-        violation_dict["file"] = str(violation_dict["file"])
-        violations_data.append(violation_dict)
-
-    ignored_data = []
-    for v in ignored_violations:
-        violation_dict = v.__dict__.copy()
-        violation_dict["file"] = str(violation_dict["file"])
-        ignored_data.append(violation_dict)
-
-    click.echo(json.dumps({
-        "violations": violations_data,
-        "ignored_violations": ignored_data,
+    """Print JSON output with audit information."""
+    # This function is now superseded by JsonFormatter but can be adapted for richer audit if needed.
+    formatter = get_formatter("json") # Use the factory to get the formatter
+    all_results = {
+        "violations": [v.__dict__ for v in violations],
+        "ignored_violations": [v.__dict__ for v in ignored_violations],
         "count": len(violations),
         "ignored_count": len(ignored_violations),
         "target": str(target_path),
         "success": len(violations) == 0
-    }))
-
+    }
+    click.echo(json.dumps(all_results, indent=2))
 
 def _print_text_output(
     violations: List[Violation],
     ignored_violations: List[Violation],
     target_path: Path
 ) -> None:
-    """Print human-readable colored text output with audit.
-
-    Args:
-        violations: List of violations
-        ignored_violations: List of ignored violations
-        target_path: The path that was validated
-    """
-    if not violations and not ignored_violations:
-        click.echo(click.style(f"\nSheriff found no violations in {target_path}", fg="green"))
-        return
-
-    if violations:
-        click.echo(click.style(
-            f"\nSheriff found {len(violations)} violations in {target_path}:",
-            fg="red", bold=True
-        ))
-        for v in violations:
-            click.echo(
-                f"  {click.style(str(v.file), fg='cyan')}:"
-                f"{click.style(str(v.line), fg='yellow')}:{click.style(str(v.column), fg='yellow')} - "
-                f"{click.style(v.rule, fg='magenta')} - {v.message}"
-            )
-            if v.code:
-                click.echo(f"    Code: {v.code}")
-
+    """Print human-readable colored text output with audit."""
+    # This function is now superseded by TextFormatter but can be adapted for richer audit if needed.
+    formatter = get_formatter("text") # Use the factory to get the formatter
+    click.echo(formatter.format(violations, target_path))
+    
     if ignored_violations:
         click.echo(click.style(
             f"\nSheriff audited {len(ignored_violations)} ignored violations in {target_path}:",
             fg="yellow", bold=True
-        ))
+        ), err=True)
         for v in ignored_violations:
             click.echo(
-                f"  {click.style(str(v.file), fg='cyan')}:"
-                f"{click.style(str(v.line), fg='yellow')}:{click.style(str(v.column), fg='yellow')} - "
-                f"{click.style(v.rule, fg='magenta')} - {v.message} (IGNORED)"
-            )
-
-    if violations:
-        click.echo(click.style(
-            f"\nSummary: {len(violations)} violations found.",
-            fg="red", bold=True
-        ))
-    else:
-        click.echo(click.style(
-            f"\nSummary: 0 violations found ({len(ignored_violations)} ignored).",
-            fg="green", bold=True
-        ))
-
+                f"  {click.style(str(v.filename), fg='cyan')}:"
+                f"{click.style(str(v.line_number), fg='yellow')} - "
+                f"{click.style(v.rule_id, fg='magenta')} - {v.message} (IGNORED)"
+            , err=True)
 
 # Note: The fix functionality is a placeholder.
 # Auto-correction would require modifying the AST and then unparsing it back to source.

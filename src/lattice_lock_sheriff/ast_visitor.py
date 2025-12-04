@@ -12,6 +12,7 @@ class SheriffVisitor(ast.NodeVisitor):
         self.source_code = source_code
         self.context = RuleContext(filename=filename, config=config)
         self.violations: List[Violation] = []
+        self.ignored_violations: List[Violation] = []
         self.ignored_lines: Set[int] = self._parse_ignore_comments(source_code)
         
         # Initialize rules
@@ -40,9 +41,14 @@ class SheriffVisitor(ast.NodeVisitor):
             for violation in node_violations:
                 if violation.line_number not in self.ignored_lines:
                     self.violations.append(violation)
+                else:
+                    self.ignored_violations.append(violation)
         
         # Continue traversal
         self.generic_visit(node)
 
     def get_violations(self) -> List[Violation]:
         return self.violations
+
+    def get_ignored_violations(self) -> List[Violation]:
+        return self.ignored_violations
