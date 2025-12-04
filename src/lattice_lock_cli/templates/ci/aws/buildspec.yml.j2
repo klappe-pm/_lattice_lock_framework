@@ -1,0 +1,41 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.10
+    commands:
+      - echo Installing dependencies...
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+      - pip install -e .
+      # Install lattice-lock if not in requirements (assuming it is the current package)
+      
+  pre_build:
+    commands:
+      - echo Running validation...
+      - lattice-lock validate
+
+  build:
+    commands:
+      - echo Running Sheriff checks...
+      - lattice-lock sheriff
+      - echo Running Gauntlet checks...
+      - lattice-lock gauntlet
+
+  post_build:
+    commands:
+      - echo Running tests...
+      - pytest --cov=src --cov-report=xml:coverage.xml --junitxml=test-results.xml
+
+reports:
+  pytest_reports:
+    files:
+      - test-results.xml
+    base-directory: .
+    file-format: JUNITXML
+
+artifacts:
+  files:
+    - coverage.xml
+    - test-results.xml
