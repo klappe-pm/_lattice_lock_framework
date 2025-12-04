@@ -56,6 +56,19 @@ class TaskRequirements:
     require_functions: bool = False
 
 @dataclass
+class FunctionCall:
+    """Represents a function call requested by the model."""
+    name: str
+    arguments: Dict[str, Any]
+
+@dataclass
+class FunctionDefinition:
+    """Represents a function that can be called by the model."""
+    name: str
+    description: str
+    parameters: Dict[str, Any] = field(default_factory=dict) # JSON schema for parameters
+
+@dataclass
 class APIResponse:
     """Standardized API response format."""
     content: str
@@ -65,3 +78,5 @@ class APIResponse:
     latency_ms: int
     raw_response: Optional[Dict] = None
     error: Optional[str] = None
+    function_call: Optional[FunctionCall] = None
+    function_call_result: Optional[Any] = None

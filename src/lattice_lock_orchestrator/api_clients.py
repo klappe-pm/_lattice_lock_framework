@@ -14,7 +14,7 @@ import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
 import logging
 
-from .types import APIResponse
+from .types import APIResponse, FunctionCall
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,8 @@ class GrokAPIClient(BaseAPIClient):
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
                              stream: bool = False,
+                             functions: Optional[List[Dict]] = None,
+                             tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Grok"""
         
@@ -95,14 +97,30 @@ class GrokAPIClient(BaseAPIClient):
         
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if functions:
+            payload["tools"] = [{"type": "function", "function": f} for f in functions]
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
             
         if stream:
             return self._stream_completion(headers, payload)
         
         data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
         
+        response_content = None
+        function_call = None
+
+        if data['choices'][0]['message'].get('content'):
+            response_content = data['choices'][0]['message']['content']
+        elif data['choices'][0]['message'].get('tool_calls'):
+            tool_call = data['choices'][0]['message']['tool_calls'][0]
+            function_call = FunctionCall(
+                name=tool_call['function']['name'],
+                arguments=json.loads(tool_call['function']['arguments'])
+            )
+            
         return APIResponse(
-            content=data['choices'][0]['message']['content'],
+            content=response_content,
             model=model,
             provider="xai",
             usage={
@@ -110,7 +128,8 @@ class GrokAPIClient(BaseAPIClient):
                 'output_tokens': data['usage']['completion_tokens']
             },
             latency_ms=latency_ms,
-            raw_response=data
+            raw_response=data,
+            function_call=function_call
         )
     
     async def _stream_completion(self, headers: Dict, payload: Dict) -> AsyncIterator[str]:
@@ -150,6 +169,8 @@ class OpenAIAPIClient(BaseAPIClient):
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
                              stream: bool = False,
+                             functions: Optional[List[Dict]] = None,
+                             tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to OpenAI"""
         
@@ -167,11 +188,27 @@ class OpenAIAPIClient(BaseAPIClient):
         
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if functions:
+            payload["tools"] = [{"type": "function", "function": f} for f in functions]
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
             
         data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
         
+        response_content = None
+        function_call = None
+
+        if data['choices'][0]['message'].get('content'):
+            response_content = data['choices'][0]['message']['content']
+        elif data['choices'][0]['message'].get('tool_calls'):
+            tool_call = data['choices'][0]['message']['tool_calls'][0]
+            function_call = FunctionCall(
+                name=tool_call['function']['name'],
+                arguments=json.loads(tool_call['function']['arguments'])
+            )
+
         return APIResponse(
-            content=data['choices'][0]['message']['content'],
+            content=response_content,
             model=model,
             provider="openai",
             usage={
@@ -179,7 +216,8 @@ class OpenAIAPIClient(BaseAPIClient):
                 'output_tokens': data['usage']['completion_tokens']
             },
             latency_ms=latency_ms,
-            raw_response=data
+            raw_response=data,
+            function_call=function_call
         )
 
 class GoogleAPIClient(BaseAPIClient):
@@ -196,6 +234,7 @@ class GoogleAPIClient(BaseAPIClient):
                              messages: List[Dict[str, str]],
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
+                             functions: Optional[List[Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Google Gemini"""
         
@@ -221,12 +260,28 @@ class GoogleAPIClient(BaseAPIClient):
         
         if max_tokens:
             payload["generationConfig"]["maxOutputTokens"] = max_tokens
+
+        if functions:
+            payload["tools"] = [{"functionDeclarations": functions}]
             
         endpoint = f"models/{model}:generateContent?key={self.api_key}"
         data, latency_ms = await self._make_request("POST", endpoint, headers, payload)
         
+        response_content = None
+        function_call = None
+
+        if data['candidates'][0]['content'].get('parts'):
+            for part in data['candidates'][0]['content']['parts']:
+                if part.get('text'):
+                    response_content = part['text']
+                elif part.get('functionCall'):
+                    function_call = FunctionCall(
+                        name=part['functionCall']['name'],
+                        arguments=part['functionCall']['args']
+                    )
+                    
         return APIResponse(
-            content=data['candidates'][0]['content']['parts'][0]['text'],
+            content=response_content,
             model=model,
             provider="google",
             usage={
@@ -234,7 +289,8 @@ class GoogleAPIClient(BaseAPIClient):
                 'output_tokens': data['usageMetadata']['candidatesTokenCount']
             },
             latency_ms=latency_ms,
-            raw_response=data
+            raw_response=data,
+            function_call=function_call
         )
 
 class AnthropicAPIClient(BaseAPIClient):
@@ -260,9 +316,13 @@ class AnthropicAPIClient(BaseAPIClient):
                              messages: List[Dict[str, str]],
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
+                             functions: Optional[List[Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Anthropic/DIAL"""
         
+        response_content = None
+        function_call = None
+
         if self.use_dial:
             # DIAL format (OpenAI-compatible)
             headers = {
@@ -279,11 +339,22 @@ class AnthropicAPIClient(BaseAPIClient):
             
             if max_tokens:
                 payload["max_tokens"] = max_tokens
+            if functions:
+                payload["tools"] = [{"type": "function", "function": f} for f in functions]
                 
             data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
             
+            if data['choices'][0]['message'].get('content'):
+                response_content = data['choices'][0]['message']['content']
+            elif data['choices'][0]['message'].get('tool_calls'):
+                tool_call = data['choices'][0]['message']['tool_calls'][0]
+                function_call = FunctionCall(
+                    name=tool_call['function']['name'],
+                    arguments=json.loads(tool_call['function']['arguments'])
+                )
+            
             return APIResponse(
-                content=data['choices'][0]['message']['content'],
+                content=response_content,
                 model=model,
                 provider="dial",
                 usage={
@@ -291,7 +362,8 @@ class AnthropicAPIClient(BaseAPIClient):
                     'output_tokens': data['usage']['completion_tokens']
                 },
                 latency_ms=latency_ms,
-                raw_response=data
+                raw_response=data,
+                function_call=function_call
             )
         else:
             # Direct Anthropic API
@@ -324,11 +396,22 @@ class AnthropicAPIClient(BaseAPIClient):
             
             if system_msg:
                 payload["system"] = system_msg
+            if functions:
+                payload["tools"] = functions
                 
             data, latency_ms = await self._make_request("POST", "messages", headers, payload)
             
+            if data['content'][0].get('text'):
+                response_content = data['content'][0]['text']
+            elif data['content'][0].get('type') == 'tool_use':
+                tool_use = data['content'][0]
+                function_call = FunctionCall(
+                    name=tool_use['name'],
+                    arguments=tool_use['input']
+                )
+                
             return APIResponse(
-                content=data['content'][0]['text'],
+                content=response_content,
                 model=model,
                 provider="anthropic",
                 usage={
@@ -336,7 +419,8 @@ class AnthropicAPIClient(BaseAPIClient):
                     'output_tokens': data['usage']['output_tokens']
                 },
                 latency_ms=latency_ms,
-                raw_response=data
+                raw_response=data,
+                function_call=function_call
             )
 
 class AzureOpenAIClient(BaseAPIClient):
@@ -354,6 +438,8 @@ class AzureOpenAIClient(BaseAPIClient):
                              messages: List[Dict[str, str]],
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
+                             functions: Optional[List[Dict]] = None,
+                             tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Azure OpenAI"""
         
@@ -370,13 +456,29 @@ class AzureOpenAIClient(BaseAPIClient):
         
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if functions:
+            payload["tools"] = [{"type": "function", "function": f} for f in functions]
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
             
         # Azure OpenAI uses deployment names in the endpoint
         endpoint = f"openai/deployments/{model}/chat/completions?api-version=2024-02-15-preview"
         data, latency_ms = await self._make_request("POST", endpoint, headers, payload)
         
+        response_content = None
+        function_call = None
+
+        if data['choices'][0]['message'].get('content'):
+            response_content = data['choices'][0]['message']['content']
+        elif data['choices'][0]['message'].get('tool_calls'):
+            tool_call = data['choices'][0]['message']['tool_calls'][0]
+            function_call = FunctionCall(
+                name=tool_call['function']['name'],
+                arguments=json.loads(tool_call['function']['arguments'])
+            )
+            
         return APIResponse(
-            content=data['choices'][0]['message']['content'],
+            content=response_content,
             model=model,
             provider="azure",
             usage={
@@ -384,7 +486,8 @@ class AzureOpenAIClient(BaseAPIClient):
                 'output_tokens': data['usage']['completion_tokens']
             },
             latency_ms=latency_ms,
-            raw_response=data
+            raw_response=data,
+            function_call=function_call
         )
 
 class BedrockAPIClient(BaseAPIClient):
@@ -400,9 +503,13 @@ class BedrockAPIClient(BaseAPIClient):
                              messages: List[Dict[str, str]],
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
+                             functions: Optional[List[Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Amazon Bedrock"""
         
+        if functions:
+            raise NotImplementedError("Bedrock function calling requires boto3 integration and model-specific tool definitions.")
+
         # Note: This is a simplified implementation
         # Real Bedrock integration requires AWS signature V4 authentication
         
@@ -456,6 +563,8 @@ class LocalModelClient(BaseAPIClient):
                              messages: List[Dict[str, str]],
                              temperature: float = 0.7,
                              max_tokens: Optional[int] = None,
+                             functions: Optional[List[Dict]] = None,
+                             tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to local model"""
         
@@ -470,12 +579,28 @@ class LocalModelClient(BaseAPIClient):
         
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if functions:
+            payload["tools"] = [{"type": "function", "function": f} for f in functions]
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
             
         try:
             data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
             
+            response_content = None
+            function_call = None
+
+            if data['choices'][0]['message'].get('content'):
+                response_content = data['choices'][0]['message']['content']
+            elif data['choices'][0]['message'].get('tool_calls'):
+                tool_call = data['choices'][0]['message']['tool_calls'][0]
+                function_call = FunctionCall(
+                    name=tool_call['function']['name'],
+                    arguments=json.loads(tool_call['function']['arguments'])
+                )
+            
             return APIResponse(
-                content=data['choices'][0]['message']['content'],
+                content=response_content,
                 model=model,
                 provider="local",
                 usage={
@@ -483,10 +608,14 @@ class LocalModelClient(BaseAPIClient):
                     'output_tokens': data.get('usage', {}).get('completion_tokens', 0)
                 },
                 latency_ms=latency_ms,
-                raw_response=data
+                raw_response=data,
+                function_call=function_call
             )
         except Exception as e:
-            # Fallback for Ollama format
+            # Fallback for Ollama format IF no functions are being used
+            if functions:
+                raise e # Re-raise if functions were provided, as fallback doesn't support them
+
             try:
                 ollama_payload = {
                     "model": model,

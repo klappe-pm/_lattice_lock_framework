@@ -1,11 +1,13 @@
 import logging
 import asyncio
-from typing import Optional, Dict, List, Any
-from .types import TaskType, TaskRequirements, APIResponse, ModelCapabilities
+import json # Added this import
+from typing import Optional, Dict, List, Any, Callable
+from .types import TaskType, TaskRequirements, APIResponse, ModelCapabilities, FunctionCall
 from .registry import ModelRegistry
 from .scorer import TaskAnalyzer, ModelScorer
 from .guide import ModelGuideParser
 from .api_clients import get_api_client
+from .function_calling import FunctionCallHandler
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,11 @@ class ModelOrchestrator:
         self.scorer = ModelScorer()
         self.guide = ModelGuideParser(guide_path)
         self.clients = {}
+        self.function_call_handler = FunctionCallHandler()
+
+    def register_function(self, name: str, func: Callable):
+        """Registers a function with the internal FunctionCallHandler."""
+        self.function_call_handler.register_function(name, func)
 
     async def route_request(self, 
                           prompt: str, 
@@ -105,12 +112,88 @@ class ModelOrchestrator:
         messages = [{"role": "user", "content": prompt}]
         if "messages" in kwargs:
             messages = kwargs.pop("messages")
-            
-        return await client.chat_completion(
+
+        # Get registered functions for the model to use
+        functions_metadata = self.function_call_handler.get_registered_functions_metadata()
+        
+        # Initial call to the model
+        first_response = await client.chat_completion(
             model=model.api_name,
             messages=messages,
+            functions=list(functions_metadata.values()), # Pass functions metadata
             **kwargs
         )
+
+        # Check for function call in the first response
+        if first_response.function_call:
+            function_call_name = first_response.function_call.name
+            function_call_args = first_response.function_call.arguments
+            
+            logger.info(f"Model requested function call: {function_call_name} with args {function_call_args}")
+            
+            try:
+                function_result = await self.function_call_handler.execute_function_call(
+                    function_call_name, 
+                    **function_call_args
+                )
+                first_response.function_call_result = function_result
+                logger.info(f"Function call {function_call_name} executed successfully. Result: {function_result}")
+                
+                # Extract the tool_call_id from the first response's raw data
+                tool_call_id = None
+                if first_response.raw_response and \
+                   'choices' in first_response.raw_response and \
+                   first_response.raw_response['choices'] and \
+                   'message' in first_response.raw_response['choices'][0] and \
+                   'tool_calls' in first_response.raw_response['choices'][0]['message'] and \
+                   first_response.raw_response['choices'][0]['message']['tool_calls']:
+                    tool_call_id = first_response.raw_response['choices'][0]['message']['tool_calls'][0]['id']
+                
+                if not tool_call_id:
+                    logger.warning("Could not extract tool_call_id from model's first response.")
+                    # Fallback to a dummy ID if it cannot be extracted (though this might cause issues with some APIs)
+                    tool_call_id = "call_dummy_id_fallback" 
+
+                # Append the assistant's function call message
+                messages.append({
+                    "role": "assistant",
+                    "content": None, # Function call doesn't have content directly
+                    "tool_calls": [{
+                        "id": tool_call_id,
+                        "type": "function",
+                        "function": {
+                            "name": function_call_name,
+                            "arguments": json.dumps(function_call_args)
+                        }
+                    }]
+                })
+
+                # Append the tool's response message
+                messages.append({
+                    "role": "tool",
+                    "content": str(function_result),
+                    "tool_call_id": tool_call_id # Must match the ID from the assistant's tool_calls
+                })
+                
+                # Make a second call to the model with the tool's response
+                final_response = await client.chat_completion(
+                    model=model.api_name,
+                    messages=messages,
+                    functions=list(functions_metadata.values()), # Pass functions metadata again
+                    **kwargs
+                )
+                
+                # Update the final response with the function call details and result from the first turn
+                final_response.function_call = first_response.function_call
+                final_response.function_call_result = first_response.function_call_result
+                
+                return final_response
+
+            except Exception as e:
+                first_response.error = f"Function call failed: {e}"
+                logger.error(f"Function call {function_call_name} failed: {e}")
+                
+        return first_response
 
     async def _handle_fallback(self, requirements: TaskRequirements, prompt: str, failed_model: str, **kwargs) -> APIResponse:
         """Handle fallback logic"""
