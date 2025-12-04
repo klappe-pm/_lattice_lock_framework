@@ -1,0 +1,279 @@
+agent:
+  identity:
+    name: tool_matcher
+    version: 1.0.0
+    description: Matches tasks to appropriate tools (Devin, Gemini, Codex, Claude variants) based on capabilities and file ownership rules.
+    role: Tool Matcher
+    tags:
+    - matching
+    - tools
+    - assignment
+    - v2.1
+  configuration:
+    language: en-US
+    timezone: UTC
+    log_level: INFO
+    max_steps: 30
+    timeout_seconds: 180
+directive:
+  primary_goal: Assign tasks to the most appropriate tool while preventing file ownership conflicts.
+  secondary_goals:
+  - Balance workload across available tools
+  - Optimize for tool capabilities and task requirements
+  - Ensure no file is owned by multiple tools
+  constraints:
+  - Never assign the same file to multiple tools
+  - Respect tool capability limitations
+  - Maintain consistent file ownership across phases
+responsibilities:
+- name: Capability Matching
+  inputs:
+  - Task requirements
+  - Tool capability profiles
+  outputs:
+  - Capability match scores
+  - Recommended tool assignments
+  criticality: High
+  description: Match task requirements to tool capabilities
+- name: File Ownership Resolution
+  inputs:
+  - Task file lists
+  - Existing file ownership map
+  outputs:
+  - Updated file ownership map
+  - Conflict resolutions
+  criticality: High
+  description: Resolve file ownership to prevent merge conflicts
+scope:
+  can_access:
+  - /agent_definitions
+  - /project_prompts
+  can_modify:
+  - None (read-only subagent)
+  cannot_access:
+  - /credentials
+  - /secrets
+  cannot_modify:
+  - All paths (read-only)
+  escalation_triggers:
+  - If file ownership conflict cannot be resolved
+  - If no tool matches task requirements
+  - If workload imbalance exceeds threshold
+context:
+  required_context:
+  - Task list with file requirements
+  - Tool capability profiles
+  - Existing file ownership map
+  memory_persistence:
+    short_term: Session only
+    long_term: Via parent agent memory
+  knowledge_sources:
+  - path: /agent_definitions
+    description: Tool and agent capabilities
+  - path: /project_prompts
+    description: Existing assignments
+planning:
+  enabled: true
+  default_strategy: linear
+  phases:
+  - name: capability_analysis
+    required: true
+  - name: ownership_mapping
+    required: true
+  - name: conflict_resolution
+    required: true
+  - name: assignment_optimization
+    required: true
+  constraints:
+    max_depth: 2
+    max_steps_per_phase: 10
+estimation:
+  enabled: true
+  currency: USD
+  complexity_weights:
+    capability_matching: 1.0
+    ownership_resolution: 1.5
+    optimization: 1.2
+  cost_limits:
+    warning_threshold: 0.15
+    hard_limit: 0.75
+    approval_required_above: 0.40
+model_selection:
+  default_provider: local
+  default_model: llama3.1:8b
+  strategies:
+    matching:
+      primary: llama3.1:8b
+      fallback: gpt-4o-mini
+      selection_criteria: speed > accuracy
+    conflict_resolution:
+      primary: qwen2.5:32b
+      fallback: claude-sonnet-4.5
+      selection_criteria: accuracy > speed
+  overrides:
+    force_local_if_offline: true
+    force_cloud_if_complex: false
+delegation:
+  enabled: false
+  max_depth: 0
+  allowed_subagents: []
+  delegation_triggers: []
+sub_agents: []
+workflow:
+  init:
+  - Load tool capability profiles
+  - Load existing file ownership map
+  execution_loop:
+  - For each task, score tool capabilities
+  - Check file ownership conflicts
+  - Resolve conflicts using priority rules
+  - Optimize workload distribution
+  - Return assignments
+  cleanup:
+  - Log matching metrics
+output:
+  default_format: json
+  schema:
+    type: object
+    properties:
+      assignments:
+        type: array
+        items:
+          type: object
+          properties:
+            task_id: {type: string}
+            tool: {type: string}
+            confidence: {type: number}
+            files_owned: {type: array}
+      file_ownership:
+        type: object
+        description: Map of file paths to tool owners
+      conflicts_resolved:
+        type: array
+        items:
+          type: object
+          properties:
+            file: {type: string}
+            original_owner: {type: string}
+            new_owner: {type: string}
+            reason: {type: string}
+      workload_distribution:
+        type: object
+        description: Task count per tool
+error_handling:
+  strategies:
+  - error: UnresolvableConflict
+    action: report_to_parent
+    retry: false
+  - error: NoMatchingTool
+    action: report_to_parent
+    retry: false
+  max_retries: 2
+  fallback_mode: graceful_degradation
+interaction:
+  user:
+    tone: professional
+    verbosity: concise
+  other_agents:
+    protocol: json_rpc
+    timeout: 30s
+metrics:
+- name: Assignment Accuracy
+  target: '> 95%'
+- name: Conflict Rate
+  target: '< 5%'
+- name: Workload Balance
+  target: 'Within 20% variance'
+guardrails:
+- Never assign same file to multiple tools
+- Always document conflict resolutions
+- Maintain file ownership consistency across phases
+tool_profiles:
+  devin:
+    name: Devin AI
+    identifier: devin
+    strengths:
+    - Package management and infrastructure
+    - Complex multi-file refactoring
+    - CI/CD pipeline setup
+    - Cloud integrations (AWS, GCP)
+    - Long-running autonomous tasks
+    preferred_files:
+    - pyproject.toml
+    - version.txt
+    - src/lattice_lock/__init__.py
+    - scripts/orchestrator_cli.py
+    - .github/workflows/
+  gemini:
+    name: Gemini CLI
+    identifier: gemini
+    strengths:
+    - Schema validation and parsing
+    - AST analysis and manipulation
+    - Rule engine implementation
+    - Data transformation
+    preferred_files:
+    - src/lattice_lock_validator/schema.py
+    - src/lattice_lock_validator/env.py
+    - sheriff.py
+  codex:
+    name: Codex CLI
+    identifier: codex
+    strengths:
+    - Code generation and completion
+    - Test generation
+    - Pre-commit hooks
+    - Structure validation
+    preferred_files:
+    - src/lattice_lock_validator/agents.py
+    - src/lattice_lock_validator/structure.py
+    - .pre-commit-config.yaml
+    - tests/
+  claude_cli:
+    name: Claude Code CLI
+    identifier: claude_cli
+    strengths:
+    - CLI implementation
+    - Command structure
+    - Template systems
+    - Init commands
+    preferred_files:
+    - src/lattice_lock_cli/__main__.py
+    - src/lattice_lock_cli/commands/init.py
+    - src/lattice_lock_cli/templates/
+  claude_app:
+    name: Claude Code App
+    identifier: claude_app
+    strengths:
+    - Additional CLI commands
+    - Integration testing
+    - API endpoints
+    - Authentication
+    preferred_files:
+    - src/lattice_lock_cli/commands/validate.py
+    - src/lattice_lock_cli/commands/doctor.py
+    - tests/integration/
+  claude_docs:
+    name: Claude Code Website
+    identifier: claude_docs
+    strengths:
+    - Documentation writing
+    - Tutorials and guides
+    - API reference
+    - User-facing content
+    preferred_files:
+    - developer_documentation/
+    - docs/
+    - README.md
+metadata:
+  id: tool-matcher-001
+  created_at: '2025-12-01T06:00:00.000000'
+  updated_at: '2025-12-01T06:00:00.000000'
+  author: Devin AI
+  license: MIT
+versioning:
+  current: 1.0.0
+  changelog:
+  - version: 1.0.0
+    date: '2025-12-01'
+    changes: Initial release
