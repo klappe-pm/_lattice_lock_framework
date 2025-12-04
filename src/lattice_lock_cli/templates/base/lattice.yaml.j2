@@ -1,0 +1,43 @@
+# Lattice Lock Configuration
+# Generated for: {{ project_name }}
+# Documentation: https://github.com/klappe-pm/lattice-lock-framework
+
+version: "1.0"
+
+# Project metadata
+project:
+  name: {{ project_name }}
+  description: "{{ description | default('A Lattice Lock managed project') }}"
+
+# Module definitions
+modules:
+  - name: {{ project_name }}
+    path: src/{{ project_name }}
+    type: {{ project_type | default('service') }}
+
+# Entity definitions (contracts, services, etc.)
+entities:
+  # Example entity - customize as needed
+  - name: example_service
+    type: service
+    module: {{ project_name }}
+    description: "Example service entity"
+
+# Governance rules
+config:
+  # Imports that should never be used
+  forbidden_imports:
+    - os.system
+    - subprocess.call
+    - eval
+    - exec
+
+  # Required patterns for code quality
+  required_patterns:
+    - type_hints
+    - docstrings
+
+  # Validation settings
+  validation:
+    strict_mode: false
+    fail_on_warning: false
