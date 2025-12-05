@@ -359,7 +359,6 @@ class TestConventionChecker:
 class TestQualityScorer:
     """Tests for QualityScorer class."""
 
-    @pytest.mark.asyncio
     async def test_score_high_quality_prompt(self):
         """Test scoring of a high-quality prompt."""
         scorer = QualityScorer(threshold=6.0, use_llm=False)
@@ -372,7 +371,6 @@ class TestQualityScorer:
         assert score.actionability_score > 5.0
         assert score.completeness_score > 5.0
 
-    @pytest.mark.asyncio
     async def test_score_low_quality_prompt(self):
         """Test scoring of a low-quality prompt."""
         scorer = QualityScorer(threshold=6.0, use_llm=False)
