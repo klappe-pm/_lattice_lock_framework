@@ -380,7 +380,6 @@ class TestQualityScorer:
         assert score.clarity_score < 8.0
         assert len(score.feedback) > 0
 
-    @pytest.mark.asyncio
     async def test_score_missing_sections(self):
         """Test scoring of prompt with missing sections."""
         scorer = QualityScorer(threshold=6.0, use_llm=False)
@@ -389,7 +388,6 @@ class TestQualityScorer:
         assert score.completeness_score < 7.0
         assert not score.passes_threshold or score.overall_score < 6.0
 
-    @pytest.mark.asyncio
     async def test_configurable_threshold(self):
         """Test configurable quality threshold."""
         low_threshold = QualityScorer(threshold=3.0, use_llm=False)
@@ -402,7 +400,6 @@ class TestQualityScorer:
         assert low_score.overall_score == high_score.overall_score
         assert low_score.passes_threshold or not high_score.passes_threshold
 
-    @pytest.mark.asyncio
     async def test_feedback_generation(self):
         """Test that feedback is generated for low scores."""
         scorer = QualityScorer(threshold=8.0, use_llm=False)
@@ -411,7 +408,6 @@ class TestQualityScorer:
         assert len(score.feedback) > 0
         assert len(score.suggestions) > 0
 
-    @pytest.mark.asyncio
     async def test_score_file(self, tmp_path):
         """Test scoring from file."""
         prompt_file = tmp_path / "test.md"
@@ -423,7 +419,6 @@ class TestQualityScorer:
         assert score.prompt_path == str(prompt_file)
         assert score.overall_score > 0
 
-    @pytest.mark.asyncio
     async def test_score_nonexistent_file(self):
         """Test scoring of nonexistent file."""
         scorer = QualityScorer(use_llm=False)
@@ -505,7 +500,6 @@ class TestValidationWithExistingPrompts:
 class TestValidatorIntegration:
     """Integration tests for validators working together."""
 
-    @pytest.mark.asyncio
     async def test_full_validation_pipeline(self, tmp_path):
         """Test complete validation pipeline."""
         # Create a proper prompt file
@@ -528,7 +522,6 @@ class TestValidatorIntegration:
         assert convention_result.is_valid
         assert quality_score.passes_threshold
 
-    @pytest.mark.asyncio
     async def test_validation_result_serialization(self):
         """Test that validation results can be serialized."""
         validator = PromptValidator()

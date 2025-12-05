@@ -6,22 +6,27 @@ from .config import SheriffConfig
 
 @dataclass
 class RuleContext:
+    """Context passed to rules during validation."""
     filename: str
     config: SheriffConfig
 
 @dataclass
 class Violation:
+    """Represents a rule violation."""
     rule_id: str
     message: str
     line_number: int
     filename: str # Added filename to Violation
 
 class Rule(ABC):
+    """Abstract base class for Sheriff rules."""
     @abstractmethod
     def check(self, node: ast.AST, context: RuleContext) -> List[Violation]:
+        """Checks an AST node for violations."""
         pass
 
 class ImportDisciplineRule(Rule):
+    """Enforces import restrictions based on configuration."""
     def check(self, node: ast.AST, context: RuleContext) -> List[Violation]:
         violations = []
         if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -50,6 +55,7 @@ class ImportDisciplineRule(Rule):
                 ))
 
 class TypeHintRule(Rule):
+    """Enforces type hints on function definitions."""
     def check(self, node: ast.AST, context: RuleContext) -> List[Violation]:
         violations = []
         if not context.config.enforce_type_hints:
@@ -67,6 +73,7 @@ class TypeHintRule(Rule):
         return violations
 
 class VersionComplianceRule(Rule):
+    """Checks for version compliance issues."""
     def check(self, node: ast.AST, context: RuleContext) -> List[Violation]:
         # Placeholder for version compliance logic
         # Could check for deprecated features or version-specific syntax
