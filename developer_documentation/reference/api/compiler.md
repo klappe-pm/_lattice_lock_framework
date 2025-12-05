@@ -1,17 +1,47 @@
-# Compiler Module
-
-The `lattice_lock.compiler` module is responsible for the Polyglot compilation and build process.
+# Compiler Module (Future API)
 
 > [!NOTE]
-> This module is currently under development or not present in the current codebase version. This page serves as a placeholder for future documentation.
+> This module is currently under design and development. The API described below is a proposal and subject to change.
+
+The `lattice_lock_compiler` module will be responsible for compiling Lattice Lock definitions into executable code and other artifacts.
 
 ## Overview
 
-The compiler is designed to translate Lattice Lock definitions into executable code for various target languages and environments.
+The compiler transforms high-level Lattice Lock schemas into:
+1.  Python data models (Pydantic/Dataclasses)
+2.  Database migration scripts (SQLAlchemy/Alembic)
+3.  API specifications (OpenAPI)
+4.  Frontend client code (TypeScript/React)
 
-## Future API
+## Proposed Modules
 
-Expected functionality includes:
+### Core Compiler (`compiler.py`)
 
--   `compile_schema(schema_path: str, target_lang: str) -> str`
--   `build_project(project_path: str) -> BuildResult`
+#### Classes
+
+- `LatticeCompiler`: Main compiler class.
+    - `compile(schema_path: str, output_dir: str, targets: List[str])`: Compiles a schema to specified targets.
+    - `watch(schema_path: str)`: Watches for changes and recompiles.
+
+### Code Generators (`generators/`)
+
+#### Classes
+
+- `PythonGenerator`: Generates Python code.
+- `TypescriptGenerator`: Generates TypeScript code.
+- `SqlGenerator`: Generates SQL DDL.
+
+## Usage Examples (Proposed)
+
+```python
+from lattice_lock_compiler import LatticeCompiler
+
+compiler = LatticeCompiler()
+
+# Compile schema to Python and TypeScript
+compiler.compile(
+    schema_path="lattice.yaml",
+    output_dir="./generated",
+    targets=["python", "typescript"]
+)
+```

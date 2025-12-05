@@ -1,7 +1,33 @@
 """
-Prompt Architect Agent - Automated prompt generation for Lattice Lock Framework.
+Prompt Architect Agent Package
+
+Contains the Prompt Architect agent and its subagents for specification analysis
+and prompt generation.
 """
 
+from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
+from lattice_lock_agents.prompt_architect.subagents.models import (
+    SpecificationAnalysis,
+    Phase,
+    Component,
+    Requirement,
+    Constraint,
+    RequirementType,
+    ConstraintType,
+    ComponentLayer,
+)
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient, PromptEntry
 
-__all__ = ["TrackerClient", "PromptEntry"]
+__all__ = [
+    "SpecAnalyzer",
+    "SpecificationAnalysis",
+    "Phase",
+    "Component",
+    "Requirement",
+    "Constraint",
+    "RequirementType",
+    "ConstraintType",
+    "ComponentLayer",
+    "TrackerClient",
+    "PromptEntry",
+]
