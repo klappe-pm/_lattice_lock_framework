@@ -6,6 +6,14 @@ from jinja2 import Environment, FileSystemLoader
 from .parser import LatticeParser, EntityDefinition, EnsuresClause
 
 class GauntletGenerator:
+    """
+    Generates pytest test contracts from Lattice Lock definitions.
+    
+    Attributes:
+        parser (LatticeParser): The parser for reading lattice definitions.
+        output_dir (Path): Directory where generated tests will be saved.
+        env (Environment): Jinja2 environment for template loading.
+    """
     def __init__(self, lattice_file: str, output_dir: str):
         self.parser = LatticeParser(lattice_file)
         self.output_dir = Path(output_dir)
@@ -14,6 +22,7 @@ class GauntletGenerator:
         )
 
     def generate(self):
+        """Generates test files for all parsed entities."""
         entities = self.parser.parse()
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -26,6 +35,7 @@ class GauntletGenerator:
                 f.write(test_file_content)
 
     def _generate_test_file(self, entity: EntityDefinition, template) -> str:
+        """Generates content for a single test file."""
         tests = []
         for clause in entity.ensures:
             assertion = self._build_assertion(clause)
@@ -65,6 +75,7 @@ class GauntletGenerator:
         )
 
     def _build_assertion(self, clause: EnsuresClause) -> str:
+        """Builds a Python assertion string for a given clause."""
         if clause.constraint == 'gt':
             return f"assert value > {clause.value}, f'Expected {clause.field} > {clause.value}, got {{value}}'"
         elif clause.constraint == 'lt':

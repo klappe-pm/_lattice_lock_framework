@@ -4,6 +4,7 @@ from typing import Dict, List, Any, Optional
 
 @dataclass
 class EnsuresClause:
+    """Represents a single validation rule (ensures clause)."""
     name: str
     field: str
     constraint: str
@@ -12,16 +13,25 @@ class EnsuresClause:
 
 @dataclass
 class EntityDefinition:
+    """Represents a parsed entity definition."""
     name: str
     fields: Dict[str, Any]
     ensures: List[EnsuresClause]
 
 class LatticeParser:
+    """
+    Parses Lattice Lock definition files (YAML) into structured objects.
+    
+    Attributes:
+        lattice_file (str): Path to the lattice definition file.
+        entities (List[EntityDefinition]): List of parsed entities.
+    """
     def __init__(self, lattice_file: str):
         self.lattice_file = lattice_file
         self.entities: List[EntityDefinition] = []
 
     def parse(self) -> List[EntityDefinition]:
+        """Parses the lattice file and returns a list of entities."""
         with open(self.lattice_file, 'r') as f:
             data = yaml.safe_load(f)
 
@@ -34,6 +44,7 @@ class LatticeParser:
         return self.entities
 
     def _parse_entity(self, name: str, definition: Dict[str, Any]) -> EntityDefinition:
+        """Parses a single entity definition."""
         ensures = []
         fields = definition.get('fields', {})
 
@@ -60,6 +71,7 @@ class LatticeParser:
         return EntityDefinition(name=name, fields=fields, ensures=ensures)
 
     def _extract_field_constraints(self, field_name: str, field_def: Dict[str, Any]) -> List[EnsuresClause]:
+        """Extracts implicit constraints from field definitions."""
         constraints = []
         
         # Numeric constraints
