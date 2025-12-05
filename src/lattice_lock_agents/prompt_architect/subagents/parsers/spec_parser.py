@@ -45,5 +45,58 @@ class MarkdownSpecParser(SpecParser):
         req_matches = re.finditer(r'^[\-\*]\s+(.+?(?:must|should).+?)$', content, re.MULTILINE | re.IGNORECASE)
         for match in req_matches:
             analysis.requirements.append(Requirement(description=match.group(1).strip()))
-            
+
         return analysis
+
+
+def get_parser_for_file(file_path: str) -> SpecParser:
+    """Get the appropriate parser for a file based on its extension.
+
+    Args:
+        file_path: Path to the specification file.
+
+    Returns:
+        An appropriate SpecParser instance for the file type.
+
+    Raises:
+        ValueError: If the file format is not supported.
+    """
+    path = Path(file_path)
+    suffix = path.suffix.lower()
+
+    parsers = {
+        '.md': MarkdownSpecParser(),
+        '.markdown': MarkdownSpecParser(),
+        '.yaml': YAMLSpecParser(),
+        '.yml': YAMLSpecParser(),
+        '.json': JSONSpecParser(),
+    }
+
+    parser = parsers.get(suffix)
+    if parser is None:
+        raise ValueError(f"Unsupported file format: {suffix}")
+
+    return parser
+
+
+def detect_parser(content: str) -> SpecParser:
+    """Detect the appropriate parser based on content.
+
+    Args:
+        content: The specification content to analyze.
+
+    Returns:
+        An appropriate SpecParser instance.
+    """
+    content_stripped = content.strip()
+
+    # Try JSON first
+    if content_stripped.startswith('{') or content_stripped.startswith('['):
+        return JSONSpecParser()
+
+    # Try YAML (if it has YAML-specific patterns)
+    if content_stripped.startswith('---') or ': ' in content_stripped.split('\n')[0]:
+        return YAMLSpecParser()
+
+    # Default to Markdown
+    return MarkdownSpecParser()

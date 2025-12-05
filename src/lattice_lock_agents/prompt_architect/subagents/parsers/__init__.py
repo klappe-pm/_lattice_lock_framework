@@ -10,6 +10,7 @@ from lattice_lock_agents.prompt_architect.subagents.parsers.spec_parser import (
     YAMLSpecParser,
     JSONSpecParser,
     get_parser_for_file,
+    detect_parser,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "YAMLSpecParser",
     "JSONSpecParser",
     "get_parser_for_file",
+    "detect_parser",
 ]
