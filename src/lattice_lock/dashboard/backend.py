@@ -1,73 +1,515 @@
+"""
+Lattice Lock Dashboard Backend
+
+FastAPI application providing dashboard endpoints for project monitoring,
+metrics visualization, and real-time updates via WebSocket.
+"""
+
 import asyncio
-from aiohttp import web
-import json
-from .aggregator import DataAggregator
+import logging
+import random
+import time
+from contextlib import asynccontextmanager
+from dataclasses import asdict
+from typing import Any, AsyncIterator, Dict, List, Optional
+
+from fastapi import FastAPI, WebSocket, APIRouter, Query, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+
+from .aggregator import DataAggregator, DashboardSummary
+from .metrics import MetricsSnapshot
 from .websocket import WebSocketManager
 
-class DashboardBackend:
-    def __init__(self):
-        self.aggregator = DataAggregator()
-        self.ws_manager = WebSocketManager()
-        self.app = web.Application()
-        self.setup_routes()
-        self.app.on_startup.append(self.start_background_tasks)
 
-    def setup_routes(self):
-        self.app.router.add_get('/dashboard/summary', self.handle_summary)
-        self.app.router.add_get('/dashboard/projects', self.handle_projects)
-        self.app.router.add_get('/dashboard/metrics', self.handle_metrics)
-        self.app.router.add_get('/dashboard/live', self.ws_manager.handle_connection)
+# Configure logging
+logger = logging.getLogger("lattice_lock.dashboard")
 
-    async def handle_summary(self, request):
-        data = self.aggregator.get_project_summary()
-        return web.json_response(data)
+# API version
+API_VERSION = "1.0.0"
 
-    async def handle_projects(self, request):
-        data = self.aggregator.get_all_projects()
-        return web.json_response(data)
+# Shared state (singleton instances)
+_aggregator: Optional[DataAggregator] = None
+_ws_manager: Optional[WebSocketManager] = None
+_background_task: Optional[asyncio.Task] = None
 
-    async def handle_metrics(self, request):
-        snapshot = self.aggregator.get_metrics()
-        # Convert dataclass to dict
-        data = {
-            "total_validations": snapshot.total_validations,
-            "success_rate": snapshot.success_rate,
-            "avg_response_time": snapshot.avg_response_time,
-            "error_counts": snapshot.error_counts,
-            "health_score": snapshot.health_score,
-            "timestamp": snapshot.timestamp
-        }
-        return web.json_response(data)
 
-    async def start_background_tasks(self, app):
-        app['mock_updater'] = asyncio.create_task(self.mock_data_updater())
+def get_aggregator() -> DataAggregator:
+    """Get the shared DataAggregator instance."""
+    global _aggregator
+    if _aggregator is None:
+        _aggregator = DataAggregator()
+    return _aggregator
 
-    async def mock_data_updater(self):
-        """Simulate real-time updates for demonstration."""
-        import random
-        projects = ["proj-alpha", "proj-beta", "proj-gamma"]
-        statuses = ["healthy", "valid", "error", "warning"]
-        
-        while True:
-            await asyncio.sleep(5)
-            # Pick a random project and update it
-            pid = random.choice(projects)
-            status = random.choice(statuses)
-            
-            self.aggregator.update_project_status(pid, status)
-            
-            # Broadcast update
-            update_msg = {
-                "type": "project_update",
+
+def get_ws_manager() -> WebSocketManager:
+    """Get the shared WebSocketManager instance."""
+    global _ws_manager
+    if _ws_manager is None:
+        _ws_manager = WebSocketManager()
+    return _ws_manager
+
+
+# Pydantic models for API responses
+class SummaryResponse(BaseModel):
+    """Dashboard summary response."""
+    total_projects: int = Field(description="Total number of registered projects")
+    healthy_projects: int = Field(description="Number of healthy projects")
+    at_risk_projects: int = Field(description="Number of at-risk projects")
+    error_projects: int = Field(description="Number of projects with errors")
+    avg_health_score: float = Field(description="Average health score across all projects")
+    total_validations: int = Field(description="Total validation count")
+    overall_success_rate: float = Field(description="Overall validation success rate")
+    last_update: float = Field(description="Timestamp of last update")
+
+
+class ProjectResponse(BaseModel):
+    """Project information response."""
+    id: str = Field(description="Project identifier")
+    name: str = Field(description="Project name")
+    status: str = Field(description="Current project status")
+    last_updated: float = Field(description="Last update timestamp")
+    health_score: int = Field(description="Project health score (0-100)")
+    error_count: int = Field(description="Total error count")
+    warning_count: int = Field(description="Total warning count")
+    validation_count: int = Field(description="Total validation count")
+    details: Dict[str, Any] = Field(default_factory=dict, description="Additional details")
+
+
+class MetricsResponse(BaseModel):
+    """Metrics data response."""
+    total_validations: int = Field(description="Total validation count")
+    success_rate: float = Field(description="Validation success rate (%)")
+    avg_response_time: float = Field(description="Average response time (seconds)")
+    error_counts: Dict[str, int] = Field(description="Error counts by type")
+    health_score: int = Field(description="Overall health score (0-100)")
+    timestamp: float = Field(description="Metrics timestamp")
+    response_time_p50: float = Field(description="50th percentile response time")
+    response_time_p95: float = Field(description="95th percentile response time")
+    response_time_p99: float = Field(description="99th percentile response time")
+    validations_per_minute: float = Field(description="Current validation rate")
+    error_rate: float = Field(description="Error rate (%)")
+
+
+class ProjectUpdateRequest(BaseModel):
+    """Request to update a project's status."""
+    status: str = Field(description="New status value")
+    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional details")
+    duration: float = Field(default=0.1, description="Operation duration for metrics")
+
+
+class ConnectionStatsResponse(BaseModel):
+    """WebSocket connection statistics response."""
+    total_connections: int = Field(description="Number of active WebSocket connections")
+    connections: List[Dict[str, Any]] = Field(description="Details of each connection")
+
+
+# Create the API router
+router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+
+
+@router.get(
+    "/summary",
+    response_model=SummaryResponse,
+    summary="Get Dashboard Summary",
+    description="Get an overall summary of all projects and system health.",
+)
+async def get_summary() -> SummaryResponse:
+    """
+    Get dashboard summary.
+
+    Returns aggregated statistics about all registered projects including
+    health scores, validation counts, and success rates.
+    """
+    aggregator = get_aggregator()
+    summary = aggregator.get_project_summary()
+
+    return SummaryResponse(
+        total_projects=summary.total_projects,
+        healthy_projects=summary.healthy_projects,
+        at_risk_projects=summary.at_risk_projects,
+        error_projects=summary.error_projects,
+        avg_health_score=summary.avg_health_score,
+        total_validations=summary.total_validations,
+        overall_success_rate=summary.overall_success_rate,
+        last_update=summary.last_update,
+    )
+
+
+@router.get(
+    "/projects",
+    response_model=List[ProjectResponse],
+    summary="List All Projects",
+    description="Get a list of all registered projects with their current status.",
+)
+async def get_projects() -> List[ProjectResponse]:
+    """
+    Get all projects.
+
+    Returns a list of all registered projects sorted by last update time
+    (most recent first).
+    """
+    aggregator = get_aggregator()
+    projects = aggregator.get_all_projects()
+
+    return [
+        ProjectResponse(
+            id=p["id"],
+            name=p["name"],
+            status=p["status"],
+            last_updated=p["last_updated"],
+            health_score=p["health_score"],
+            error_count=p["error_count"],
+            warning_count=p["warning_count"],
+            validation_count=p["validation_count"],
+            details=p["details"],
+        )
+        for p in projects
+    ]
+
+
+@router.get(
+    "/projects/{project_id}",
+    response_model=ProjectResponse,
+    summary="Get Project Details",
+    description="Get detailed information about a specific project.",
+    responses={
+        404: {"description": "Project not found"},
+    },
+)
+async def get_project(project_id: str) -> ProjectResponse:
+    """
+    Get a specific project.
+
+    Returns detailed information about a single project by ID.
+    """
+    aggregator = get_aggregator()
+    project = aggregator.get_project(project_id)
+
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project '{project_id}' not found",
+        )
+
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        status=project.status,
+        last_updated=project.last_updated,
+        health_score=project.health_score,
+        error_count=project.error_count,
+        warning_count=project.warning_count,
+        validation_count=project.validation_count,
+        details=project.details,
+    )
+
+
+@router.post(
+    "/projects/{project_id}",
+    response_model=ProjectResponse,
+    summary="Update Project Status",
+    description="Update the status of a specific project.",
+)
+async def update_project(
+    project_id: str,
+    request: ProjectUpdateRequest,
+) -> ProjectResponse:
+    """
+    Update a project's status.
+
+    Updates the status of a project and broadcasts the change to
+    all connected WebSocket clients.
+    """
+    aggregator = get_aggregator()
+    ws_manager = get_ws_manager()
+
+    project = aggregator.update_project_status(
+        project_id=project_id,
+        status=request.status,
+        details=request.details,
+        duration=request.duration,
+    )
+
+    # Broadcast update to WebSocket clients
+    await ws_manager.broadcast_event(
+        event_type="project_update",
+        data={
+            "project_id": project_id,
+            "status": request.status,
+            "health_score": project.health_score,
+        },
+        project_id=project_id,
+    )
+
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        status=project.status,
+        last_updated=project.last_updated,
+        health_score=project.health_score,
+        error_count=project.error_count,
+        warning_count=project.warning_count,
+        validation_count=project.validation_count,
+        details=project.details,
+    )
+
+
+@router.get(
+    "/metrics",
+    response_model=MetricsResponse,
+    summary="Get Metrics Data",
+    description="Get current validation metrics and statistics.",
+)
+async def get_metrics() -> MetricsResponse:
+    """
+    Get metrics data.
+
+    Returns current validation metrics including success rates,
+    response times, error counts, and health scores.
+    """
+    aggregator = get_aggregator()
+    snapshot = aggregator.get_metrics()
+
+    return MetricsResponse(
+        total_validations=snapshot.total_validations,
+        success_rate=snapshot.success_rate,
+        avg_response_time=snapshot.avg_response_time,
+        error_counts=snapshot.error_counts,
+        health_score=snapshot.health_score,
+        timestamp=snapshot.timestamp,
+        response_time_p50=snapshot.response_time_p50,
+        response_time_p95=snapshot.response_time_p95,
+        response_time_p99=snapshot.response_time_p99,
+        validations_per_minute=snapshot.validations_per_minute,
+        error_rate=snapshot.error_rate,
+    )
+
+
+@router.get(
+    "/connections",
+    response_model=ConnectionStatsResponse,
+    summary="Get WebSocket Connection Stats",
+    description="Get statistics about active WebSocket connections.",
+)
+async def get_connection_stats() -> ConnectionStatsResponse:
+    """
+    Get WebSocket connection statistics.
+
+    Returns information about all active WebSocket connections.
+    """
+    ws_manager = get_ws_manager()
+    stats = ws_manager.get_connection_stats()
+
+    return ConnectionStatsResponse(
+        total_connections=stats["total_connections"],
+        connections=stats["connections"],
+    )
+
+
+@router.websocket("/live")
+async def websocket_endpoint(websocket: WebSocket) -> None:
+    """
+    WebSocket endpoint for real-time updates.
+
+    Connect to receive real-time updates about project status changes,
+    metrics updates, and system events.
+
+    Message Types:
+    - `connected`: Sent on connection establishment
+    - `project_update`: Sent when a project's status changes
+    - `metrics_update`: Sent periodically with updated metrics
+    - `heartbeat`: Sent periodically to keep connection alive
+    """
+    ws_manager = get_ws_manager()
+    await ws_manager.handle_connection(websocket)
+
+
+# Background task for demo/mock data updates
+async def mock_data_updater() -> None:
+    """
+    Simulate real-time updates for demonstration.
+
+    This background task periodically updates project statuses
+    and broadcasts changes to connected WebSocket clients.
+    """
+    projects = ["proj-alpha", "proj-beta", "proj-gamma"]
+    statuses = ["healthy", "valid", "error", "warning"]
+
+    aggregator = get_aggregator()
+    ws_manager = get_ws_manager()
+
+    # Initialize demo projects
+    for pid in projects:
+        aggregator.register_project(pid, name=f"Demo Project {pid.split('-')[1].title()}")
+
+    while True:
+        await asyncio.sleep(5)
+
+        # Pick a random project and update it
+        pid = random.choice(projects)
+        new_status = random.choice(statuses)
+
+        project = aggregator.update_project_status(pid, new_status)
+
+        # Broadcast update
+        await ws_manager.broadcast_event(
+            event_type="project_update",
+            data={
                 "project_id": pid,
-                "status": status,
-                "metrics": self.aggregator.get_project_summary()
-            }
-            await self.ws_manager.broadcast(update_msg)
+                "status": new_status,
+                "health_score": project.health_score,
+                "summary": aggregator.get_project_summary().to_dict(),
+            },
+            project_id=pid,
+        )
 
-def create_app():
-    backend = DashboardBackend()
-    return backend.app
 
-if __name__ == '__main__':
-    web.run_app(create_app(), port=8080)
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan manager."""
+    global _background_task
+
+    logger.info("Starting Lattice Lock Dashboard Backend v%s", API_VERSION)
+
+    # Start background mock updater (for demo purposes)
+    # In production, remove this or make it configurable
+    _background_task = asyncio.create_task(mock_data_updater())
+
+    yield
+
+    # Shutdown
+    if _background_task:
+        _background_task.cancel()
+        try:
+            await _background_task
+        except asyncio.CancelledError:
+            pass
+
+    # Close WebSocket connections
+    ws_manager = get_ws_manager()
+    await ws_manager.close_all()
+
+    logger.info("Shutting down Lattice Lock Dashboard Backend")
+
+
+def create_app(
+    cors_origins: Optional[List[str]] = None,
+    debug: bool = False,
+    enable_mock_updates: bool = True,
+) -> FastAPI:
+    """
+    Create and configure the FastAPI application.
+
+    Args:
+        cors_origins: List of allowed CORS origins. Defaults to ["*"].
+        debug: Enable debug mode with additional logging.
+        enable_mock_updates: Enable mock data updates for demo.
+
+    Returns:
+        Configured FastAPI application instance.
+    """
+    app = FastAPI(
+        title="Lattice Lock Dashboard API",
+        description="""
+## Lattice Lock Dashboard API
+
+Real-time monitoring dashboard for Lattice Lock projects.
+
+### Features
+
+- **Project Monitoring**: View and track all registered projects
+- **Health Metrics**: Monitor validation success rates and health scores
+- **Real-Time Updates**: WebSocket support for live updates
+- **Performance Metrics**: Response time percentiles and error tracking
+
+### WebSocket Usage
+
+Connect to `/dashboard/live` to receive real-time updates:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8080/dashboard/live');
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Update:', data);
+};
+```
+        """,
+        version=API_VERSION,
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
+        lifespan=lifespan if enable_mock_updates else None,
+    )
+
+    # Configure CORS
+    if cors_origins is None:
+        cors_origins = ["*"]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Include dashboard routes
+    app.include_router(router)
+
+    # Root endpoint
+    @app.get("/", include_in_schema=False)
+    async def root() -> Dict[str, str]:
+        """Root endpoint."""
+        return {
+            "name": "Lattice Lock Dashboard API",
+            "version": API_VERSION,
+            "docs": "/docs",
+            "dashboard": "/dashboard/summary",
+        }
+
+    return app
+
+
+# Default application instance
+app = create_app()
+
+
+def run_server(
+    host: str = "127.0.0.1",
+    port: int = 8080,
+    reload: bool = False,
+    cors_origins: Optional[List[str]] = None,
+    debug: bool = False,
+) -> None:
+    """
+    Run the Dashboard API server.
+
+    Args:
+        host: Host to bind to (default: 127.0.0.1)
+        port: Port to listen on (default: 8080)
+        reload: Enable auto-reload for development
+        cors_origins: List of allowed CORS origins
+        debug: Enable debug mode
+    """
+    import uvicorn
+
+    global app
+    app = create_app(cors_origins=cors_origins, debug=debug)
+
+    log_level = "debug" if debug else "info"
+
+    logger.info("Starting Dashboard API server on %s:%d", host, port)
+
+    uvicorn.run(
+        "lattice_lock.dashboard.backend:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level=log_level,
+    )
+
+
+if __name__ == "__main__":
+    run_server()
