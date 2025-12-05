@@ -338,6 +338,219 @@ def cmd_regenerate(args) -> None:
     generate_markdown(state)
 
 
+def cmd_add_prompt(args) -> None:
+    """Add a newly generated prompt to state."""
+    state = load_state()
+    prompts = state["prompts"]
+
+    # Check if prompt ID already exists
+    for p in prompts:
+        if p["id"] == args.id:
+            print(json.dumps({
+                "status": "error",
+                "message": f"Prompt '{args.id}' already exists"
+            }, indent=2), file=sys.stderr)
+            sys.exit(1)
+
+    # Parse ID to extract phase and epic
+    parts = args.id.split(".")
+    if len(parts) < 2:
+        print(json.dumps({
+            "status": "error",
+            "message": f"Invalid prompt ID format: {args.id}. Expected X.X.X"
+        }, indent=2), file=sys.stderr)
+        sys.exit(1)
+
+    phase = parts[0]
+    epic = f"{parts[0]}.{parts[1]}"
+
+    # Create new prompt entry
+    new_prompt = {
+        "id": args.id,
+        "phase": phase,
+        "epic": epic,
+        "title": args.title,
+        "tool": args.tool,
+        "file": args.file,
+        "picked_up": False,
+        "done": False,
+        "merged": False,
+        "model_used": None,
+        "start_time": None,
+        "end_time": None,
+        "duration_minutes": None,
+        "pr_url": None
+    }
+
+    # Find the right position to insert (maintain order by ID)
+    insert_index = len(prompts)
+    for i, p in enumerate(prompts):
+        if _compare_ids(args.id, p["id"]) < 0:
+            insert_index = i
+            break
+
+    prompts.insert(insert_index, new_prompt)
+    state["metadata"]["total_prompts"] = len(prompts)
+
+    save_state(state)
+
+    print(json.dumps({
+        "status": "added",
+        "id": args.id,
+        "title": args.title,
+        "tool": args.tool,
+        "file": args.file
+    }, indent=2))
+
+
+def cmd_batch_add(args) -> None:
+    """Add multiple prompts at once from a JSON file."""
+    state = load_state()
+    prompts = state["prompts"]
+
+    # Read prompts from file
+    batch_file = Path(args.file)
+    if not batch_file.exists():
+        print(f"Error: Batch file not found at {batch_file}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(batch_file, "r") as f:
+        new_prompts = json.load(f)
+
+    if not isinstance(new_prompts, list):
+        print("Error: Batch file must contain a JSON array of prompts", file=sys.stderr)
+        sys.exit(1)
+
+    # Track existing IDs
+    existing_ids = {p["id"] for p in prompts}
+    added = []
+    skipped = []
+
+    for entry in new_prompts:
+        prompt_id = entry.get("id")
+        if not prompt_id:
+            skipped.append({"entry": entry, "reason": "missing id"})
+            continue
+
+        if prompt_id in existing_ids:
+            skipped.append({"id": prompt_id, "reason": "already exists"})
+            continue
+
+        # Parse ID to extract phase and epic
+        parts = prompt_id.split(".")
+        if len(parts) < 2:
+            skipped.append({"id": prompt_id, "reason": "invalid id format"})
+            continue
+
+        phase = parts[0]
+        epic = f"{parts[0]}.{parts[1]}"
+
+        new_prompt = {
+            "id": prompt_id,
+            "phase": phase,
+            "epic": epic,
+            "title": entry.get("title", "Untitled"),
+            "tool": entry.get("tool", "unknown"),
+            "file": entry.get("file", ""),
+            "picked_up": False,
+            "done": False,
+            "merged": False,
+            "model_used": None,
+            "start_time": None,
+            "end_time": None,
+            "duration_minutes": None,
+            "pr_url": None
+        }
+
+        prompts.append(new_prompt)
+        existing_ids.add(prompt_id)
+        added.append(prompt_id)
+
+    # Sort prompts by ID
+    prompts.sort(key=lambda p: [int(x) for x in p["id"].split(".")])
+    state["prompts"] = prompts
+    state["metadata"]["total_prompts"] = len(prompts)
+
+    save_state(state)
+
+    print(json.dumps({
+        "status": "batch_complete",
+        "added": added,
+        "added_count": len(added),
+        "skipped": skipped,
+        "skipped_count": len(skipped)
+    }, indent=2))
+
+
+def cmd_validate_state(args) -> None:
+    """Validate that state matches actual prompt files."""
+    state = load_state()
+    prompts = state["prompts"]
+
+    issues = []
+    valid = []
+
+    for p in prompts:
+        file_path = PROMPTS_DIR / p["file"]
+        if file_path.exists():
+            valid.append(p["id"])
+        else:
+            issues.append({
+                "id": p["id"],
+                "file": p["file"],
+                "issue": "file_not_found"
+            })
+
+    # Check for orphan files (files not in state)
+    if args.check_orphans:
+        tracked_files = {p["file"] for p in prompts}
+        for phase_dir in PROMPTS_DIR.iterdir():
+            if phase_dir.is_dir() and phase_dir.name.startswith("phase"):
+                for prompt_file in phase_dir.glob("*.md"):
+                    relative_path = f"{phase_dir.name}/{prompt_file.name}"
+                    if relative_path not in tracked_files:
+                        issues.append({
+                            "file": relative_path,
+                            "issue": "orphan_file"
+                        })
+
+    is_valid = len(issues) == 0
+
+    result = {
+        "status": "valid" if is_valid else "invalid",
+        "total_prompts": len(prompts),
+        "valid_count": len(valid),
+        "issue_count": len(issues)
+    }
+
+    if issues:
+        result["issues"] = issues
+
+    print(json.dumps(result, indent=2))
+
+    if not is_valid:
+        sys.exit(1)
+
+
+def _compare_ids(id1: str, id2: str) -> int:
+    """Compare two prompt IDs. Returns -1 if id1 < id2, 0 if equal, 1 if id1 > id2."""
+    parts1 = [int(x) for x in id1.split(".")]
+    parts2 = [int(x) for x in id2.split(".")]
+
+    for p1, p2 in zip(parts1, parts2):
+        if p1 < p2:
+            return -1
+        if p1 > p2:
+            return 1
+
+    if len(parts1) < len(parts2):
+        return -1
+    if len(parts1) > len(parts2):
+        return 1
+
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Lattice Lock Framework - Project Prompts Tracker",
@@ -377,7 +590,25 @@ Examples:
     
     # regenerate command
     subparsers.add_parser("regenerate", help="Regenerate markdown tracker from JSON")
-    
+
+    # add-prompt command
+    add_parser = subparsers.add_parser("add-prompt", help="Add a newly generated prompt to state")
+    add_parser.add_argument("--id", required=True, help="Prompt ID (e.g., 1.1.3)")
+    add_parser.add_argument("--title", required=True, help="Prompt title")
+    add_parser.add_argument("--tool", required=True,
+                           choices=["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"],
+                           help="Tool identifier")
+    add_parser.add_argument("--file", required=True, help="Relative file path within project_prompts/")
+
+    # batch-add command
+    batch_parser = subparsers.add_parser("batch-add", help="Add multiple prompts from a JSON file")
+    batch_parser.add_argument("--file", required=True, help="Path to JSON file containing prompts array")
+
+    # validate-state command
+    validate_parser = subparsers.add_parser("validate-state", help="Validate state matches actual files")
+    validate_parser.add_argument("--check-orphans", action="store_true",
+                                 help="Also check for orphan files not tracked in state")
+
     args = parser.parse_args()
     
     if args.command == "next":
@@ -390,6 +621,12 @@ Examples:
         cmd_status(args)
     elif args.command == "regenerate":
         cmd_regenerate(args)
+    elif args.command == "add-prompt":
+        cmd_add_prompt(args)
+    elif args.command == "batch-add":
+        cmd_batch_add(args)
+    elif args.command == "validate-state":
+        cmd_validate_state(args)
     else:
         parser.print_help()
         sys.exit(1)
