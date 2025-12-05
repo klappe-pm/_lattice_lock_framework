@@ -2,7 +2,12 @@ from typing import Dict, Optional, List
 from .types import TaskType, TaskRequirements, ModelCapabilities
 
 class TaskAnalyzer:
-    """Analyze prompts to determine task requirements"""
+    """
+    Analyzes prompts to determine task requirements and characteristics.
+    
+    Attributes:
+        task_keywords (Dict[TaskType, List[str]]): Keywords associated with each task type.
+    """
 
     def __init__(self):
         self.task_keywords = {
@@ -16,7 +21,15 @@ class TaskAnalyzer:
         }
 
     def analyze(self, prompt: str) -> TaskRequirements:
-        """Analyze prompt to determine task requirements"""
+        """
+        Analyzes a user prompt to extract task requirements.
+
+        Args:
+            prompt: The user's input prompt.
+
+        Returns:
+            TaskRequirements: The analyzed requirements including task type, context size, and priority.
+        """
         prompt_lower = prompt.lower()
 
         # Detect task type
@@ -55,10 +68,21 @@ class TaskAnalyzer:
         )
 
 class ModelScorer:
-    """Score models against task requirements"""
+    """
+    Scores models based on their capabilities and task requirements.
+    """
 
     def score(self, model: ModelCapabilities, requirements: TaskRequirements) -> float:
-        """Score model fitness for task requirements (0.0 to 1.0)"""
+        """
+        Calculates a fitness score for a model given the task requirements.
+
+        Args:
+            model: The model to score.
+            requirements: The requirements of the task.
+
+        Returns:
+            float: A score between 0.0 and 1.0, where higher is better.
+        """
         score = 0.0
 
         # Hard requirements (disqualifying if not met)

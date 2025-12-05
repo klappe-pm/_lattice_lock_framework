@@ -1,120 +1,73 @@
 # Orchestrator Module
 
-The `lattice_lock_orchestrator` module provides intelligent model routing and orchestration capabilities, allowing the framework to dynamically select the best AI model for a given task.
+The `lattice_lock_orchestrator` module provides intelligent model routing and orchestration capabilities. It analyzes user prompts and selects the best LLM based on task requirements, cost, and performance.
 
 ## Overview
 
-The Orchestrator analyzes prompts, determines task requirements (e.g., coding, reasoning, debugging), and routes the request to the most suitable model based on capabilities, cost, and performance. It supports multiple providers including OpenAI, Anthropic, Google, xAI, and local models.
+The orchestrator serves as the central brain for dispatching tasks to various AI models.
 
-## Classes
+## Modules
 
-### ModelOrchestrator
+### Core Orchestration (`core.py`)
 
-The main entry point for model interaction.
+The main orchestration logic.
 
-```python
-class ModelOrchestrator:
-    def __init__(self, guide_path: Optional[str] = None):
-        ...
+#### Classes
 
-    async def route_request(
-        self, 
-        prompt: str, 
-        model_id: Optional[str] = None, 
-        task_type: Optional[TaskType] = None,
-        **kwargs
-    ) -> APIResponse:
-        ...
+- `ModelOrchestrator`: The main orchestrator class.
+    - `__init__(guide_path: Optional[str] = None)`: Initializes the orchestrator.
+    - `route_request(prompt: str, model_id: Optional[str] = None, task_type: Optional[TaskType] = None, **kwargs) -> APIResponse`: Routes a request to the best model.
+    - `register_function(name: str, func: Callable)`: Registers a tool function for models to use.
 
-    def register_function(self, name: str, func: Callable):
-        ...
-```
+### Model Registry (`registry.py`)
 
-**Methods:**
+Manages the available models and their capabilities.
 
--   `route_request(...)`: Routes a prompt to the best model.
-    -   `prompt` (str): The user's input prompt.
-    -   `model_id` (Optional[str]): Force a specific model ID (e.g., "gpt-4-turbo").
-    -   `task_type` (Optional[TaskType]): Manually specify the task type.
-    -   `**kwargs`: Additional arguments passed to the underlying API client (e.g., `temperature`, `max_tokens`).
-    -   **Returns**: `APIResponse` object.
+#### Classes
 
--   `register_function(name: str, func: Callable)`: Registers a Python function for the model to call (Function Calling).
+- `ModelRegistry`: The registry of models.
+    - `get_model(model_id: str) -> Optional[ModelCapabilities]`: Gets a model by ID.
+    - `get_all_models() -> List[ModelCapabilities]`: Gets all registered models.
+    - `get_models_by_provider(provider: ModelProvider) -> List[ModelCapabilities]`: Gets models by provider.
 
-### APIResponse
+### Task Analysis & Scoring (`scorer.py`)
 
-Standardized response object returned by all model calls.
+Analyzes prompts and scores models.
 
-```python
-@dataclass
-class APIResponse:
-    content: str
-    model: str
-    provider: str
-    usage: Dict[str, int]
-    latency_ms: int
-    raw_response: Optional[Dict] = None
-    error: Optional[str] = None
-    function_call: Optional[FunctionCall] = None
-    function_call_result: Optional[Any] = None
-```
+#### Classes
 
-**Attributes:**
+- `TaskAnalyzer`: Analyzes prompts.
+    - `analyze(prompt: str) -> TaskRequirements`: Extracts requirements from a prompt.
+- `ModelScorer`: Scores models.
+    - `score(model: ModelCapabilities, requirements: TaskRequirements) -> float`: Calculates a fitness score (0.0 - 1.0).
 
--   `content` (str): The text response from the model.
--   `model` (str): The ID of the model that generated the response.
--   `provider` (str): The provider name (e.g., "openai", "anthropic").
--   `usage` (Dict[str, int]): Token usage statistics (`input_tokens`, `output_tokens`).
--   `latency_ms` (int): Request latency in milliseconds.
--   `function_call` (Optional[FunctionCall]): Details of a function call if the model requested one.
+### Guide (`guide.py`)
 
-### TaskType
+Parses external configuration (e.g., `MODELS.md`) for routing rules.
 
-Enum defining the types of tasks the orchestrator can identify.
+#### Classes
 
-```python
-class TaskType(Enum):
-    CODE_GENERATION = auto()
-    DEBUGGING = auto()
-    ARCHITECTURAL_DESIGN = auto()
-    DOCUMENTATION = auto()
-    TESTING = auto()
-    DATA_ANALYSIS = auto()
-    GENERAL = auto()
-    REASONING = auto()
-```
+- `ModelGuideParser`: Parses the guide file.
+    - `get_recommended_models(task_type: str) -> List[str]`: Gets recommended models for a task.
+    - `get_fallback_chain(task_type: str) -> List[str]`: Gets fallback model chain.
+    - `is_model_blocked(model_id: str) -> bool`: Checks if a model is blocked.
 
-## Usage Example
-
-### Basic Routing
+## Usage Examples
 
 ```python
 import asyncio
-from lattice_lock_orchestrator import ModelOrchestrator
+from lattice_lock_orchestrator.core import ModelOrchestrator
 
 async def main():
     orchestrator = ModelOrchestrator()
     
-    response = await orchestrator.route_request(
-        prompt="Write a Python function to calculate the Fibonacci sequence."
-    )
-    
-    print(f"Model used: {response.model}")
-    print(f"Response: {response.content}")
+    # Simple routing
+    response = await orchestrator.route_request("Write a Python script to sort a list")
+    print(f"Response from {response.model_id}: {response.content}")
+
+    # Force specific model
+    response = await orchestrator.route_request("Hello", model_id="gpt-4o")
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
-
-### Function Calling
-
-```python
-async def get_weather(location: str):
-    return {"temp": 72, "condition": "Sunny"}
-
-orchestrator.register_function("get_weather", get_weather)
-
-response = await orchestrator.route_request(
-    prompt="What's the weather in San Francisco?"
-)
 ```
