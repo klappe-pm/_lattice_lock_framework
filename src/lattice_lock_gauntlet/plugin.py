@@ -5,6 +5,17 @@ from typing import Dict, List, Any, Optional
 import pytest
 
 class GauntletPlugin:
+    """
+    Pytest plugin for Gauntlet reporting.
+    
+    Collects test results and generates JSON and GitHub Summary reports.
+    
+    Attributes:
+        json_report (bool): Whether to generate a JSON report.
+        github_report (bool): Whether to generate a GitHub Summary.
+        results (List[Dict]): List of test results.
+        start_time (float): Session start time.
+    """
     def __init__(self, json_report: bool = False, github_report: bool = False):
         # Allow configuration via init args OR environment variables
         self.json_report = json_report or os.environ.get("GAUNTLET_JSON_REPORT") == "true"
@@ -13,9 +24,11 @@ class GauntletPlugin:
         self.start_time = 0.0
 
     def pytest_sessionstart(self, session):
+        """Hook called at the start of the session."""
         self.start_time = time.time()
 
     def pytest_runtest_logreport(self, report):
+        """Hook called for each test report."""
         if report.when == "call":
             # Collect result for JSON report
             result = {
@@ -43,6 +56,7 @@ class GauntletPlugin:
                 print(f"::error file={fpath},line={lineno+1}::Test failed: {domain}%0A{message}")
 
     def pytest_sessionfinish(self, session, exitstatus):
+        """Hook called at the end of the session to generate reports."""
         duration = time.time() - self.start_time
         
         if self.json_report:

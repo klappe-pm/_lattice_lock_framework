@@ -1,111 +1,97 @@
 # Admin Module
 
-The `lattice_lock.admin` module provides the backend for the Lattice Lock Admin Dashboard and CLI management tools. It exposes a REST API for project monitoring, health checks, and rollback operations.
+The `lattice_lock.admin` module provides the backend API for monitoring and managing Lattice Lock projects. It includes a FastAPI application, authentication, and data models for project status and errors.
 
 ## Overview
 
-This module is built with FastAPI and provides a comprehensive set of endpoints to manage the lifecycle of Lattice Lock projects. It handles project registration, error tracking, and validation status updates.
+The Admin API exposes endpoints for project registration, health monitoring, error tracking, and rollback management.
 
-## Application
+## Modules
 
-### create_app
+### API Application (`api.py`)
 
-Creates and configures the FastAPI application.
+Configures and runs the FastAPI application.
 
-```python
-def create_app(
-    cors_origins: list[str] | None = None,
-    debug: bool = False,
-) -> FastAPI:
-    ...
-```
+#### Functions
 
-**Arguments:**
+- `create_app(cors_origins: list[str] | None = None, debug: bool = False) -> FastAPI`: Creates the FastAPI app.
+- `run_server(host: str, port: int, reload: bool, cors_origins: list[str] | None, debug: bool)`: Runs the API server.
 
--   `cors_origins` (list[str] | None): List of allowed CORS origins. Defaults to `["*"]`.
--   `debug` (bool): Enable debug mode with verbose logging.
+### Authentication (`auth.py`)
 
-### run_server
+Handles user authentication and authorization.
 
-Runs the Admin API server using Uvicorn.
+#### Classes
 
-```python
-def run_server(
-    host: str = "127.0.0.1",
-    port: int = 8080,
-    reload: bool = False,
-    cors_origins: list[str] | None = None,
-    debug: bool = False,
-) -> None:
-    ...
-```
+- `Role(Enum)`: User roles (ADMIN, OPERATOR, VIEWER).
+- `User(BaseModel)`: User model.
+- `TokenData(BaseModel)`: JWT token payload.
 
-## Data Models
+#### Functions
 
-### Project
+- `create_access_token(username: str, role: Role, expires_delta: timedelta | None) -> str`: Creates a JWT access token.
+- `verify_token(token: str) -> TokenData`: Verifies a JWT token.
+- `get_current_user(token: str) -> TokenData`: Dependency to get the current user.
+- `require_roles(*allowed_roles: Role)`: Dependency to enforce role-based access.
 
-Represents a registered Lattice Lock project.
+### Routes (`routes.py`)
 
-```python
-@dataclass
-class Project:
-    id: str
-    name: str
-    path: str
-    status: ProjectStatus
-    registered_at: float
-    last_activity: float
-    validation: ProjectValidation
-    errors: list[ProjectError]
-    rollback_checkpoints: list[RollbackInfo]
-    metadata: dict[str, Any]
-```
+Defines the API endpoints.
 
-### ProjectStatus
+#### Endpoints
 
-Enum representing the health status of a project.
+- `GET /api/v1/health`: API health check.
+- `GET /api/v1/projects`: List all projects.
+- `POST /api/v1/projects`: Register a new project.
+- `GET /api/v1/projects/{project_id}/status`: Get project status.
+- `GET /api/v1/projects/{project_id}/errors`: Get project errors.
+- `POST /api/v1/projects/{project_id}/rollback`: Trigger a rollback.
 
--   `HEALTHY`: Project is valid and error-free.
--   `WARNING`: Non-critical issues detected (e.g., Gauntlet failures).
--   `ERROR`: Critical issues detected (e.g., Schema or Sheriff failures).
--   `UNKNOWN`: Status cannot be determined.
+### Models (`models.py`)
 
-## API Endpoints
+Internal data models for the application.
 
-The Admin API exposes the following endpoints (prefix: `/api/v1`):
+#### Classes
 
-### Health & Monitoring
+- `Project`: Represents a registered project.
+- `ProjectError`: Represents an error in a project.
+- `ProjectStatus(Enum)`: Status of a project (HEALTHY, WARNING, ERROR).
+- `ProjectStore`: Thread-safe in-memory store for projects.
 
--   `GET /health`: Check API health status.
--   `GET /projects`: List all registered projects.
--   `GET /projects/{id}/status`: Get detailed status for a specific project.
--   `GET /projects/{id}/errors`: Get recent errors for a project.
+### Schemas (`schemas.py`)
 
-### Management
+Pydantic schemas for API requests and responses.
 
--   `POST /projects`: Register a new project.
--   `POST /projects/{id}/rollback`: Trigger a rollback to a previous checkpoint.
--   `GET /projects/{id}/rollback/checkpoints`: List available rollback checkpoints.
+#### Classes
 
-## Usage Example
+- `ProjectSummary`: Summary of a project.
+- `ProjectStatusResponse`: Detailed project status.
+- `ErrorDetail`: Details of an error.
+- `RollbackRequest`: Request body for rollback.
+- `RollbackResponse`: Response for rollback.
 
-### Starting the Server
+## Usage Examples
+
+### Running the Server
 
 ```python
-from lattice_lock.admin import run_server
+from lattice_lock.admin.api import run_server
 
 if __name__ == "__main__":
-    run_server(port=8000, debug=True)
+    run_server(host="0.0.0.0", port=8000, debug=True)
 ```
 
-### interacting with the Store (Internal)
+### Registering a Project (Client Side)
 
 ```python
-from lattice_lock.admin.models import get_project_store
+import requests
 
-store = get_project_store()
-projects = store.list_projects()
-
-for project in projects:
-    print(f"{project.name}: {project.status}")
+response = requests.post(
+    "http://localhost:8000/api/v1/projects",
+    json={
+        "name": "My Project",
+        "path": "/path/to/project"
+    }
+)
+print(response.json())
 ```

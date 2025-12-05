@@ -1,109 +1,64 @@
 # Gauntlet Module
 
-The `lattice_lock_gauntlet` module provides automated test generation and execution capabilities based on the `lattice.yaml` schema.
+The `lattice_lock_gauntlet` module provides test generation and execution capabilities for the Lattice Lock Framework. It translates Lattice Lock definitions into executable pytest contracts.
 
 ## Overview
 
-Gauntlet translates the constraints and "ensures" clauses defined in your Lattice schema into executable pytest contracts. It also includes a pytest plugin for reporting results.
+Gauntlet ensures that the implementation matches the constraints defined in the Lattice Lock schema.
 
-## Classes
+## Modules
 
-### GauntletGenerator
+### Test Generator (`generator.py`)
 
-Responsible for generating Python test files from the Lattice schema.
+Generates pytest files from parsed Lattice definitions.
 
-```python
-class GauntletGenerator:
-    def __init__(self, lattice_file: str, output_dir: str):
-        ...
-    
-    def generate(self):
-        ...
-```
+#### Classes
 
-**Methods:**
+- `GauntletGenerator`: Main generator class.
+    - `__init__(lattice_file: str, output_dir: str)`: Initializes the generator.
+    - `generate()`: Generates test files for all entities in the lattice file.
 
--   `__init__(lattice_file: str, output_dir: str)`: Initializes the generator.
-    -   `lattice_file`: Path to the `lattice.yaml` file.
-    -   `output_dir`: Directory where generated tests will be saved.
--   `generate()`: Parses the schema and writes test files to the output directory.
+### Parser (`parser.py`)
 
-### LatticeParser
+Parses Lattice Lock YAML definitions into internal data structures.
 
-Parses `lattice.yaml` into internal entity definitions.
+#### Classes
 
-```python
-class LatticeParser:
-    def __init__(self, lattice_file: str):
-        ...
+- `LatticeParser`: Parses the YAML file.
+    - `parse() -> List[EntityDefinition]`: Returns a list of parsed entities.
+- `EntityDefinition`: Data class for an entity.
+- `EnsuresClause`: Data class for a validation rule.
 
-    def parse(self) -> List[EntityDefinition]:
-        ...
-```
+### Pytest Plugin (`plugin.py`)
 
-**Methods:**
+A pytest plugin to collect results and generate reports (JSON, GitHub Summary).
 
--   `parse() -> List[EntityDefinition]`: Returns a list of parsed entities with their fields and constraints.
+#### Classes
 
-### EntityDefinition
+- `GauntletPlugin`: The pytest plugin.
+    - `pytest_sessionstart(session)`: Records start time.
+    - `pytest_runtest_logreport(report)`: Collects test results.
+    - `pytest_sessionfinish(session, exitstatus)`: Generates reports.
 
-Data class representing a parsed entity.
-
-```python
-@dataclass
-class EntityDefinition:
-    name: str
-    fields: Dict[str, Any]
-    ensures: List[EnsuresClause]
-```
-
-### EnsuresClause
-
-Data class representing a validation rule or constraint.
-
-```python
-@dataclass
-class EnsuresClause:
-    name: str
-    field: str
-    constraint: str
-    value: Any
-    description: str
-```
-
-### GauntletPlugin
-
-A pytest plugin for enhanced reporting (JSON, GitHub Actions).
-
-```python
-class GauntletPlugin:
-    def __init__(self, json_report: bool = False, github_report: bool = False):
-        ...
-```
-
-**Configuration:**
-
--   `json_report` (bool): Enable JSON report generation (default: `False`, or via `GAUNTLET_JSON_REPORT` env var).
--   `github_report` (bool): Enable GitHub Actions summary and annotations (default: `False`, or via `GAUNTLET_GITHUB_REPORT` env var).
-
-## Usage Example
+## Usage Examples
 
 ### Generating Tests
 
 ```python
-from lattice_lock_gauntlet import GauntletGenerator
+from lattice_lock_gauntlet.generator import GauntletGenerator
 
-generator = GauntletGenerator(
-    lattice_file="lattice.yaml",
-    output_dir="tests/gauntlet"
-)
+# Generate tests from lattice.yaml to tests/generated
+generator = GauntletGenerator("lattice.yaml", "tests/generated")
 generator.generate()
 ```
 
-### Running Tests
+### Running Tests with Plugin
 
-Gauntlet tests are standard pytest files. You can run them using the CLI or programmatically.
+```python
+import pytest
+from lattice_lock_gauntlet.plugin import GauntletPlugin
 
-```bash
-pytest tests/gauntlet
+# Run pytest with the Gauntlet plugin
+plugin = GauntletPlugin(json_report=True)
+pytest.main(["tests/generated"], plugins=[plugin])
 ```
