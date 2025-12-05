@@ -5,30 +5,51 @@ from typing import List, Optional, Dict, Any
 
 @dataclass
 class ValidationError:
+    """Represents a validation error."""
     message: str
     line_number: Optional[int] = None
     field_path: Optional[str] = None
 
 @dataclass
 class ValidationWarning:
+    """Represents a validation warning."""
     message: str
     line_number: Optional[int] = None
     field_path: Optional[str] = None
 
 @dataclass
 class ValidationResult:
+    """
+    Container for validation results.
+    
+    Attributes:
+        valid (bool): Whether the validation passed.
+        errors (List[ValidationError]): List of validation errors.
+        warnings (List[ValidationWarning]): List of validation warnings.
+    """
     valid: bool = True
     errors: List[ValidationError] = field(default_factory=list)
     warnings: List[ValidationWarning] = field(default_factory=list)
 
     def add_error(self, message: str, line_number: Optional[int] = None, field_path: Optional[str] = None):
+        """Adds an error to the result."""
         self.valid = False
         self.errors.append(ValidationError(message, line_number, field_path))
 
     def add_warning(self, message: str, line_number: Optional[int] = None, field_path: Optional[str] = None):
+        """Adds a warning to the result."""
         self.warnings.append(ValidationWarning(message, line_number, field_path))
 
 def validate_lattice_schema(file_path: str) -> ValidationResult:
+    """
+    Validates a Lattice Lock schema definition file.
+
+    Args:
+        file_path: Path to the schema file (YAML).
+
+    Returns:
+        ValidationResult: The result of the validation.
+    """
     result = ValidationResult()
     
     try:
@@ -80,6 +101,7 @@ def validate_lattice_schema(file_path: str) -> ValidationResult:
     return result
 
 def _validate_entity(entity_name: str, entity_def: Any, result: ValidationResult):
+    """Validates a single entity definition."""
     if not isinstance(entity_def, dict):
         result.add_error(f"Definition for entity '{entity_name}' must be a dictionary", field_path=f"entities.{entity_name}")
         return
@@ -96,6 +118,7 @@ def _validate_entity(entity_name: str, entity_def: Any, result: ValidationResult
         _validate_field(entity_name, field_name, field_def, result)
 
 def _validate_field(entity_name: str, field_name: str, field_def: Any, result: ValidationResult):
+    """Validates a single field definition."""
     path = f"entities.{entity_name}.fields.{field_name}"
     
     if not isinstance(field_def, dict):
@@ -144,6 +167,7 @@ def _validate_field(entity_name: str, field_name: str, field_def: Any, result: V
                  result.add_error(f"Numeric constraints used on non-numeric field '{field_name}'", field_path=path)
 
 def _validate_interface(interface_name: str, interface_def: Any, defined_entities: set, result: ValidationResult):
+    """Validates an interface definition."""
     if not isinstance(interface_def, dict):
         return # Basic structural error would be caught elsewhere or ignored here
 

@@ -3,6 +3,16 @@ from typing import List, Optional
 from .schema import ValidationResult
 
 def validate_env_file(file_path: str, required_vars: Optional[List[str]] = None) -> ValidationResult:
+    """
+    Validates an environment variable file (.env).
+
+    Args:
+        file_path: Path to the .env file.
+        required_vars: List of required environment variable names.
+
+    Returns:
+        ValidationResult: The result of the validation.
+    """
     if required_vars is None:
         required_vars = ['ORCHESTRATOR_STRATEGY', 'LOG_LEVEL']
 
