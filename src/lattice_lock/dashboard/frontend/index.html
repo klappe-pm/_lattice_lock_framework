@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lattice Lock Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Lattice Lock Admin</h1>
+            <div class="header-controls">
+                <span id="connection-status" class="status-indicator disconnected">Disconnected</span>
+                <button id="refresh-btn" class="btn">Refresh Data</button>
+            </div>
+        </header>
+        
+        <div class="dashboard-content">
+            <aside class="sidebar">
+                <nav>
+                    <ul>
+                        <li><a href="#overview" class="active">Overview</a></li>
+                        <li><a href="#projects">Projects</a></li>
+                        <li><a href="#metrics">Metrics</a></li>
+                        <li><a href="#alerts">Alerts</a></li>
+                    </ul>
+                </nav>
+                <div class="sidebar-actions">
+                    <button id="trigger-rollback-btn" class="btn btn-danger">Trigger Rollback</button>
+                </div>
+            </aside>
+            
+            <main class="main-view">
+                <section id="overview-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Projects</h3>
+                            <div id="total-projects-count" class="stat-value">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>System Health</h3>
+                            <div id="system-health-score" class="stat-value">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Alerts</h3>
+                            <div id="active-alerts-count" class="stat-value">-</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="projects-section" class="dashboard-section">
+                    <h2>Projects</h2>
+                    <div id="project-list" class="project-grid">
+                        <!-- Project cards will be injected here -->
+                    </div>
+                </section>
+
+                <section id="metrics-section" class="dashboard-section">
+                    <h2>System Metrics</h2>
+                    <div class="chart-container">
+                        <canvas id="metrics-chart"></canvas>
+                    </div>
+                </section>
+
+                <section id="alerts-section" class="dashboard-section">
+                    <h2>Recent Alerts</h2>
+                    <div id="alert-list" class="alert-list-container">
+                        <!-- Alerts will be injected here -->
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

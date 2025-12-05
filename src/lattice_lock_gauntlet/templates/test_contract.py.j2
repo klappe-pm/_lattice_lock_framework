@@ -1,6 +1,6 @@
 import pytest
 from decimal import Decimal
-from typing import Any
+from typing import Any, Dict
 
 # Generated Test Contract for {{ entity_name }}
 
@@ -11,14 +11,16 @@ class Test{{ entity_name }}Contract:
     """
 
     @pytest.fixture
-    def instance(self):
+    def instance(self) -> Dict[str, Any]:
         """
         Fixture to provide an instance of {{ entity_name }}.
-        In a real scenario, this would load from a factory or mock.
-        For now, we assume a dictionary or object is passed.
+        Override this fixture in a conftest.py or subclass to provide real data.
         """
-        # TODO: Integrate with a factory or data loader
-        return {}
+        return {
+            {% for field, constraints in fields.items() %}
+            "{{ field }}": {{ constraints.example_value if constraints.example_value is defined else "None" }},
+            {% endfor %}
+        }
 
     {% for test in tests %}
     def test_{{ test.name }}(self, instance: Any):
@@ -26,7 +28,7 @@ class Test{{ entity_name }}Contract:
         {{ test.description }}
         Constraint: {{ test.constraint }}
         """
-        # Field value extraction (assuming dict or object access)
+        # Field value extraction
         value = instance.get("{{ test.field }}") if isinstance(instance, dict) else getattr(instance, "{{ test.field }}", None)
         
         # Skip if value is missing (unless checking for required)
@@ -35,4 +37,16 @@ class Test{{ entity_name }}Contract:
 
         # Assertion
         {{ test.assertion }}
+    {% endfor %}
+
+    # Boundary Tests
+    {% for test in boundary_tests %}
+    def test_boundary_{{ test.name }}(self):
+        """
+        Boundary test for {{ test.field }}.
+        {{ test.description }}
+        """
+        # This test requires a way to instantiate the object with specific values.
+        # Since we don't have a factory, we will skip or use a placeholder.
+        pytest.skip("Boundary testing requires a factory implementation.")
     {% endfor %}

@@ -37,9 +37,31 @@ class GauntletGenerator:
                 "assertion": assertion
             })
 
+        # Generate boundary tests (placeholders for now)
+        boundary_tests = []
+        for clause in entity.ensures:
+            if clause.constraint in ['gt', 'lt', 'gte', 'lte']:
+                 boundary_tests.append({
+                     "name": clause.name,
+                     "field": clause.field,
+                     "description": f"Verify boundary for {clause.constraint} {clause.value}"
+                 })
+
+        # Enrich fields with example values for the fixture
+        fields_data = {}
+        for fname, fdef in entity.fields.items():
+            example = "None"
+            if 'gt' in fdef: example = str(fdef['gt'] + 1)
+            elif 'gte' in fdef: example = str(fdef['gte'])
+            elif 'lt' in fdef: example = str(fdef['lt'] - 1)
+            elif 'lte' in fdef: example = str(fdef['lte'])
+            fields_data[fname] = {"example_value": example}
+
         return template.render(
             entity_name=entity.name,
-            tests=tests
+            tests=tests,
+            boundary_tests=boundary_tests,
+            fields=fields_data
         )
 
     def _build_assertion(self, clause: EnsuresClause) -> str:
