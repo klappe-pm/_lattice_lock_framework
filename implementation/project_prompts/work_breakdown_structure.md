@@ -78,7 +78,25 @@ The Lattice Lock Framework is a governance-first framework for AI-assisted softw
 | 5.3 | Prompt Generation Engine | Devin AI |
 | 5.4 | Tracker Integration | Claude Code App |
 
-## Tool Ownership Matrix (v2 - Updated December 2025)
+### Phase 6: Core Stabilization & Governance (Priority)
+
+**Exit Criteria:**
+- CLI runs without AttributeError on model capabilities
+- Governance core loop works end-to-end (lattice.yaml → compile → tests)
+- Model registry loads from configuration file
+- Cost tracking and consensus features functional
+- All tests pass without collection errors
+
+| Epic | Description | Owner Tools |
+|------|-------------|-------------|
+| 6.1 | Breaking Issues / Orchestrator Contract Hardening | Gemini Antimatter (design), Devin AI (impl) |
+| 6.2 | Governance Core Loop | Gemini Antimatter (design), Devin AI (impl) |
+| 6.3 | Orchestrator Feature Completeness | Gemini Antimatter (design), Devin AI (impl) |
+| 6.4 | Engineering Framework & Tooling | Gemini Antimatter (design), Devin AI (impl) |
+
+**Priority:** This phase should be executed before continuing with Phases 2-5 as it fixes critical issues blocking normal operation.
+
+## Tool Ownership Matrix(v2 - Updated December 2025)
 
 **Note:** Gemini CLI and Codex CLI have been retired. All assignments have been redistributed to Devin AI and Claude Code.
 
@@ -122,3 +140,14 @@ Example: `1.1.1_devin.md` = Phase 1, Epic 1.1, Task 1, assigned to Devin AI
 - Epic 5.2 (Specification Analysis) depends on 5.1 (Core Agent)
 - Epic 5.3 (Prompt Generation) depends on 5.1 and 5.2
 - Epic 5.4 (Tracker Integration) depends on 5.3
+
+### Phase 6 Dependencies (Priority - Execute First)
+- Phase 6 should be executed before continuing with incomplete Phases 2-5
+- Epic 6.1 (Breaking Issues) - No dependencies, start first
+- Epic 6.2 (Governance Core) - Can run parallel with 6.1
+- Epic 6.3 (Orchestrator Features) - Depends on 6.1 completion
+- Epic 6.4 (Engineering Framework) - Depends on 6.1 and 6.2 completion
+
+Within each epic:
+- Gemini Antimatter tasks (design) run first
+- Devin AI tasks (implementation) depend on corresponding design tasks
