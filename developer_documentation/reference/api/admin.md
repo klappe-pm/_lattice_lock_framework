@@ -1,97 +1,54 @@
-# Admin Module
+# Admin API
 
-The `lattice_lock.admin` module provides the backend API for monitoring and managing Lattice Lock projects. It includes a FastAPI application, authentication, and data models for project status and errors.
+The `lattice_lock.admin` module provides the backend for the Lattice Lock Dashboard and administrative tools.
 
 ## Overview
 
-The Admin API exposes endpoints for project registration, health monitoring, error tracking, and rollback management.
+This module exposes a FastAPI application that serves as the control plane for Lattice Lock projects.
 
-## Modules
+## Functions
 
-### API Application (`api.py`)
+### `create_app`
 
-Configures and runs the FastAPI application.
+```python
+def create_app(cors_origins: list[str] | None = None, debug: bool = False) -> FastAPI:
+```
 
-#### Functions
+Create and configure the FastAPI application.
 
-- `create_app(cors_origins: list[str] | None = None, debug: bool = False) -> FastAPI`: Creates the FastAPI app.
-- `run_server(host: str, port: int, reload: bool, cors_origins: list[str] | None, debug: bool)`: Runs the API server.
+**Arguments:**
+- `cors_origins` (list[str] | None): List of allowed CORS origins.
+- `debug` (bool): Enable debug mode.
 
-### Authentication (`auth.py`)
+**Returns:**
+- `FastAPI`: Configured application instance.
 
-Handles user authentication and authorization.
+### `run_server`
 
-#### Classes
+```python
+def run_server(
+    host: str = "127.0.0.1",
+    port: int = 8080,
+    reload: bool = False,
+    cors_origins: list[str] | None = None,
+    debug: bool = False,
+) -> None:
+```
 
-- `Role(Enum)`: User roles (ADMIN, OPERATOR, VIEWER).
-- `User(BaseModel)`: User model.
-- `TokenData(BaseModel)`: JWT token payload.
+Run the Admin API server using Uvicorn.
 
-#### Functions
+**Arguments:**
+- `host` (str): Host to bind to.
+- `port` (int): Port to listen on.
+- `reload` (bool): Enable auto-reload.
+- `cors_origins` (list[str] | None): CORS origins.
+- `debug` (bool): Debug mode.
 
-- `create_access_token(username: str, role: Role, expires_delta: timedelta | None) -> str`: Creates a JWT access token.
-- `verify_token(token: str) -> TokenData`: Verifies a JWT token.
-- `get_current_user(token: str) -> TokenData`: Dependency to get the current user.
-- `require_roles(*allowed_roles: Role)`: Dependency to enforce role-based access.
-
-### Routes (`routes.py`)
-
-Defines the API endpoints.
-
-#### Endpoints
-
-- `GET /api/v1/health`: API health check.
-- `GET /api/v1/projects`: List all projects.
-- `POST /api/v1/projects`: Register a new project.
-- `GET /api/v1/projects/{project_id}/status`: Get project status.
-- `GET /api/v1/projects/{project_id}/errors`: Get project errors.
-- `POST /api/v1/projects/{project_id}/rollback`: Trigger a rollback.
-
-### Models (`models.py`)
-
-Internal data models for the application.
-
-#### Classes
-
-- `Project`: Represents a registered project.
-- `ProjectError`: Represents an error in a project.
-- `ProjectStatus(Enum)`: Status of a project (HEALTHY, WARNING, ERROR).
-- `ProjectStore`: Thread-safe in-memory store for projects.
-
-### Schemas (`schemas.py`)
-
-Pydantic schemas for API requests and responses.
-
-#### Classes
-
-- `ProjectSummary`: Summary of a project.
-- `ProjectStatusResponse`: Detailed project status.
-- `ErrorDetail`: Details of an error.
-- `RollbackRequest`: Request body for rollback.
-- `RollbackResponse`: Response for rollback.
-
-## Usage Examples
-
-### Running the Server
+## Usage Example
 
 ```python
 from lattice_lock.admin.api import run_server
 
 if __name__ == "__main__":
-    run_server(host="0.0.0.0", port=8000, debug=True)
-```
-
-### Registering a Project (Client Side)
-
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/api/v1/projects",
-    json={
-        "name": "My Project",
-        "path": "/path/to/project"
-    }
-)
-print(response.json())
+    run_server(port=9000, debug=True)
 ```

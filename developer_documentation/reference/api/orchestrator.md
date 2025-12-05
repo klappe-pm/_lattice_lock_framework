@@ -1,72 +1,69 @@
-# Orchestrator Module
+# Orchestrator API
 
-The `lattice_lock_orchestrator` module provides intelligent model routing and orchestration capabilities. It analyzes user prompts and selects the best LLM based on task requirements, cost, and performance.
+The `lattice_lock.orchestrator` module manages LLM interactions, routing requests to the most appropriate model based on task requirements.
 
 ## Overview
 
-The orchestrator serves as the central brain for dispatching tasks to various AI models.
+The Orchestrator analyzes prompts, scores available models, and routes requests. It handles fallback logic and function calling.
 
-## Modules
+## Classes
 
-### Core Orchestration (`core.py`)
+### `ModelOrchestrator`
 
-The main orchestration logic.
+Intelligent model orchestration system.
 
-#### Classes
+```python
+class ModelOrchestrator:
+    def __init__(self, guide_path: Optional[str] = None): ...
+```
 
-- `ModelOrchestrator`: The main orchestrator class.
-    - `__init__(guide_path: Optional[str] = None)`: Initializes the orchestrator.
-    - `route_request(prompt: str, model_id: Optional[str] = None, task_type: Optional[TaskType] = None, **kwargs) -> APIResponse`: Routes a request to the best model.
-    - `register_function(name: str, func: Callable)`: Registers a tool function for models to use.
+**Methods:**
 
-### Model Registry (`registry.py`)
+#### `route_request`
 
-Manages the available models and their capabilities.
+```python
+async def route_request(
+    self, 
+    prompt: str, 
+    model_id: Optional[str] = None, 
+    task_type: Optional[TaskType] = None, 
+    **kwargs
+) -> APIResponse:
+```
 
-#### Classes
+Route a request to the appropriate model.
 
-- `ModelRegistry`: The registry of models.
-    - `get_model(model_id: str) -> Optional[ModelCapabilities]`: Gets a model by ID.
-    - `get_all_models() -> List[ModelCapabilities]`: Gets all registered models.
-    - `get_models_by_provider(provider: ModelProvider) -> List[ModelCapabilities]`: Gets models by provider.
+**Arguments:**
+- `prompt` (str): The user prompt.
+- `model_id` (Optional[str]): Specific model ID to force use.
+- `task_type` (Optional[TaskType]): Manual task type override.
+- `**kwargs`: Additional arguments passed to the API client.
 
-### Task Analysis & Scoring (`scorer.py`)
+**Returns:**
+- `APIResponse`: The response from the model.
 
-Analyzes prompts and scores models.
+#### `register_function`
 
-#### Classes
+```python
+def register_function(self, name: str, func: Callable):
+```
 
-- `TaskAnalyzer`: Analyzes prompts.
-    - `analyze(prompt: str) -> TaskRequirements`: Extracts requirements from a prompt.
-- `ModelScorer`: Scores models.
-    - `score(model: ModelCapabilities, requirements: TaskRequirements) -> float`: Calculates a fitness score (0.0 - 1.0).
+Registers a function for the model to call.
 
-### Guide (`guide.py`)
-
-Parses external configuration (e.g., `MODELS.md`) for routing rules.
-
-#### Classes
-
-- `ModelGuideParser`: Parses the guide file.
-    - `get_recommended_models(task_type: str) -> List[str]`: Gets recommended models for a task.
-    - `get_fallback_chain(task_type: str) -> List[str]`: Gets fallback model chain.
-    - `is_model_blocked(model_id: str) -> bool`: Checks if a model is blocked.
-
-## Usage Examples
+## Usage Example
 
 ```python
 import asyncio
-from lattice_lock_orchestrator.core import ModelOrchestrator
+from lattice_lock.orchestrator import ModelOrchestrator
 
 async def main():
     orchestrator = ModelOrchestrator()
     
-    # Simple routing
-    response = await orchestrator.route_request("Write a Python script to sort a list")
-    print(f"Response from {response.model_id}: {response.content}")
-
-    # Force specific model
-    response = await orchestrator.route_request("Hello", model_id="gpt-4o")
+    response = await orchestrator.route_request(
+        prompt="Write a Python function to calculate fibonacci numbers."
+    )
+    
+    print(response.content)
 
 if __name__ == "__main__":
     asyncio.run(main())

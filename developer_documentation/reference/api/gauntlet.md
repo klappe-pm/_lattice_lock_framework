@@ -1,64 +1,46 @@
-# Gauntlet Module
+# Gauntlet API
 
-The `lattice_lock_gauntlet` module provides test generation and execution capabilities for the Lattice Lock Framework. It translates Lattice Lock definitions into executable pytest contracts.
+The `lattice_lock.gauntlet` module generates semantic test contracts from Lattice Lock schemas.
 
 ## Overview
 
-Gauntlet ensures that the implementation matches the constraints defined in the Lattice Lock schema.
+Gauntlet reads `ensures` clauses from your schema and generates `pytest` test files to verify that your data models adhere to these constraints.
 
-## Modules
+## Classes
 
-### Test Generator (`generator.py`)
+### `GauntletGenerator`
 
-Generates pytest files from parsed Lattice definitions.
-
-#### Classes
-
-- `GauntletGenerator`: Main generator class.
-    - `__init__(lattice_file: str, output_dir: str)`: Initializes the generator.
-    - `generate()`: Generates test files for all entities in the lattice file.
-
-### Parser (`parser.py`)
-
-Parses Lattice Lock YAML definitions into internal data structures.
-
-#### Classes
-
-- `LatticeParser`: Parses the YAML file.
-    - `parse() -> List[EntityDefinition]`: Returns a list of parsed entities.
-- `EntityDefinition`: Data class for an entity.
-- `EnsuresClause`: Data class for a validation rule.
-
-### Pytest Plugin (`plugin.py`)
-
-A pytest plugin to collect results and generate reports (JSON, GitHub Summary).
-
-#### Classes
-
-- `GauntletPlugin`: The pytest plugin.
-    - `pytest_sessionstart(session)`: Records start time.
-    - `pytest_runtest_logreport(report)`: Collects test results.
-    - `pytest_sessionfinish(session, exitstatus)`: Generates reports.
-
-## Usage Examples
-
-### Generating Tests
+Generates pytest test contracts from Lattice Lock definitions.
 
 ```python
-from lattice_lock_gauntlet.generator import GauntletGenerator
-
-# Generate tests from lattice.yaml to tests/generated
-generator = GauntletGenerator("lattice.yaml", "tests/generated")
-generator.generate()
+class GauntletGenerator:
+    def __init__(self, lattice_file: str, output_dir: str): ...
 ```
 
-### Running Tests with Plugin
+**Attributes:**
+- `parser` (LatticeParser): The parser for reading lattice definitions.
+- `output_dir` (Path): Directory where generated tests will be saved.
+- `env` (Environment): Jinja2 environment for template loading.
+
+**Methods:**
+
+#### `generate`
 
 ```python
-import pytest
-from lattice_lock_gauntlet.plugin import GauntletPlugin
+def generate(self):
+```
 
-# Run pytest with the Gauntlet plugin
-plugin = GauntletPlugin(json_report=True)
-pytest.main(["tests/generated"], plugins=[plugin])
+Generates test files for all parsed entities.
+
+## Usage Example
+
+```python
+from lattice_lock.gauntlet import GauntletGenerator
+
+generator = GauntletGenerator(
+    lattice_file="lattice.yaml",
+    output_dir="tests/contracts"
+)
+
+generator.generate()
 ```
