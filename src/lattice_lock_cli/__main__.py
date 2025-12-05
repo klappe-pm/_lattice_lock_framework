@@ -28,12 +28,14 @@ from .commands.validate import validate_command
 from .commands.doctor import doctor_command
 from .commands.sheriff import sheriff_command
 from .commands.gauntlet import gauntlet_command
+from .commands.admin import admin_command
 
 cli.add_command(init_command, name="init")
 cli.add_command(validate_command, name="validate")
 cli.add_command(doctor_command, name="doctor")
 cli.add_command(sheriff_command, name="sheriff")
 cli.add_command(gauntlet_command, name="gauntlet")
+cli.add_command(admin_command, name="admin")
 
 
 def main() -> None:
