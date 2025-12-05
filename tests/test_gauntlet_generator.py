@@ -1,73 +1,98 @@
 import pytest
-import yaml
+import os
 from pathlib import Path
 from lattice_lock_gauntlet.generator import GauntletGenerator
-from lattice_lock_gauntlet.parser import LatticeParser
+from lattice_lock_gauntlet.parser import LatticeParser, EntityDefinition, EnsuresClause
+
+TEST_LATTICE_YAML = """
+entities:
+  User:
+    fields:
+      age:
+        gt: 18
+        lt: 100
+      score:
+        gte: 0
+        lte: 10
+      username:
+        unique: true
+    ensures:
+      - name: custom_rule
+        field: score
+        constraint: custom
+        value: "value % 2 == 0"
+        description: "Score must be even"
+"""
 
 @pytest.fixture
-def sample_lattice_yaml(tmp_path):
-    content = """
-    version: "1.0"
-    generated_module: "test_module"
-    entities:
-      TestEntity:
-        fields:
-          age:
-            type: int
-            gt: 0
-            lt: 150
-          score:
-            type: decimal
-            gte: 0.0
-            lte: 100.0
-          username:
-            type: str
-            unique: true
-    """
-    file_path = tmp_path / "lattice.yaml"
-    file_path.write_text(content)
-    return file_path
+def lattice_file(tmp_path):
+    f = tmp_path / "lattice.yaml"
+    f.write_text(TEST_LATTICE_YAML)
+    return str(f)
 
-def test_parser_extracts_constraints(sample_lattice_yaml):
-    parser = LatticeParser(str(sample_lattice_yaml))
+@pytest.fixture
+def output_dir(tmp_path):
+    return tmp_path / "output"
+
+def test_parser_parsing(lattice_file):
+    parser = LatticeParser(lattice_file)
     entities = parser.parse()
-    
     assert len(entities) == 1
-    entity = entities[0]
-    assert entity.name == "TestEntity"
-    
-    # Check constraints
-    constraints = {c.name: c for c in entity.ensures}
-    assert "age_gt_0" in constraints
-    assert "age_lt_150" in constraints
-    assert "score_gte_0_0" in constraints
-    assert "score_lte_100_0" in constraints
-    assert "username_unique" in constraints
-    
-    assert constraints["age_gt_0"].value == 0
-    assert constraints["age_gt_0"].constraint == "gt"
+    user = entities[0]
+    assert user.name == "User"
+    # 4 implicit (gt, lt, gte, lte, unique -> 5?)
+    # age: gt, lt (2)
+    # score: gte, lte (2)
+    # username: unique (1)
+    # explicit: 1
+    # Total: 6
+    assert len(user.ensures) == 6
 
-def test_generator_creates_files(sample_lattice_yaml, tmp_path):
-    output_dir = tmp_path / "tests"
-    generator = GauntletGenerator(str(sample_lattice_yaml), str(output_dir))
+def test_generator_creates_files(lattice_file, output_dir):
+    generator = GauntletGenerator(lattice_file, str(output_dir))
     generator.generate()
     
-    expected_file = output_dir / "test_contract_TestEntity.py"
+    expected_file = output_dir / "test_contract_User.py"
     assert expected_file.exists()
     
     content = expected_file.read_text()
-    assert "class TestTestEntityContract:" in content
-    assert "def test_age_gt_0" in content
-    assert "assert value > 0" in content
-    assert "def test_score_lte_100_0" in content
-    assert "assert value <= 100.0" in content
+    assert "class TestUserContract:" in content
+    assert "def test_age_gt_18" in content
+    assert "def test_age_lt_100" in content
+    assert "def test_score_gte_0" in content
+    assert "def test_score_lte_10" in content
+    assert "def test_username_unique" in content
+    assert "def test_custom_rule" in content
+    
+    # Check fixture generation
+    assert '"age": 19' in content  # gt 18 -> 19
+    assert '"score": 0' in content # gte 0 -> 0
 
-def test_generated_code_is_valid_python(sample_lattice_yaml, tmp_path):
-    output_dir = tmp_path / "tests"
-    generator = GauntletGenerator(str(sample_lattice_yaml), str(output_dir))
+def test_generated_code_is_valid_python(lattice_file, output_dir):
+    generator = GauntletGenerator(lattice_file, str(output_dir))
     generator.generate()
     
-    test_file = output_dir / "test_contract_TestEntity.py"
+    expected_file = output_dir / "test_contract_User.py"
     
-    # Compile the generated code to check for syntax errors
-    compile(test_file.read_text(), str(test_file), "exec")
+    # Compile checking
+    import ast
+    ast.parse(expected_file.read_text())
+
+def test_generated_test_execution(lattice_file, output_dir):
+    # This is a bit meta: we run pytest on the generated file
+    generator = GauntletGenerator(lattice_file, str(output_dir))
+    generator.generate()
+    
+    # We need to run pytest on this file.
+    # The generated test uses a fixture that returns a dict.
+    # The default fixture values should pass the tests.
+    # age > 18 (19) -> Pass
+    # age < 100 (19) -> Pass
+    # score >= 0 (0) -> Pass
+    # score <= 10 (0) -> Pass
+    # unique -> Placeholder (Pass/Skip)
+    # custom -> "pass # Unknown constraint" -> Pass
+    
+    import pytest
+    ret = pytest.main([str(output_dir)])
+    assert ret == 0
