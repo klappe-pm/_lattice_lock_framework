@@ -36,23 +36,25 @@ class ConventionResult(BaseModel):
 class ConventionChecker:
     """Checks prompt files against naming and placement conventions."""
 
-    # Filename pattern: {phase}.{epic}.{task}_{tool}_{description}.md
-    # Examples: 1.1.1_devin_package_infrastructure.md, 5.4.2_claude_app_validation_integration.md
-    # Also supports DONE- prefix for completed prompts
-    FILENAME_PATTERN = re.compile(
-        r"^(?:DONE-|STARTED-)?(\d+)\.(\d+)\.(\d+)_([a-z_]+)_?(.*)\.md$"
-    )
-
-    # Valid tool identifiers
+    # Valid tool identifiers (ordered by specificity - longer matches first)
     VALID_TOOLS = {
+        "claude_docs": "Claude Code Website",
+        "claude_app": "Claude Code App",
+        "claude_cli": "Claude Code CLI",
+        "claude": "Claude Code CLI",
         "devin": "Devin AI",
         "gemini": "Gemini CLI",
         "codex": "Codex CLI",
-        "claude": "Claude Code CLI",
-        "claude_cli": "Claude Code CLI",
-        "claude_app": "Claude Code App",
-        "claude_docs": "Claude Code Website",
     }
+
+    # Filename pattern: {phase}.{epic}.{task}_{tool}_{description}.md
+    # Examples: 1.1.1_devin_package_infrastructure.md, 5.4.2_claude_app_validation_integration.md
+    # Also supports DONE- or STARTED- prefix
+    # Tool pattern matches known tools (longest first to handle claude_app before claude)
+    _TOOL_PATTERN = "|".join(sorted(VALID_TOOLS.keys(), key=len, reverse=True))
+    FILENAME_PATTERN = re.compile(
+        rf"^(?:DONE-|STARTED-)?(\d+)\.(\d+)\.(\d+)_({_TOOL_PATTERN})_(.+)\.md$"
+    )
 
     # Phase directory patterns
     PHASE_DIR_PATTERN = re.compile(r"^phase(\d+)_([a-z_]+)$")
