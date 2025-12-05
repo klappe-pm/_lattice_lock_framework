@@ -7,6 +7,15 @@ from typing import List
 from .schema import ValidationResult
 
 def validate_repository_structure(repo_path: str) -> ValidationResult:
+    """
+    Validates the repository structure and file naming conventions.
+
+    Args:
+        repo_path: Path to the repository root.
+
+    Returns:
+        ValidationResult: The result of the validation.
+    """
     result = ValidationResult()
     
     # 1. Directory Structure
@@ -41,6 +50,7 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     return result
 
 def validate_directory_structure(repo_path: str) -> ValidationResult:
+    """Validates the directory structure against requirements."""
     result = ValidationResult()
     path = Path(repo_path)
     
@@ -76,6 +86,7 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
     return result
 
 def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResult:
+    """Validates file naming conventions (snake_case)."""
     result = ValidationResult()
     path = Path(file_path)
     filename = path.name

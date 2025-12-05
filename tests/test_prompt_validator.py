@@ -1,6 +1,7 @@
 """Unit tests for prompt validators."""
 
 import pytest
+import asyncio
 import os
 import tempfile
 from pathlib import Path
@@ -13,6 +14,9 @@ from lattice_lock_agents.prompt_architect.validators import (
     ConventionResult,
     QualityScore,
 )
+
+# Configure pytest-asyncio
+pytestmark = pytest.mark.anyio
 
 
 # Sample valid prompt content
@@ -290,13 +294,15 @@ class TestConventionChecker:
         result = checker.check_filename("1-1-1_devin_package.md")
         assert not result.is_valid
 
-    def test_unknown_tool_warning(self):
-        """Test warning for unknown tool identifier."""
+    def test_unknown_tool_fails(self):
+        """Test that unknown tool identifier fails validation."""
         checker = ConventionChecker()
         result = checker.check_filename("1.1.1_unknown_tool_test.md")
 
-        assert result.is_valid  # Still valid, just a warning
-        assert any("not in known tools" in w for w in result.warnings)
+        # Unknown tools now fail the regex match entirely
+        assert not result.is_valid
+        assert not result.filename_valid
+        assert any("does not match convention" in e for e in result.errors)
 
     def test_placement_check(self, tmp_path):
         """Test directory placement validation."""
