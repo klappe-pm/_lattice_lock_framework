@@ -24,6 +24,7 @@ from lattice_lock_orchestrator import (
     TaskAnalyzer,
 )
 from lattice_lock_orchestrator.types import TaskRequirements, ModelCapabilities
+from lattice_lock.compile import compile_lattice, CompilationResult
 
 
 def _get_version() -> str:
@@ -51,4 +52,6 @@ __all__ = [
     "ModelRegistry",
     "ModelScorer",
     "TaskAnalyzer",
+    "compile_lattice",
+    "CompilationResult",
 ]
