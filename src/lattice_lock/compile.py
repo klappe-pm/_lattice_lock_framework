@@ -1,26 +1,27 @@
 """
-Lattice Lock Compilation API.
+Lattice Lock Schema Compiler
 
-Compiles lattice.yaml schema files into enforcement artifacts:
-- Pydantic models for validation
-- SQLModel classes for ORM
-- Gauntlet tests for contract testing
-
-Example:
-    >>> from lattice_lock.compile import compile_lattice
-    >>> result = compile_lattice("examples/basic/lattice.yaml")
-    >>> print(result.generated_files)
+This module provides the compile_lattice function that transforms lattice.yaml
+schemas into enforcement artifacts including Pydantic models, SQLModel ORM
+classes, and Gauntlet test contracts.
 """
+
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Union
-import logging
+from typing import List, Optional, Union
+import yaml
 
 from lattice_lock_validator.schema import validate_lattice_schema, ValidationResult
 from lattice_lock_gauntlet.generator import GauntletGenerator
 from lattice_lock_gauntlet.parser import LatticeParser
 
-logger = logging.getLogger(__name__)
+
+@dataclass
+class GeneratedFile:
+    """Represents a generated file."""
+    path: Path
+    file_type: str  # 'pydantic', 'sqlmodel', 'gauntlet'
+    entity_name: Optional[str] = None
 
 
 @dataclass
@@ -29,33 +30,35 @@ class CompilationResult:
     Result of compiling a lattice.yaml schema.
 
     Attributes:
-        success: Whether compilation completed successfully
-        generated_files: List of paths to generated files
+        success: Whether compilation succeeded
+        generated_files: List of generated file paths and types
         warnings: List of warning messages
         errors: List of error messages
-        schema_path: Original schema path
-        entities: List of entity names that were compiled
+        validation_result: The validation result from schema validation
     """
     success: bool = True
-    generated_files: List[Path] = field(default_factory=list)
+    generated_files: List[GeneratedFile] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
-    schema_path: Optional[Path] = None
-    entities: List[str] = field(default_factory=list)
+    validation_result: Optional[ValidationResult] = None
+
+    def add_warning(self, message: str):
+        """Add a warning message."""
+        self.warnings.append(message)
 
     def add_error(self, message: str):
-        """Add an error and mark compilation as failed."""
+        """Add an error message and mark compilation as failed."""
         self.success = False
         self.errors.append(message)
 
-    def add_warning(self, message: str):
-        """Add a warning (does not affect success status)."""
-        self.warnings.append(message)
+    def add_generated_file(self, path: Path, file_type: str, entity_name: Optional[str] = None):
+        """Add a generated file to the result."""
+        self.generated_files.append(GeneratedFile(path=path, file_type=file_type, entity_name=entity_name))
 
 
 def compile_lattice(
     schema_path: Union[str, Path],
-    output_dir: Union[str, Path, None] = None,
+    output_dir: Optional[Union[str, Path]] = None,
     generate_pydantic: bool = True,
     generate_sqlmodel: bool = False,
     generate_gauntlet: bool = True,
@@ -64,9 +67,9 @@ def compile_lattice(
     Compile a lattice.yaml schema into enforcement artifacts.
 
     Args:
-        schema_path: Path to the lattice.yaml schema file
+        schema_path: Path to lattice.yaml file
         output_dir: Directory for generated files (default: same as schema)
-        generate_pydantic: Generate Pydantic validation models
+        generate_pydantic: Generate Pydantic models
         generate_sqlmodel: Generate SQLModel ORM classes
         generate_gauntlet: Generate Gauntlet test contracts
 
@@ -74,209 +77,168 @@ def compile_lattice(
         CompilationResult with paths to generated files and any warnings/errors
 
     Example:
-        >>> result = compile_lattice("schema.yaml", output_dir="./generated")
+        >>> result = compile_lattice("examples/basic/lattice.yaml", output_dir="./generated")
         >>> if result.success:
-        ...     print(f"Generated {len(result.generated_files)} files")
-        >>> else:
-        ...     for error in result.errors:
-        ...         print(f"Error: {error}")
+        ...     for f in result.generated_files:
+        ...         print(f"Generated: {f.path}")
     """
     result = CompilationResult()
 
-    # Normalize paths
+    # Convert to Path objects
     schema_path = Path(schema_path)
-    result.schema_path = schema_path
-
     if output_dir is None:
-        output_dir = schema_path.parent / "generated"
+        output_dir = schema_path.parent
     else:
         output_dir = Path(output_dir)
 
-    # Step 1: Validate the schema
-    logger.info(f"Validating schema: {schema_path}")
-    validation = validate_lattice_schema(str(schema_path))
-
-    if not validation.valid:
-        for error in validation.errors:
-            result.add_error(f"Validation error: {error.message}")
+    # Step 1: Validate schema exists
+    if not schema_path.exists():
+        result.add_error(f"Schema file not found: {schema_path}")
         return result
 
-    # Add validation warnings
-    for warning in validation.warnings:
-        result.add_warning(f"Validation warning: {warning.message}")
+    # Step 2: Validate schema
+    validation_result = validate_lattice_schema(str(schema_path))
+    result.validation_result = validation_result
 
-    # Step 2: Parse the schema
-    logger.info("Parsing schema...")
+    if not validation_result.valid:
+        for error in validation_result.errors:
+            result.add_error(f"Schema validation error: {error.message}")
+        return result
+
+    # Add any validation warnings
+    for warning in validation_result.warnings:
+        result.add_warning(f"Schema validation warning: {warning.message}")
+
+    # Step 3: Load schema data
     try:
-        parser = LatticeParser(str(schema_path))
-        entities = parser.parse()
-        result.entities = [entity.name for entity in entities]
-    except Exception as e:
-        result.add_error(f"Failed to parse schema: {str(e)}")
+        with open(schema_path, 'r') as f:
+            schema_data = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        result.add_error(f"Failed to parse YAML: {e}")
         return result
-
-    if not entities:
-        result.add_warning("No entities found in schema")
 
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Step 3: Generate Gauntlet tests
-    if generate_gauntlet and entities:
-        logger.info("Generating Gauntlet test contracts...")
+    # Get module name from schema
+    module_name = schema_data.get('generated_module', 'types_generated')
+
+    # Step 4: Generate Pydantic models (if requested)
+    if generate_pydantic:
         try:
-            gauntlet_dir = output_dir / "gauntlet"
+            pydantic_path = _generate_pydantic_models(schema_data, output_dir, module_name)
+            if pydantic_path:
+                result.add_generated_file(pydantic_path, 'pydantic')
+        except Exception as e:
+            result.add_warning(f"Failed to generate Pydantic models: {e}")
+
+    # Step 5: Generate SQLModel ORM classes (if requested)
+    if generate_sqlmodel:
+        try:
+            sqlmodel_path = _generate_sqlmodel_classes(schema_data, output_dir, module_name)
+            if sqlmodel_path:
+                result.add_generated_file(sqlmodel_path, 'sqlmodel')
+        except Exception as e:
+            result.add_warning(f"Failed to generate SQLModel classes: {e}")
+
+    # Step 6: Generate Gauntlet test contracts (if requested)
+    if generate_gauntlet:
+        try:
+            gauntlet_dir = output_dir / "tests"
             generator = GauntletGenerator(str(schema_path), str(gauntlet_dir))
             generator.generate()
 
-            # Record generated files
-            for entity in entities:
+            # Add generated test files to result
+            for entity in generator.parser.entities:
                 test_file = gauntlet_dir / f"test_contract_{entity.name}.py"
                 if test_file.exists():
-                    result.generated_files.append(test_file)
+                    result.add_generated_file(test_file, 'gauntlet', entity.name)
         except Exception as e:
-            result.add_error(f"Failed to generate Gauntlet tests: {str(e)}")
+            result.add_warning(f"Failed to generate Gauntlet tests: {e}")
 
-    # Step 4: Generate Pydantic models
-    if generate_pydantic and entities:
-        logger.info("Generating Pydantic models...")
-        try:
-            pydantic_file = output_dir / "models.py"
-            _generate_pydantic_models(entities, parser, pydantic_file)
-            result.generated_files.append(pydantic_file)
-        except Exception as e:
-            result.add_error(f"Failed to generate Pydantic models: {str(e)}")
-
-    # Step 5: Generate SQLModel classes
-    if generate_sqlmodel and entities:
-        logger.info("Generating SQLModel classes...")
-        try:
-            sqlmodel_file = output_dir / "orm.py"
-            _generate_sqlmodel_classes(entities, parser, sqlmodel_file)
-            result.generated_files.append(sqlmodel_file)
-        except Exception as e:
-            result.add_error(f"Failed to generate SQLModel classes: {str(e)}")
-
-    logger.info(f"Compilation complete. Generated {len(result.generated_files)} files.")
     return result
 
 
-def _generate_pydantic_models(entities, parser: LatticeParser, output_path: Path):
-    """Generate Pydantic validation models."""
+def _generate_pydantic_models(schema_data: dict, output_dir: Path, module_name: str) -> Optional[Path]:
+    """
+    Generate Pydantic models from schema data.
+
+    Args:
+        schema_data: Parsed schema data
+        output_dir: Output directory
+        module_name: Name for the generated module
+
+    Returns:
+        Path to generated file, or None if no entities
+    """
+    entities = schema_data.get('entities', {})
+    if not entities:
+        return None
+
+    output_path = output_dir / f"{module_name}_pydantic.py"
+
     lines = [
         '"""',
-        'Auto-generated Pydantic models from lattice.yaml',
-        '',
-        'DO NOT EDIT - Generated by lattice-lock compile',
+        f'Pydantic models generated from lattice.yaml',
+        f'Module: {module_name}',
+        'Generated by Lattice Lock Compiler',
         '"""',
-        'from pydantic import BaseModel, Field, field_validator',
-        'from typing import Optional, List',
-        'from uuid import UUID',
+        '',
         'from decimal import Decimal',
         'from enum import Enum',
+        'from typing import Optional, List',
+        'from uuid import UUID',
+        'from pydantic import BaseModel, Field',
+        '',
         '',
     ]
 
-    for entity in entities:
+    for entity_name, entity_def in entities.items():
+        fields = entity_def.get('fields', {})
+
+        # Generate enum classes for enum fields
+        for field_name, field_def in fields.items():
+            if 'enum' in field_def:
+                enum_values = field_def['enum']
+                enum_class_name = f"{entity_name}{field_name.title().replace('_', '')}Enum"
+                lines.append(f'class {enum_class_name}(str, Enum):')
+                for value in enum_values:
+                    lines.append(f'    {value.upper()} = "{value}"')
+                lines.append('')
+                lines.append('')
+
+        # Generate model class
+        lines.append(f'class {entity_name}(BaseModel):')
+        description = entity_def.get('description', f'{entity_name} model')
+        lines.append(f'    """{description}"""')
         lines.append('')
-        lines.append(f'class {entity.name}(BaseModel):')
-        lines.append(f'    """Pydantic model for {entity.name} entity."""')
 
-        if not entity.fields:
-            lines.append('    pass')
-            continue
+        for field_name, field_def in fields.items():
+            field_type = _get_pydantic_type(field_def, entity_name, field_name)
+            field_kwargs = _get_pydantic_field_kwargs(field_def)
 
-        for field_name, field_def in entity.fields.items():
-            field_type = _map_type_to_python(field_def)
-            default = field_def.get('default')
-
-            if default is not None:
-                lines.append(f'    {field_name}: {field_type} = {repr(default)}')
-            elif field_def.get('nullable', False):
-                lines.append(f'    {field_name}: Optional[{field_type}] = None')
+            if field_kwargs:
+                lines.append(f'    {field_name}: {field_type} = Field({field_kwargs})')
             else:
                 lines.append(f'    {field_name}: {field_type}')
 
-        # Add validators for constraints
-        for clause in entity.ensures:
-            if clause.constraint in ('gt', 'lt', 'gte', 'lte'):
-                lines.append('')
-                lines.append(f'    @field_validator("{clause.field}")')
-                lines.append('    @classmethod')
-                lines.append(f'    def validate_{clause.field}_{clause.constraint}(cls, v):')
-                op = {'gt': '>', 'lt': '<', 'gte': '>=', 'lte': '<='}[clause.constraint]
-                lines.append(f'        if v is not None and not (v {op} {clause.value}):')
-                lines.append(f'            raise ValueError("{clause.field} must be {op} {clause.value}")')
-                lines.append('        return v')
-
-    lines.append('')
-
-    with open(output_path, 'w') as f:
-        f.write('\n'.join(lines))
-
-
-def _generate_sqlmodel_classes(entities, parser: LatticeParser, output_path: Path):
-    """Generate SQLModel ORM classes."""
-    lines = [
-        '"""',
-        'Auto-generated SQLModel ORM classes from lattice.yaml',
-        '',
-        'DO NOT EDIT - Generated by lattice-lock compile',
-        '"""',
-        'from sqlmodel import SQLModel, Field',
-        'from typing import Optional',
-        'from uuid import UUID, uuid4',
-        'from decimal import Decimal',
-        '',
-    ]
-
-    for entity in entities:
         lines.append('')
-        lines.append(f'class {entity.name}(SQLModel, table=True):')
-        lines.append(f'    """SQLModel ORM class for {entity.name} entity."""')
-
-        if not entity.fields:
-            lines.append('    pass')
-            continue
-
-        for field_name, field_def in entity.fields.items():
-            field_type = _map_type_to_python(field_def)
-
-            # Build Field() arguments
-            field_args = []
-            if field_def.get('primary_key'):
-                field_args.append('primary_key=True')
-            if field_def.get('unique'):
-                field_args.append('unique=True')
-            if field_def.get('default') is not None:
-                field_args.append(f'default={repr(field_def["default"])}')
-            elif field_def.get('nullable', False):
-                field_args.append('default=None')
-
-            # Handle UUID primary keys with default
-            if field_def.get('type') == 'uuid' and field_def.get('primary_key'):
-                field_args.append('default_factory=uuid4')
-
-            if field_args:
-                args_str = ', '.join(field_args)
-                if field_def.get('nullable', False):
-                    lines.append(f'    {field_name}: Optional[{field_type}] = Field({args_str})')
-                else:
-                    lines.append(f'    {field_name}: {field_type} = Field({args_str})')
-            else:
-                if field_def.get('nullable', False):
-                    lines.append(f'    {field_name}: Optional[{field_type}] = None')
-                else:
-                    lines.append(f'    {field_name}: {field_type}')
-
-    lines.append('')
+        lines.append('')
 
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
 
+    return output_path
 
-def _map_type_to_python(field_def: Dict[str, Any]) -> str:
-    """Map lattice.yaml types to Python types."""
+
+def _get_pydantic_type(field_def: dict, entity_name: str, field_name: str) -> str:
+    """Convert lattice field type to Pydantic type."""
+    field_type = field_def.get('type', 'str')
+
+    if 'enum' in field_def:
+        enum_class_name = f"{entity_name}{field_name.title().replace('_', '')}Enum"
+        return enum_class_name
+
     type_mapping = {
         'uuid': 'UUID',
         'str': 'str',
@@ -285,10 +247,138 @@ def _map_type_to_python(field_def: Dict[str, Any]) -> str:
         'bool': 'bool',
     }
 
+    return type_mapping.get(field_type, 'str')
+
+
+def _get_pydantic_field_kwargs(field_def: dict) -> str:
+    """Generate Pydantic Field kwargs from field definition."""
+    kwargs = []
+
+    if 'gt' in field_def:
+        kwargs.append(f'gt={field_def["gt"]}')
+    if 'lt' in field_def:
+        kwargs.append(f'lt={field_def["lt"]}')
+    if 'gte' in field_def:
+        kwargs.append(f'ge={field_def["gte"]}')
+    if 'lte' in field_def:
+        kwargs.append(f'le={field_def["lte"]}')
+    if 'default' in field_def:
+        default_val = field_def['default']
+        if isinstance(default_val, str):
+            kwargs.append(f'default="{default_val}"')
+        else:
+            kwargs.append(f'default={default_val}')
+
+    return ', '.join(kwargs)
+
+
+def _generate_sqlmodel_classes(schema_data: dict, output_dir: Path, module_name: str) -> Optional[Path]:
+    """
+    Generate SQLModel ORM classes from schema data.
+
+    Args:
+        schema_data: Parsed schema data
+        output_dir: Output directory
+        module_name: Name for the generated module
+
+    Returns:
+        Path to generated file, or None if no entities
+    """
+    entities = schema_data.get('entities', {})
+    if not entities:
+        return None
+
+    output_path = output_dir / f"{module_name}_sqlmodel.py"
+
+    lines = [
+        '"""',
+        f'SQLModel ORM classes generated from lattice.yaml',
+        f'Module: {module_name}',
+        'Generated by Lattice Lock Compiler',
+        '"""',
+        '',
+        'from decimal import Decimal',
+        'from enum import Enum',
+        'from typing import Optional',
+        'from uuid import UUID, uuid4',
+        'from sqlmodel import SQLModel, Field',
+        '',
+        '',
+    ]
+
+    for entity_name, entity_def in entities.items():
+        fields = entity_def.get('fields', {})
+        persistence = entity_def.get('persistence', None)
+
+        # Generate enum classes for enum fields
+        for field_name, field_def in fields.items():
+            if 'enum' in field_def:
+                enum_values = field_def['enum']
+                enum_class_name = f"{entity_name}{field_name.title().replace('_', '')}Enum"
+                lines.append(f'class {enum_class_name}(str, Enum):')
+                for value in enum_values:
+                    lines.append(f'    {value.upper()} = "{value}"')
+                lines.append('')
+                lines.append('')
+
+        # Generate model class
+        table_arg = ', table=True' if persistence == 'table' else ''
+        lines.append(f'class {entity_name}(SQLModel{table_arg}):')
+        description = entity_def.get('description', f'{entity_name} model')
+        lines.append(f'    """{description}"""')
+        lines.append('')
+
+        for field_name, field_def in fields.items():
+            field_type = _get_sqlmodel_type(field_def, entity_name, field_name)
+            field_kwargs = _get_sqlmodel_field_kwargs(field_def)
+
+            if field_kwargs:
+                lines.append(f'    {field_name}: {field_type} = Field({field_kwargs})')
+            else:
+                lines.append(f'    {field_name}: {field_type}')
+
+        lines.append('')
+        lines.append('')
+
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+
+    return output_path
+
+
+def _get_sqlmodel_type(field_def: dict, entity_name: str, field_name: str) -> str:
+    """Convert lattice field type to SQLModel type."""
     field_type = field_def.get('type', 'str')
 
-    # Handle enum types
     if 'enum' in field_def:
-        return 'str'  # Enums are treated as strings
+        enum_class_name = f"{entity_name}{field_name.title().replace('_', '')}Enum"
+        return enum_class_name
+
+    type_mapping = {
+        'uuid': 'UUID',
+        'str': 'str',
+        'int': 'int',
+        'decimal': 'Decimal',
+        'bool': 'bool',
+    }
 
     return type_mapping.get(field_type, 'str')
+
+
+def _get_sqlmodel_field_kwargs(field_def: dict) -> str:
+    """Generate SQLModel Field kwargs from field definition."""
+    kwargs = []
+
+    if field_def.get('primary_key'):
+        kwargs.append('primary_key=True')
+        kwargs.append('default_factory=uuid4')
+    if field_def.get('unique'):
+        kwargs.append('unique=True')
+    if 'default' in field_def:
+        default_val = field_def['default']
+        if isinstance(default_val, str):
+            kwargs.append(f'default="{default_val}"')
+        else:
+            kwargs.append(f'default={default_val}')
+
+    return ', '.join(kwargs)

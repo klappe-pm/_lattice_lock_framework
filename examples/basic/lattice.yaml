@@ -1,11 +1,13 @@
 # Basic Lattice Lock Schema Example
-# This is a minimal example demonstrating core features
+# This example demonstrates a simple schema with 2 entities and basic constraints.
+# Use this as a starting point for your own lattice.yaml files.
 
 version: v2.1
-generated_module: basic_types
+generated_module: types_basic
 
+# Entity definitions - the core domain models
 entities:
-  # Simple User entity with basic fields
+  # A simple User entity with basic fields
   User:
     fields:
       id:
@@ -25,18 +27,18 @@ entities:
         type: bool
         default: true
 
-  # Simple Post entity referencing User
-  Post:
+  # A simple Product entity with price constraints
+  Product:
     fields:
       id:
         type: uuid
         primary_key: true
-      title:
+      name:
         type: str
-      content:
-        type: str
-      author_id:
-        type: uuid
-      published:
-        type: bool
-        default: false
+      price:
+        type: decimal
+        gt: 0
+        scale: 2
+      quantity:
+        type: int
+        gte: 0

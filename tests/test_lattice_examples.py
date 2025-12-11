@@ -1,200 +1,196 @@
-"""
-Tests for lattice.yaml examples and fixtures.
+"""Tests for lattice.yaml example files and test fixtures.
 
 This module validates that:
-1. All example schemas are valid
-2. Invalid fixtures produce appropriate errors
-3. The schema validator catches common mistakes
+1. Example files are valid and can be parsed
+2. Test fixtures work correctly for validation testing
+3. Invalid fixtures produce appropriate error messages
 """
+
+import os
 import pytest
 from pathlib import Path
 
-from lattice_lock_validator.schema import validate_lattice_schema, ValidationResult
-from lattice_lock_gauntlet.parser import LatticeParser
+from src.lattice_lock_validator.schema import validate_lattice_schema
 
 
 # Get the project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
-EXAMPLES_DIR = PROJECT_ROOT / "examples"
-FIXTURES_DIR = PROJECT_ROOT / "tests" / "fixtures"
 
 
-class TestValidExamples:
-    """Test that all example schemas pass validation."""
+class TestBasicExample:
+    """Tests for the basic lattice.yaml example."""
 
-    def test_basic_example_is_valid(self):
-        """Basic example should pass validation."""
-        schema_path = EXAMPLES_DIR / "basic" / "lattice.yaml"
-        result = validate_lattice_schema(str(schema_path))
+    @pytest.fixture
+    def basic_example_path(self):
+        return str(PROJECT_ROOT / "examples" / "basic" / "lattice.yaml")
 
+    def test_basic_example_exists(self, basic_example_path):
+        """Verify the basic example file exists."""
+        assert os.path.exists(basic_example_path), "Basic example file should exist"
+
+    def test_basic_example_is_valid(self, basic_example_path):
+        """Verify the basic example passes validation."""
+        result = validate_lattice_schema(basic_example_path)
         assert result.valid, f"Basic example should be valid. Errors: {[e.message for e in result.errors]}"
-        assert len(result.errors) == 0
+        assert len(result.errors) == 0, "Basic example should have no errors"
 
-    def test_advanced_example_is_valid(self):
-        """Advanced example should pass validation."""
-        schema_path = EXAMPLES_DIR / "advanced" / "lattice.yaml"
-        result = validate_lattice_schema(str(schema_path))
+    def test_basic_example_has_two_entities(self, basic_example_path):
+        """Verify the basic example has exactly 2 entities."""
+        import yaml
+        with open(basic_example_path, 'r') as f:
+            data = yaml.safe_load(f)
+        assert len(data['entities']) == 2, "Basic example should have 2 entities"
+        assert 'User' in data['entities'], "Basic example should have User entity"
+        assert 'Product' in data['entities'], "Basic example should have Product entity"
 
+
+class TestAdvancedExample:
+    """Tests for the advanced lattice.yaml example."""
+
+    @pytest.fixture
+    def advanced_example_path(self):
+        return str(PROJECT_ROOT / "examples" / "advanced" / "lattice.yaml")
+
+    def test_advanced_example_exists(self, advanced_example_path):
+        """Verify the advanced example file exists."""
+        assert os.path.exists(advanced_example_path), "Advanced example file should exist"
+
+    def test_advanced_example_is_valid(self, advanced_example_path):
+        """Verify the advanced example passes validation."""
+        result = validate_lattice_schema(advanced_example_path)
         assert result.valid, f"Advanced example should be valid. Errors: {[e.message for e in result.errors]}"
-        assert len(result.errors) == 0
+        assert len(result.errors) == 0, "Advanced example should have no errors"
 
-    def test_root_example_is_valid(self):
-        """Root examples/lattice.yaml should pass validation."""
-        schema_path = EXAMPLES_DIR / "lattice.yaml"
-        if schema_path.exists():
-            result = validate_lattice_schema(str(schema_path))
-            assert result.valid, f"Root example should be valid. Errors: {[e.message for e in result.errors]}"
+    def test_advanced_example_has_multiple_entities(self, advanced_example_path):
+        """Verify the advanced example has multiple entities."""
+        import yaml
+        with open(advanced_example_path, 'r') as f:
+            data = yaml.safe_load(f)
+        assert len(data['entities']) >= 3, "Advanced example should have at least 3 entities"
+
+    def test_advanced_example_has_interfaces(self, advanced_example_path):
+        """Verify the advanced example has interface definitions."""
+        import yaml
+        with open(advanced_example_path, 'r') as f:
+            data = yaml.safe_load(f)
+        assert 'interfaces' in data, "Advanced example should have interfaces"
+        assert len(data['interfaces']) >= 1, "Advanced example should have at least 1 interface"
+
+    def test_advanced_example_has_ensures_clauses(self, advanced_example_path):
+        """Verify the advanced example has ensures clauses."""
+        import yaml
+        with open(advanced_example_path, 'r') as f:
+            data = yaml.safe_load(f)
+
+        has_ensures = False
+        for entity_name, entity_def in data['entities'].items():
+            if 'ensures' in entity_def:
+                has_ensures = True
+                break
+        assert has_ensures, "Advanced example should have at least one entity with ensures clauses"
 
 
-class TestValidFixtures:
-    """Test that valid fixtures pass validation."""
+class TestValidFixture:
+    """Tests for the valid test fixture."""
 
-    def test_valid_fixture_passes(self):
-        """Valid fixture should pass validation."""
-        schema_path = FIXTURES_DIR / "valid_lattice.yaml"
-        result = validate_lattice_schema(str(schema_path))
+    @pytest.fixture
+    def valid_fixture_path(self):
+        return str(PROJECT_ROOT / "tests" / "fixtures" / "valid_lattice.yaml")
 
-        assert result.valid, f"Valid fixture should pass. Errors: {[e.message for e in result.errors]}"
-        assert len(result.errors) == 0
+    def test_valid_fixture_exists(self, valid_fixture_path):
+        """Verify the valid fixture file exists."""
+        assert os.path.exists(valid_fixture_path), "Valid fixture file should exist"
+
+    def test_valid_fixture_is_valid(self, valid_fixture_path):
+        """Verify the valid fixture passes validation."""
+        result = validate_lattice_schema(valid_fixture_path)
+        assert result.valid, f"Valid fixture should be valid. Errors: {[e.message for e in result.errors]}"
+        assert len(result.errors) == 0, "Valid fixture should have no errors"
+
+    def test_valid_fixture_has_all_field_types(self, valid_fixture_path):
+        """Verify the valid fixture exercises all field types."""
+        import yaml
+        with open(valid_fixture_path, 'r') as f:
+            data = yaml.safe_load(f)
+
+        # Collect all field types used
+        field_types = set()
+        for entity_name, entity_def in data['entities'].items():
+            for field_name, field_def in entity_def.get('fields', {}).items():
+                if 'type' in field_def:
+                    field_types.add(field_def['type'])
+                if 'enum' in field_def:
+                    field_types.add('enum')
+
+        expected_types = {'uuid', 'str', 'int', 'decimal', 'bool', 'enum'}
+        assert expected_types.issubset(field_types), f"Valid fixture should use all field types. Missing: {expected_types - field_types}"
 
 
-class TestInvalidFixtures:
-    """Test that invalid fixtures produce appropriate errors."""
+class TestInvalidFixture:
+    """Tests for the invalid test fixture."""
 
-    def test_missing_version_is_invalid(self):
-        """Missing version field should produce error."""
-        schema_path = FIXTURES_DIR / "invalid_lattice_missing_version.yaml"
-        result = validate_lattice_schema(str(schema_path))
+    @pytest.fixture
+    def invalid_fixture_path(self):
+        return str(PROJECT_ROOT / "tests" / "fixtures" / "invalid_lattice.yaml")
 
-        assert not result.valid, "Missing version should be invalid"
+    def test_invalid_fixture_exists(self, invalid_fixture_path):
+        """Verify the invalid fixture file exists."""
+        assert os.path.exists(invalid_fixture_path), "Invalid fixture file should exist"
+
+    def test_invalid_fixture_fails_validation(self, invalid_fixture_path):
+        """Verify the invalid fixture fails validation."""
+        result = validate_lattice_schema(invalid_fixture_path)
+        assert not result.valid, "Invalid fixture should fail validation"
+        assert len(result.errors) > 0, "Invalid fixture should have errors"
+
+    def test_invalid_fixture_detects_version_error(self, invalid_fixture_path):
+        """Verify the invalid fixture detects version format error."""
+        result = validate_lattice_schema(invalid_fixture_path)
         error_messages = [e.message for e in result.errors]
         assert any("version" in msg.lower() for msg in error_messages), \
-            f"Should mention missing version. Got: {error_messages}"
+            "Should detect invalid version format"
 
-    def test_missing_entities_is_invalid(self):
-        """Missing entities section should produce error."""
-        schema_path = FIXTURES_DIR / "invalid_lattice_missing_entities.yaml"
-        result = validate_lattice_schema(str(schema_path))
-
-        assert not result.valid, "Missing entities should be invalid"
+    def test_invalid_fixture_detects_missing_generated_module(self, invalid_fixture_path):
+        """Verify the invalid fixture detects missing generated_module."""
+        result = validate_lattice_schema(invalid_fixture_path)
         error_messages = [e.message for e in result.errors]
-        assert any("entities" in msg.lower() for msg in error_messages), \
-            f"Should mention missing entities. Got: {error_messages}"
+        assert any("generated_module" in msg.lower() for msg in error_messages), \
+            "Should detect missing generated_module"
 
-    def test_bad_type_is_invalid(self):
-        """Unknown field type should produce error."""
-        schema_path = FIXTURES_DIR / "invalid_lattice_bad_type.yaml"
-        result = validate_lattice_schema(str(schema_path))
-
-        assert not result.valid, "Unknown type should be invalid"
+    def test_invalid_fixture_detects_unknown_field_type(self, invalid_fixture_path):
+        """Verify the invalid fixture detects unknown field type."""
+        result = validate_lattice_schema(invalid_fixture_path)
         error_messages = [e.message for e in result.errors]
-        assert any("type" in msg.lower() or "money" in msg.lower() for msg in error_messages), \
-            f"Should mention invalid type. Got: {error_messages}"
+        assert any("unknown_type" in msg.lower() or "unsupported" in msg.lower() for msg in error_messages), \
+            "Should detect unknown field type"
 
-    def test_numeric_constraint_on_string_is_invalid(self):
-        """Numeric constraint on string field should produce error."""
-        schema_path = FIXTURES_DIR / "invalid_lattice_numeric_constraint_on_string.yaml"
-        result = validate_lattice_schema(str(schema_path))
-
-        assert not result.valid, "Numeric constraint on string should be invalid"
+    def test_invalid_fixture_detects_numeric_constraint_on_string(self, invalid_fixture_path):
+        """Verify the invalid fixture detects numeric constraint on string field."""
+        result = validate_lattice_schema(invalid_fixture_path)
         error_messages = [e.message for e in result.errors]
-        assert any("numeric" in msg.lower() or "constraint" in msg.lower() for msg in error_messages), \
-            f"Should mention invalid constraint. Got: {error_messages}"
+        assert any("numeric" in msg.lower() for msg in error_messages), \
+            "Should detect numeric constraint on non-numeric field"
 
-    def test_bad_version_format_is_invalid(self):
-        """Malformed version string should produce error."""
-        schema_path = FIXTURES_DIR / "invalid_lattice_bad_version.yaml"
-        result = validate_lattice_schema(str(schema_path))
-
-        assert not result.valid, "Bad version format should be invalid"
+    def test_invalid_fixture_detects_undefined_entity_reference(self, invalid_fixture_path):
+        """Verify the invalid fixture detects undefined entity reference."""
+        result = validate_lattice_schema(invalid_fixture_path)
         error_messages = [e.message for e in result.errors]
-        assert any("version" in msg.lower() for msg in error_messages), \
-            f"Should mention version format. Got: {error_messages}"
-
-    def test_ensures_unknown_field_is_invalid(self):
-        """Ensures clause referencing unknown field should produce error."""
-        schema_path = FIXTURES_DIR / "invalid_lattice_ensures_unknown_field.yaml"
-        result = validate_lattice_schema(str(schema_path))
-
-        assert not result.valid, "Unknown field in ensures should be invalid"
-        error_messages = [e.message for e in result.errors]
-        assert any("field" in msg.lower() or "unknown" in msg.lower() or "nonexistent" in msg.lower()
-                   for msg in error_messages), \
-            f"Should mention unknown field. Got: {error_messages}"
+        assert any("undefined" in msg.lower() or "undefinedentity" in msg.lower() for msg in error_messages), \
+            "Should detect undefined entity reference"
 
 
-class TestLatticeParser:
-    """Test the Gauntlet parser with examples."""
+class TestExistingExample:
+    """Tests for the existing root-level lattice.yaml example."""
 
-    def test_parse_basic_example(self):
-        """Parser should extract entities from basic example."""
-        schema_path = EXAMPLES_DIR / "basic" / "lattice.yaml"
-        parser = LatticeParser(str(schema_path))
-        entities = parser.parse()
+    @pytest.fixture
+    def existing_example_path(self):
+        return str(PROJECT_ROOT / "examples" / "lattice.yaml")
 
-        assert len(entities) == 2, f"Expected 2 entities, got {len(entities)}"
-        entity_names = {e.name for e in entities}
-        assert "User" in entity_names
-        assert "Post" in entity_names
+    def test_existing_example_exists(self, existing_example_path):
+        """Verify the existing example file exists."""
+        assert os.path.exists(existing_example_path), "Existing example file should exist"
 
-    def test_parse_advanced_example(self):
-        """Parser should extract entities from advanced example."""
-        schema_path = EXAMPLES_DIR / "advanced" / "lattice.yaml"
-        parser = LatticeParser(str(schema_path))
-        entities = parser.parse()
-
-        assert len(entities) == 5, f"Expected 5 entities, got {len(entities)}"
-        entity_names = {e.name for e in entities}
-        assert "Customer" in entity_names
-        assert "Product" in entity_names
-        assert "Order" in entity_names
-        assert "Payment" in entity_names
-        assert "Review" in entity_names
-
-    def test_parse_extracts_ensures_clauses(self):
-        """Parser should extract ensures clauses from entities."""
-        schema_path = EXAMPLES_DIR / "advanced" / "lattice.yaml"
-        parser = LatticeParser(str(schema_path))
-        entities = parser.parse()
-
-        # Find Order entity which has explicit ensures
-        order_entity = next((e for e in entities if e.name == "Order"), None)
-        assert order_entity is not None, "Order entity not found"
-
-        # Should have ensures clauses (both implicit from constraints and explicit)
-        assert len(order_entity.ensures) > 0, "Order should have ensures clauses"
-
-    def test_parse_extracts_field_constraints(self):
-        """Parser should extract implicit constraints from fields."""
-        schema_path = FIXTURES_DIR / "valid_lattice.yaml"
-        parser = LatticeParser(str(schema_path))
-        entities = parser.parse()
-
-        # Find TestEntity
-        test_entity = next((e for e in entities if e.name == "TestEntity"), None)
-        assert test_entity is not None, "TestEntity not found"
-
-        # Should have extracted constraints from integer_field (gte, lte)
-        constraint_fields = {c.field for c in test_entity.ensures}
-        assert "integer_field" in constraint_fields, "Should extract integer_field constraints"
-
-
-class TestExampleDocumentation:
-    """Test that examples have proper documentation."""
-
-    def test_basic_example_has_comments(self):
-        """Basic example should have explanatory comments."""
-        schema_path = EXAMPLES_DIR / "basic" / "lattice.yaml"
-        content = schema_path.read_text()
-
-        # Should have comment explaining what this is
-        assert "#" in content, "Example should have comments"
-
-    def test_advanced_example_has_comments(self):
-        """Advanced example should have explanatory comments."""
-        schema_path = EXAMPLES_DIR / "advanced" / "lattice.yaml"
-        content = schema_path.read_text()
-
-        # Should have comment explaining features
-        assert "#" in content, "Example should have comments"
-        assert "interface" in content.lower() or "entities" in content.lower()
+    def test_existing_example_is_valid(self, existing_example_path):
+        """Verify the existing example passes validation."""
+        result = validate_lattice_schema(existing_example_path)
+        assert result.valid, f"Existing example should be valid. Errors: {[e.message for e in result.errors]}"

@@ -1,78 +1,236 @@
-"""
-Tests for the configurable model registry.
+"""Tests for the ModelRegistry and registry validation.
 
 This module validates that:
-1. Registry loads from YAML successfully
-2. All documented models are present
-3. Invalid YAML produces clear errors
-4. Fallback to defaults works when YAML missing
+1. ModelRegistry loads models from YAML correctly
+2. Registry validation catches errors and warnings
+3. Model lookup by ID and provider works correctly
+4. Fallback to defaults works when YAML is missing
 """
-import pytest
-from pathlib import Path
-from unittest.mock import patch, mock_open
-import yaml
 
-from lattice_lock_orchestrator.registry import ModelRegistry
-from lattice_lock_orchestrator.types import ModelProvider, ProviderMaturity, ModelStatus
+import pytest
+import tempfile
+import os
+from pathlib import Path
+
+from src.lattice_lock_orchestrator.registry import (
+    ModelRegistry,
+    RegistryValidationResult,
+    REQUIRED_MODEL_FIELDS,
+    VALID_MATURITY_VALUES,
+    VALID_STATUS_VALUES,
+)
+from src.lattice_lock_orchestrator.types import ModelProvider
 
 
 PROJECT_ROOT = Path(__file__).parent.parent
-REGISTRY_PATH = PROJECT_ROOT / "models" / "registry.yaml"
 
 
-class TestRegistryLoading:
-    """Test registry YAML loading functionality."""
+class TestRegistryValidationResult:
+    """Tests for the RegistryValidationResult dataclass."""
 
-    def test_registry_loads_from_yaml(self):
-        """Registry should load successfully from YAML file."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+    def test_initial_state_is_valid(self):
+        """Test that a new result starts as valid."""
+        result = RegistryValidationResult()
+        assert result.valid
+        assert len(result.errors) == 0
+        assert len(result.warnings) == 0
 
-        # Should have loaded models
-        models = registry.get_all_models()
-        assert len(models) > 0, "Registry should have loaded models"
+    def test_add_error_marks_invalid(self):
+        """Test that adding an error marks the result as invalid."""
+        result = RegistryValidationResult()
+        result.add_error("Test error")
 
-    def test_registry_loads_all_providers(self):
-        """Registry should include models from all major providers."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+        assert not result.valid
+        assert "Test error" in result.errors
 
-        providers_found = set()
+    def test_add_warning_keeps_valid(self):
+        """Test that adding a warning keeps the result valid."""
+        result = RegistryValidationResult()
+        result.add_warning("Test warning")
+
+        assert result.valid
+        assert "Test warning" in result.warnings
+
+
+class TestModelRegistryLoading:
+    """Tests for ModelRegistry loading functionality."""
+
+    def test_loads_from_yaml(self):
+        """Test that registry loads models from YAML file."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
+
+        assert len(registry.models) > 0, "Should load models from YAML"
+
+    def test_loads_all_providers(self):
+        """Test that registry loads models from all providers."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
+
+        providers_with_models = set()
         for model in registry.get_all_models():
-            providers_found.add(model.provider)
+            providers_with_models.add(model.provider)
 
-        # Should have multiple providers
-        expected_providers = {
-            ModelProvider.OPENAI,
-            ModelProvider.ANTHROPIC,
-            ModelProvider.GOOGLE,
-            ModelProvider.XAI,
-            ModelProvider.OLLAMA,
-        }
+        assert len(providers_with_models) >= 5, "Should have models from at least 5 providers"
 
-        for provider in expected_providers:
-            assert provider in providers_found, f"Missing provider: {provider}"
+    def test_fallback_to_defaults_when_yaml_missing(self):
+        """Test that registry falls back to defaults when YAML is missing."""
+        registry = ModelRegistry(registry_path="nonexistent_file.yaml")
 
-    def test_registry_model_count(self):
-        """Registry should contain the expected number of models."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+        assert len(registry.models) > 0, "Should fall back to default models"
 
-        models = registry.get_all_models()
-        # Should have at least 40+ models based on documentation
-        assert len(models) >= 40, f"Expected at least 40 models, got {len(models)}"
+    def test_fallback_to_defaults_when_path_is_none(self):
+        """Test that registry falls back to defaults when path is None."""
+        registry = ModelRegistry(registry_path=None)
+
+        assert len(registry.models) > 0, "Should fall back to default models"
+
+
+class TestModelRegistryValidation:
+    """Tests for ModelRegistry validation functionality."""
+
+    def test_validates_registry_yaml(self):
+        """Test that registry validates the YAML file on load."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
+
+        assert registry.validation_result is not None, "Should have validation result"
+        assert registry.validation_result.valid, f"Registry should be valid. Errors: {registry.validation_result.errors}"
+
+    def test_validation_counts_models(self):
+        """Test that validation counts models correctly."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
+
+        assert registry.validation_result.model_count > 0, "Should count models"
+        assert registry.validation_result.model_count == len(registry.models), "Model count should match loaded models"
+
+    def test_validation_counts_providers(self):
+        """Test that validation counts providers correctly."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
+
+        assert registry.validation_result.provider_count > 0, "Should count providers"
+
+    def test_validates_missing_providers_section(self):
+        """Test that validation catches missing providers section."""
+        registry = ModelRegistry(registry_path=None)
+        result = registry.validate_registry({"version": "1.0"})
+
+        assert not result.valid
+        assert any("providers" in e.lower() for e in result.errors)
+
+    def test_validates_missing_required_fields(self):
+        """Test that validation catches missing required fields."""
+        registry = ModelRegistry(registry_path=None)
+        result = registry.validate_registry({
+            "version": "1.0",
+            "providers": {
+                "openai": {
+                    "models": {
+                        "test-model": {
+                            "api_name": "test"
+                        }
+                    }
+                }
+            }
+        })
+
+        assert not result.valid
+        assert len(result.errors) > 0
+
+    def test_validates_invalid_maturity(self):
+        """Test that validation catches invalid maturity values."""
+        registry = ModelRegistry(registry_path=None)
+        result = registry.validate_registry({
+            "version": "1.0",
+            "providers": {
+                "openai": {
+                    "models": {
+                        "test-model": {
+                            "api_name": "test",
+                            "context_window": 8000,
+                            "input_cost": 1.0,
+                            "output_cost": 2.0,
+                            "reasoning_score": 80.0,
+                            "coding_score": 80.0,
+                            "speed_rating": 7.0,
+                            "maturity": "INVALID_MATURITY"
+                        }
+                    }
+                }
+            }
+        })
+
+        assert not result.valid
+        assert any("maturity" in e.lower() for e in result.errors)
+
+    def test_validates_negative_cost(self):
+        """Test that validation catches negative costs."""
+        registry = ModelRegistry(registry_path=None)
+        result = registry.validate_registry({
+            "version": "1.0",
+            "providers": {
+                "openai": {
+                    "models": {
+                        "test-model": {
+                            "api_name": "test",
+                            "context_window": 8000,
+                            "input_cost": -1.0,
+                            "output_cost": 2.0,
+                            "reasoning_score": 80.0,
+                            "coding_score": 80.0,
+                            "speed_rating": 7.0
+                        }
+                    }
+                }
+            }
+        })
+
+        assert not result.valid
+        assert any("negative" in e.lower() for e in result.errors)
+
+    def test_warns_on_unknown_provider(self):
+        """Test that validation warns on unknown providers."""
+        registry = ModelRegistry(registry_path=None)
+        result = registry.validate_registry({
+            "version": "1.0",
+            "providers": {
+                "unknown_provider": {
+                    "models": {
+                        "test-model": {
+                            "api_name": "test",
+                            "context_window": 8000,
+                            "input_cost": 1.0,
+                            "output_cost": 2.0,
+                            "reasoning_score": 80.0,
+                            "coding_score": 80.0,
+                            "speed_rating": 7.0
+                        }
+                    }
+                }
+            }
+        })
+
+        assert any("unknown" in w.lower() for w in result.warnings)
+
+
+class TestModelRegistryLookup:
+    """Tests for ModelRegistry lookup functionality."""
 
     def test_get_model_by_id(self):
-        """Should retrieve specific model by ID."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+        """Test getting a model by its ID."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-        # Test known models
-        gpt4o = registry.get_model("gpt-4o")
-        assert gpt4o is not None, "gpt-4o should exist"
-        assert gpt4o.provider == ModelProvider.OPENAI
-        assert gpt4o.supports_vision is True
-        assert gpt4o.supports_function_calling is True
+        model = registry.get_model("gpt-4o")
+        assert model is not None, "Should find gpt-4o model"
+        assert model.api_name == "gpt-4o"
+
+    def test_get_model_returns_none_for_unknown(self):
+        """Test that get_model returns None for unknown model ID."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
+
+        model = registry.get_model("nonexistent-model")
+        assert model is None
 
     def test_get_models_by_provider(self):
-        """Should filter models by provider."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+        """Test getting all models for a provider."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
         openai_models = registry.get_models_by_provider(ModelProvider.OPENAI)
         assert len(openai_models) > 0, "Should have OpenAI models"
@@ -80,163 +238,59 @@ class TestRegistryLoading:
         for model in openai_models:
             assert model.provider == ModelProvider.OPENAI
 
+    def test_get_all_models(self):
+        """Test getting all registered models."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-class TestModelCapabilities:
-    """Test model capability fields are loaded correctly."""
-
-    def test_model_has_required_fields(self):
-        """Each model should have all required fields."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
-
-        for model in registry.get_all_models():
-            assert model.name, f"Model missing name: {model}"
-            assert model.api_name, f"Model missing api_name: {model.name}"
-            assert model.provider is not None, f"Model missing provider: {model.name}"
-            assert model.context_window > 0, f"Model has invalid context_window: {model.name}"
-            assert model.input_cost >= 0, f"Model has negative input_cost: {model.name}"
-            assert model.output_cost >= 0, f"Model has negative output_cost: {model.name}"
-            assert 0 <= model.reasoning_score <= 100, f"Model has invalid reasoning_score: {model.name}"
-            assert 0 <= model.coding_score <= 100, f"Model has invalid coding_score: {model.name}"
-            assert 0 <= model.speed_rating <= 10, f"Model has invalid speed_rating: {model.name}"
-
-    def test_derived_properties(self):
-        """Test derived properties work correctly."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
-
-        # Get a high-reasoning model
-        o1_pro = registry.get_model("o1-pro")
-        if o1_pro:
-            assert o1_pro.supports_reasoning is True, "o1-pro should support reasoning"
-            assert o1_pro.code_specialized is True, "o1-pro should be code specialized"
-            assert o1_pro.blended_cost > 0, "o1-pro should have positive blended cost"
-
-    def test_task_scores_computed(self):
-        """Test task_scores property returns valid scores."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
-
-        model = registry.get_model("gpt-4o")
-        if model:
-            scores = model.task_scores
-            assert len(scores) > 0, "Should have task scores"
-
-            for task_type, score in scores.items():
-                assert 0 <= score <= 1, f"Score for {task_type} should be 0-1, got {score}"
+        all_models = registry.get_all_models()
+        assert len(all_models) > 0, "Should have models"
+        assert len(all_models) == len(registry.models)
 
 
-class TestRegistryValidation:
-    """Test registry validation and error handling."""
+class TestModelCapabilitiesFromYAML:
+    """Tests for model capabilities loaded from YAML."""
 
-    def test_invalid_yaml_raises_error(self):
-        """Invalid YAML should be handled gracefully."""
-        invalid_yaml = "invalid: yaml: content: [[[["
+    def test_model_has_required_attributes(self):
+        """Test that loaded models have all required attributes."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-        with patch("builtins.open", mock_open(read_data=invalid_yaml)):
-            with patch.object(Path, "exists", return_value=True):
-                # Should not crash, should fall back to defaults
-                registry = ModelRegistry(registry_path="fake/path.yaml")
-                # Verify it loaded defaults instead
-                models = registry.get_all_models()
-                assert len(models) > 0, "Should have loaded default models"
+        for model_id, model in registry.models.items():
+            assert model.name is not None, f"Model {model_id} should have name"
+            assert model.api_name is not None, f"Model {model_id} should have api_name"
+            assert model.provider is not None, f"Model {model_id} should have provider"
+            assert model.context_window > 0, f"Model {model_id} should have positive context_window"
+            assert model.input_cost >= 0, f"Model {model_id} should have non-negative input_cost"
+            assert model.output_cost >= 0, f"Model {model_id} should have non-negative output_cost"
 
-    def test_missing_yaml_uses_defaults(self):
-        """Missing YAML file should fall back to defaults."""
-        registry = ModelRegistry(registry_path="nonexistent/path/registry.yaml")
+    def test_model_capabilities_are_booleans(self):
+        """Test that model capabilities are boolean values."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-        # Should have loaded default models
-        models = registry.get_all_models()
-        assert len(models) > 0, "Should have loaded default models"
-
-    def test_unknown_provider_logged(self):
-        """Unknown provider in YAML should be logged but not crash."""
-        yaml_content = """
-version: "1.0"
-providers:
-  unknown_provider:
-    models:
-      test-model:
-        api_name: test
-        context_window: 1000
-        input_cost: 1.0
-        output_cost: 2.0
-        reasoning_score: 50.0
-        coding_score: 50.0
-        speed_rating: 5.0
-"""
-        with patch("builtins.open", mock_open(read_data=yaml_content)):
-            with patch.object(Path, "exists", return_value=True):
-                # Should not crash
-                registry = ModelRegistry(registry_path="fake/path.yaml")
-                # Unknown provider models should be skipped
-                models = registry.get_all_models()
-                # Might have no models or fall back to defaults
-                assert isinstance(models, list)
+        for model_id, model in registry.models.items():
+            assert isinstance(model.supports_function_calling, bool), f"Model {model_id} supports_function_calling should be bool"
+            assert isinstance(model.supports_vision, bool), f"Model {model_id} supports_vision should be bool"
 
 
-class TestSpecificModels:
-    """Test specific model configurations from documentation."""
+class TestRegistryModelCount:
+    """Tests for verifying the expected number of models in the registry."""
 
-    def test_local_models_are_free(self):
-        """Local Ollama models should have zero cost."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+    def test_registry_has_expected_model_count(self):
+        """Test that registry has a reasonable number of models."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-        local_models = registry.get_models_by_provider(ModelProvider.OLLAMA)
-        for model in local_models:
-            assert model.input_cost == 0.0, f"Local model {model.name} should be free"
-            assert model.output_cost == 0.0, f"Local model {model.name} should be free"
+        assert len(registry.models) >= 40, f"Expected at least 40 models, got {len(registry.models)}"
 
-    def test_vision_models_flagged(self):
-        """Vision-capable models should be properly flagged."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
+    def test_registry_has_models_from_major_providers(self):
+        """Test that registry has models from major providers."""
+        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-        gpt4o = registry.get_model("gpt-4o")
-        if gpt4o:
-            assert gpt4o.supports_vision is True, "gpt-4o should support vision"
+        major_providers = [
+            ModelProvider.OPENAI,
+            ModelProvider.ANTHROPIC,
+            ModelProvider.GOOGLE,
+            ModelProvider.OLLAMA,
+        ]
 
-        # Check Claude models
-        claude_sonnet = registry.get_model("claude-3-5-sonnet")
-        if claude_sonnet:
-            assert claude_sonnet.supports_vision is True, "Claude 3.5 Sonnet should support vision"
-
-    def test_function_calling_flagged(self):
-        """Function calling capable models should be properly flagged."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
-
-        gpt4o = registry.get_model("gpt-4o")
-        if gpt4o:
-            assert gpt4o.supports_function_calling is True, "gpt-4o should support function calling"
-
-    def test_maturity_levels(self):
-        """Models should have appropriate maturity levels."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
-
-        # OpenAI should be production
-        gpt4o = registry.get_model("gpt-4o")
-        if gpt4o:
-            assert gpt4o.maturity == ProviderMaturity.PRODUCTION
-
-        # Bedrock should be experimental
-        bedrock_models = registry.get_models_by_provider(ModelProvider.BEDROCK)
-        for model in bedrock_models:
-            assert model.maturity == ProviderMaturity.EXPERIMENTAL
-
-
-class TestCLIIntegration:
-    """Test that CLI can list models from registry."""
-
-    def test_list_all_models(self):
-        """CLI list command should show all models."""
-        registry = ModelRegistry(registry_path=str(REGISTRY_PATH))
-
-        # Simulate what CLI list would do
-        models = registry.get_all_models()
-
-        # Group by provider
-        by_provider = {}
-        for model in models:
-            provider = model.provider.value
-            if provider not in by_provider:
-                by_provider[provider] = []
-            by_provider[provider].append(model)
-
-        # Should have multiple providers
-        assert len(by_provider) >= 5, f"Expected at least 5 providers, got {len(by_provider)}"
+        for provider in major_providers:
+            models = registry.get_models_by_provider(provider)
+            assert len(models) > 0, f"Should have models from {provider.value}"

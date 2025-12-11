@@ -1,0 +1,68 @@
+# Invalid Lattice Lock Schema Test Fixture
+# This fixture contains intentional errors for testing error handling.
+# Each section demonstrates a different type of validation error.
+
+# ERROR 1: Invalid version format (missing 'v' prefix)
+version: 2.1
+
+# ERROR 2: Missing required 'generated_module' section
+
+entities:
+  # ERROR 3: Entity with missing 'fields' section
+  EmptyEntity:
+    description: "This entity has no fields"
+
+  # ERROR 4: Entity with invalid field type
+  BadTypeEntity:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      bad_field:
+        type: unknown_type
+
+  # ERROR 5: Numeric constraint on non-numeric field
+  BadConstraintEntity:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      name:
+        type: str
+        gt: 10
+
+  # ERROR 6: Enum field with non-list enum values
+  BadEnumEntity:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      status:
+        type: enum
+        enum: "not_a_list"
+
+  # ERROR 7: Ensures clause referencing unknown field
+  BadEnsuresEntity:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      value:
+        type: int
+        gte: 0
+    ensures:
+      - name: bad_ensures
+        field: nonexistent_field
+        constraint: gt
+        value: 0
+        description: "References a field that doesn't exist"
+
+interfaces:
+  # ERROR 8: Interface method referencing undefined entity
+  IBadService:
+    file: src/services/bad_service.py
+    methods:
+      get_item:
+        params:
+          item: UndefinedEntity
+        returns: UndefinedEntity

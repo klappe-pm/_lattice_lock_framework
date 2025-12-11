@@ -1,16 +1,28 @@
 # Advanced Lattice Lock Schema Example
 # This example demonstrates all supported features including:
-# - All field types (uuid, str, int, decimal, bool, enum)
+# - Multiple entities with relationships
 # - All constraint types (gt, lt, gte, lte, unique, primary_key)
+# - Enum fields with defaults
 # - Ensures clauses for semantic contracts
-# - Interface definitions for service contracts
+# - Interface definitions with method signatures
 
 version: v2.1
-generated_module: ecommerce_types
+generated_module: types_advanced
 
+# Configuration section
+config:
+  forbidden_imports:
+    - requests
+    - psycopg2
+    - sqlite3
+  orm_engine: sqlmodel
+
+# Entity definitions
 entities:
-  # Customer entity with comprehensive validation
+  # Customer entity with comprehensive field types
   Customer:
+    description: "Represents a customer in the system"
+    persistence: table
     fields:
       id:
         type: uuid
@@ -20,30 +32,71 @@ entities:
         unique: true
       name:
         type: str
-      credit_score:
-        type: int
-        gte: 300
-        lte: 850
-      account_balance:
+      credit_limit:
         type: decimal
-        scale: 2
         gte: 0
-      membership_tier:
+        lte: 100000
+        scale: 2
+      tier:
         type: enum
         enum: [bronze, silver, gold, platinum]
         default: bronze
-      verified:
+      active:
         type: bool
-        default: false
+        default: true
+      loyalty_points:
+        type: int
+        gte: 0
     ensures:
-      - name: platinum_requires_high_credit
-        field: credit_score
-        constraint: gte
-        value: 750
-        description: "Platinum members must have credit score >= 750"
+      - name: credit_limit_by_tier
+        field: credit_limit
+        constraint: lte
+        value: 100000
+        description: "Credit limit cannot exceed $100,000"
+
+  # Order entity demonstrating relationships and complex constraints
+  Order:
+    description: "Represents a customer order"
+    persistence: table
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      customer_id:
+        type: uuid
+      total_amount:
+        type: decimal
+        gt: 0
+        scale: 2
+      discount_percent:
+        type: decimal
+        gte: 0
+        lte: 100
+        scale: 2
+      status:
+        type: enum
+        enum: [pending, confirmed, shipped, delivered, cancelled]
+        default: pending
+      priority:
+        type: int
+        gte: 1
+        lte: 5
+    ensures:
+      - name: max_order_amount
+        field: total_amount
+        constraint: lte
+        value: 50000
+        description: "Orders exceeding $50,000 require manual approval"
+      - name: valid_discount
+        field: discount_percent
+        constraint: lte
+        value: 50
+        description: "Maximum discount is 50%"
 
   # Product entity with inventory constraints
   Product:
+    description: "Represents a product in the catalog"
+    persistence: table
     fields:
       id:
         type: uuid
@@ -55,133 +108,109 @@ entities:
         type: str
       price:
         type: decimal
-        scale: 2
         gt: 0
+        scale: 2
       cost:
         type: decimal
+        gt: 0
         scale: 2
-        gte: 0
       stock_quantity:
+        type: int
+        gte: 0
+      reorder_level:
         type: int
         gte: 0
       category:
         type: enum
-        enum: [electronics, clothing, food, furniture, other]
-      active:
-        type: bool
-        default: true
+        enum: [electronics, clothing, food, home, other]
+        default: other
     ensures:
-      - name: price_exceeds_cost
+      - name: positive_margin
         field: price
         constraint: gt
         value: 0
-        description: "Product price must be greater than zero"
+        description: "Price must be positive to ensure margin"
 
-  # Order entity with complex business rules
-  Order:
-    fields:
-      id:
-        type: uuid
-        primary_key: true
-      customer_id:
-        type: uuid
-      total_amount:
-        type: decimal
-        scale: 2
-        gt: 0
-        lte: 100000
-      discount_percent:
-        type: decimal
-        scale: 2
-        gte: 0
-        lte: 100
-      status:
-        type: enum
-        enum: [pending, confirmed, processing, shipped, delivered, cancelled, refunded]
-        default: pending
-      priority:
-        type: enum
-        enum: [low, normal, high, urgent]
-        default: normal
-      item_count:
-        type: int
-        gt: 0
-        lte: 100
-    ensures:
-      - name: high_value_order_limit
-        field: total_amount
-        constraint: lte
-        value: 100000
-        description: "Orders over $100,000 require manual approval"
-      - name: discount_limit
-        field: discount_percent
-        constraint: lte
-        value: 50
-        description: "Maximum discount is 50% without manager approval"
-
-  # Payment entity for financial transactions
-  Payment:
+  # OrderItem entity for order line items
+  OrderItem:
+    description: "Represents a line item in an order"
+    persistence: table
     fields:
       id:
         type: uuid
         primary_key: true
       order_id:
         type: uuid
-      amount:
-        type: decimal
-        scale: 2
-        gt: 0
-      method:
-        type: enum
-        enum: [credit_card, debit_card, paypal, bank_transfer, crypto]
-      status:
-        type: enum
-        enum: [pending, authorized, captured, failed, refunded]
-        default: pending
-      processed:
-        type: bool
-        default: false
-
-  # Review entity with rating constraints
-  Review:
-    fields:
-      id:
-        type: uuid
-        primary_key: true
       product_id:
         type: uuid
-      customer_id:
-        type: uuid
-      rating:
+      quantity:
         type: int
-        gte: 1
-        lte: 5
-      verified_purchase:
-        type: bool
-        default: false
+        gt: 0
+        lte: 1000
+      unit_price:
+        type: decimal
+        gt: 0
+        scale: 2
+      line_total:
+        type: decimal
+        gt: 0
+        scale: 2
 
 # Interface definitions for service contracts
 interfaces:
-  OrderService:
+  IOrderService:
+    file: src/services/order_service.py
+    scaffold: repository_pattern
+    depends_on: []
     methods:
       create_order:
         params:
           customer: Customer
-          items: str
+          items: list
         returns: Order
-      cancel_order:
-        params:
-          order: Order
-        returns: bool
+        ensures:
+          - "result.status == 'pending'"
 
-  PaymentService:
-    methods:
-      process_payment:
+      update_status:
         params:
           order: Order
-          method: str
-        returns: Payment
-      refund_payment:
+          new_status: str
+        returns: Order
+        ensures:
+          - "result.status == new_status"
+
+  ICustomerService:
+    file: src/services/customer_service.py
+    scaffold: repository_pattern
+    depends_on: []
+    methods:
+      get_customer:
         params:
-          payment: Payment
+          customer_id: str
+        returns: Customer
+
+      update_tier:
+        params:
+          customer: Customer
+          new_tier: str
+        returns: Customer
+        ensures:
+          - "result.tier == new_tier"
+
+  IInventoryService:
+    file: src/services/inventory_service.py
+    scaffold: repository_pattern
+    depends_on: []
+    methods:
+      check_stock:
+        params:
+          product: Product
+        returns: int
+
+      reserve_stock:
+        params:
+          product: Product
+          quantity: int
         returns: bool
+        ensures:
+          - "result == True or product.stock_quantity < quantity"
