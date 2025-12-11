@@ -9,6 +9,7 @@ import json
 import time
 import asyncio
 from typing import Dict, List, Optional, Any, Union, AsyncIterator
+from enum import Enum
 import aiohttp
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -17,6 +18,107 @@ import logging
 from .types import APIResponse, FunctionCall
 
 logger = logging.getLogger(__name__)
+
+
+class ProviderStatus(Enum):
+    """Provider maturity/availability status."""
+    PRODUCTION = "production"  # Fully supported, tested, recommended
+    BETA = "beta"  # Working but may have issues
+    EXPERIMENTAL = "experimental"  # Use at own risk, may not work
+    UNAVAILABLE = "unavailable"  # Missing credentials or not configured
+
+
+class ProviderAvailability:
+    """Tracks provider availability and credential status."""
+    
+    _instance = None
+    _checked = False
+    _status: Dict[str, ProviderStatus] = {}
+    _messages: Dict[str, str] = {}
+    
+    # Required environment variables per provider
+    REQUIRED_CREDENTIALS = {
+        "openai": ["OPENAI_API_KEY"],
+        "anthropic": ["ANTHROPIC_API_KEY"],
+        "google": ["GOOGLE_API_KEY"],
+        "xai": ["XAI_API_KEY"],
+        "azure": ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT"],
+        "bedrock": [],  # Uses AWS credentials from environment/config
+        "dial": ["DIAL_API_KEY"],
+        "local": [],  # Local models (Ollama/vLLM), no credentials needed
+    }
+    
+    # Provider maturity classification
+    PROVIDER_MATURITY = {
+        "openai": ProviderStatus.PRODUCTION,
+        "anthropic": ProviderStatus.PRODUCTION,
+        "google": ProviderStatus.PRODUCTION,
+        "xai": ProviderStatus.PRODUCTION,
+        "local": ProviderStatus.PRODUCTION,  # Local models (Ollama/vLLM)
+        "azure": ProviderStatus.BETA,
+        "dial": ProviderStatus.BETA,
+        "bedrock": ProviderStatus.EXPERIMENTAL,
+    }
+    
+    @classmethod
+    def get_instance(cls) -> "ProviderAvailability":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+    
+    @classmethod
+    def check_all_providers(cls) -> Dict[str, ProviderStatus]:
+        """Check availability of all providers. Returns status dict."""
+        instance = cls.get_instance()
+        if instance._checked:
+            return instance._status
+        
+        for provider, required_vars in cls.REQUIRED_CREDENTIALS.items():
+            missing = [var for var in required_vars if not os.getenv(var)]
+            
+            if missing:
+                instance._status[provider] = ProviderStatus.UNAVAILABLE
+                instance._messages[provider] = f"Missing credentials: {', '.join(missing)}"
+                logger.warning(f"Provider '{provider}' unavailable: {instance._messages[provider]}")
+            else:
+                instance._status[provider] = cls.PROVIDER_MATURITY.get(provider, ProviderStatus.EXPERIMENTAL)
+                instance._messages[provider] = f"Status: {instance._status[provider].value}"
+        
+        instance._checked = True
+        return instance._status
+    
+    @classmethod
+    def is_available(cls, provider: str) -> bool:
+        """Check if a provider is available (has credentials)."""
+        status = cls.check_all_providers()
+        return status.get(provider, ProviderStatus.UNAVAILABLE) != ProviderStatus.UNAVAILABLE
+    
+    @classmethod
+    def get_status(cls, provider: str) -> ProviderStatus:
+        """Get the status of a provider."""
+        status = cls.check_all_providers()
+        return status.get(provider, ProviderStatus.UNAVAILABLE)
+    
+    @classmethod
+    def get_message(cls, provider: str) -> str:
+        """Get the status message for a provider."""
+        cls.check_all_providers()
+        instance = cls.get_instance()
+        return instance._messages.get(provider, "Unknown provider")
+    
+    @classmethod
+    def get_available_providers(cls) -> List[str]:
+        """Get list of available providers."""
+        status = cls.check_all_providers()
+        return [p for p, s in status.items() if s != ProviderStatus.UNAVAILABLE]
+    
+    @classmethod
+    def reset(cls):
+        """Reset the singleton for testing."""
+        cls._instance = None
+        cls._checked = False
+        cls._status = {}
+        cls._messages = {}
 
 class BaseAPIClient:
     """Base class for all API clients"""
@@ -491,12 +593,26 @@ class AzureOpenAIClient(BaseAPIClient):
         )
 
 class BedrockAPIClient(BaseAPIClient):
-    """Amazon Bedrock API client"""
+    """
+    Amazon Bedrock API client.
+    
+    Status: EXPERIMENTAL
+    
+    This client is not fully implemented. Bedrock requires AWS Signature V4 
+    authentication which needs boto3. This client will raise a clear error
+    explaining the limitation rather than crashing unexpectedly.
+    
+    To use Bedrock models in production:
+    1. Install boto3: pip install boto3
+    2. Configure AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    3. Use the boto3 bedrock-runtime client directly
+    """
     
     def __init__(self, region: str = "us-east-1"):
         # Bedrock uses AWS credentials, not API keys
         super().__init__("", f"https://bedrock-runtime.{region}.amazonaws.com")
         self.region = region
+        self._warned = False
         
     async def chat_completion(self,
                              model: str,
@@ -505,50 +621,39 @@ class BedrockAPIClient(BaseAPIClient):
                              max_tokens: Optional[int] = None,
                              functions: Optional[List[Dict]] = None,
                              **kwargs) -> APIResponse:
-        """Send chat completion request to Amazon Bedrock"""
+        """
+        Send chat completion request to Amazon Bedrock.
+        
+        Note: This is an experimental client that is not fully implemented.
+        It will return an error response rather than raising NotImplementedError.
+        """
+        if not self._warned:
+            logger.warning(
+                "BedrockAPIClient is EXPERIMENTAL and not fully implemented. "
+                "Bedrock requires AWS Signature V4 authentication via boto3. "
+                "This request will fail gracefully."
+            )
+            self._warned = True
+        
+        error_msg = (
+            "Bedrock provider is experimental and requires boto3 integration. "
+            "To use Bedrock models: 1) Install boto3, 2) Configure AWS credentials, "
+            "3) Use boto3 bedrock-runtime client directly. "
+            "The orchestrator will attempt to use fallback providers."
+        )
         
         if functions:
-            raise NotImplementedError("Bedrock function calling requires boto3 integration and model-specific tool definitions.")
-
-        # Note: This is a simplified implementation
-        # Real Bedrock integration requires AWS signature V4 authentication
+            error_msg += " Additionally, Bedrock function calling requires model-specific tool definitions."
         
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-        
-        # Format varies by model provider on Bedrock
-        if model.startswith("anthropic."):
-            # Claude format
-            payload = {
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens or 4096
-            }
-        elif model.startswith("meta."):
-            # Llama format
-            prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
-            payload = {
-                "prompt": prompt,
-                "temperature": temperature,
-                "max_gen_len": max_tokens or 4096
-            }
-        elif model.startswith("amazon."):
-            # Titan format
-            prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
-            payload = {
-                "inputText": prompt,
-                "textGenerationConfig": {
-                    "temperature": temperature,
-                    "maxTokenCount": max_tokens or 4096
-                }
-            }
-            
-        endpoint = f"model/{model}/invoke"
-        # Note: This would need proper AWS authentication in real implementation
-        raise NotImplementedError("Bedrock requires AWS authentication - use boto3 in production")
+        return APIResponse(
+            content=None,
+            model=model,
+            provider="bedrock",
+            usage={'input_tokens': 0, 'output_tokens': 0},
+            latency_ms=0,
+            raw_response={"error": error_msg},
+            error=error_msg
+        )
 
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""
@@ -637,20 +742,71 @@ class LocalModelClient(BaseAPIClient):
             except:
                 raise e
 
-# Factory function to get appropriate client
-def get_api_client(provider: str, **kwargs) -> BaseAPIClient:
-    """Factory function to get the appropriate API client"""
+class ProviderUnavailableError(Exception):
+    """Raised when a provider is unavailable due to missing credentials."""
+    
+    def __init__(self, provider: str, message: str):
+        self.provider = provider
+        self.message = message
+        super().__init__(f"Provider '{provider}' unavailable: {message}")
+
+
+def get_api_client(provider: str, check_availability: bool = True, **kwargs) -> BaseAPIClient:
+    """
+    Factory function to get the appropriate API client.
+    
+    Args:
+        provider: The provider name (e.g., 'openai', 'anthropic', 'bedrock')
+        check_availability: If True, check credentials before creating client.
+                          Set to False to skip availability check.
+        **kwargs: Additional arguments passed to the client constructor.
+    
+    Returns:
+        BaseAPIClient: The appropriate API client instance.
+    
+    Raises:
+        ProviderUnavailableError: If provider credentials are missing and 
+                                  check_availability is True.
+        ValueError: If provider is unknown.
+    """
+    # Normalize provider name
+    provider_lower = provider.lower()
+    
+    # Map provider aliases
+    provider_aliases = {
+        'grok': 'xai',
+        'gemini': 'google',
+        'claude': 'anthropic',
+        'ollama': 'local',
+    }
+    provider_lower = provider_aliases.get(provider_lower, provider_lower)
     
     clients = {
         'xai': GrokAPIClient,
         'openai': OpenAIAPIClient,
         'google': GoogleAPIClient,
         'anthropic': AnthropicAPIClient,
-        'dial': lambda: AnthropicAPIClient(use_dial=True),
+        'dial': lambda **kw: AnthropicAPIClient(use_dial=True, **kw),
+        'azure': AzureOpenAIClient,
+        'bedrock': BedrockAPIClient,
         'local': LocalModelClient,
     }
     
-    if provider not in clients:
-        raise ValueError(f"Unknown provider: {provider}")
+    if provider_lower not in clients:
+        raise ValueError(f"Unknown provider: {provider}. Available providers: {list(clients.keys())}")
     
-    return clients[provider](**kwargs)
+    # Check availability if requested
+    if check_availability:
+        status = ProviderAvailability.get_status(provider_lower)
+        if status == ProviderStatus.UNAVAILABLE:
+            message = ProviderAvailability.get_message(provider_lower)
+            raise ProviderUnavailableError(provider_lower, message)
+        
+        # Log warning for experimental providers
+        if status == ProviderStatus.EXPERIMENTAL:
+            logger.warning(
+                f"Provider '{provider_lower}' is EXPERIMENTAL. "
+                f"It may not work as expected. {ProviderAvailability.get_message(provider_lower)}"
+            )
+    
+    return clients[provider_lower](**kwargs)

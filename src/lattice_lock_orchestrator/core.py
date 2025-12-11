@@ -1,12 +1,17 @@
 import logging
 import asyncio
-import json # Added this import
+import json
 from typing import Optional, Dict, List, Any, Callable
 from .types import TaskType, TaskRequirements, APIResponse, ModelCapabilities, FunctionCall
 from .registry import ModelRegistry
 from .scorer import TaskAnalyzer, ModelScorer
 from .guide import ModelGuideParser
-from .api_clients import get_api_client
+from .api_clients import (
+    get_api_client,
+    ProviderAvailability,
+    ProviderStatus,
+    ProviderUnavailableError,
+)
 from .function_calling import FunctionCallHandler
 
 logger = logging.getLogger(__name__)
@@ -196,42 +201,144 @@ class ModelOrchestrator:
         return first_response
 
     async def _handle_fallback(self, requirements: TaskRequirements, prompt: str, failed_model: str, **kwargs) -> APIResponse:
-        """Handle fallback logic"""
+        """
+        Handle fallback logic when primary model fails.
+        
+        This method:
+        1. Gets fallback chain from guide or builds one from registry
+        2. Filters out unavailable providers (missing credentials)
+        3. Attempts each fallback model in order
+        4. Provides clear error messages when all fallbacks fail
+        
+        Args:
+            requirements: The task requirements for model selection
+            prompt: The user prompt
+            failed_model: The model that failed (to skip in fallback)
+            **kwargs: Additional arguments for the API call
+            
+        Returns:
+            APIResponse from the first successful fallback model
+            
+        Raises:
+            RuntimeError: If all fallback models fail or no providers available
+        """
         # Get fallback chain from guide
         chain = self.guide.get_fallback_chain(requirements.task_type.name)
         
         # If no chain, or failed model was last in chain, try to find next best scorer
         if not chain:
-             # Simple fallback: try next best model from registry
-             candidates = []
-             for model in self.registry.get_all_models():
-                if model.api_name == failed_model: 
+            # Simple fallback: try next best model from registry
+            candidates = []
+            for model in self.registry.get_all_models():
+                if model.api_name == failed_model:
                     continue
+                    
+                # Skip models from unavailable providers
+                provider_name = model.provider.value
+                if not self._is_provider_available(provider_name):
+                    logger.debug(f"Skipping model {model.api_name}: provider '{provider_name}' unavailable")
+                    continue
+                    
                 score = self.scorer.score(model, requirements)
                 if score > 0:
-                    candidates.append((model.api_name, score))
-             candidates.sort(key=lambda x: x[1], reverse=True)
-             chain = [c[0] for c in candidates[:3]] # Try top 3
+                    candidates.append((model.api_name, score, provider_name))
+            
+            candidates.sort(key=lambda x: x[1], reverse=True)
+            chain = [c[0] for c in candidates[:5]]  # Try top 5 available models
         
+        if not chain:
+            available = self.get_available_providers()
+            raise RuntimeError(
+                f"No fallback models available. "
+                f"Available providers: {available if available else 'None'}. "
+                f"Please configure credentials for at least one provider."
+            )
+        
+        failed_attempts = []
         for model_id in chain:
             if model_id == failed_model:
                 continue
                 
-            logger.info(f"Fallback to: {model_id}")
             model_cap = self.registry.get_model(model_id)
             if not model_cap:
+                logger.debug(f"Skipping fallback model {model_id}: not found in registry")
+                continue
+            
+            # Check provider availability before attempting
+            provider_name = model_cap.provider.value
+            if not self._is_provider_available(provider_name):
+                logger.info(f"Skipping fallback model {model_id}: provider '{provider_name}' unavailable")
                 continue
                 
+            logger.info(f"Attempting fallback to: {model_id} ({provider_name})")
+            
             try:
-                return await self._call_model(model_cap, prompt, **kwargs)
+                response = await self._call_model(model_cap, prompt, **kwargs)
+                # Check if the response indicates an error (e.g., from experimental providers)
+                if response.error:
+                    logger.warning(f"Fallback model {model_id} returned error: {response.error}")
+                    failed_attempts.append((model_id, response.error))
+                    continue
+                return response
+            except ProviderUnavailableError as e:
+                logger.warning(f"Fallback model {model_id} provider unavailable: {e.message}")
+                failed_attempts.append((model_id, e.message))
+                continue
             except Exception as e:
                 logger.warning(f"Fallback model {model_id} failed: {e}")
+                failed_attempts.append((model_id, str(e)))
                 continue
-                
-        raise RuntimeError("All fallback models failed")
+        
+        # Build detailed error message
+        error_details = "; ".join([f"{m}: {e}" for m, e in failed_attempts]) if failed_attempts else "No models attempted"
+        available = self.get_available_providers()
+        raise RuntimeError(
+            f"All fallback models failed. "
+            f"Attempted: {error_details}. "
+            f"Available providers: {available if available else 'None'}. "
+            f"Check your API credentials and provider configuration."
+        )
 
     def _get_client(self, provider: str):
-        """Get or create API client"""
+        """
+        Get or create API client for the specified provider.
+        
+        Args:
+            provider: The provider name (e.g., 'openai', 'anthropic')
+            
+        Returns:
+            The API client instance.
+            
+        Raises:
+            ProviderUnavailableError: If provider credentials are missing.
+        """
         if provider not in self.clients:
-            self.clients[provider] = get_api_client(provider)
+            try:
+                self.clients[provider] = get_api_client(provider, check_availability=True)
+            except ProviderUnavailableError as e:
+                logger.error(f"Cannot create client for provider '{provider}': {e.message}")
+                raise
         return self.clients[provider]
+    
+    def _is_provider_available(self, provider: str) -> bool:
+        """Check if a provider is available (has credentials configured)."""
+        return ProviderAvailability.is_available(provider)
+    
+    def get_available_providers(self) -> List[str]:
+        """Get list of providers that have credentials configured."""
+        return ProviderAvailability.get_available_providers()
+    
+    def check_provider_status(self) -> Dict[str, str]:
+        """
+        Check and return the status of all providers.
+        
+        Returns:
+            Dict mapping provider names to their status messages.
+        """
+        ProviderAvailability.check_all_providers()
+        result = {}
+        for provider in ProviderAvailability.REQUIRED_CREDENTIALS.keys():
+            status = ProviderAvailability.get_status(provider)
+            message = ProviderAvailability.get_message(provider)
+            result[provider] = f"{status.value}: {message}"
+        return result
