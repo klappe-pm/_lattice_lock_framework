@@ -1,0 +1,3 @@
+# Invalid: Missing entities section
+version: v2.1
+generated_module: test_types

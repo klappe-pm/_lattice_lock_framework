@@ -1,0 +1,42 @@
+# Basic Lattice Lock Schema Example
+# This is a minimal example demonstrating core features
+
+version: v2.1
+generated_module: basic_types
+
+entities:
+  # Simple User entity with basic fields
+  User:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      username:
+        type: str
+        unique: true
+      email:
+        type: str
+        unique: true
+      age:
+        type: int
+        gte: 0
+        lte: 150
+      active:
+        type: bool
+        default: true
+
+  # Simple Post entity referencing User
+  Post:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      title:
+        type: str
+      content:
+        type: str
+      author_id:
+        type: uuid
+      published:
+        type: bool
+        default: false

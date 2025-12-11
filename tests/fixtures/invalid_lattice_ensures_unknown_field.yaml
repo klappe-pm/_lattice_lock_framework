@@ -1,0 +1,17 @@
+# Invalid: Ensures clause references unknown field
+version: v2.1
+generated_module: test_types
+
+entities:
+  TestEntity:
+    fields:
+      id:
+        type: uuid
+      amount:
+        type: decimal
+    ensures:
+      - name: bad_constraint
+        field: nonexistent_field  # Field doesn't exist
+        constraint: gte
+        value: 0
+        description: "This references a field that doesn't exist"

@@ -1,0 +1,50 @@
+# Valid Lattice Schema for Testing
+# This fixture exercises all supported features
+
+version: v2.1
+generated_module: test_types
+
+entities:
+  # Test entity with all field types
+  TestEntity:
+    fields:
+      uuid_field:
+        type: uuid
+        primary_key: true
+      string_field:
+        type: str
+        unique: true
+      integer_field:
+        type: int
+        gte: 0
+        lte: 100
+      decimal_field:
+        type: decimal
+        scale: 2
+        gt: 0
+      boolean_field:
+        type: bool
+        default: false
+      enum_field:
+        type: enum
+        enum: [option_a, option_b, option_c]
+        default: option_a
+    ensures:
+      - name: test_constraint
+        field: integer_field
+        constraint: lte
+        value: 50
+        description: "Test constraint for validation"
+
+  # Second entity for relationship testing
+  RelatedEntity:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      parent_id:
+        type: uuid
+      value:
+        type: decimal
+        scale: 4
+        gte: 0

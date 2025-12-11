@@ -1,0 +1,9 @@
+# Invalid: Malformed version string
+version: 2.1  # Should be v2.1
+generated_module: test_types
+
+entities:
+  TestEntity:
+    fields:
+      id:
+        type: uuid

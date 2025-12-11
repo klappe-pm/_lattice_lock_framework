@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Dict, List, Optional
 import yaml
 import logging
 from .types import ModelCapabilities, ModelProvider, TaskType, ProviderMaturity, ModelStatus
