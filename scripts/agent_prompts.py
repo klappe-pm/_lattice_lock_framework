@@ -662,6 +662,51 @@ Context:
 - Current `ModelCapabilities` is missing fields used by CLI (`supports_reasoning`, `code_specialized`, `task_scores`)
 - `TaskType` enum is missing `VISION`
 - This causes `AttributeError` at runtime''',
+
+    "6.1.3": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+
+Task ID: 6.1.3 - Provider Client and Fallback Strategy Design
+
+Write a design document covering:
+
+1. **Provider Maturity Classification**
+   - Define tiers: Production, Beta, Experimental, Planned
+   - Classify each of the 8 providers
+   - Define what each tier means for users
+
+2. **Bedrock Decision**
+   - Option A: Implement minimal working Bedrock client
+   - Option B: Mark as "experimental" and gate behind feature flag
+   - Option C: Remove from registry until implemented
+   - Recommendation with rationale
+
+3. **Required Environment Variables**
+   - For each provider, list required credentials
+   - Define validation behavior when credentials missing
+   - Error messages for misconfiguration
+
+4. **Fallback Behavior**
+   - What happens when a provider is unavailable?
+   - What happens when credentials are missing?
+   - How does this interact with fallback chains in `core.py`?
+   - Should unavailable providers be silently skipped or hard-fail?
+
+5. **Provider Health Checks**
+   - How to detect if a provider is available at startup
+   - Caching strategy for health status
+   - Retry behavior for transient failures
+
+6. **Implementation Tasks**
+   List concrete tasks for Devin AI:
+   - Files to modify
+   - Feature flags to add
+   - Tests to write
+   - Documentation updates
+
+Context:
+- `BedrockClient` currently raises `NotImplementedError`, causing runtime failures
+- Mixed maturity levels across providers (OpenAI fully supported, others partial)
+- Need robust fallback when providers are missing credentials''',
 }
 
 # Gemini CLI prompts - for terminal commands and scripts
