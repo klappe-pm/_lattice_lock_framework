@@ -94,7 +94,7 @@ class OrchestratorCLI:
                 best_for = []
                 for task_type, score in model.task_scores.items():
                     if score >= 0.8:
-                        best_for.append(task_type.value.replace("_", " ").title())
+                        best_for.append(task_type.name.replace("_", " ").title())
                 
                 row.append(" ".join(caps))
                 row.append(", ".join(best_for[:3]))  # Top 3
@@ -143,12 +143,12 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
             
             # Determine main reason for selection
             reasons = []
-            if requirements.requires_vision and model.supports_vision:
+            if requirements.require_vision and model.supports_vision:
                 reasons.append("Vision support")
-            if requirements.requires_reasoning and model.supports_reasoning:
+            if requirements.task_type == TaskType.REASONING and model.supports_reasoning:
                 reasons.append("Strong reasoning")
             if model.task_scores.get(requirements.task_type, 0) >= 0.8:
-                reasons.append(f"Excellent for {requirements.task_type.value}")
+                reasons.append(f"Excellent for {requirements.task_type.name}")
             if model.context_window >= requirements.min_context * 2:
                 reasons.append("Large context")
             if avg_cost < 0.01:
