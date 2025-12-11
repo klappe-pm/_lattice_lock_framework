@@ -98,7 +98,33 @@ def validate_lattice_schema(file_path: str) -> ValidationResult:
         for interface_name, interface_def in data['interfaces'].items():
             _validate_interface(interface_name, interface_def, defined_entities, result)
 
+    # 5. Validate ensures clauses (Entity-level)
+    if 'entities' in data and isinstance(data['entities'], dict):
+        for entity_name, entity_def in data['entities'].items():
+            if 'ensures' in entity_def:
+                _validate_ensures(entity_name, entity_def['ensures'], entity_def.get('fields', {}), result)
+
     return result
+
+def _validate_ensures(entity_name: str, ensures_def: Any, fields_def: Dict, result: ValidationResult):
+    """Validates ensures clauses."""
+    if not isinstance(ensures_def, list):
+         result.add_error(f"Ensures clauses for '{entity_name}' must be a list", field_path=f"entities.{entity_name}.ensures")
+         return
+
+    for idx, rule in enumerate(ensures_def):
+        path = f"entities.{entity_name}.ensures[{idx}]"
+        if not isinstance(rule, dict):
+            result.add_error(f"Ensures rule #{idx} must be a dictionary", field_path=path)
+            continue
+            
+        required_keys = {'name', 'field', 'constraint', 'value'}
+        if not all(k in rule for k in required_keys):
+             result.add_error(f"Ensures rule #{idx} missing required keys (name, field, constraint, value)", field_path=path)
+        
+        # Check if field exists
+        if 'field' in rule and rule['field'] not in fields_def:
+             result.add_error(f"Ensures rule '{rule.get('name', idx)}' references unknown field '{rule['field']}'", field_path=path)
 
 def _validate_entity(entity_name: str, entity_def: Any, result: ValidationResult):
     """Validates a single entity definition."""

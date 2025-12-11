@@ -164,6 +164,24 @@ class BaseAPIClient:
             logger.error(f"Request failed: {e}")
             raise
 
+    async def validate_credentials(self) -> bool:
+        """
+        Validate credentials by making a lightweight API call.
+        Subclasses should implement this with a cheap provider-specific call.
+        """
+        # Default fallback for now
+        return True
+
+    async def health_check(self) -> bool:
+        """
+        Check provider health status.
+        """
+        try:
+            return await self.validate_credentials()
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return False
+
 class GrokAPIClient(BaseAPIClient):
     """xAI Grok API client with all models support"""
     
@@ -609,6 +627,10 @@ class BedrockAPIClient(BaseAPIClient):
     """
     
     def __init__(self, region: str = "us-east-1"):
+        # BEDROCK INTEGRATION GATED
+        # Requires AWS Signature V4 and verified credentials strategy.
+        raise NotImplementedError("Bedrock integration is currently GATED (Experimental). See provider_strategy.md.")
+        
         # Bedrock uses AWS credentials, not API keys
         super().__init__("", f"https://bedrock-runtime.{region}.amazonaws.com")
         self.region = region

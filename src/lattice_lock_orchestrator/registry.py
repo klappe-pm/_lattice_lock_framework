@@ -1,15 +1,76 @@
-from typing import Dict, List, Optional
-from .types import ModelCapabilities, ModelProvider, TaskType
+from pathlib import Path
+import yaml
+import logging
+from .types import ModelCapabilities, ModelProvider, TaskType, ProviderMaturity, ModelStatus
+
+logger = logging.getLogger(__name__)
 
 class ModelRegistry:
     """Centralized model registry with all model definitions"""
 
-    def __init__(self):
+    def __init__(self, registry_path: Optional[str] = "models/registry.yaml"):
         self.models: Dict[str, ModelCapabilities] = {}
+        self.registry_path = registry_path
         self._load_all_models()
 
     def _load_all_models(self):
-        """Load all models across all providers"""
+        """Load all models, preferring YAML config over defaults"""
+        loaded_from_yaml = False
+        if self.registry_path:
+            loaded_from_yaml = self._load_from_yaml()
+            
+        if not loaded_from_yaml:
+            logger.warning("Registry YAML not found or failed, falling back to defaults")
+            self._load_defaults()
+
+    def _load_from_yaml(self) -> bool:
+        """Load models from registry.yaml"""
+        path = Path(self.registry_path)
+        if not path.exists():
+            return False
+            
+        try:
+            with open(path, 'r') as f:
+                data = yaml.safe_load(f)
+                
+            for provider_name, provider_data in data.get('providers', {}).items():
+                try:
+                    provider_enum = ModelProvider(provider_name.lower())
+                except ValueError:
+                    logger.warning(f"Unknown provider in registry: {provider_name}")
+                    continue
+                    
+                for model_id, model_data in provider_data.get('models', {}).items():
+                    try:
+                        maturity = ProviderMaturity[model_data.get('maturity', 'BETA')]
+                        status = ModelStatus[model_data.get('status', 'ACTIVE')]
+                        
+                        caps = ModelCapabilities(
+                            name=model_id, # using id as name if not separate
+                            api_name=model_data['api_name'],
+                            provider=provider_enum,
+                            context_window=model_data['context_window'],
+                            input_cost=model_data['input_cost'],
+                            output_cost=model_data['output_cost'],
+                            reasoning_score=model_data['reasoning_score'],
+                            coding_score=model_data['coding_score'],
+                            speed_rating=model_data['speed_rating'],
+                            maturity=maturity,
+                            status=status,
+                            supports_function_calling='function_calling' in model_data.get('capabilities', []),
+                            supports_vision='vision' in model_data.get('capabilities', [])
+                        )
+                        self.models[model_id] = caps
+                    except Exception as e:
+                        logger.error(f"Failed to load model {model_id}: {e}")
+                        
+            return True
+        except Exception as e:
+            logger.error(f"Failed to load registry YAML: {e}")
+            return False
+
+    def _load_defaults(self):
+        """Load hardcoded default models"""
         self._load_grok_models()
         self._load_openai_models()
         self._load_google_models()
@@ -31,6 +92,7 @@ class ModelRegistry:
                 reasoning_score=95.0,
                 coding_score=85.0,
                 speed_rating=7.0,
+                maturity=ProviderMaturity.BETA,
                 # task_scores logic will be handled by scorer based on capabilities
             ),
             "grok-code-fast-1": ModelCapabilities(
@@ -45,6 +107,7 @@ class ModelRegistry:
                 reasoning_score=85.0,
                 coding_score=90.0,
                 speed_rating=8.0,
+                maturity=ProviderMaturity.BETA,
             ),
             "grok-3": ModelCapabilities(
                 name="Grok 3",
@@ -58,6 +121,7 @@ class ModelRegistry:
                 reasoning_score=80.0,
                 coding_score=75.0,
                 speed_rating=6.0,
+                maturity=ProviderMaturity.BETA,
             ),
         })
 
@@ -76,6 +140,7 @@ class ModelRegistry:
                 reasoning_score=99.0,
                 coding_score=98.0,
                 speed_rating=3.0,
+                maturity=ProviderMaturity.PRODUCTION,
             ),
             "gpt-4o": ModelCapabilities(
                 name="GPT-4o",
@@ -89,6 +154,7 @@ class ModelRegistry:
                 reasoning_score=90.0,
                 coding_score=85.0,
                 speed_rating=8.0,
+                maturity=ProviderMaturity.PRODUCTION,
             ),
         })
 
@@ -107,6 +173,7 @@ class ModelRegistry:
                 reasoning_score=85.0,
                 coding_score=85.0,
                 speed_rating=7.0,
+                maturity=ProviderMaturity.BETA,
             ),
             "gemini-2.5-flash": ModelCapabilities(
                 name="Gemini 2.5 Flash",
@@ -120,6 +187,7 @@ class ModelRegistry:
                 reasoning_score=80.0,
                 coding_score=80.0,
                 speed_rating=9.0,
+                maturity=ProviderMaturity.BETA,
             ),
         })
 
@@ -138,6 +206,7 @@ class ModelRegistry:
                 reasoning_score=95.0,
                 coding_score=95.0,
                 speed_rating=7.0,
+                maturity=ProviderMaturity.PRODUCTION,
             ),
              "claude-3-opus": ModelCapabilities(
                 name="Claude 3 Opus",
@@ -151,6 +220,7 @@ class ModelRegistry:
                 reasoning_score=98.0,
                 coding_score=92.0,
                 speed_rating=5.0,
+                maturity=ProviderMaturity.PRODUCTION,
             ),
         })
 

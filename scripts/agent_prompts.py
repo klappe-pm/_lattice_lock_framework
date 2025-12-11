@@ -707,6 +707,45 @@ Context:
 - `BedrockClient` currently raises `NotImplementedError`, causing runtime failures
 - Mixed maturity levels across providers (OpenAI fully supported, others partial)
 - Need robust fallback when providers are missing credentials''',
+
+    "6.3.3": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+
+Task ID: 6.3.3 - Cost & Telemetry Strategy Design
+
+Write a design document covering:
+
+1. **Cost Tracking Scope**
+   - Per-call tracking: tokens in, tokens out, cost
+   - Per-session aggregation: total cost for session
+   - Per-model breakdown: cost by model
+   - Per-provider breakdown: cost by provider
+   - Time-based reporting: daily, weekly, monthly
+
+2. **Data Model**
+   - UsageRecord dataclass with timestamp, model_id, provider, tokens, cost
+   - CostReport for aggregated reports
+   - SessionSummary for current session
+
+3. **Storage Strategy**
+   - Evaluate: In-memory, JSON, SQLite, PostgreSQL
+   - Recommendation with rationale
+
+4. **API Surface**
+   - CostTracker class with record_usage, get_session_cost, get_cost_by_model, etc.
+   - CLI commands: cost, cost --detailed, cost --export
+
+5. **Integration Points**
+   - Where in core.py to record usage
+   - How to get token counts from API responses
+   - Handling providers that don't return token counts
+
+6. **Implementation Tasks**
+   List concrete tasks for Devin AI
+
+Context:
+- `show_cost_report()` in CLI returns "not yet implemented in v3.1"
+- Model costs are defined but not tracked
+- No storage for usage data''',
 }
 
 # Gemini CLI prompts - for terminal commands and scripts
