@@ -69,13 +69,13 @@ You should see output similar to:
 Lattice Lock Framework v1.0.0
 ```
 
-To run a system check:
+To run a system health check:
 
 ```bash
-lattice-lock check
+lattice-lock doctor
 ```
 
-This will verify your environment and dependencies.
+This will verify your Python version, dependencies, environment variables, and optional tools like Ollama.
 
 ## Next Steps
 
