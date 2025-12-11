@@ -1,0 +1,89 @@
+# Valid Lattice Lock Schema Test Fixture
+# This fixture exercises all supported features for validation testing.
+
+version: v2.1
+generated_module: types_test
+
+config:
+  forbidden_imports:
+    - requests
+  orm_engine: sqlmodel
+
+entities:
+  # Entity with all field types
+  TestEntity:
+    description: "Test entity with all field types"
+    persistence: table
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      string_field:
+        type: str
+        unique: true
+      int_field:
+        type: int
+        gt: 0
+        lt: 100
+      decimal_field:
+        type: decimal
+        gte: 0
+        lte: 1000
+        scale: 4
+      bool_field:
+        type: bool
+        default: false
+      enum_field:
+        type: enum
+        enum: [option_a, option_b, option_c]
+        default: option_a
+    ensures:
+      - name: int_range_check
+        field: int_field
+        constraint: lt
+        value: 100
+        description: "Integer field must be less than 100"
+      - name: decimal_max_check
+        field: decimal_field
+        constraint: lte
+        value: 1000
+        description: "Decimal field cannot exceed 1000"
+
+  # Entity with relationships
+  RelatedEntity:
+    description: "Entity that references TestEntity"
+    persistence: table
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      test_entity_id:
+        type: uuid
+      score:
+        type: int
+        gte: 1
+        lte: 10
+      rating:
+        type: decimal
+        gte: 0
+        lte: 5
+        scale: 1
+
+# Interface definitions
+interfaces:
+  ITestService:
+    file: src/services/test_service.py
+    scaffold: repository_pattern
+    depends_on: []
+    methods:
+      get_entity:
+        params:
+          entity_id: str
+        returns: TestEntity
+
+      create_entity:
+        params:
+          data: TestEntity
+        returns: TestEntity
+        ensures:
+          - "result.id is not None"

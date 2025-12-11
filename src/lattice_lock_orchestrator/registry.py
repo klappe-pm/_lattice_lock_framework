@@ -1,9 +1,44 @@
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Dict, List, Optional
 import yaml
 import logging
 from .types import ModelCapabilities, ModelProvider, TaskType, ProviderMaturity, ModelStatus
 
 logger = logging.getLogger(__name__)
+
+
+REQUIRED_MODEL_FIELDS = [
+    'api_name',
+    'context_window',
+    'input_cost',
+    'output_cost',
+    'reasoning_score',
+    'coding_score',
+    'speed_rating',
+]
+
+VALID_MATURITY_VALUES = ['PRODUCTION', 'BETA', 'EXPERIMENTAL', 'DEPRECATED']
+VALID_STATUS_VALUES = ['ACTIVE', 'INACTIVE', 'DEPRECATED']
+VALID_CAPABILITIES = ['function_calling', 'vision']
+
+
+@dataclass
+class RegistryValidationResult:
+    """Result of registry validation."""
+    valid: bool = True
+    errors: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    model_count: int = 0
+    provider_count: int = 0
+
+    def add_error(self, error: str):
+        self.errors.append(error)
+        self.valid = False
+
+    def add_warning(self, warning: str):
+        self.warnings.append(warning)
+
 
 class ModelRegistry:
     """Centralized model registry with all model definitions"""
@@ -11,40 +46,150 @@ class ModelRegistry:
     def __init__(self, registry_path: Optional[str] = "models/registry.yaml"):
         self.models: Dict[str, ModelCapabilities] = {}
         self.registry_path = registry_path
+        self._validation_result: Optional[RegistryValidationResult] = None
         self._load_all_models()
+
+    @property
+    def validation_result(self) -> Optional[RegistryValidationResult]:
+        """Get the validation result from the last load operation."""
+        return self._validation_result
+
+    def validate_registry(self, data: dict) -> RegistryValidationResult:
+        """Validate registry data structure and content.
+
+        Args:
+            data: The parsed YAML registry data
+
+        Returns:
+            RegistryValidationResult with validation status, errors, and warnings
+        """
+        result = RegistryValidationResult()
+
+        if not isinstance(data, dict):
+            result.add_error("Registry data must be a dictionary")
+            return result
+
+        if 'version' not in data:
+            result.add_warning("Registry missing 'version' field")
+
+        if 'providers' not in data:
+            result.add_error("Registry missing required 'providers' section")
+            return result
+
+        providers = data.get('providers', {})
+        if not isinstance(providers, dict):
+            result.add_error("'providers' must be a dictionary")
+            return result
+
+        result.provider_count = len(providers)
+
+        for provider_name, provider_data in providers.items():
+            if not isinstance(provider_data, dict):
+                result.add_error(f"Provider '{provider_name}' data must be a dictionary")
+                continue
+
+            try:
+                ModelProvider(provider_name.lower())
+            except ValueError:
+                result.add_warning(f"Unknown provider: {provider_name}")
+
+            models = provider_data.get('models', {})
+            if not isinstance(models, dict):
+                result.add_error(f"Provider '{provider_name}' models must be a dictionary")
+                continue
+
+            for model_id, model_data in models.items():
+                result.model_count += 1
+
+                if not isinstance(model_data, dict):
+                    result.add_error(f"Model '{model_id}' data must be a dictionary")
+                    continue
+
+                for field_name in REQUIRED_MODEL_FIELDS:
+                    if field_name not in model_data:
+                        result.add_error(f"Model '{model_id}' missing required field: {field_name}")
+
+                if 'context_window' in model_data:
+                    if not isinstance(model_data['context_window'], int):
+                        result.add_error(f"Model '{model_id}' context_window must be an integer")
+                    elif model_data['context_window'] <= 0:
+                        result.add_error(f"Model '{model_id}' context_window must be positive")
+
+                for cost_field in ['input_cost', 'output_cost']:
+                    if cost_field in model_data:
+                        if not isinstance(model_data[cost_field], (int, float)):
+                            result.add_error(f"Model '{model_id}' {cost_field} must be a number")
+                        elif model_data[cost_field] < 0:
+                            result.add_error(f"Model '{model_id}' {cost_field} cannot be negative")
+
+                for score_field in ['reasoning_score', 'coding_score', 'speed_rating']:
+                    if score_field in model_data:
+                        if not isinstance(model_data[score_field], (int, float)):
+                            result.add_error(f"Model '{model_id}' {score_field} must be a number")
+                        elif not (0 <= model_data[score_field] <= 100):
+                            result.add_warning(f"Model '{model_id}' {score_field} should be between 0 and 100")
+
+                if 'maturity' in model_data:
+                    if model_data['maturity'] not in VALID_MATURITY_VALUES:
+                        result.add_error(f"Model '{model_id}' has invalid maturity: {model_data['maturity']}")
+
+                if 'status' in model_data:
+                    if model_data['status'] not in VALID_STATUS_VALUES:
+                        result.add_error(f"Model '{model_id}' has invalid status: {model_data['status']}")
+
+                if 'capabilities' in model_data:
+                    caps = model_data['capabilities']
+                    if not isinstance(caps, list):
+                        result.add_error(f"Model '{model_id}' capabilities must be a list")
+                    else:
+                        for cap in caps:
+                            if cap not in VALID_CAPABILITIES:
+                                result.add_warning(f"Model '{model_id}' has unknown capability: {cap}")
+
+        return result
 
     def _load_all_models(self):
         """Load all models, preferring YAML config over defaults"""
         loaded_from_yaml = False
         if self.registry_path:
             loaded_from_yaml = self._load_from_yaml()
-            
+
         if not loaded_from_yaml:
             logger.warning("Registry YAML not found or failed, falling back to defaults")
             self._load_defaults()
 
     def _load_from_yaml(self) -> bool:
-        """Load models from registry.yaml"""
+        """Load models from registry.yaml with validation."""
         path = Path(self.registry_path)
         if not path.exists():
             return False
-            
+
         try:
             with open(path, 'r') as f:
                 data = yaml.safe_load(f)
-                
+
+            self._validation_result = self.validate_registry(data)
+
+            if self._validation_result.errors:
+                for error in self._validation_result.errors:
+                    logger.error(f"Registry validation error: {error}")
+
+            if self._validation_result.warnings:
+                for warning in self._validation_result.warnings:
+                    logger.warning(f"Registry validation warning: {warning}")
+
             for provider_name, provider_data in data.get('providers', {}).items():
                 try:
                     provider_enum = ModelProvider(provider_name.lower())
                 except ValueError:
                     logger.warning(f"Unknown provider in registry: {provider_name}")
                     continue
-                    
+
                 for model_id, model_data in provider_data.get('models', {}).items():
                     try:
                         maturity = ProviderMaturity[model_data.get('maturity', 'BETA')]
                         status = ModelStatus[model_data.get('status', 'ACTIVE')]
-                        
+
                         caps = ModelCapabilities(
                             name=model_id, # using id as name if not separate
                             api_name=model_data['api_name'],
@@ -63,7 +208,7 @@ class ModelRegistry:
                         self.models[model_id] = caps
                     except Exception as e:
                         logger.error(f"Failed to load model {model_id}: {e}")
-                        
+
             return True
         except Exception as e:
             logger.error(f"Failed to load registry YAML: {e}")
