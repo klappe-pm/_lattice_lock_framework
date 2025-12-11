@@ -1,0 +1,12 @@
+# Invalid: Numeric constraint on string field
+version: v2.1
+generated_module: test_types
+
+entities:
+  TestEntity:
+    fields:
+      id:
+        type: uuid
+      name:
+        type: str
+        gt: 10  # Invalid: can't use 'gt' on string type

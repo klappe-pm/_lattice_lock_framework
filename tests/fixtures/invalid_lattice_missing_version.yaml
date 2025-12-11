@@ -1,0 +1,8 @@
+# Invalid: Missing version field
+generated_module: test_types
+
+entities:
+  TestEntity:
+    fields:
+      id:
+        type: uuid

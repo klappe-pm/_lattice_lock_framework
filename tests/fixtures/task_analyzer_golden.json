@@ -1,0 +1,218 @@
+{
+  "version": "1.0",
+  "description": "Golden test set for Task Analyzer v2 accuracy testing",
+  "test_cases": [
+    {
+      "id": 1,
+      "prompt": "Write a Python function that calculates the factorial of a number",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 2,
+      "prompt": "Debug this code: TypeError: 'NoneType' object is not subscriptable at line 42",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 3,
+      "prompt": "Design a scalable microservices architecture for an e-commerce platform with high availability",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": ["REASONING"],
+      "expected_complexity": "complex"
+    },
+    {
+      "id": 4,
+      "prompt": "Write unit tests for the UserService class using pytest",
+      "expected_primary": "TESTING",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 5,
+      "prompt": "Analyze this CSV data and create a visualization of sales trends",
+      "expected_primary": "DATA_ANALYSIS",
+      "expected_secondary": [],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 6,
+      "prompt": "Look at this screenshot and tell me what error is shown",
+      "expected_primary": "VISION",
+      "expected_secondary": ["DEBUGGING"],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 7,
+      "prompt": "Create comprehensive documentation for the REST API including docstrings and README",
+      "expected_primary": "DOCUMENTATION",
+      "expected_secondary": [],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 8,
+      "prompt": "Fix this bug: Traceback (most recent call last):\n  File 'app.py', line 23\n    KeyError: 'user_id'",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": [],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 9,
+      "prompt": "Why is my React component re-rendering multiple times?",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": ["REASONING"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 10,
+      "prompt": "Implement a binary search tree with insert, delete, and search operations",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 11,
+      "prompt": "What's the best approach to handle authentication in a REST API?",
+      "expected_primary": "REASONING",
+      "expected_secondary": ["ARCHITECTURAL_DESIGN"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 12,
+      "prompt": "Help me understand how async/await works in JavaScript",
+      "expected_primary": "REASONING",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 13,
+      "prompt": "Create a complete CRUD API for user management with proper error handling",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": ["ARCHITECTURAL_DESIGN"],
+      "expected_complexity": "complex"
+    },
+    {
+      "id": 14,
+      "prompt": "Write integration tests for the payment processing module",
+      "expected_primary": "TESTING",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 15,
+      "prompt": "Analyze the performance metrics from this log file",
+      "expected_primary": "DATA_ANALYSIS",
+      "expected_secondary": ["REASONING"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 16,
+      "prompt": "Design the database schema for a social media application",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": [],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 17,
+      "prompt": "Quick! I need a simple hello world script fast",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [],
+      "expected_complexity": "simple",
+      "expected_priority": "speed"
+    },
+    {
+      "id": 18,
+      "prompt": "Give me the best quality solution for implementing a caching layer",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "moderate",
+      "expected_priority": "quality"
+    },
+    {
+      "id": 19,
+      "prompt": "```python\ndef calculate_total(items):\n    total = 0\n    for item in items:\n        total += item['price']\n    return total\n```\nFix this code that's throwing an error when items is empty",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 20,
+      "prompt": "Explain the SOLID principles with code examples",
+      "expected_primary": "DOCUMENTATION",
+      "expected_secondary": ["REASONING", "CODE_GENERATION"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 21,
+      "prompt": "Create a matplotlib visualization of the correlation between temperature and ice cream sales",
+      "expected_primary": "DATA_ANALYSIS",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 22,
+      "prompt": "Implement a comprehensive test suite with mocks for external API calls",
+      "expected_primary": "TESTING",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "complex"
+    },
+    {
+      "id": 23,
+      "prompt": "What is causing this image to not render properly?",
+      "expected_primary": "VISION",
+      "expected_secondary": ["DEBUGGING"],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 24,
+      "prompt": "Architect a distributed system for real-time messaging with high throughput",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": ["REASONING"],
+      "expected_complexity": "complex"
+    },
+    {
+      "id": 25,
+      "prompt": "Write a README for my open source project",
+      "expected_primary": "DOCUMENTATION",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 26,
+      "prompt": "def test_user_creation():\n    assert User.create('test') is not None\nThis test is failing, why?",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": ["TESTING"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 27,
+      "prompt": "Load this CSV into pandas and calculate the mean and standard deviation",
+      "expected_primary": "DATA_ANALYSIS",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 28,
+      "prompt": "How do I structure a monorepo for multiple microservices?",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": ["REASONING"],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 29,
+      "prompt": "Create a function that validates email addresses using regex",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 30,
+      "prompt": "Debug and fix the memory leak in this Node.js application",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": ["CODE_GENERATION"],
+      "expected_complexity": "complex"
+    }
+  ]
+}

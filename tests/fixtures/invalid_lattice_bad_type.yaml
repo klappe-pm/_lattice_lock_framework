@@ -1,0 +1,11 @@
+# Invalid: Unknown field type
+version: v2.1
+generated_module: test_types
+
+entities:
+  TestEntity:
+    fields:
+      id:
+        type: uuid
+      bad_field:
+        type: money  # Invalid type - should be 'decimal'
