@@ -1,0 +1,36 @@
+version: v2.1
+generated_module: types_v2
+
+entities:
+  Order:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      amount:
+        type: decimal
+        gt: 0
+        scale: 2
+      status:
+        type: enum
+        enum: [pending, filled, cancelled]
+        default: pending
+    ensures:
+      - name: limit_check
+        field: amount
+        constraint: lte
+        value: 10000
+        description: "Orders cannot exceed $10,000 without manual review"
+
+  Customer:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      email:
+        type: str
+        unique: true
+      rating:
+        type: int
+        gte: 1
+        lte: 5

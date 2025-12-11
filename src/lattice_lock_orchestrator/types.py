@@ -24,6 +24,18 @@ class ModelProvider(Enum):
     AZURE = "azure"
     BEDROCK = "bedrock"
 
+class ModelStatus(Enum):
+    """Lifecycle status of the model."""
+    ACTIVE = auto()
+    DEPRECATED = auto()
+    SUNSET = auto()
+
+class ProviderMaturity(Enum):
+    """Maturity tier of the provider implementation."""
+    PRODUCTION = auto()    # Stable, verified, default
+    BETA = auto()         # Functional but evolving
+    EXPERIMENTAL = auto() # Gated, requires setup
+
 @dataclass
 class ModelCapabilities:
     """Defines the capabilities and costs of a specific model."""
@@ -35,7 +47,10 @@ class ModelCapabilities:
     output_cost: float # Per 1M tokens
     reasoning_score: float # 0-100
     coding_score: float # 0-100
+    coding_score: float # 0-100
     speed_rating: float # 0-10
+    maturity: ProviderMaturity = ProviderMaturity.BETA
+    status: ModelStatus = ModelStatus.ACTIVE
     supports_vision: bool = False
     supports_function_calling: bool = False
     
