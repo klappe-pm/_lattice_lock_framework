@@ -66,6 +66,7 @@ def cmd_list() -> None:
         "4.3.2": "Pilot Project 2 design (CLI Tool)",
         "5.1.1": "Prompt Architect Agent specification",
         "5.1.2": "Prompt Architect integration specification",
+        "6.1.1": "Orchestrator Capabilities Contract Design",
     }
 
     print(f"{'Task ID':<10} {'Description':<50}")

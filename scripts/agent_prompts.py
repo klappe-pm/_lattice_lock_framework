@@ -621,6 +621,47 @@ Write a specification for integrating the Prompt Architect Agent:
    - Invalid specifications
    - Missing templates
    - Tracker conflicts''',
+
+    "6.1.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+
+Task ID: 6.1.1 - Orchestrator Capabilities Contract Design
+
+Write a design document in markdown with these sections:
+
+1. **Contract Definition**
+   - Which fields MUST exist on `ModelCapabilities` for CLI output and routing?
+   - Define the complete field list with types
+   - Specify which fields are required vs optional with defaults
+
+2. **Field Semantics**
+   - Should we use explicit booleans (`supports_reasoning`, `code_specialized`) or derive from numeric scores?
+   - How should `task_scores` be represented? Options:
+     - Explicit `dict[TaskType, float]` on each model
+     - Derived at runtime from scoring functions
+     - Hybrid approach
+   - Recommendation with rationale
+
+3. **TaskType Enum Updates**
+   - Should `VISION` be added to the enum?
+   - If yes: define semantics and which models support it
+   - If no: how to handle/remove existing references?
+   - Any other missing task types?
+
+4. **Migration Strategy**
+   - Safe defaults for new fields (backwards compatibility)
+   - How existing model definitions should be updated
+   - Validation to ensure all models have required fields
+
+5. **Implementation Tasks**
+   List concrete tasks for Devin AI to implement, including:
+   - Specific files to modify
+   - Field names and types to add
+   - Tests to write
+
+Context:
+- Current `ModelCapabilities` is missing fields used by CLI (`supports_reasoning`, `code_specialized`, `task_scores`)
+- `TaskType` enum is missing `VISION`
+- This causes `AttributeError` at runtime''',
 }
 
 # Gemini CLI prompts - for terminal commands and scripts
