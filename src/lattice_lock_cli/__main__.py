@@ -5,73 +5,66 @@ This module provides the main entry point for the CLI.
 """
 
 import click
-from rich.console import Console
+import logging
+from typing import Optional
 
 from lattice_lock import __version__
+from lattice_lock_cli.utils.console import get_console
 
-console = Console()
+# Import command groups
+from lattice_lock_cli.groups.orchestrator import orchestrator_group
+from lattice_lock_cli.groups.admin import admin_group
 
-
-@click.group()
-@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
-@click.version_option(version=__version__, prog_name="lattice-lock")
-@click.pass_context
-def cli(ctx, verbose):
-    """Lattice Lock Framework CLI - Governance for AI Engineering."""
-    ctx.ensure_object(dict)
-    ctx.obj["VERBOSE"] = verbose
-    if verbose:
-        console.log("[bold blue]Verbose mode enabled[/]")
-
-
+# Import existing commands
 from lattice_lock_cli.commands.compile import compile_command
 from lattice_lock_cli.commands.doctor import doctor_command
 from lattice_lock_cli.commands.feedback import feedback
 from lattice_lock_cli.commands.gauntlet import gauntlet_command
-
-# Import commands from commands module
 from lattice_lock_cli.commands.init import init_command
 from lattice_lock_cli.commands.sheriff import sheriff_command
 from lattice_lock_cli.commands.validate import validate_command
 
-# Register commands with the CLI
+# Configuration for logger
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger("lattice_lock")
+
+@click.group()
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
+@click.option("--json", is_flag=True, help="Output results as JSON")
+@click.option(
+    "--project-dir",
+    "-p",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, resolve_path=True),
+    default=".",
+    help="Target project directory (default: current)",
+)
+@click.version_option(version=__version__, prog_name="lattice-lock")
+@click.pass_context
+def cli(ctx, verbose: bool, json: bool, project_dir: str):
+    """Lattice Lock Framework CLI - Governance for AI Engineering."""
+    ctx.ensure_object(dict)
+    ctx.obj["VERBOSE"] = verbose
+    ctx.obj["JSON"] = json
+    ctx.obj["PROJECT_DIR"] = project_dir
+    
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+        get_console().print("[info]Verbose mode enabled[/info]")
+
+# Register Core Commands
 cli.add_command(init_command, name="init")
 cli.add_command(validate_command, name="validate")
 cli.add_command(compile_command, name="compile")
 cli.add_command(doctor_command, name="doctor")
 cli.add_command(feedback, name="feedback")
-cli.add_command(gauntlet_command, name="gauntlet")
-cli.add_command(sheriff_command, name="sheriff")
 
+# Alias commands for better UX
+cli.add_command(gauntlet_command, name="test")
+cli.add_command(sheriff_command, name="sheriff") # Keep sheriff available directly or via validate? Design says 'validate' runs sheriff.
 
-@cli.command()
-@click.option(
-    "--path",
-    "-p",
-    type=click.Path(exists=True),
-    default=".",
-    help="Path to project directory (default: current directory)",
-)
-@click.pass_context
-def test(ctx, path):
-    """Run Gauntlet semantic tests.
-
-    This is an alias for the gauntlet command.
-    """
-    ctx.invoke(gauntlet_command, path=path)
-
-
-@cli.command()
-@click.pass_context
-def doctor(ctx):
-    """Check environment health for Lattice Lock.
-
-    Verifies Python version, dependencies, environment variables,
-    and optional tools like Ollama.
-    """
-    from lattice_lock_cli.commands.doctor import doctor_command
-
-    doctor_command.invoke(ctx)
+# Register Groups
+cli.add_command(orchestrator_group)
+cli.add_command(admin_group)
 
 
 def main():

@@ -1,0 +1,26 @@
+[
+    {
+        "prompt": "Write a python function to calculate fibonacci sequence",
+        "expected_type": "CODE_GENERATION"
+    },
+    {
+        "prompt": "def fib(n): return n if n < 2 else fib(n-1) + fib(n-2)",
+        "expected_type": "CODE_GENERATION"
+    },
+    {
+        "prompt": "Why is my server returning 500 error?",
+        "expected_type": "DEBUGGING"
+    },
+    {
+        "prompt": "Explain how the reactor pattern works",
+        "expected_type": "GENERAL"
+    },
+    {
+        "prompt": "Create a unit test for the login module",
+        "expected_type": "TESTING"
+    },
+    {
+        "prompt": "I need a architectural diagram for the microservices",
+        "expected_type": "ARCHITECTURAL_DESIGN"
+    }
+]

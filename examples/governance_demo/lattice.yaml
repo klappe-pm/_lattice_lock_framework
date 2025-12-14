@@ -1,0 +1,14 @@
+version: "2.1"
+rules:
+  - id: "no-print"
+    description: "Use logger instead of print"
+    severity: "error"
+    scope: "**/*.py"
+    excludes: ["scripts/*", "tests/*"]
+    forbids: "node.is_call_to('print')"
+
+  - id: "api-typed-responses"
+    severity: "error"
+    description: "API routes must return Pydantic models"
+    scope: "src/api/**/*.py"
+    ensures: "return_type.is_subclass_of(BaseModel)"
