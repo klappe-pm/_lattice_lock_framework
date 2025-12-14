@@ -6,7 +6,6 @@ Scaffolds new projects with compliant directory structures.
 
 import re
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -80,17 +79,21 @@ def create_project_structure(
         ("base/lattice.yaml.j2", project_dir / "lattice.yaml"),
         ("base/readme.md.j2", project_dir / "README.md"),
         ("base/gitignore.j2", project_dir / ".gitignore"),
-        ("ci/github_actions/lattice-lock.yml.j2", project_dir / ".github" / "workflows" / "lattice-lock.yml"),
+        (
+            "ci/github_actions/lattice-lock.yml.j2",
+            project_dir / ".github" / "workflows" / "lattice-lock.yml",
+        ),
     ]
 
     # Add type-specific files
     if project_type == "agent":
-        file_mappings.append(
-            ("agent/agent_definition.yaml.j2", project_dir / "agent.yaml")
-        )
+        file_mappings.append(("agent/agent_definition.yaml.j2", project_dir / "agent.yaml"))
     elif project_type == "service":
         file_mappings.append(
-            ("service/service_scaffold.py.j2", project_dir / "src" / "services" / f"{project_name}.py")
+            (
+                "service/service_scaffold.py.j2",
+                project_dir / "src" / "services" / f"{project_name}.py",
+            )
         )
     elif project_type == "library":
         file_mappings.append(
@@ -101,11 +104,16 @@ def create_project_structure(
 
     # Add AWS CI templates if aws provider selected
     if ci_provider == "aws":
-        file_mappings.extend([
-            ("ci/aws/buildspec.yml.j2", project_dir / "ci" / "aws" / "buildspec.yml"),
-            ("ci/aws/pipeline.yml.j2", project_dir / "ci" / "aws" / "pipeline.yml"),
-            ("ci/aws/codebuild-project.yml.j2", project_dir / "ci" / "aws" / "codebuild-project.yml"),
-        ])
+        file_mappings.extend(
+            [
+                ("ci/aws/buildspec.yml.j2", project_dir / "ci" / "aws" / "buildspec.yml"),
+                ("ci/aws/pipeline.yml.j2", project_dir / "ci" / "aws" / "pipeline.yml"),
+                (
+                    "ci/aws/codebuild-project.yml.j2",
+                    project_dir / "ci" / "aws" / "codebuild-project.yml",
+                ),
+            ]
+        )
 
     # Render and write templates
     for template_name, output_path in file_mappings:
@@ -194,7 +202,7 @@ def init_command(
 
     PROJECT_NAME should be in snake_case format (e.g., my_project).
     """
-    verbose = ctx.obj.get("verbose", False) if ctx.obj else False
+    verbose = ctx.obj.get("VERBOSE", False) if ctx.obj else False
 
     # Validate project name
     if not validate_project_name(project_name):
