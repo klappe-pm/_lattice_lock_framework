@@ -1,7 +1,7 @@
 import pytest
 import os
 import tempfile
-from src.lattice_lock_validator.agents import validate_agent_manifest
+from lattice_lock_validator.agents import validate_agent_manifest
 
 @pytest.fixture
 def valid_agent_content():

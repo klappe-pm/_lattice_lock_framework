@@ -3,7 +3,7 @@ import os
 import tempfile
 import shutil
 from pathlib import Path
-from src.lattice_lock_validator.structure import validate_repository_structure, validate_file_naming, validate_directory_structure
+from lattice_lock_validator.structure import validate_repository_structure, validate_file_naming, validate_directory_structure
 
 @pytest.fixture
 def temp_repo():

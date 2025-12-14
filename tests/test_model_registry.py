@@ -12,14 +12,14 @@ import tempfile
 import os
 from pathlib import Path
 
-from src.lattice_lock_orchestrator.registry import (
+from lattice_lock_orchestrator.registry import (
     ModelRegistry,
     RegistryValidationResult,
     REQUIRED_MODEL_FIELDS,
     VALID_MATURITY_VALUES,
     VALID_STATUS_VALUES,
 )
-from src.lattice_lock_orchestrator.types import ModelProvider
+from lattice_lock_orchestrator.types import ModelProvider
 
 
 PROJECT_ROOT = Path(__file__).parent.parent

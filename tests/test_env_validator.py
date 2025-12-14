@@ -1,7 +1,7 @@
 import pytest
 import os
 import tempfile
-from src.lattice_lock_validator.env import validate_env_file
+from lattice_lock_validator.env import validate_env_file
 
 @pytest.fixture
 def valid_env_content():

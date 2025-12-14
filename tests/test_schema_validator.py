@@ -1,7 +1,7 @@
 import pytest
 import os
 import tempfile
-from src.lattice_lock_validator.schema import validate_lattice_schema
+from lattice_lock_validator.schema import validate_lattice_schema
 
 @pytest.fixture
 def valid_schema_content():

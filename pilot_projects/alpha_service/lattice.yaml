@@ -1,0 +1,7 @@
+
+version: "2.1"
+project:
+  name: "alpha-service"
+rules:
+  - id: "enforce-types"
+    severity: "error"

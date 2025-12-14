@@ -13,7 +13,7 @@ import tempfile
 import shutil
 from pathlib import Path
 
-from src.lattice_lock.compile import compile_lattice, CompilationResult
+from lattice_lock.compile import compile_lattice, CompilationResult
 
 
 # Get the project root directory

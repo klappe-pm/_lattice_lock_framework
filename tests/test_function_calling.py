@@ -1,8 +1,8 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
-from src.lattice_lock_orchestrator.core import ModelOrchestrator
-from src.lattice_lock_orchestrator.types import TaskType, APIResponse, ModelCapabilities, ModelProvider, FunctionCall
+from lattice_lock_orchestrator.core import ModelOrchestrator
+from lattice_lock_orchestrator.types import TaskType, APIResponse, ModelCapabilities, ModelProvider, FunctionCall
 
 # Define a mock function that the model can call
 async def mock_get_weather(location: str) -> str:

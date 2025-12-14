@@ -10,7 +10,7 @@ import os
 import pytest
 from pathlib import Path
 
-from src.lattice_lock_validator.schema import validate_lattice_schema
+from lattice_lock_validator.schema import validate_lattice_schema
 
 
 # Get the project root directory

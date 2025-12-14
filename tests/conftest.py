@@ -2,23 +2,16 @@
 Pytest configuration for Lattice Lock Framework tests.
 
 This module configures pytest to:
-1. Skip legacy test files with incorrect imports
-2. Configure asyncio mode for async tests
-3. Provide common fixtures
+1. Configure asyncio mode for async tests
+2. Provide common fixtures
 """
 import pytest
 
-# List of legacy test files that need import fixes
-# These use "from src." imports which don't work with proper packaging
+
+# Legacy test files skip list - imports normalized as of 2025-12-14
+# Only skip files that genuinely can't be run
 LEGACY_TEST_FILES = [
-    "test_agent_validator.py",
-    "test_env_validator.py",
-    "test_function_calling.py",
-    "test_schema_validator.py",
-    "test_spec_analyzer.py",
-    "test_structure_main.py",
-    "test_structure_validator.py",
-    "test_tool_matcher.py",
+    "test_tool_matcher.py",  # Requires lattice_lock_agents package which may not exist
 ]
 
 

@@ -1,7 +1,7 @@
 import pytest
 import sys
 from unittest.mock import patch, MagicMock
-from src.lattice_lock_validator.structure import main
+from lattice_lock_validator.structure import main
 
 def test_main_success(tmp_path):
     # Create valid structure
