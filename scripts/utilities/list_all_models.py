@@ -53,7 +53,8 @@ def check_local_models():
             return installed_models
         else:
             return []
-    except:
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        # Ollama not installed or not responding
         return []
 
 def format_task_scores(task_scores, top_n=3):

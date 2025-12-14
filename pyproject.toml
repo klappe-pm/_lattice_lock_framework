@@ -46,6 +46,11 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "httpx>=0.25.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "pre-commit>=3.5.0",
+    "pylint>=3.0.0",
 ]
 all = [
     "uvloop>=0.19.0; platform_system != 'Windows'",
@@ -67,3 +72,82 @@ where = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+# Black configuration
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+    | \.venv
+    | venv
+    | __pycache__
+    | \.pytest_cache
+    | build
+    | dist
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+skip = [".git", ".venv", "venv", "__pycache__", ".pytest_cache", "build", "dist"]
+known_first_party = ["lattice_lock", "lattice_lock_orchestrator", "lattice_lock_cli", "lattice_lock_validator"]
+
+# Ruff configuration
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B008",   # do not perform function calls in argument defaults
+    "C901",   # too complex
+    "ARG001", # unused function argument (common in frameworks)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001", "S101"]  # Allow assert and unused args in tests
+"scripts/*" = ["ARG001"]
+
+# Pylint configuration
+[tool.pylint.main]
+ignore = [".git", ".venv", "venv", "__pycache__", ".pytest_cache", "build", "dist"]
+ignore-patterns = ["test_.*\\.py"]
+
+[tool.pylint.messages_control]
+disable = [
+    "C0114",  # missing-module-docstring (we'll add these in A4)
+    "C0115",  # missing-class-docstring (we'll add these in A4)
+    "C0116",  # missing-function-docstring (we'll add these in A4)
+    "R0903",  # too-few-public-methods
+    "W1203",  # logging-fstring-interpolation
+]
+
+[tool.pylint.format]
+max-line-length = 100

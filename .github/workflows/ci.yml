@@ -1,5 +1,5 @@
 # Main CI workflow for Lattice Lock Framework
-# Tests on multiple Python versions with proper dependency management
+# Tests on multiple Python versions with comprehensive quality checks
 
 name: CI
 
@@ -13,9 +13,52 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Check formatting with Black
+      run: |
+        black --check --diff src/ tests/ scripts/
+
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only --diff src/ tests/ scripts/
+
+    - name: Lint with Ruff
+      run: |
+        ruff check src/ tests/ --output-format=github
+
+    - name: Run Sheriff AST validator
+      run: |
+        python -m lattice_lock.sheriff src/ --json > sheriff-report.json || true
+        python -m lattice_lock.sheriff src/
+
+    - name: Upload Sheriff Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: sheriff-report
+        path: sheriff-report.json
+
   test:
     name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    needs: quality
     strategy:
       fail-fast: false
       matrix:
@@ -35,12 +78,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
 
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
-        pytest tests/ -v --tb=short
+        pytest tests/ -v --tb=short --cov=src --cov-report=xml --cov-report=term-missing
 
-  lint:
-    name: Lint and Type Check
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      if: matrix.python-version == '3.11'
+      with:
+        name: coverage-report
+        path: coverage.xml
+
+  typecheck:
+    name: Type Checking
     runs-on: ubuntu-latest
 
     steps:
@@ -56,12 +106,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
-        pip install ruff mypy types-PyYAML types-requests
-
-    - name: Lint with ruff
-      run: |
-        # Critical errors only (syntax, undefined names)
-        ruff check src/ --select=E9,F63,F7,F82 --output-format=github
+        pip install mypy types-PyYAML types-requests types-aiofiles
 
     - name: Type check with mypy
       run: |
@@ -70,7 +115,7 @@ jobs:
   build:
     name: Build Package
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [quality, test]
 
     steps:
     - uses: actions/checkout@v4
@@ -98,3 +143,19 @@ jobs:
       with:
         name: dist
         path: dist/
+
+  # Summary job for branch protection
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [quality, test, build]
+    if: always()
+
+    steps:
+    - name: Check all jobs passed
+      run: |
+        if [[ "${{ needs.quality.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.build.result }}" != "success" ]]; then
+          echo "One or more jobs failed"
+          exit 1
+        fi
+        echo "All CI jobs passed successfully"

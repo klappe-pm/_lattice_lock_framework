@@ -49,8 +49,9 @@ class OrchestratorCLI:
         if GrokAPI and os.getenv("XAI_API_KEY"):
             try:
                 self.grok_api = GrokAPI()
-            except:
-                pass
+            except (ImportError, ValueError, RuntimeError) as e:
+                # Log initialization failure but continue without Grok API
+                console.print(f"[dim]Grok API initialization skipped: {e}[/dim]")
     
     def list_models(self, provider: Optional[str] = None, verbose: bool = False):
         """List all available models"""

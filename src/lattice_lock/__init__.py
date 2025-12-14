@@ -25,6 +25,7 @@ from lattice_lock_orchestrator import (
 )
 from lattice_lock_orchestrator.types import TaskRequirements, ModelCapabilities
 from lattice_lock.compile import compile_lattice, CompilationResult
+from lattice_lock.sheriff import run_sheriff, SheriffResult, Violation, ViolationSeverity
 
 
 def _get_version() -> str:
@@ -54,4 +55,8 @@ __all__ = [
     "TaskAnalyzer",
     "compile_lattice",
     "CompilationResult",
+    "run_sheriff",
+    "SheriffResult",
+    "Violation",
+    "ViolationSeverity",
 ]

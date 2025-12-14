@@ -47,8 +47,8 @@ def update_status(model: str, status: str, message: str = ""):
         try:
             with open(STATUS_FILE, 'w') as f:
                 json.dump(model_status, f, indent=2)
-        except:
-            pass
+        except (OSError, IOError, PermissionError):
+            pass  # Status file write failed, continue without persisting status
 
 
 def keep_model_alive(model: str):
@@ -111,8 +111,8 @@ def get_ram_usage() -> tuple:
                     value = parts[2].rstrip(".")
                     try:
                         pages[key] = int(value)
-                    except:
-                        pass
+                    except (ValueError, TypeError):
+                        pass  # Skip non-numeric values
 
         page_size = 4096
         total_used = (pages.get("active", 0) + pages.get("wired", 0)) * page_size / (1024**3)

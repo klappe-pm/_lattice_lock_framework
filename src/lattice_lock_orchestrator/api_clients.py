@@ -749,10 +749,10 @@ class LocalModelClient(BaseAPIClient):
                     "prompt": messages[-1]["content"],
                     "temperature": temperature,
                 }
-                
+
                 async with self.session.post(f"{self.base_url}/api/generate", json=ollama_payload) as response:
                     data = await response.json()
-                    
+
                 return APIResponse(
                     content=data['response'],
                     model=model,
@@ -761,7 +761,8 @@ class LocalModelClient(BaseAPIClient):
                     latency_ms=0,
                     raw_response=data
                 )
-            except:
+            except (aiohttp.ClientError, KeyError, json.JSONDecodeError):
+                # Ollama fallback failed, re-raise original exception
                 raise e
 
 class ProviderUnavailableError(Exception):

@@ -1,26 +1,58 @@
+# Pre-commit hooks configuration for Lattice Lock Framework
+# See https://pre-commit.com for more information
+
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
 
--   repo: local
+  # Black formatter
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
     hooks:
-    -   id: lattice-structure-check
-        name: Lattice Structure Validation
-        entry: python -m src.lattice_lock_validator.structure
-        language: python
-        types: [file]
-        pass_filenames: false
-        additional_dependencies: [pyyaml]
+      - id: black
+        language_version: python3.10
+        args: [--config=pyproject.toml]
 
-    -   id: lattice-naming-check
-        name: File Naming Convention Check
-        entry: python -m src.lattice_lock_validator.structure --naming-only
+  # isort import sorter
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--settings-path=pyproject.toml]
+
+  # Ruff linter (fast Python linter)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Local hooks for Lattice Lock specific checks
+  - repo: local
+    hooks:
+      - id: lattice-structure-check
+        name: Lattice Structure Validation
+        entry: python3 -m lattice_lock_validator.structure
         language: python
         types: [file]
         pass_filenames: false
         additional_dependencies: [pyyaml]
+        stages: [commit]
+
+      - id: lattice-naming-check
+        name: File Naming Convention Check
+        entry: python3 -m lattice_lock_validator.structure --naming-only
+        language: python
+        types: [file]
+        pass_filenames: false
+        additional_dependencies: [pyyaml]
+        stages: [commit]
