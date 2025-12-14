@@ -138,7 +138,8 @@ class GitHubFormatter(OutputFormatter):
         if warning_count > 0:
             summary_parts.append(f"{warning_count} warning(s)")
 
-        summary = f"::notice::Sheriff found {" and ".join(summary_parts)} in {target_path}"
+        summary_text = " and ".join(summary_parts)
+        summary = f"::notice::Sheriff found {summary_text} in {target_path}"
         lines.append(summary)
 
         return "\n".join(lines)
