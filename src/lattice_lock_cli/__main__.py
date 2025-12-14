@@ -23,65 +23,20 @@ def cli(ctx, verbose):
         console.log("[bold blue]Verbose mode enabled[/]")
 
 
-@cli.command()
-@click.argument("name")
-@click.option("--output-dir", "-o", default=".", help="Output directory for the project")
-@click.option(
-    "--template",
-    "-t",
-    type=click.Choice(["agent", "service", "library"]),
-    default="service",
-    help="Project template type",
-)
-@click.pass_context
-def init(ctx, name, output_dir, template):
-    """Initialize a new project with NAME."""
-    from pathlib import Path
+from lattice_lock_cli.commands.doctor import doctor_command
+from lattice_lock_cli.commands.gauntlet import gauntlet_command
 
-    verbose = ctx.obj.get("VERBOSE", False)
-    output_path = Path(output_dir)
+# Import commands from commands module
+from lattice_lock_cli.commands.init import init_command
+from lattice_lock_cli.commands.sheriff import sheriff_command
+from lattice_lock_cli.commands.validate import validate_command
 
-    if verbose:
-        console.print(f"[blue]Creating project '{name}' in {output_dir}[/]")
-
-    # Import here to avoid circular imports
-    from lattice_lock_cli.commands.init import create_project_structure, validate_project_name
-
-    # Validate project name
-    if not validate_project_name(name):
-        console.print(
-            f"[red]Invalid project name '{name}'. "
-            "Name must be snake_case (lowercase letters, numbers, underscores) "
-            "and start with a letter.[/]"
-        )
-        raise SystemExit(1)
-
-    # Check if directory already exists
-    project_dir = output_path / name
-    if project_dir.exists():
-        console.print(
-            f"[red]Directory '{project_dir}' already exists. "
-            "Please choose a different name or remove the existing directory.[/]"
-        )
-        raise SystemExit(1)
-
-    try:
-        created_files = create_project_structure(
-            project_name=name,
-            project_type=template,
-            output_dir=output_path,
-            verbose=verbose,
-        )
-        console.print(f"[green]Created project '{name}' with {len(created_files)} files![/]")
-    except Exception as e:
-        console.print(f"[red]Error creating project: {e}[/]")
-        raise SystemExit(1)
-
-
-@cli.command()
-def validate():
-    """Run Sheriff AST validation."""
-    console.print("[yellow]Running Sheriff...[/]")
+# Register commands with the CLI
+cli.add_command(init_command, name="init")
+cli.add_command(validate_command, name="validate")
+cli.add_command(doctor_command, name="doctor")
+cli.add_command(gauntlet_command, name="gauntlet")
+cli.add_command(sheriff_command, name="sheriff")
 
 
 @cli.command()
