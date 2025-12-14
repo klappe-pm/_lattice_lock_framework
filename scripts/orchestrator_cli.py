@@ -4,18 +4,16 @@ Model Orchestrator CLI
 Command-line interface for the intelligent model orchestration system
 """
 
-import os
-import sys
-import json
 import argparse
 import asyncio
+import os
+import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
+
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.syntax import Syntax
-from rich import print as rprint
+from rich.table import Table
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -24,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from lattice_lock import ModelOrchestrator, TaskType
 
 try:
-    from lattice_lock_orchestrator.zen_mcp_bridge import ZenMCPBridge, ModelRouter
+    from lattice_lock_orchestrator.zen_mcp_bridge import ModelRouter, ZenMCPBridge
 except ImportError:
     ZenMCPBridge = None
     ModelRouter = None
@@ -34,7 +32,15 @@ try:
 except ImportError:
     GrokAPI = None
 
+try:
+    from lattice_lock_agents.prompt_architect.agent import PromptArchitectAgent
+    from lattice_lock_agents.prompt_architect.orchestrator import orchestrate_prompt_generation
+except ImportError:
+    orchestrate_prompt_generation = None
+    PromptArchitectAgent = None
+
 console = Console()
+
 
 class OrchestratorCLI:
     """CLI interface for model orchestration"""
@@ -72,12 +78,7 @@ class OrchestratorCLI:
 
             cost_str = f"${model.input_cost:.2f}/${model.output_cost:.2f}"
 
-            row = [
-                model.provider.value,
-                model_id,
-                f"{model.context_window:,}",
-                cost_str
-            ]
+            row = [model.provider.value, model_id, f"{model.context_window:,}", cost_str]
 
             if verbose:
                 # Capabilities
@@ -160,7 +161,7 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
                 model_id,
                 f"{score:.2%}",
                 f"${avg_cost:.4f}",
-                reasons[0] if reasons else "General fit"
+                reasons[0] if reasons else "General fit",
             )
 
         console.print(table)
@@ -177,10 +178,7 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
 
         console.print(Panel(selected_content, title="✨ Optimal Choice", border_style="green"))
 
-    async def route_request(self,
-                           prompt: str,
-                           mode: str = "auto",
-                           strategy: str = "balanced"):
+    async def route_request(self, prompt: str, mode: str = "auto", strategy: str = "balanced"):
         """Route a request through the system"""
 
         console.print(f"\n[bold]Routing request with mode: {mode}, strategy: {strategy}[/bold]\n")
@@ -194,13 +192,13 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
         console.print(f"[yellow]Context:[/yellow] {model.context_window:,} tokens")
 
         # Estimate cost (assuming 1K input, 500 output)
-        if hasattr(self.orchestrator, 'estimate_cost'):
-             cost = self.orchestrator.estimate_cost(model_id, 1000, 500)
-             console.print(f"[red]Estimated cost:[/red] ${cost:.4f}")
+        if hasattr(self.orchestrator, "estimate_cost"):
+            cost = self.orchestrator.estimate_cost(model_id, 1000, 500)
+            console.print(f"[red]Estimated cost:[/red] ${cost:.4f}")
         else:
-             # Manual calculation
-             cost = (model.input_cost * 1000 + model.output_cost * 500) / 1000000
-             console.print(f"[red]Estimated cost:[/red] ${cost:.4f}")
+            # Manual calculation
+            cost = (model.input_cost * 1000 + model.output_cost * 500) / 1000000
+            console.print(f"[red]Estimated cost:[/red] ${cost:.4f}")
 
         # Would make actual API call here
         console.print("\n[dim]Note: Actual API call would be made here[/dim]")
@@ -258,6 +256,93 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
         """Create a consensus group for the prompt (not yet implemented)."""
         console.print("[yellow]Consensus groups not yet implemented in v3.1[/yellow]")
 
+    async def generate_prompts(
+        self,
+        spec: Optional[str] = None,
+        roadmap: Optional[str] = None,
+        output_dir: Optional[str] = None,
+        dry_run: bool = False,
+        from_project: bool = False,
+        phases: Optional[list[str]] = None,
+        tools: Optional[list[str]] = None,
+    ):
+        """Generate prompts from specifications and roadmaps"""
+
+        if orchestrate_prompt_generation is None:
+            console.print("[red]Prompt Architect module not available.[/red]")
+            console.print("[dim]Install with: pip install -e .[/dim]")
+            return
+
+        console.print("\n[bold cyan]Prompt Architect - Automated Prompt Generation[/bold cyan]\n")
+
+        # Show configuration
+        config_content = f"""
+[bold]Specification:[/bold] {spec or 'Auto-discover' if from_project else 'Not provided'}
+[bold]Roadmap:[/bold] {roadmap or 'Auto-discover' if from_project else 'Not provided'}
+[bold]Output Directory:[/bold] {output_dir or 'Default (project_prompts/)'}
+[bold]Dry Run:[/bold] {'Yes' if dry_run else 'No'}
+[bold]From Project:[/bold] {'Yes' if from_project else 'No'}
+[bold]Phases Filter:[/bold] {', '.join(phases) if phases else 'All'}
+[bold]Tools Filter:[/bold] {', '.join(tools) if tools else 'All'}
+        """
+        console.print(Panel(config_content.strip(), title="Configuration", border_style="blue"))
+
+        # Run orchestration
+        console.print("\n[yellow]Running prompt generation pipeline...[/yellow]\n")
+
+        try:
+            result = await orchestrate_prompt_generation(
+                spec_path=spec,
+                roadmap_path=roadmap,
+                output_dir=output_dir,
+                dry_run=dry_run,
+                from_project=from_project,
+                phases=phases,
+                tools=tools,
+            )
+
+            # Display results
+            status_color = {
+                "success": "green",
+                "partial": "yellow",
+                "failure": "red",
+            }.get(result.status, "white")
+
+            result_content = f"""
+[bold]Status:[/bold] [{status_color}]{result.status.upper()}[/{status_color}]
+[bold]Prompts Generated:[/bold] {result.prompts_generated}
+[bold]Prompts Updated:[/bold] {result.prompts_updated}
+[bold]Phases Covered:[/bold] {', '.join(result.phases_covered) if result.phases_covered else 'None'}
+            """
+            console.print(Panel(result_content.strip(), title="Results", border_style=status_color))
+
+            # Show tool distribution
+            if result.tool_distribution:
+                table = Table(title="Tool Distribution", show_header=True)
+                table.add_column("Tool", style="cyan")
+                table.add_column("Prompts", justify="right", style="green")
+
+                for tool, count in sorted(result.tool_distribution.items()):
+                    table.add_row(tool, str(count))
+
+                console.print(table)
+
+            # Show errors if any
+            if result.errors:
+                console.print("\n[bold red]Errors:[/bold red]")
+                for error in result.errors:
+                    console.print(f"  [red]- {error}[/red]")
+
+            # Show metrics
+            if result.metrics:
+                metrics = result.metrics
+                if metrics.get("duration_seconds"):
+                    console.print(f"\n[dim]Duration: {metrics['duration_seconds']:.2f}s[/dim]")
+
+        except Exception as e:
+            console.print(f"[red]Error during prompt generation: {e}[/red]")
+            raise
+
     def test_integration(self):
         """Test the complete integration"""
 
@@ -266,10 +351,12 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
         # Test 1: Model availability
         console.print("[yellow]Test 1: Model Availability[/yellow]")
         total_models = len(self.orchestrator.registry.models)
-        available = len(self.orchestrator.registry.models) # Assuming all loaded are available for now
+        available = len(
+            self.orchestrator.registry.models
+        )  # Assuming all loaded are available for now
         console.print(f"  Total models: {total_models}")
         console.print(f"  Available: {available}")
-        console.print(f"  Status: [green]✓ PASS[/green]" if available > 0 else "[red]✗ FAIL[/red]")
+        console.print("  Status: [green]✓ PASS[/green]" if available > 0 else "[red]✗ FAIL[/red]")
 
         # Test 2: Task detection
         console.print("\n[yellow]Test 2: Task Detection[/yellow]")
@@ -291,16 +378,19 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
 
         for strategy in strategies:
             # Mocking strategy selection for test
-            model_id = self.orchestrator._select_best_model(self.orchestrator.analyzer.analyze("Write a Python function"))
+            model_id = self.orchestrator._select_best_model(
+                self.orchestrator.analyzer.analyze("Write a Python function")
+            )
             console.print(f"  {strategy}: {model_id}")
 
         # Test 4: Zen MCP Bridge
         console.print("\n[yellow]Test 4: Zen MCP Integration[/yellow]")
         zen_tools = self.bridge.zen_tools
         console.print(f"  Zen tools discovered: {len(zen_tools)}")
-        console.print(f"  Status: [green]✓ PASS[/green]" if zen_tools else "[red]✗ FAIL[/red]")
+        console.print("  Status: [green]✓ PASS[/green]" if zen_tools else "[red]✗ FAIL[/red]")
 
         console.print("\n[bold green]Integration test complete![/bold green]")
+
 
 async def main():
     """Main CLI entry point"""
@@ -323,10 +413,14 @@ async def main():
     # Route command
     route_parser = subparsers.add_parser("route", help="Route a request")
     route_parser.add_argument("prompt", help="Prompt to process")
-    route_parser.add_argument("--mode", default="auto",
-                             choices=["auto", "consensus", "chain", "adaptive"])
-    route_parser.add_argument("--strategy", default="balanced",
-                             choices=["balanced", "cost_optimize", "quality_first", "speed_priority"])
+    route_parser.add_argument(
+        "--mode", default="auto", choices=["auto", "consensus", "chain", "adaptive"]
+    )
+    route_parser.add_argument(
+        "--strategy",
+        default="balanced",
+        choices=["balanced", "cost_optimize", "quality_first", "speed_priority"],
+    )
 
     # Consensus command
     consensus_parser = subparsers.add_parser("consensus", help="Create consensus group")
@@ -338,9 +432,32 @@ async def main():
 
     # Test command
     test_parser = subparsers.add_parser("test", help="Test integration")
+
+    # Generate prompts command
+    generate_parser = subparsers.add_parser(
+        "generate-prompts", help="Generate prompts from specifications"
+    )
+    generate_parser.add_argument("--spec", help="Path to specification file")
+    generate_parser.add_argument("--roadmap", help="Path to roadmap/WBS file")
+    generate_parser.add_argument("--output-dir", help="Output directory for generated prompts")
+    generate_parser.add_argument(
+        "--dry-run", action="store_true", help="Simulate without writing files"
+    )
+    generate_parser.add_argument(
+        "--from-project", action="store_true", help="Auto-discover from Project Agent"
+    )
+    generate_parser.add_argument(
+        "--phases", help="Comma-separated list of phases to generate (e.g., '1,2,3')"
+    )
+    generate_parser.add_argument(
+        "--tools", help="Comma-separated list of tools to filter (e.g., 'devin,gemini')"
+    )
+
     parser.add_argument("--cost", action="store_true", help="Show cost usage report")
-    parser.add_argument("--detailed", action="store_true", help="Show detailed breakdown (with --cost)")
-    
+    parser.add_argument(
+        "--detailed", action="store_true", help="Show detailed breakdown (with --cost)"
+    )
+
     args = parser.parse_args()
 
     cli = OrchestratorCLI()
@@ -348,11 +465,12 @@ async def main():
     if args.cost:
         try:
             from lattice_lock_orchestrator.cli.cost_command import handle_cost
+
             handle_cost(console, detailed=args.detailed)
         except ImportError:
-             console.print("[red]Cost tracking module not available.[/red]")
+            console.print("[red]Cost tracking module not available.[/red]")
         return
-    
+
     if args.list:
         parser.print_help()
         return
@@ -374,6 +492,21 @@ async def main():
 
     elif args.command == "test":
         cli.test_integration()
+
+    elif args.command == "generate-prompts":
+        # Parse comma-separated lists
+        phases = args.phases.split(",") if args.phases else None
+        tools = args.tools.split(",") if args.tools else None
+        await cli.generate_prompts(
+            spec=args.spec,
+            roadmap=args.roadmap,
+            output_dir=args.output_dir,
+            dry_run=args.dry_run,
+            from_project=args.from_project,
+            phases=phases,
+            tools=tools,
+        )
+
 
 if __name__ == "__main__":
     # Check for rich library
