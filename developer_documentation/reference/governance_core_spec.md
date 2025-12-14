@@ -138,7 +138,7 @@ def compile_lattice(
 ) -> CompilationResult:
     """
     Orchestrates the full compilation pipeline.
-    
+
     Args:
         source_path: Path to lattice.yaml
         output_dir: Where to write generated type definitions

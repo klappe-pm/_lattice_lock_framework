@@ -21,7 +21,7 @@ def test_registry_maturity():
     gpt4o = registry.get_model("gpt-4o")
     assert gpt4o.maturity == ProviderMaturity.PRODUCTION
     print("✅ gpt-4o is PRODUCTION")
-    
+
     grok = registry.get_model("grok-3")
     assert grok.maturity == ProviderMaturity.BETA
     print("✅ grok-3 is BETA")

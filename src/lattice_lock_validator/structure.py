@@ -17,7 +17,7 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
         ValidationResult: The result of the validation.
     """
     result = ValidationResult()
-    
+
     # 1. Directory Structure
     dir_result = validate_directory_structure(repo_path)
     result.errors.extend(dir_result.errors)
@@ -36,7 +36,7 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
             dirs.remove('__pycache__')
         if 'venv' in dirs:
             dirs.remove('venv')
-            
+
         for filename in files:
             if filename == '.DS_Store':
                 continue
@@ -46,14 +46,14 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
             result.warnings.extend(naming_result.warnings)
             if not naming_result.valid:
                 result.valid = False
-                
+
     return result
 
 def validate_directory_structure(repo_path: str) -> ValidationResult:
     """Validates the directory structure against requirements."""
     result = ValidationResult()
     path = Path(repo_path)
-    
+
     if not path.exists():
         result.add_error(f"Repository path not found: {repo_path}")
         return result
@@ -69,7 +69,7 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
     for f in required_files:
         if not (path / f).is_file():
             result.add_error(f"Missing required root file: {f}")
-            
+
     # Agent definitions nesting
     agent_def_path = path / 'agent_definitions'
     if agent_def_path.is_dir():
@@ -90,19 +90,19 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
     result = ValidationResult()
     path = Path(file_path)
     filename = path.name
-    
+
     # Prohibited patterns
     if ' ' in filename:
         result.add_error(f"File name contains spaces: {filename}")
-    
+
     # Check for special characters (allow alphanumeric, underscore, dot, hyphen)
-    # Prompt says "No special characters except underscore". 
+    # Prompt says "No special characters except underscore".
     # Usually dot is needed for extensions. Hyphen is usually allowed in kebab-case but prompt says "snake_case".
     # Prompt says: "All files must use snake_case (no spaces, hyphens in names)"
     # So hyphens are PROHIBITED.
-    if '-' in filename and filename not in ['LICENSE.md', 'README.md', '.gitignore', '.pre-commit-config.yaml', 'pyproject.toml']: 
+    if '-' in filename and filename not in ['LICENSE.md', 'README.md', '.gitignore', '.pre-commit-config.yaml', 'pyproject.toml']:
         # Allow standard files that might have hyphens or be exceptions.
-        # But wait, prompt says "Exception: README.md, LICENSE.md". 
+        # But wait, prompt says "Exception: README.md, LICENSE.md".
         # It doesn't explicitly exempt others, but standard repo files often have hyphens (e.g. pre-commit-config).
         # Let's be strict but allow known config files if they exist.
         # Actually, let's look at the prompt again: "Exception: standard files like README.md, LICENSE.md"
@@ -114,7 +114,7 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
     stem = path.stem
     # If file starts with dot (like .gitignore), stem might be .gitignore or empty depending on how pathlib handles it.
     # pathlib: Path('.gitignore').stem is '.gitignore'.
-    
+
     if filename.startswith('.'):
         # Hidden files/configs often don't follow snake_case (e.g. .gitignore, .pre-commit-config.yaml)
         # Let's assume dotfiles are exempt or have specific rules?
@@ -141,14 +141,14 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
             if filename.endswith('.yaml') or filename.endswith('.yml'):
                 if not filename.endswith('_definition.yaml') and not filename.endswith('_definition.yml'):
                      result.add_error(f"Agent definition '{filename}' must end with '_definition.yaml'")
-                
+
                 # Check prefix matches category?
                 # path parts: .../agent_definitions/{category}/{filename}
                 idx = parts.index('agent_definitions')
                 # parts[idx] = agent_definitions
                 # parts[idx+1] = category
                 # parts[idx+2] = filename (if directly in category)
-                
+
                 if len(parts) > idx + 3: # nested deeper than category/filename
                     # e.g. agent_definitions/category/subdir/file
                     pass
@@ -168,11 +168,11 @@ def main():
     parser = argparse.ArgumentParser(description="Lattice Lock Structure Validator")
     parser.add_argument("--naming-only", action="store_true", help="Run only file naming validation")
     parser.add_argument("path", nargs="?", default=".", help="Path to repository root")
-    
+
     args = parser.parse_args()
-    
+
     repo_path = os.path.abspath(args.path)
-    
+
     if args.naming_only:
         # Just walk and check naming
         overall_result = ValidationResult()
@@ -180,7 +180,7 @@ def main():
              if '.git' in dirs: dirs.remove('.git')
              if '__pycache__' in dirs: dirs.remove('__pycache__')
              if 'venv' in dirs: dirs.remove('venv')
-             
+
              for filename in files:
                  file_path = os.path.join(root, filename)
                  res = validate_file_naming(file_path, repo_path)
@@ -190,7 +190,7 @@ def main():
                      overall_result.valid = False
     else:
         overall_result = validate_repository_structure(repo_path)
-    
+
     if not overall_result.valid:
         print("Validation FAILED:")
         for error in overall_result.errors:

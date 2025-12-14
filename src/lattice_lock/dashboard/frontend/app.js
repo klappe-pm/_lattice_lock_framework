@@ -23,7 +23,7 @@ class DashboardApp {
         const wsUrl = `${protocol}//${window.location.host}/ws`;
 
         // For development/testing if not served from backend
-        // const wsUrl = 'ws://localhost:8080/ws'; 
+        // const wsUrl = 'ws://localhost:8080/ws';
 
         this.ws = new WebSocket(wsUrl);
 

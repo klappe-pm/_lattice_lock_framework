@@ -53,7 +53,7 @@ workflow:
       - "What are the failure modes?"
       - "Who/what does it interact with?"
     output: "requirements_summary.yaml"
-    
+
   step_2_scope_definition:
     task: "Define boundaries and constraints"
     questions_to_answer:
@@ -62,7 +62,7 @@ workflow:
       - "When should it ask for help?"
       - "What are the resource limits?"
     output: "scope_contract.yaml"
-    
+
   step_3_decomposition_analysis:
     task: "Identify if sub-agents are needed"
     decision_criteria:
@@ -78,7 +78,7 @@ workflow:
         - "Total complexity < 5 steps"
         - "No parallel processing opportunities"
     output: "agent_architecture.yaml"
-    
+
   step_4_model_selection_strategy:
     task: "Define model selection criteria"
     use_framework: "See Section 0.5 - Model Selection Framework"
@@ -89,22 +89,22 @@ workflow:
       - "Speed vs quality tradeoffs"
       - "Special capabilities (vision, code, reasoning)"
     output: "model_strategy.yaml"
-    
+
   step_5_planning_framework:
     task: "Define how agent creates execution plans"
     use_framework: "See Section 0.6 - Planning Protocol"
     output: "planning_protocol.yaml"
-    
+
   step_6_estimation_framework:
     task: "Define cost and complexity estimation"
     use_framework: "See Section 0.7 - Estimation Protocol"
     output: "estimation_protocol.yaml"
-    
+
   step_7_delegation_protocol:
     task: "Define subagent delegation rules"
     use_framework: "See Section 0.8 - Delegation Protocol"
     output: "delegation_protocol.yaml"
-    
+
   step_8_complete_specification:
     task: "Generate complete agent file"
     actions:
@@ -119,7 +119,7 @@ workflow:
 
 ```yaml
 relationship_model:
-  
+
   parent_agent:
     role: "Coordinator and decision maker"
     responsibilities:
@@ -131,11 +131,11 @@ relationship_model:
       - "Aggregate sub-agent outputs"
       - "Validate final results"
       - "Report to user"
-    
+
     file_location: "/agents/[agent-name].agent.yaml"
     naming_convention: "[domain]-[role]-agent.yaml"
     example: "model-orchestrator-agent.yaml"
-    
+
   sub_agent:
     role: "Specialist executor"
     responsibilities:
@@ -145,28 +145,28 @@ relationship_model:
       - "Execute specialized task"
       - "Return structured results to parent"
       - "Report errors with recovery suggestions"
-    
+
     file_location: "/agents/subagents/[parent-agent]/[subagent-name].subagent.yaml"
     naming_convention: "[parent-name]-[specialty]-subagent.yaml"
     example: "model-orchestrator-task-analysis-subagent.yaml"
-    
+
   key_differences:
     scope:
       parent: "Broad, multi-phase tasks"
       sub: "Narrow, specialized tasks"
-    
+
     delegation_authority:
       parent: "Can delegate to multiple sub-agents"
       sub: "Can only escalate back to parent or delegate to sibling if authorized"
-    
+
     model_selection:
       parent: "Selects model for coordination and aggregation"
       sub: "Selects model optimized for specialized task"
-    
+
     planning_depth:
       parent: "High-level multi-phase planning"
       sub: "Detailed single-phase execution planning"
-    
+
     estimation_scope:
       parent: "Estimates total cost including all sub-agents"
       sub: "Estimates only own execution cost"
@@ -213,24 +213,24 @@ graph TD
     A[Start Selection] --> B{Requires Privacy?}
     B -- Yes --> C[Filter: Local Models Only]
     B -- No --> D{Budget Constraint?}
-    
+
     D -- Zero Cost --> C
     D -- Low Cost --> E[Filter: Local + Tier 2 Cloud]
     D -- None --> F[All Models Available]
-    
+
     C --> G{Task Type?}
     E --> G
     F --> G
-    
+
     G -- Code --> H{Complexity?}
     G -- Reasoning --> I{Depth?}
     G -- Creative --> J{Style?}
     G -- Vision --> K{Detail?}
-    
+
     H -- High --> L[codellama:34b / claude-sonnet-4.5]
     H -- Med --> M[magicoder:7b / gpt-4o]
     H -- Low --> N[deepseek-coder:1.3b / haiku]
-    
+
     I -- Deep --> O[deepseek-r1:70b / o1-pro]
     I -- Med --> P[qwen2.5:32b / claude-sonnet-4]
     I -- Low --> Q[llama3.1:8b / gemini-flash]
@@ -561,7 +561,7 @@ planning:
 
 	  required: true
 
-	  
+
 
   constraints:
 
@@ -587,7 +587,7 @@ estimation:
 
 	read_only_analysis: 0.8
 
-	
+
 
   cost_limits:
 
@@ -617,17 +617,17 @@ model_selection:
 
 	  selection_criteria: "accuracy > speed"
 
-	  
+
     reasoning:
       primary: "deepseek-r1:70b"
       fallback: "o1-pro"
       selection_criteria: "depth > speed"
-      
+
     quick_response:
       primary: "deepseek-coder:1.3b"
       fallback: "gpt-4o-mini"
       selection_criteria: "speed > accuracy"
-      
+
 
   overrides:
 
@@ -659,7 +659,7 @@ delegation:
 
 	  file: "subagents/[subagent-2].yaml"
 
-	  
+
 
   delegation_triggers:
 
@@ -760,7 +760,7 @@ output:
 
 	  Cost: ${{metrics.cost}}
 
-	
+
     failure: |
       Task failed.
       Error: {{error.message}}
@@ -792,7 +792,7 @@ error_handling:
 
 	  retry: true
 
-	  
+
 
   max_retries: 3
 
@@ -812,7 +812,7 @@ interaction:
 
 	confirmation_required: ["delete_file", "deploy_code"]
 
-	
+
 
   other_agents:
 
@@ -855,7 +855,7 @@ examples:
 	  [Input example]
 	expected_output: |
 	  [Output example]
-	  
+
   - name: "Edge Case"
 	input: |
 	  [Input example]

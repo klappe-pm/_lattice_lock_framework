@@ -12,7 +12,7 @@ agent:
       - "routing"
       - "optimization"
       - "cost-management"
-  
+
   configuration:
     language: "en-US"
     timezone: "UTC"
@@ -37,13 +37,13 @@ responsibilities:
     inputs: ["User Prompt", "Task Requirements", "Budget Constraints"]
     outputs: ["Selected Model ID", "Reasoning"]
     criticality: "High"
-    
+
   - name: "Cost Optimization"
     description: "Track usage and enforce budget limits, preferring free local models."
     inputs: ["Token Usage", "Model Rates"]
     outputs: ["Cost Report", "Budget Alert"]
     criticality: "Medium"
-    
+
   - name: "Performance Monitoring"
     description: "Track latency and success rates to update model rankings."
     inputs: ["Response Time", "Error Rates"]
@@ -65,7 +65,7 @@ scope:
     - "OS Level Configuration"
   cannot_modify:
     - "Agent Definitions"
-  
+
   escalation_triggers:
     - "If all providers are offline"
     - "If task complexity exceeds all available models"
@@ -76,11 +76,11 @@ context:
     - "Available Models List"
     - "Current Budget Status"
     - "User Preferences"
-  
+
   memory_persistence:
     short_term: "Session routing history"
     long_term: "Model performance statistics"
-  
+
   knowledge_sources:
     - path: "/Model Orchestrator/docs/Model Selection Guide.md"
       description: "Rules for mapping tasks to models"
@@ -90,7 +90,7 @@ context:
 planning:
   enabled: true
   default_strategy: "linear"
-  
+
   phases:
     - name: "intent_analysis"
       required: true
@@ -102,7 +102,7 @@ planning:
       required: true
     - name: "fallback_planning"
       required: true
-      
+
   constraints:
     max_depth: 1
     max_steps_per_phase: 5
@@ -110,11 +110,11 @@ planning:
 estimation:
   enabled: true
   currency: "USD"
-  
+
   complexity_weights:
     routing_decision: 1.0
     cost_analysis: 0.5
-    
+
   cost_limits:
     warning_threshold: 0.01
     hard_limit: 0.10
@@ -123,20 +123,20 @@ estimation:
 model_selection:
   default_provider: "local"
   default_model: "deepseek-r1:70b" # Use strong reasoning for the routing decision itself
-  
+
   strategies:
     routing_logic:
       primary: "deepseek-r1:70b"
       fallback: "claude-3.5-sonnet"
       selection_criteria: "reasoning > speed"
-      
+
   overrides:
     force_local_if_offline: true
 
 delegation:
   enabled: true
   max_depth: 1
-  
+
   allowed_subagents:
     - name: "task-analyzer-subagent"
       role: "Intent Classifier"
@@ -144,7 +144,7 @@ delegation:
     - name: "cost-manager-subagent"
       role: "Budget Controller"
       file: "subagents/cost_manager_subagent/agent.yaml"
-      
+
   delegation_triggers:
     - condition: "Prompt is ambiguous"
       target: "task-analyzer-subagent"
@@ -166,21 +166,21 @@ workflow:
     - "Load model configuration"
     - "Check provider status"
     - "Sync cost logs"
-  
+
   execution_loop:
     - "Receive user prompt"
     - "Analyze intent (or delegate)"
     - "Select optimal model"
     - "Execute prompt (if simple) or return selection"
     - "Log metrics"
-  
+
   cleanup:
     - "Update performance stats"
     - "Save session log"
 
 output:
   default_format: "json"
-  
+
   schema:
     type: "object"
     properties:
@@ -192,13 +192,13 @@ output:
         type: "number"
       alternatives:
         type: "array"
-  
+
   templates:
     success: |
       Selected Model: {{selected_model}}
       Reasoning: {{reasoning}}
       Cost: ${{estimated_cost}}
-    
+
     failure: |
       Routing Failed.
       Error: {{error.message}}
@@ -211,7 +211,7 @@ error_handling:
     - error: "ContextTooLarge"
       action: "select_larger_context_model"
       retry: true
-      
+
   max_retries: 3
   fallback_mode: "use_local_default"
 
@@ -220,7 +220,7 @@ interaction:
     tone: "helpful"
     verbosity: "concise"
     confirmation_required: ["high_cost_model_selection"]
-    
+
   other_agents:
     protocol: "json_rpc"
     timeout: 5s
@@ -248,7 +248,7 @@ examples:
         "reasoning": "Task is code generation. Local model 'codellama:34b' offers premium quality at zero cost.",
         "estimated_cost": 0.00
       }
-      
+
   - name: "Complex Reasoning Request"
     input: |
       User: "Analyze the geopolitical implications of..."
@@ -271,7 +271,7 @@ metadata:
   updated_at: "2025-11-26"
   author: "System Generator"
   license: "MIT"
-  
+
 versioning:
   current: "2.1.0"
   changelog:

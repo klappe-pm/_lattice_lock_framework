@@ -20,7 +20,7 @@ OLLAMA_URL="http://localhost:11434"
 # Default models to warm up (from small to large)
 DEFAULT_MODELS=(
     "llama3.2:3b"
-    "llama3.2:8b" 
+    "llama3.2:8b"
     "llama3.1:8b"
     "llama3.2:11b-vision"
     "codellama:13b-code"
@@ -60,24 +60,24 @@ except:
 warmup_model() {
     local model="$1"
     local test_prompt="${2:-Hello}"
-    
+
     echo -e "${BLUE}🔄 Warming up ${model}...${NC}"
-    
+
     # Check if model is installed
     if ! ollama list | grep -q "$model"; then
         echo -e "${YELLOW}⚠️  Model $model not installed, skipping${NC}"
         return 1
     fi
-    
+
     # Run a simple test to load the model
     start_time=$(date +%s)
-    
+
     # Use a very simple prompt to minimize processing time
     response=$(ollama run "$model" "$test_prompt" --verbose=false 2>/dev/null)
-    
+
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ $model ready (${duration}s)${NC}"
         return 0
@@ -90,12 +90,12 @@ warmup_model() {
 # Show memory usage
 show_memory_usage() {
     echo -e "\n${BLUE}📊 Memory Usage:${NC}"
-    
+
     # Show Ollama processes
     if command -v ollama &> /dev/null; then
         ollama ps 2>/dev/null || echo "No models currently loaded"
     fi
-    
+
     # Show system memory (macOS)
     if command -v vm_stat &> /dev/null; then
         echo -e "\n${BLUE}System Memory:${NC}"
@@ -189,20 +189,20 @@ done
 # Main execution
 main() {
     check_ollama
-    
+
     if [ "$STATUS_ONLY" = true ]; then
         show_memory_usage
         exit 0
     fi
-    
+
     if [ "$SHOW_INFO" = true ]; then
         show_model_info
         exit 0
     fi
-    
+
     # Determine which models to warm up
     local models_to_warmup=()
-    
+
     if [ ${#CUSTOM_MODELS[@]} -gt 0 ]; then
         models_to_warmup=("${CUSTOM_MODELS[@]}")
         echo -e "${BLUE}Warming up custom models: ${models_to_warmup[*]}${NC}"
@@ -216,24 +216,24 @@ main() {
         models_to_warmup=("${DEFAULT_MODELS[@]}")
         echo -e "${BLUE}Warming up default models${NC}"
     fi
-    
+
     if [ ${#models_to_warmup[@]} -eq 0 ]; then
         echo -e "${YELLOW}⚠️  No models to warm up${NC}"
         echo "Install models with: ollama pull llama3.2:8b"
         exit 1
     fi
-    
+
     # Set test prompt based on mode
     local test_prompt="Hi"
     if [ "$FAST_MODE" = false ]; then
         test_prompt="What is the capital of France? Answer in one word."
     fi
-    
+
     # Warm up models
     echo -e "\n${BLUE}🔥 Starting warmup process...${NC}"
     local successful=0
     local failed=0
-    
+
     for model in "${models_to_warmup[@]}"; do
         if warmup_model "$model" "$test_prompt"; then
             ((successful++))
@@ -241,17 +241,17 @@ main() {
             ((failed++))
         fi
     done
-    
+
     # Summary
     echo -e "\n${BLUE}📊 Warmup Summary:${NC}"
     echo -e "${GREEN}✅ Successful: $successful${NC}"
     if [ $failed -gt 0 ]; then
         echo -e "${RED}❌ Failed: $failed${NC}"
     fi
-    
+
     # Show final status
     show_memory_usage
-    
+
     echo -e "\n${GREEN}🎉 Model warmup complete!${NC}"
     echo -e "\n${BLUE}Next steps:${NC}"
     echo "1. Test orchestrator: ./orchestrator-cli.py analyze 'your prompt'"

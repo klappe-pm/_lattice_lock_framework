@@ -10,7 +10,7 @@ def run_gauntlet(target_dir: str = "tests/gauntlet"):
     Runs semantic tests using pytest.
     """
     print(f"GAUNTLET: Running semantic tests in {target_dir}...")
-    
+
     # Check if directory exists
     from pathlib import Path
     if not Path(target_dir).exists():
@@ -19,7 +19,7 @@ def run_gauntlet(target_dir: str = "tests/gauntlet"):
 
     # Run pytest programmatically
     retcode = pytest.main(["-v", target_dir])
-    
+
     if retcode == 0:
         print("[PASS] All semantic tests passed.")
     else:

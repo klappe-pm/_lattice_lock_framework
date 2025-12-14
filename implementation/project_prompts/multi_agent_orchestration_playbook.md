@@ -422,7 +422,7 @@ Goals:
        error_code: str
        severity: Severity
        category: Category
-   
+
    class SchemaValidationError(LatticeError): ...
    class SheriffViolationError(LatticeError): ...
    class GauntletFailureError(LatticeError): ...
@@ -437,13 +437,13 @@ Goals:
        HIGH = "high"
        MEDIUM = "medium"
        LOW = "low"
-   
+
    class Category(Enum):
        VALIDATION = "validation"
        RUNTIME = "runtime"
        CONFIGURATION = "configuration"
        NETWORK = "network"
-   
+
    class Recoverability(Enum):
        RECOVERABLE = "recoverable"
        MANUAL_INTERVENTION = "manual_intervention"
@@ -569,15 +569,15 @@ Goals:
    class ErrorMiddleware:
        def __init__(self, logger=None, telemetry=None):
            ...
-       
+
        def catch_and_classify(self, func):
            """Decorator to catch and classify errors."""
            ...
-       
+
        def handle_error(self, error: Exception) -> ErrorContext:
            """Classify error and generate context."""
            ...
-       
+
        def log_error(self, context: ErrorContext):
            """Log error with appropriate level."""
            ...

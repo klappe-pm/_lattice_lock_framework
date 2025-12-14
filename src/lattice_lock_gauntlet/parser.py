@@ -21,7 +21,7 @@ class EntityDefinition:
 class LatticeParser:
     """
     Parses Lattice Lock definition files (YAML) into structured objects.
-    
+
     Attributes:
         lattice_file (str): Path to the lattice definition file.
         entities (List[EntityDefinition]): List of parsed entities.
@@ -73,7 +73,7 @@ class LatticeParser:
     def _extract_field_constraints(self, field_name: str, field_def: Dict[str, Any]) -> List[EnsuresClause]:
         """Extracts implicit constraints from field definitions."""
         constraints = []
-        
+
         # Numeric constraints
         if 'gt' in field_def:
             constraints.append(EnsuresClause(

@@ -23,16 +23,16 @@ class CacheLayer:
         path = self._get_path(key)
         if not path.exists():
             return None
-        
+
         try:
             with open(path, "rb") as f:
                 data = pickle.load(f)
-                
+
             if time.time() - data['ts'] > self.ttl:
                 print(f"[CACHE] Expired: {key}")
                 path.unlink()
                 return None
-                
+
             print(f"[CACHE] Hit: {key}")
             return data['val']
         except Exception:

@@ -280,13 +280,13 @@ output:
 
 ### Error Handling Strategies
 
-- **`ContextLimitExceeded`**: 
+- **`ContextLimitExceeded`**:
 	- Action: `summarize_history`
 	- Retry: `true`
-- **`ApiRateLimit`**: 
+- **`ApiRateLimit`**:
 	- Action: `exponential_backoff`
 	- Retry: `true`
-- **`ToolFailure`**: 
+- **`ToolFailure`**:
 	- Action: `try_alternative_tool`
 	- Retry: `true`
 

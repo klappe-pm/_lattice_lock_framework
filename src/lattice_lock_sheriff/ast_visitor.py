@@ -8,7 +8,7 @@ from .rules import Rule, RuleContext, Violation, ImportDisciplineRule, TypeHintR
 class SheriffVisitor(ast.NodeVisitor):
     """
     AST Visitor that applies Sheriff rules to the code.
-    
+
     Attributes:
         filename (str): The name of the file being visited.
         config (SheriffConfig): The Sheriff configuration.
@@ -24,7 +24,7 @@ class SheriffVisitor(ast.NodeVisitor):
         self.violations: List[Violation] = []
         self.ignored_violations: List[Violation] = []
         self.ignored_lines: Set[int] = self._parse_ignore_comments(source_code)
-        
+
         # Initialize rules
         self.rules: List[Rule] = [
             ImportDisciplineRule(),
@@ -55,7 +55,7 @@ class SheriffVisitor(ast.NodeVisitor):
                     self.violations.append(violation)
                 else:
                     self.ignored_violations.append(violation)
-        
+
         # Continue traversal
         self.generic_visit(node)
 

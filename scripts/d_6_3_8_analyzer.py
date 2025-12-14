@@ -15,7 +15,7 @@ class TaskAnalyzer:
 
     def analyze(self, user_prompt: str):
         print(f"[ANALYZER] Analyzing: '{user_prompt}'")
-        
+
         # 1. Fast Heuristics
         for task_type, regexes in self.patterns.items():
             for pattern in regexes:

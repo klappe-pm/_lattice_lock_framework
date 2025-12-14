@@ -85,7 +85,7 @@ class PromptGenerator:
             else:
                 logger.warning(f"Config file not found at {path}, using defaults")
                 return {}
-                
+
         with open(path, 'r') as f:
             return yaml.safe_load(f)
 
@@ -106,18 +106,18 @@ class PromptGenerator:
         # Extract basic info
         task_id = assignment.task_id
         tool_name = assignment.tool
-        
+
         # Parse task_id to get phase, epic, task numbers
         # Assuming task_id format like "1.1.1" or "5.3.2"
         parts = task_id.split('.')
         phase_number = parts[0] if len(parts) > 0 else "0"
         epic_id = f"{parts[0]}.{parts[1]}" if len(parts) > 1 else "0.0"
-        
+
         # Get names from context or assignment (placeholders for now if not available)
         epic_name = context_data.get("epic_name", "Unknown Epic")
         phase_name = context_data.get("phase_name", "Unknown Phase")
         task_title = context_data.get("task_title", "Unknown Task")
-        
+
         # Generate sections
         context_text = await self._generate_context(assignment, context_data)
         goal_text = await self._generate_goal(assignment, context_data)
@@ -153,7 +153,7 @@ class PromptGenerator:
         # We need a clean task name for the filename
         clean_title = task_title.lower().replace(" ", "_").replace("-", "_")
         filename = f"{task_id}_{tool_name.lower()}_{clean_title}.md"
-        
+
         # Determine phase directory
         phase_dir_name = f"phase{phase_number}_automation" # This needs to be dynamic based on phase name
         # For now, we try to find the directory or create a generic one
@@ -444,10 +444,10 @@ Return only the enhanced context text.
         Description: {context_data.get('task_description', '')}
         Tool: {assignment.tool}
         Files: {', '.join(assignment.files_owned)}
-        
+
         Format as a numbered list.
         """
-        
+
         try:
             response = await self.client.chat_completion(
                 model=self.model,
@@ -477,7 +477,7 @@ Return only the enhanced context text.
         # Simple heuristic to find existing phase directory
         if not os.path.exists(self.prompts_dir):
             return "phase" + phase_number
-            
+
         for d in os.listdir(self.prompts_dir):
             if d.startswith(f"phase{phase_number}") and os.path.isdir(os.path.join(self.prompts_dir, d)):
                 return d

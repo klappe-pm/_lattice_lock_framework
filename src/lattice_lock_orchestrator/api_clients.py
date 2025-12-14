@@ -30,12 +30,12 @@ class ProviderStatus(Enum):
 
 class ProviderAvailability:
     """Tracks provider availability and credential status."""
-    
+
     _instance = None
     _checked = False
     _status: Dict[str, ProviderStatus] = {}
     _messages: Dict[str, str] = {}
-    
+
     # Required environment variables per provider
     REQUIRED_CREDENTIALS = {
         "openai": ["OPENAI_API_KEY"],
@@ -47,7 +47,7 @@ class ProviderAvailability:
         "dial": ["DIAL_API_KEY"],
         "local": [],  # Local models (Ollama/vLLM), no credentials needed
     }
-    
+
     # Provider maturity classification
     PROVIDER_MATURITY = {
         "openai": ProviderStatus.PRODUCTION,
@@ -59,23 +59,23 @@ class ProviderAvailability:
         "dial": ProviderStatus.BETA,
         "bedrock": ProviderStatus.EXPERIMENTAL,
     }
-    
+
     @classmethod
     def get_instance(cls) -> "ProviderAvailability":
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
-    
+
     @classmethod
     def check_all_providers(cls) -> Dict[str, ProviderStatus]:
         """Check availability of all providers. Returns status dict."""
         instance = cls.get_instance()
         if instance._checked:
             return instance._status
-        
+
         for provider, required_vars in cls.REQUIRED_CREDENTIALS.items():
             missing = [var for var in required_vars if not os.getenv(var)]
-            
+
             if missing:
                 instance._status[provider] = ProviderStatus.UNAVAILABLE
                 instance._messages[provider] = f"Missing credentials: {', '.join(missing)}"
@@ -83,35 +83,35 @@ class ProviderAvailability:
             else:
                 instance._status[provider] = cls.PROVIDER_MATURITY.get(provider, ProviderStatus.EXPERIMENTAL)
                 instance._messages[provider] = f"Status: {instance._status[provider].value}"
-        
+
         instance._checked = True
         return instance._status
-    
+
     @classmethod
     def is_available(cls, provider: str) -> bool:
         """Check if a provider is available (has credentials)."""
         status = cls.check_all_providers()
         return status.get(provider, ProviderStatus.UNAVAILABLE) != ProviderStatus.UNAVAILABLE
-    
+
     @classmethod
     def get_status(cls, provider: str) -> ProviderStatus:
         """Get the status of a provider."""
         status = cls.check_all_providers()
         return status.get(provider, ProviderStatus.UNAVAILABLE)
-    
+
     @classmethod
     def get_message(cls, provider: str) -> str:
         """Get the status message for a provider."""
         cls.check_all_providers()
         instance = cls.get_instance()
         return instance._messages.get(provider, "Unknown provider")
-    
+
     @classmethod
     def get_available_providers(cls) -> List[str]:
         """Get list of available providers."""
         status = cls.check_all_providers()
         return [p for p, s in status.items() if s != ProviderStatus.UNAVAILABLE]
-    
+
     @classmethod
     def reset(cls):
         """Reset the singleton for testing."""
@@ -122,44 +122,44 @@ class ProviderAvailability:
 
 class BaseAPIClient:
     """Base class for all API clients"""
-    
+
     def __init__(self, api_key: str, base_url: str):
         self.api_key = api_key
         self.base_url = base_url
         self.session = None
-        
+
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
         return self
-        
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             await self.session.close()
-    
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-    async def _make_request(self, 
-                           method: str, 
-                           endpoint: str, 
-                           headers: Dict, 
+    async def _make_request(self,
+                           method: str,
+                           endpoint: str,
+                           headers: Dict,
                            payload: Dict) -> Dict:
         """Make API request with retry logic"""
         if not self.session:
             self.session = aiohttp.ClientSession()
-            
+
         url = f"{self.base_url}/{endpoint}"
         start_time = time.time()
-        
+
         try:
             async with self.session.request(method, url, headers=headers, json=payload) as response:
                 latency_ms = int((time.time() - start_time) * 1000)
-                
+
                 if response.status != 200:
                     error_text = await response.text()
                     raise Exception(f"API Error {response.status}: {error_text}")
-                
+
                 data = await response.json()
                 return data, latency_ms
-                
+
         except Exception as e:
             logger.error(f"Request failed: {e}")
             raise
@@ -184,14 +184,14 @@ class BaseAPIClient:
 
 class GrokAPIClient(BaseAPIClient):
     """xAI Grok API client with all models support"""
-    
+
     def __init__(self, api_key: Optional[str] = None):
         api_key = api_key or os.getenv('XAI_API_KEY')
         if not api_key:
             raise ValueError("XAI_API_KEY not found")
         super().__init__(api_key, "https://api.x.ai/v1")
-        
-    async def chat_completion(self, 
+
+    async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
                              temperature: float = 0.7,
@@ -201,12 +201,12 @@ class GrokAPIClient(BaseAPIClient):
                              tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Grok"""
-        
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
-        
+
         payload = {
             "model": model,
             "messages": messages,
@@ -214,19 +214,19 @@ class GrokAPIClient(BaseAPIClient):
             "stream": stream,
             **kwargs
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
         if functions:
             payload["tools"] = [{"type": "function", "function": f} for f in functions]
         if tool_choice:
             payload["tool_choice"] = tool_choice
-            
+
         if stream:
             return self._stream_completion(headers, payload)
-        
+
         data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
-        
+
         response_content = None
         function_call = None
 
@@ -238,7 +238,7 @@ class GrokAPIClient(BaseAPIClient):
                 name=tool_call['function']['name'],
                 arguments=json.loads(tool_call['function']['arguments'])
             )
-            
+
         return APIResponse(
             content=response_content,
             model=model,
@@ -251,11 +251,11 @@ class GrokAPIClient(BaseAPIClient):
             raw_response=data,
             function_call=function_call
         )
-    
+
     async def _stream_completion(self, headers: Dict, payload: Dict) -> AsyncIterator[str]:
         """Stream completion responses"""
         payload['stream'] = True
-        
+
         async with self.session.post(
             f"{self.base_url}/chat/completions",
             headers=headers,
@@ -276,13 +276,13 @@ class GrokAPIClient(BaseAPIClient):
 
 class OpenAIAPIClient(BaseAPIClient):
     """OpenAI API client"""
-    
+
     def __init__(self, api_key: Optional[str] = None):
         api_key = api_key or os.getenv('OPENAI_API_KEY')
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found")
         super().__init__(api_key, "https://api.openai.com/v1")
-        
+
     async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
@@ -293,28 +293,28 @@ class OpenAIAPIClient(BaseAPIClient):
                              tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to OpenAI"""
-        
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
-        
+
         payload = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             **kwargs
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
         if functions:
             payload["tools"] = [{"type": "function", "function": f} for f in functions]
         if tool_choice:
             payload["tool_choice"] = tool_choice
-            
+
         data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
-        
+
         response_content = None
         function_call = None
 
@@ -342,13 +342,13 @@ class OpenAIAPIClient(BaseAPIClient):
 
 class GoogleAPIClient(BaseAPIClient):
     """Google Gemini API client"""
-    
+
     def __init__(self, api_key: Optional[str] = None):
         api_key = api_key or os.getenv('GOOGLE_API_KEY')
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found")
         super().__init__(api_key, "https://generativelanguage.googleapis.com/v1beta")
-        
+
     async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
@@ -357,11 +357,11 @@ class GoogleAPIClient(BaseAPIClient):
                              functions: Optional[List[Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Google Gemini"""
-        
+
         headers = {
             "Content-Type": "application/json",
         }
-        
+
         # Convert messages to Gemini format
         contents = []
         for msg in messages:
@@ -369,7 +369,7 @@ class GoogleAPIClient(BaseAPIClient):
                 "parts": [{"text": msg["content"]}],
                 "role": "user" if msg["role"] == "user" else "model"
             })
-        
+
         payload = {
             "contents": contents,
             "generationConfig": {
@@ -377,16 +377,16 @@ class GoogleAPIClient(BaseAPIClient):
                 "candidateCount": 1,
             }
         }
-        
+
         if max_tokens:
             payload["generationConfig"]["maxOutputTokens"] = max_tokens
 
         if functions:
             payload["tools"] = [{"functionDeclarations": functions}]
-            
+
         endpoint = f"models/{model}:generateContent?key={self.api_key}"
         data, latency_ms = await self._make_request("POST", endpoint, headers, payload)
-        
+
         response_content = None
         function_call = None
 
@@ -399,7 +399,7 @@ class GoogleAPIClient(BaseAPIClient):
                         name=part['functionCall']['name'],
                         arguments=part['functionCall']['args']
                     )
-                    
+
         return APIResponse(
             content=response_content,
             model=model,
@@ -415,7 +415,7 @@ class GoogleAPIClient(BaseAPIClient):
 
 class AnthropicAPIClient(BaseAPIClient):
     """Anthropic Claude API client (via DIAL or direct)"""
-    
+
     def __init__(self, api_key: Optional[str] = None, use_dial: bool = False):
         if use_dial:
             api_key = api_key or os.getenv('DIAL_API_KEY')
@@ -428,9 +428,9 @@ class AnthropicAPIClient(BaseAPIClient):
             if not api_key:
                 raise ValueError("ANTHROPIC_API_KEY not found")
             super().__init__(api_key, "https://api.anthropic.com/v1")
-        
+
         self.use_dial = use_dial
-        
+
     async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
@@ -439,7 +439,7 @@ class AnthropicAPIClient(BaseAPIClient):
                              functions: Optional[List[Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Anthropic/DIAL"""
-        
+
         response_content = None
         function_call = None
 
@@ -449,21 +449,21 @@ class AnthropicAPIClient(BaseAPIClient):
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
             }
-            
+
             payload = {
                 "model": model,
                 "messages": messages,
                 "temperature": temperature,
                 **kwargs
             }
-            
+
             if max_tokens:
                 payload["max_tokens"] = max_tokens
             if functions:
                 payload["tools"] = [{"type": "function", "function": f} for f in functions]
-                
+
             data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
-            
+
             if data['choices'][0]['message'].get('content'):
                 response_content = data['choices'][0]['message']['content']
             elif data['choices'][0]['message'].get('tool_calls'):
@@ -472,7 +472,7 @@ class AnthropicAPIClient(BaseAPIClient):
                     name=tool_call['function']['name'],
                     arguments=json.loads(tool_call['function']['arguments'])
                 )
-            
+
             return APIResponse(
                 content=response_content,
                 model=model,
@@ -492,11 +492,11 @@ class AnthropicAPIClient(BaseAPIClient):
                 "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json"
             }
-            
+
             # Convert to Anthropic format
             system_msg = None
             claude_messages = []
-            
+
             for msg in messages:
                 if msg["role"] == "system":
                     system_msg = msg["content"]
@@ -505,7 +505,7 @@ class AnthropicAPIClient(BaseAPIClient):
                         "role": msg["role"],
                         "content": msg["content"]
                     })
-            
+
             payload = {
                 "model": model,
                 "messages": claude_messages,
@@ -513,14 +513,14 @@ class AnthropicAPIClient(BaseAPIClient):
                 "max_tokens": max_tokens or 4096,
                 **kwargs
             }
-            
+
             if system_msg:
                 payload["system"] = system_msg
             if functions:
                 payload["tools"] = functions
-                
+
             data, latency_ms = await self._make_request("POST", "messages", headers, payload)
-            
+
             if data['content'][0].get('text'):
                 response_content = data['content'][0]['text']
             elif data['content'][0].get('type') == 'tool_use':
@@ -529,7 +529,7 @@ class AnthropicAPIClient(BaseAPIClient):
                     name=tool_use['name'],
                     arguments=tool_use['input']
                 )
-                
+
             return APIResponse(
                 content=response_content,
                 model=model,
@@ -545,14 +545,14 @@ class AnthropicAPIClient(BaseAPIClient):
 
 class AzureOpenAIClient(BaseAPIClient):
     """Azure OpenAI Service API client"""
-    
+
     def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None):
         api_key = api_key or os.getenv('AZURE_OPENAI_API_KEY')
         endpoint = endpoint or os.getenv('AZURE_OPENAI_ENDPOINT')
         if not api_key or not endpoint:
             raise ValueError("AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT required")
         super().__init__(api_key, endpoint)
-        
+
     async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
@@ -562,29 +562,29 @@ class AzureOpenAIClient(BaseAPIClient):
                              tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to Azure OpenAI"""
-        
+
         headers = {
             "api-key": self.api_key,
             "Content-Type": "application/json"
         }
-        
+
         payload = {
             "messages": messages,
             "temperature": temperature,
             **kwargs
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
         if functions:
             payload["tools"] = [{"type": "function", "function": f} for f in functions]
         if tool_choice:
             payload["tool_choice"] = tool_choice
-            
+
         # Azure OpenAI uses deployment names in the endpoint
         endpoint = f"openai/deployments/{model}/chat/completions?api-version=2024-02-15-preview"
         data, latency_ms = await self._make_request("POST", endpoint, headers, payload)
-        
+
         response_content = None
         function_call = None
 
@@ -596,7 +596,7 @@ class AzureOpenAIClient(BaseAPIClient):
                 name=tool_call['function']['name'],
                 arguments=json.loads(tool_call['function']['arguments'])
             )
-            
+
         return APIResponse(
             content=response_content,
             model=model,
@@ -613,29 +613,29 @@ class AzureOpenAIClient(BaseAPIClient):
 class BedrockAPIClient(BaseAPIClient):
     """
     Amazon Bedrock API client.
-    
+
     Status: EXPERIMENTAL
-    
-    This client is not fully implemented. Bedrock requires AWS Signature V4 
+
+    This client is not fully implemented. Bedrock requires AWS Signature V4
     authentication which needs boto3. This client will raise a clear error
     explaining the limitation rather than crashing unexpectedly.
-    
+
     To use Bedrock models in production:
     1. Install boto3: pip install boto3
     2. Configure AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     3. Use the boto3 bedrock-runtime client directly
     """
-    
+
     def __init__(self, region: str = "us-east-1"):
         # BEDROCK INTEGRATION GATED
         # Requires AWS Signature V4 and verified credentials strategy.
         raise NotImplementedError("Bedrock integration is currently GATED (Experimental). See provider_strategy.md.")
-        
+
         # Bedrock uses AWS credentials, not API keys
         super().__init__("", f"https://bedrock-runtime.{region}.amazonaws.com")
         self.region = region
         self._warned = False
-        
+
     async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
@@ -645,7 +645,7 @@ class BedrockAPIClient(BaseAPIClient):
                              **kwargs) -> APIResponse:
         """
         Send chat completion request to Amazon Bedrock.
-        
+
         Note: This is an experimental client that is not fully implemented.
         It will return an error response rather than raising NotImplementedError.
         """
@@ -656,17 +656,17 @@ class BedrockAPIClient(BaseAPIClient):
                 "This request will fail gracefully."
             )
             self._warned = True
-        
+
         error_msg = (
             "Bedrock provider is experimental and requires boto3 integration. "
             "To use Bedrock models: 1) Install boto3, 2) Configure AWS credentials, "
             "3) Use boto3 bedrock-runtime client directly. "
             "The orchestrator will attempt to use fallback providers."
         )
-        
+
         if functions:
             error_msg += " Additionally, Bedrock function calling requires model-specific tool definitions."
-        
+
         return APIResponse(
             content=None,
             model=model,
@@ -679,12 +679,12 @@ class BedrockAPIClient(BaseAPIClient):
 
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""
-    
+
     def __init__(self, base_url: Optional[str] = None):
         base_url = base_url or os.getenv('CUSTOM_API_URL', 'http://localhost:11434/v1')
         # No API key needed for local models
         super().__init__("", base_url)
-        
+
     async def chat_completion(self,
                              model: str,
                              messages: List[Dict[str, str]],
@@ -694,26 +694,26 @@ class LocalModelClient(BaseAPIClient):
                              tool_choice: Optional[Union[str, Dict]] = None,
                              **kwargs) -> APIResponse:
         """Send chat completion request to local model"""
-        
+
         headers = {"Content-Type": "application/json"}
-        
+
         payload = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             **kwargs
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
         if functions:
             payload["tools"] = [{"type": "function", "function": f} for f in functions]
         if tool_choice:
             payload["tool_choice"] = tool_choice
-            
+
         try:
             data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
-            
+
             response_content = None
             function_call = None
 
@@ -725,7 +725,7 @@ class LocalModelClient(BaseAPIClient):
                     name=tool_call['function']['name'],
                     arguments=json.loads(tool_call['function']['arguments'])
                 )
-            
+
             return APIResponse(
                 content=response_content,
                 model=model,
@@ -767,7 +767,7 @@ class LocalModelClient(BaseAPIClient):
 
 class ProviderUnavailableError(Exception):
     """Raised when a provider is unavailable due to missing credentials."""
-    
+
     def __init__(self, provider: str, message: str):
         self.provider = provider
         self.message = message
@@ -777,24 +777,24 @@ class ProviderUnavailableError(Exception):
 def get_api_client(provider: str, check_availability: bool = True, **kwargs) -> BaseAPIClient:
     """
     Factory function to get the appropriate API client.
-    
+
     Args:
         provider: The provider name (e.g., 'openai', 'anthropic', 'bedrock')
         check_availability: If True, check credentials before creating client.
                           Set to False to skip availability check.
         **kwargs: Additional arguments passed to the client constructor.
-    
+
     Returns:
         BaseAPIClient: The appropriate API client instance.
-    
+
     Raises:
-        ProviderUnavailableError: If provider credentials are missing and 
+        ProviderUnavailableError: If provider credentials are missing and
                                   check_availability is True.
         ValueError: If provider is unknown.
     """
     # Normalize provider name
     provider_lower = provider.lower()
-    
+
     # Map provider aliases
     provider_aliases = {
         'grok': 'xai',
@@ -803,7 +803,7 @@ def get_api_client(provider: str, check_availability: bool = True, **kwargs) -> 
         'ollama': 'local',
     }
     provider_lower = provider_aliases.get(provider_lower, provider_lower)
-    
+
     clients = {
         'xai': GrokAPIClient,
         'openai': OpenAIAPIClient,
@@ -814,22 +814,22 @@ def get_api_client(provider: str, check_availability: bool = True, **kwargs) -> 
         'bedrock': BedrockAPIClient,
         'local': LocalModelClient,
     }
-    
+
     if provider_lower not in clients:
         raise ValueError(f"Unknown provider: {provider}. Available providers: {list(clients.keys())}")
-    
+
     # Check availability if requested
     if check_availability:
         status = ProviderAvailability.get_status(provider_lower)
         if status == ProviderStatus.UNAVAILABLE:
             message = ProviderAvailability.get_message(provider_lower)
             raise ProviderUnavailableError(provider_lower, message)
-        
+
         # Log warning for experimental providers
         if status == ProviderStatus.EXPERIMENTAL:
             logger.warning(
                 f"Provider '{provider_lower}' is EXPERIMENTAL. "
                 f"It may not work as expected. {ProviderAvailability.get_message(provider_lower)}"
             )
-    
+
     return clients[provider_lower](**kwargs)

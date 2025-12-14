@@ -24,10 +24,10 @@ def generate_tutorial():
     print("[DOCS] Generating tutorial content...")
     dest = Path("docs/guides")
     dest.mkdir(parents=True, exist_ok=True)
-    
+
     with open(dest / "quickstart.md", "w") as f:
         f.write(TUTORIAL_CONTENT)
-        
+
     print(f"[DOCS] Created {dest}/quickstart.md")
 
 if __name__ == "__main__":

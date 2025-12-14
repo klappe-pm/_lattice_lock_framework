@@ -20,18 +20,18 @@ def rollback(checkpoint, latest):
         return
 
     click.echo("Initiating rollback...")
-    
+
     # Initialize components
     # In a real app, these might be injected or initialized from a context
     checkpoint_manager = CheckpointManager()
     trigger = RollbackTrigger(checkpoint_manager)
-    
+
     success = False
     if latest:
         success = trigger.trigger_rollback("Manual rollback (latest)")
     else:
         success = trigger.trigger_rollback(f"Manual rollback ({checkpoint})", checkpoint_id=checkpoint)
-        
+
     if success:
         click.echo("Rollback completed successfully.")
     else:

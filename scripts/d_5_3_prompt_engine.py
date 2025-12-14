@@ -17,9 +17,9 @@ $instructions
 class PromptEngine:
     def generate(self, spec: dict) -> str:
         print("[ENGINE] Generating prompt from spec...")
-        
+
         context_str = "\n".join([f"- {f}" for f in spec.get('files', [])])
-        
+
         return PROMPT_TEMPLATE.substitute(
             role="Senior Python Engineer",
             task_type=spec.get('type', 'Implementation'),

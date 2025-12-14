@@ -17,7 +17,7 @@ def validate_env_file(file_path: str, required_vars: Optional[List[str]] = None)
         required_vars = ['ORCHESTRATOR_STRATEGY', 'LOG_LEVEL']
 
     result = ValidationResult()
-    
+
     try:
         with open(file_path, 'r') as f:
             lines = f.readlines()
@@ -26,23 +26,23 @@ def validate_env_file(file_path: str, required_vars: Optional[List[str]] = None)
         return result
 
     found_vars = set()
-    
+
     # Secret patterns
     secret_key_patterns = [
-        r'.*_API_KEY$', r'.*_SECRET$', r'.*_TOKEN$', 
+        r'.*_API_KEY$', r'.*_SECRET$', r'.*_TOKEN$',
         r'.*_PASSWORD$', r'.*_PASS$', r'.*_CREDENTIAL$', r'.*_AUTH$'
     ]
-    
+
     # Acceptable placeholder patterns
     placeholder_patterns = [
-        r'^your-.*-here$', r'^<placeholder>$', r'^xxx$', r'^changeme$', 
+        r'^your-.*-here$', r'^<placeholder>$', r'^xxx$', r'^changeme$',
         r'^$', r'^vault:.*$', r'^aws-secrets:.*$'
     ]
 
     for i, line in enumerate(lines):
         line_num = i + 1
         line = line.strip()
-        
+
         if not line or line.startswith('#'):
             continue
 
@@ -51,11 +51,11 @@ def validate_env_file(file_path: str, required_vars: Optional[List[str]] = None)
         if not match:
             # warn about malformed lines?
             continue
-            
+
         key, value = match.groups()
         key = key.strip()
         value = value.strip()
-        
+
         # Remove quotes if present
         if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
             value = value[1:-1]

@@ -46,7 +46,7 @@ repos:
         types: [file]
         pass_filenames: false
         additional_dependencies: [pyyaml]
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: lattice-naming-check
         name: File Naming Convention Check
@@ -55,4 +55,4 @@ repos:
         types: [file]
         pass_filenames: false
         additional_dependencies: [pyyaml]
-        stages: [commit]
+        stages: [pre-commit]

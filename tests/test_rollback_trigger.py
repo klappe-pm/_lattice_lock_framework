@@ -26,43 +26,43 @@ class TestRollbackTrigger:
 
     def test_trigger_rollback_success(self, trigger, mock_checkpoint_manager, mock_state):
         mock_checkpoint_manager.get_checkpoint.return_value = mock_state
-        
+
         success = trigger.trigger_rollback("Test reason", "ckpt_123")
-        
+
         assert success is True
         mock_checkpoint_manager.get_checkpoint.assert_called_once_with("ckpt_123")
 
     def test_trigger_rollback_latest_success(self, trigger, mock_checkpoint_manager, mock_state):
         mock_checkpoint_manager.list_checkpoints.return_value = ["ckpt_123", "ckpt_124"]
         mock_checkpoint_manager.get_checkpoint.return_value = mock_state
-        
+
         success = trigger.trigger_rollback("Test reason")
-        
+
         assert success is True
         mock_checkpoint_manager.list_checkpoints.assert_called_once()
         mock_checkpoint_manager.get_checkpoint.assert_called_once_with("ckpt_124")
 
     def test_trigger_rollback_failure_no_checkpoint(self, trigger, mock_checkpoint_manager):
         mock_checkpoint_manager.get_checkpoint.return_value = None
-        
+
         success = trigger.trigger_rollback("Test reason", "ckpt_123")
-        
+
         assert success is False
 
     def test_hooks_execution(self, trigger, mock_checkpoint_manager, mock_state):
         mock_checkpoint_manager.list_checkpoints.return_value = ["ckpt_123"]
         mock_checkpoint_manager.get_checkpoint.return_value = mock_state
-        
+
         pre_hook = MagicMock()
         post_hook = MagicMock()
         notification_hook = MagicMock()
-        
+
         trigger.register_pre_rollback_hook(pre_hook)
         trigger.register_post_rollback_hook(post_hook)
         trigger.register_notification_hook(notification_hook)
-        
+
         trigger.trigger_rollback("Test reason")
-        
+
         pre_hook.assert_called_once()
         post_hook.assert_called_once_with(True)
         assert notification_hook.call_count >= 2 # Triggered and Success messages
@@ -71,7 +71,7 @@ class TestRollbackTrigger:
         with patch.object(trigger, 'trigger_rollback') as mock_trigger:
             trigger.check_validation_failure(False, "Context")
             mock_trigger.assert_called_once()
-            
+
             mock_trigger.reset_mock()
             trigger.check_validation_failure(True, "Context")
             mock_trigger.assert_not_called()
@@ -80,7 +80,7 @@ class TestRollbackTrigger:
         with patch.object(trigger, 'trigger_rollback') as mock_trigger:
             trigger.check_sheriff_violation(["violation1"])
             mock_trigger.assert_called_once()
-            
+
             mock_trigger.reset_mock()
             trigger.check_sheriff_violation([])
             mock_trigger.assert_not_called()
@@ -89,7 +89,7 @@ class TestRollbackTrigger:
         with patch.object(trigger, 'trigger_rollback') as mock_trigger:
             trigger.check_gauntlet_failure("details")
             mock_trigger.assert_called_once()
-            
+
             mock_trigger.reset_mock()
             trigger.check_gauntlet_failure("")
             mock_trigger.assert_not_called()
@@ -99,12 +99,12 @@ class TestRollbackCLI:
         runner = CliRunner()
         with patch('lattice_lock_cli.commands.rollback.RollbackTrigger') as MockTrigger, \
              patch('lattice_lock_cli.commands.rollback.CheckpointManager') as MockManager:
-            
+
             mock_trigger_instance = MockTrigger.return_value
             mock_trigger_instance.trigger_rollback.return_value = True
-            
+
             result = runner.invoke(rollback, ['--latest'])
-            
+
             assert result.exit_code == 0
             assert "Rollback completed successfully." in result.output
             mock_trigger_instance.trigger_rollback.assert_called_with("Manual rollback (latest)")
@@ -113,12 +113,12 @@ class TestRollbackCLI:
         runner = CliRunner()
         with patch('lattice_lock_cli.commands.rollback.RollbackTrigger') as MockTrigger, \
              patch('lattice_lock_cli.commands.rollback.CheckpointManager') as MockManager:
-            
+
             mock_trigger_instance = MockTrigger.return_value
             mock_trigger_instance.trigger_rollback.return_value = True
-            
+
             result = runner.invoke(rollback, ['--checkpoint', 'ckpt_123'])
-            
+
             assert result.exit_code == 0
             assert "Rollback completed successfully." in result.output
             mock_trigger_instance.trigger_rollback.assert_called_with("Manual rollback (ckpt_123)", checkpoint_id='ckpt_123')

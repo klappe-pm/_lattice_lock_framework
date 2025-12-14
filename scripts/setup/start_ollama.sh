@@ -43,7 +43,7 @@ check_ollama_running() {
 # Start Ollama service
 start_ollama() {
     echo -e "${YELLOW}🔄 Starting Ollama service...${NC}"
-    
+
     # Try to start as system service first (macOS with brew)
     if command -v brew &> /dev/null && brew services list | grep -q ollama; then
         echo "Starting via Homebrew services..."
@@ -55,7 +55,7 @@ start_ollama() {
         nohup ollama serve > ollama.log 2>&1 &
         sleep 3
     fi
-    
+
     # Wait up to 30 seconds for service to start
     echo "Waiting for service to start..."
     for i in {1..30}; do
@@ -66,7 +66,7 @@ start_ollama() {
         sleep 1
         echo -n "."
     done
-    
+
     echo -e "\n${RED}❌ Failed to start Ollama service${NC}"
     echo "Check the logs: tail -f ollama.log"
     return 1
@@ -75,11 +75,11 @@ start_ollama() {
 # Show service status
 show_status() {
     echo -e "\n${BLUE}📊 Service Status:${NC}"
-    
+
     if check_ollama_running; then
         echo -e "${GREEN}✅ Ollama service is running${NC}"
         echo "   URL: ${OLLAMA_URL}"
-        
+
         # Get version info
         version_info=$(curl -s "${OLLAMA_URL}/api/version" 2>/dev/null)
         if [ $? -eq 0 ]; then
@@ -94,7 +94,7 @@ show_status() {
 # List installed models
 list_models() {
     echo -e "\n${BLUE}📋 Installed Models:${NC}"
-    
+
     if check_ollama_running; then
         models=$(ollama list 2>/dev/null)
         if [ $? -eq 0 ] && [ -n "$models" ]; then
@@ -111,15 +111,15 @@ list_models() {
 # Test model connectivity
 test_model() {
     local model="${1:-llama3.2:8b}"
-    
+
     echo -e "\n${BLUE}🧪 Testing Model: ${model}${NC}"
-    
+
     if ! ollama list | grep -q "$model"; then
         echo -e "${YELLOW}⚠️  Model $model not installed${NC}"
         echo "Install with: ollama pull $model"
         return 1
     fi
-    
+
     echo "Running test query..."
     response=$(ollama run "$model" "What is 1+1? Answer with just the number." 2>/dev/null)
     if [ $? -eq 0 ]; then
@@ -185,12 +185,12 @@ main() {
     if [ "$QUIET" = false ]; then
         check_ollama_installed
     fi
-    
+
     if [ "$STATUS_ONLY" = true ]; then
         show_status
         exit $?
     fi
-    
+
     if [ -n "$TEST_MODEL" ]; then
         if ! check_ollama_running; then
             echo -e "${RED}❌ Ollama service not running${NC}"
@@ -199,7 +199,7 @@ main() {
         test_model "$TEST_MODEL"
         exit $?
     fi
-    
+
     # Main startup flow
     if check_ollama_running; then
         if [ "$QUIET" = false ]; then
@@ -208,11 +208,11 @@ main() {
     else
         start_ollama || exit 1
     fi
-    
+
     if [ "$QUIET" = false ]; then
         show_status
         list_models
-        
+
         echo -e "\n${GREEN}🎉 Ollama is ready for Power Prompts!${NC}"
         echo -e "\n${BLUE}Next steps:${NC}"
         echo "1. Install models: ollama pull llama3.2:8b"

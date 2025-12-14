@@ -20,26 +20,26 @@ def update_tracker(prompts_dir: str = "prompts"):
     if Path(TRACKER_FILE).exists():
         with open(TRACKER_FILE) as f:
             state = json.load(f)
-            
+
     root = Path(prompts_dir)
     changes = []
-    
+
     for p_file in root.glob("**/*.md"):
         current_hash = get_file_hash(p_file)
         stored = state.get(str(p_file))
-        
+
         if not stored or stored['hash'] != current_hash:
             changes.append(p_file.name)
             state[str(p_file)] = {
                 "hash": current_hash,
                 "updated_at": datetime.now().isoformat()
             }
-            
+
     # Save State
     Path(TRACKER_FILE).parent.mkdir(exist_ok=True)
     with open(TRACKER_FILE, "w") as f:
         json.dump(state, f, indent=2)
-        
+
     print(f"[C3] Prompt Tracker updated. {len(changes)} files changed.")
 
 if __name__ == "__main__":

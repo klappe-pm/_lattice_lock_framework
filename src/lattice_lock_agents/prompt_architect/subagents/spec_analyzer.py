@@ -18,16 +18,16 @@ class SpecAnalyzer:
         path = Path(spec_path)
         if not path.exists():
             raise FileNotFoundError(f"Specification file not found: {spec_path}")
-            
+
         suffix = path.suffix.lower()
         parser = self.parsers.get(suffix)
-        
+
         if not parser:
             raise ValueError(f"Unsupported file format: {suffix}")
-            
+
         with open(path, 'r', encoding='utf-8') as f:
             content = f.read()
-            
+
         return parser.parse(content)
 
     # Future: Add LLM-assisted extraction here

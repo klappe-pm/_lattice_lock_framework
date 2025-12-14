@@ -13,10 +13,10 @@ def init_project(target_dir: str = "."):
 
     # 1. Directory Structure
     dirs = [
-        "src", 
-        "tests/unit", 
-        "tests/integration", 
-        ".lattice", 
+        "src",
+        "tests/unit",
+        "tests/integration",
+        ".lattice",
         "docs"
     ]
     for d in dirs:
@@ -37,7 +37,7 @@ def init_project(target_dir: str = "."):
     with open(root / ".gitignore", "w") as f:
         f.write(".lattice/\n__pycache__/\n*.pyc\n.env\n")
     print("  [+] Created .gitignore")
-    
+
     print("\nProject Initialized Successfully.")
 
 if __name__ == "__main__":

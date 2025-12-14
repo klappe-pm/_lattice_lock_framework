@@ -37,7 +37,7 @@ version: v2.1
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -56,7 +56,7 @@ entities: {}
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -82,7 +82,7 @@ interfaces:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -102,7 +102,7 @@ entities:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -122,7 +122,7 @@ entities:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -144,7 +144,7 @@ entities:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -162,7 +162,7 @@ entities:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid
@@ -181,7 +181,7 @@ entities:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_lattice_schema(path)
         assert not result.valid

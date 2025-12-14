@@ -37,17 +37,17 @@ class ToolMatcher:
             elif file_path == pattern or file_path.endswith(pattern): # Simple suffix match for now
                  # Exact or suffix match takes precedence over directory
                  return owner_id
-        
+
         return best_match_owner
 
     def match(self, tasks: List[Task]) -> List[ToolAssignment]:
         assignments = []
-        
+
         for task in tasks:
             best_tool = None
             max_score = -1.0
             conflict_files = []
-            
+
             # First pass: Check for hard ownership constraints
             forced_owner = None
             for file in task.files:
@@ -58,10 +58,10 @@ class ToolMatcher:
                         # Strategy: Split or assign to primary owner (simplification: assign to first owner found)
                         # In a real scenario, we might split the task.
                         # For now, we'll note the conflict but stick to the first owner.
-                        pass 
+                        pass
                     else:
                         forced_owner = owner
-            
+
             if forced_owner:
                 best_tool = forced_owner
                 max_score = 1.0 # Forced assignment
@@ -91,5 +91,5 @@ class ToolMatcher:
                     confidence=0.0,
                     reasoning="No suitable tool found"
                 ))
-                
+
         return assignments

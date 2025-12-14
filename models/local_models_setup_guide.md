@@ -186,7 +186,7 @@ The orchestrator is pre-configured with **21 local models** across different pro
 #### Meta Llama Models (9 models)
 **Note**: llama3.1:70b is now installed - a powerful 70B parameter model
 - `llama-3.2-90b` → `llama3.2:90b` (Vision capable)
-- `llama-3.2-11b` → `llama3.2:11b` (Vision capable) 
+- `llama-3.2-11b` → `llama3.2:11b` (Vision capable)
 - `llama-3.2-3b` → `llama3.2:3b` (Lightweight)
 - `llama-3.1-405b` → `llama3.1:405b` (Largest model)
 - `llama-3.1-70b` → `llama3.1:70b` (**NEW - High quality, 70B parameters**)
@@ -250,7 +250,7 @@ export CUSTOM_API_URL="http://localhost:8080/v1"
 
 ### Memory Requirements by Model
 - **Small models (1.3B-8B)**: 2-8GB RAM
-- **Medium models (13B-32B)**: 12-25GB RAM  
+- **Medium models (13B-32B)**: 12-25GB RAM
 - **Large models (34B-70B)**: 30-50GB RAM
 
 **New Model Requirements:**
@@ -280,7 +280,7 @@ ollama run magicoder:7b "warm up"
 2. **Balanced**: magicoder:7b (optimal balance)
 3. **Fast**: deepseek-coder:1.3b (quick iterations)
 
-#### **Reasoning & Analysis** 🧠  
+#### **Reasoning & Analysis** 🧠
 1. **Ultimate**: deepseek-r1:70b (best reasoning)
 2. **High-End**: **llama3.1:70b** (new - excellent for complex analysis)
 3. **Balanced**: qwen2.5:32b (multilingual reasoning)
@@ -347,7 +347,7 @@ ollama list | grep -E "(llama3.1:70b|gemma:7b|qwen2.5:7b)"
 
 ### Immediate Actions
 1. ✅ **14 local models installed** - Ready to use
-2. 🔧 **Test the new models**: llama3.1:70b, gemma:7b, qwen2.5:7b-instruct  
+2. 🔧 **Test the new models**: llama3.1:70b, gemma:7b, qwen2.5:7b-instruct
 3. 📚 **Try the orchestrator**: Use `cost_optimize` strategy to prefer local models
 
 ### Expansion Options

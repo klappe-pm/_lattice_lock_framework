@@ -332,13 +332,13 @@ if curl -s http://localhost:11434/api/version > /dev/null 2>&1; then
     echo "✅ Ollama is already running"
 else
     echo "🚀 Starting Ollama service..."
-    
+
     # Start Ollama in background
     nohup ollama serve > ollama.log 2>&1 &
-    
+
     # Wait for service to start
     sleep 3
-    
+
     # Verify startup
     if curl -s http://localhost:11434/api/version > /dev/null 2>&1; then
         echo "✅ Ollama started successfully"
@@ -437,7 +437,7 @@ htop
 import requests
 
 # Test local model via API
-response = requests.post('http://localhost:11434/api/generate', 
+response = requests.post('http://localhost:11434/api/generate',
     json={
         'model': 'llama3.2:8b',
         'prompt': 'Explain Python decorators',

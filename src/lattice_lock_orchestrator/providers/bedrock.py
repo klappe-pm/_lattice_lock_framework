@@ -15,7 +15,7 @@ class BedrockClient:
         self.access_key = os.getenv("AWS_ACCESS_KEY_ID")
         self.secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         self.enabled = bool(self.access_key and self.secret_key)
-        
+
         if self.enabled:
             logger.info(f"Bedrock Client initialized in {self.region}")
         else:
@@ -24,13 +24,13 @@ class BedrockClient:
     def generate(self, prompt: str, model: str, **kwargs) -> APIResponse:
         if not self.enabled:
             raise RuntimeError("Bedrock provider is not configured (missing AWS credentials)")
-        
+
         # In a real implementation, we would use boto3 here.
         # client = boto3.client("bedrock-runtime", region_name=self.region)
         # response = client.invoke_model(...)
-        
+
         logger.info(f"Generating with Bedrock model: {model}")
-        
+
         # Mock Response
         return APIResponse(
             content="[Bedrock] This is a placeholder response.",
