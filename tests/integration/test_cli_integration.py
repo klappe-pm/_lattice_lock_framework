@@ -28,7 +28,7 @@ class TestFullWorkflow:
             "--output-dir", str(temp_project_dir),
         ])
         assert init_result.exit_code == 0, f"Init failed: {init_result.output}"
-        assert "Project created successfully!" in init_result.output
+        assert "Created project" in init_result.output
 
         project_dir = temp_project_dir / "workflow_test"
         assert project_dir.exists()

@@ -616,25 +616,23 @@ class BedrockAPIClient(BaseAPIClient):
 
     Status: EXPERIMENTAL
 
-    This client is not fully implemented. Bedrock requires AWS Signature V4
-    authentication which needs boto3. This client will raise a clear error
-    explaining the limitation rather than crashing unexpectedly.
+    This client wraps the BedrockClient from providers/bedrock.py.
+    Bedrock requires AWS credentials and optionally boto3.
 
-    To use Bedrock models in production:
+    To use Bedrock models:
     1. Install boto3: pip install boto3
-    2. Configure AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    3. Use the boto3 bedrock-runtime client directly
+    2. Configure AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION)
     """
 
     def __init__(self, region: str = "us-east-1"):
-        # BEDROCK INTEGRATION GATED
-        # Requires AWS Signature V4 and verified credentials strategy.
-        raise NotImplementedError("Bedrock integration is currently GATED (Experimental). See provider_strategy.md.")
-
         # Bedrock uses AWS credentials, not API keys
         super().__init__("", f"https://bedrock-runtime.{region}.amazonaws.com")
         self.region = region
         self._warned = False
+
+        # Import and initialize the actual Bedrock client
+        from .providers.bedrock import BedrockClient
+        self._bedrock_client = BedrockClient(region_name=region)
 
     async def chat_completion(self,
                              model: str,
@@ -646,36 +644,39 @@ class BedrockAPIClient(BaseAPIClient):
         """
         Send chat completion request to Amazon Bedrock.
 
-        Note: This is an experimental client that is not fully implemented.
-        It will return an error response rather than raising NotImplementedError.
+        Note: This is an experimental client.
         """
         if not self._warned:
             logger.warning(
-                "BedrockAPIClient is EXPERIMENTAL and not fully implemented. "
-                "Bedrock requires AWS Signature V4 authentication via boto3. "
-                "This request will fail gracefully."
+                "BedrockAPIClient is EXPERIMENTAL. "
+                "Bedrock requires AWS Signature V4 authentication via boto3."
             )
             self._warned = True
 
-        error_msg = (
-            "Bedrock provider is experimental and requires boto3 integration. "
-            "To use Bedrock models: 1) Install boto3, 2) Configure AWS credentials, "
-            "3) Use boto3 bedrock-runtime client directly. "
-            "The orchestrator will attempt to use fallback providers."
-        )
+        # If functions are requested, note that Bedrock has model-specific tool support
+        if functions and not self._bedrock_client.enabled:
+            error_msg = (
+                "Bedrock provider is not configured. "
+                "Additionally, Bedrock function calling requires model-specific tool definitions."
+            )
+            return APIResponse(
+                content=None,
+                model=model,
+                provider="bedrock",
+                usage={'input_tokens': 0, 'output_tokens': 0},
+                latency_ms=0,
+                raw_response={"error": error_msg},
+                error=error_msg
+            )
 
-        if functions:
-            error_msg += " Additionally, Bedrock function calling requires model-specific tool definitions."
-
-        return APIResponse(
-            content=None,
+        # Delegate to the actual Bedrock client
+        response = self._bedrock_client.generate(
             model=model,
-            provider="bedrock",
-            usage={'input_tokens': 0, 'output_tokens': 0},
-            latency_ms=0,
-            raw_response={"error": error_msg},
-            error=error_msg
+            messages=messages,
+            max_tokens=max_tokens or 4096
         )
+
+        return response
 
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""

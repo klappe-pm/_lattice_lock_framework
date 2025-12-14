@@ -338,12 +338,22 @@ async def main():
 
     # Test command
     test_parser = subparsers.add_parser("test", help="Test integration")
-
+    parser.add_argument("--cost", action="store_true", help="Show cost usage report")
+    parser.add_argument("--detailed", action="store_true", help="Show detailed breakdown (with --cost)")
+    
     args = parser.parse_args()
 
     cli = OrchestratorCLI()
 
-    if not args.command:
+    if args.cost:
+        try:
+            from lattice_lock_orchestrator.cli.cost_command import handle_cost
+            handle_cost(console, detailed=args.detailed)
+        except ImportError:
+             console.print("[red]Cost tracking module not available.[/red]")
+        return
+    
+    if args.list:
         parser.print_help()
         return
 

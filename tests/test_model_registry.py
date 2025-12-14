@@ -183,7 +183,8 @@ class TestModelRegistryValidation:
         })
 
         assert not result.valid
-        assert any("negative" in e.lower() for e in result.errors)
+        # Pydantic error says "greater than or equal to 0" instead of "negative"
+        assert any("input_cost" in e.lower() or "greater than" in e.lower() for e in result.errors)
 
     def test_warns_on_unknown_provider(self):
         """Test that validation warns on unknown providers."""
