@@ -39,6 +39,13 @@ dependencies = [
     "rich>=13.0.0",
     "tenacity>=8.2.0",
     "Jinja2>=3.1.0",
+    "pydantic>=2.0.0",
+    "click>=8.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.6",
 ]
 
 [project.optional-dependencies]
@@ -72,6 +79,17 @@ where = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+norecursedirs = [
+    "pilot_projects",
+    "scripts/tests",
+    "examples",
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
 
 # Black configuration
 [tool.black]
