@@ -1,5 +1,6 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
+import subprocess
 from lattice_lock.rollback.trigger import RollbackTrigger
 from lattice_lock.rollback.checkpoint import CheckpointManager
 from lattice_lock.rollback.state import RollbackState
@@ -39,7 +40,24 @@ class TestRollbackTrigger(unittest.TestCase):
     def test_trigger_rollback_failure_no_checkpoint(self):
         self.mock_checkpoint_manager.get_checkpoint.return_value = None
 
-        success = self.trigger.trigger_rollback("Test reason", "ckpt_123")
+        success = self.trigger.trigger_rollback("Test reason", checkpoint_id="ckpt_123")
+
+        self.assertFalse(success)
+
+    @patch('subprocess.run')
+    def test_trigger_rollback_git_success(self, mock_subprocess):
+        mock_subprocess.return_value.returncode = 0
+        
+        success = self.trigger.trigger_rollback("Test reason", mode="git_revert")
+
+        self.assertTrue(success)
+        mock_subprocess.assert_called_with(["git", "revert", "--no-edit", "HEAD"], check=True, capture_output=True)
+
+    @patch('subprocess.run')
+    def test_trigger_rollback_git_failure(self, mock_subprocess):
+        mock_subprocess.side_effect = subprocess.CalledProcessError(1, ["git", "revert"])
+        
+        success = self.trigger.trigger_rollback("Test reason", mode="git_revert")
 
         self.assertFalse(success)
 
@@ -64,7 +82,7 @@ class TestRollbackTrigger(unittest.TestCase):
     def test_check_validation_failure(self):
         with patch.object(self.trigger, 'trigger_rollback') as mock_trigger:
             self.trigger.check_validation_failure(False, "Context")
-            mock_trigger.assert_called_once()
+            mock_trigger.assert_called_once_with("Validation failed: Context", mode="git_revert")
 
             mock_trigger.reset_mock()
             self.trigger.check_validation_failure(True, "Context")
@@ -73,7 +91,7 @@ class TestRollbackTrigger(unittest.TestCase):
     def test_check_sheriff_violation(self):
         with patch.object(self.trigger, 'trigger_rollback') as mock_trigger:
             self.trigger.check_sheriff_violation(["violation1"])
-            mock_trigger.assert_called_once()
+            mock_trigger.assert_called_once_with("Sheriff violations found: violation1", mode="git_revert")
 
             mock_trigger.reset_mock()
             self.trigger.check_sheriff_violation([])
@@ -82,7 +100,7 @@ class TestRollbackTrigger(unittest.TestCase):
     def test_check_gauntlet_failure(self):
         with patch.object(self.trigger, 'trigger_rollback') as mock_trigger:
             self.trigger.check_gauntlet_failure("details")
-            mock_trigger.assert_called_once()
+            mock_trigger.assert_called_once_with("Gauntlet failure: details", mode="git_revert")
 
             mock_trigger.reset_mock()
             self.trigger.check_gauntlet_failure("")
