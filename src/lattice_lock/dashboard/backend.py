@@ -227,7 +227,7 @@ async def update_project(
     all connected WebSocket clients.
     """
 
-    """
+
     aggregator = request.app.state.aggregator # Alternative access pattern
     ws_manager = request.app.state.ws_manager
 

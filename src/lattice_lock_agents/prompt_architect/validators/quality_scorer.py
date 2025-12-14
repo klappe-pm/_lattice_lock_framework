@@ -4,7 +4,7 @@ import re
 import os
 import json
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 from .utils import parse_sections
 
@@ -21,9 +21,9 @@ class QualityScore(BaseModel):
     completeness_score: float = 0.0  # 1-10 scale
     passes_threshold: bool = True
     needs_review: bool = False
-    feedback: List[str] = Field(default_factory=list)
-    suggestions: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    feedback: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class QualityScorer:

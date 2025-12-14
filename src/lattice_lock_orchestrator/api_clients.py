@@ -672,15 +672,23 @@ class BedrockAPIClient(BaseAPIClient):
                 error=error_msg
             )
 
-        # Delegate to the actual Bedrock client
-        response = self._bedrock_client.generate(
-            model=model,
-            messages=messages,
-            max_tokens=max_tokens or 4096,
-            anthropic_version=self.anthropic_version
-        )
+        # Delegate to the actual Bedrock client with retry
+        # Use tenacity retry logic similar to _make_request
+        @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+        async def _call_bedrock():
+            return self._bedrock_client.generate(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens or 4096,
+                anthropic_version=self.anthropic_version
+            )
 
-        return response
+        try:
+             response = await _call_bedrock()
+             return response
+        except Exception as e:
+            logger.error(f"Bedrock generation failed after retries: {e}")
+            raise
 
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""
