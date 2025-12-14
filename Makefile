@@ -1,4 +1,4 @@
-.PHONY: lint test ci deps clean
+.PHONY: lint test ci deps clean git-cleanup
 
 lint:
 	ruff check .
@@ -22,3 +22,11 @@ clean:
 	rm -rf build/ dist/ *.egg-info .pytest_cache
 	find . -name "*.pyc" -delete
 	find . -name "__pycache__" -delete
+
+git-cleanup:
+	@echo "Pruning remote tracking branches..."
+	git fetch --prune
+	@echo "Deleting local merged branches..."
+	git branch --merged main | grep -v '^\*\|main' | xargs -r git branch -d || true
+	@echo "Done. Remaining branches:"
+	@git branch
