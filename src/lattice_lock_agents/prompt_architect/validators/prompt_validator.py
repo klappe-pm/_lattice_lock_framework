@@ -7,6 +7,8 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from pathlib import Path
 
+from .utils import parse_sections
+
 logger = logging.getLogger(__name__)
 
 
@@ -180,7 +182,8 @@ class PromptValidator:
     def _validate_sections(self, content: str, result: ValidationResult) -> None:
         """Validate all required and optional sections."""
         # Parse sections from content
-        sections = self._parse_sections(content)
+        # Parse sections from content
+        sections = parse_sections(content)
 
         # Validate required sections
         for section_name, rules in self.REQUIRED_SECTIONS.items():
@@ -203,30 +206,7 @@ class PromptValidator:
             for warning in validation.warnings:
                 result.add_warning(warning)
 
-    def _parse_sections(self, content: str) -> Dict[str, str]:
-        """Parse content into sections based on ## headers."""
-        sections = {}
-        current_section = None
-        current_content = []
 
-        for line in content.split('\n'):
-            # Check for section header
-            if line.startswith('## '):
-                # Save previous section
-                if current_section:
-                    sections[current_section] = '\n'.join(current_content).strip()
-
-                # Start new section
-                current_section = line[3:].strip()
-                current_content = []
-            elif current_section:
-                current_content.append(line)
-
-        # Save last section
-        if current_section:
-            sections[current_section] = '\n'.join(current_content).strip()
-
-        return sections
 
     def _validate_section(
         self,

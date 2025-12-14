@@ -2,6 +2,7 @@ import os
 import json
 import yaml
 import logging
+import aiofiles
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -89,17 +90,17 @@ class PromptGenerator:
         with open(path, 'r') as f:
             return yaml.safe_load(f)
 
-    def _load_template(self) -> str:
+    async def _load_template(self) -> str:
         if os.path.exists(self.template_path):
-            with open(self.template_path, 'r') as f:
-                return f.read()
+            async with aiofiles.open(self.template_path, 'r') as f:
+                return await f.read()
         return ""
 
     async def generate(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> GeneratedPrompt:
         """
         Generate a detailed prompt based on the tool assignment and context.
         """
-        template_content = self._load_template()
+        template_content = await self._load_template()
         if not template_content:
             raise ValueError("Prompt template not found")
 
@@ -187,7 +188,7 @@ class PromptGenerator:
                 )
 
         # Write to file and update state (which also regenerates tracker markdown)
-        self._write_prompt_file(prompt)
+        await self._write_prompt_file(prompt)
         self._update_state(prompt, context_data)
 
         return prompt
@@ -312,7 +313,7 @@ class PromptGenerator:
             )
 
         # Re-render template
-        template_content = self._load_template()
+        template_content = await self._load_template()
         template = Template(template_content)
         rendered_content = template.render(**variables)
 
@@ -483,10 +484,10 @@ Return only the enhanced context text.
                 return d
         return f"phase{phase_number}_generic"
 
-    def _write_prompt_file(self, prompt: GeneratedPrompt):
+    async def _write_prompt_file(self, prompt: GeneratedPrompt):
         os.makedirs(os.path.dirname(prompt.file_path), exist_ok=True)
-        with open(prompt.file_path, 'w') as f:
-            f.write(prompt.content)
+        async with aiofiles.open(prompt.file_path, 'w') as f:
+            await f.write(prompt.content)
         logger.info(f"Generated prompt written to {prompt.file_path}")
 
     def _update_state(self, prompt: GeneratedPrompt, context_data: Dict[str, Any]):

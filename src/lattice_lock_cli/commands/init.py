@@ -68,6 +68,8 @@ def create_project_structure(
     # Add AWS CI directory if aws provider selected
     if ci_provider == "aws":
         directories.append(project_dir / "ci" / "aws")
+    elif ci_provider == "gcp":
+        directories.append(project_dir / "ci" / "gcp")
 
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
@@ -111,6 +113,25 @@ def create_project_structure(
                 (
                     "ci/aws/codebuild-project.yml.j2",
                     project_dir / "ci" / "aws" / "codebuild-project.yml",
+                ),
+            ]
+        )
+
+    # Add GCP CI templates if gcp provider selected
+    if ci_provider == "gcp":
+        file_mappings.extend(
+            [
+                (
+                    "ci/gcp/cloudbuild.yaml.j2",
+                    project_dir / "ci" / "gcp" / "cloudbuild.yaml",
+                ),
+                (
+                    "ci/gcp/cloudbuild-pr.yaml.j2",
+                    project_dir / "ci" / "gcp" / "cloudbuild-pr.yaml",
+                ),
+                (
+                    "ci/gcp/trigger-config.yaml.j2",
+                    project_dir / "ci" / "gcp" / "trigger-config.yaml",
                 ),
             ]
         )
@@ -186,9 +207,9 @@ def test_project_name_valid() -> None:
 )
 @click.option(
     "--ci",
-    type=click.Choice(["github", "aws"]),
+    type=click.Choice(["github", "aws", "gcp"]),
     default="github",
-    help="CI/CD provider (github or aws)",
+    help="CI/CD provider (github, aws, or gcp)",
 )
 @click.pass_context
 def init_command(

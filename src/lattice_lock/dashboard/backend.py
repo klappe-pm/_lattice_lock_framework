@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from .aggregator import DataAggregator, DashboardSummary
 from .metrics import MetricsSnapshot
 from .websocket import WebSocketManager
+from .mock_data import mock_data_updater
 
 
 # Configure logging
@@ -29,26 +30,21 @@ logger = logging.getLogger("lattice_lock.dashboard")
 # API version
 API_VERSION = "1.0.0"
 
-# Shared state (singleton instances)
-_aggregator: Optional[DataAggregator] = None
-_ws_manager: Optional[WebSocketManager] = None
-_background_task: Optional[asyncio.Task] = None
+
+# Shared state management moved to app.state
+# Use dependency injection to access these
+
+from fastapi import Request, Depends
+
+def get_aggregator(request: Request) -> DataAggregator:
+    """Get the shared DataAggregator instance from app state."""
+    return request.app.state.aggregator
 
 
-def get_aggregator() -> DataAggregator:
-    """Get the shared DataAggregator instance."""
-    global _aggregator
-    if _aggregator is None:
-        _aggregator = DataAggregator()
-    return _aggregator
+def get_ws_manager(request: Request) -> WebSocketManager:
+    """Get the shared WebSocketManager instance from app state."""
+    return request.app.state.ws_manager
 
-
-def get_ws_manager() -> WebSocketManager:
-    """Get the shared WebSocketManager instance."""
-    global _ws_manager
-    if _ws_manager is None:
-        _ws_manager = WebSocketManager()
-    return _ws_manager
 
 
 # Pydantic models for API responses
@@ -115,14 +111,16 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
     summary="Get Dashboard Summary",
     description="Get an overall summary of all projects and system health.",
 )
-async def get_summary() -> SummaryResponse:
+async def get_summary(
+    aggregator: DataAggregator = Depends(get_aggregator)
+) -> SummaryResponse:
     """
     Get dashboard summary.
 
     Returns aggregated statistics about all registered projects including
     health scores, validation counts, and success rates.
     """
-    aggregator = get_aggregator()
+    # aggregator = get_aggregator() # DI handled by Depends
     summary = aggregator.get_project_summary()
 
     return SummaryResponse(
@@ -143,14 +141,16 @@ async def get_summary() -> SummaryResponse:
     summary="List All Projects",
     description="Get a list of all registered projects with their current status.",
 )
-async def get_projects() -> List[ProjectResponse]:
+async def get_projects(
+    aggregator: DataAggregator = Depends(get_aggregator)
+) -> List[ProjectResponse]:
     """
     Get all projects.
 
     Returns a list of all registered projects sorted by last update time
     (most recent first).
     """
-    aggregator = get_aggregator()
+    # aggregator = get_aggregator() # DI
     projects = aggregator.get_all_projects()
 
     return [
@@ -178,13 +178,16 @@ async def get_projects() -> List[ProjectResponse]:
         404: {"description": "Project not found"},
     },
 )
-async def get_project(project_id: str) -> ProjectResponse:
+async def get_project(
+    project_id: str,
+    aggregator: DataAggregator = Depends(get_aggregator)
+) -> ProjectResponse:
     """
     Get a specific project.
 
     Returns detailed information about a single project by ID.
     """
-    aggregator = get_aggregator()
+    # aggregator = get_aggregator() # DI
     project = aggregator.get_project(project_id)
 
     if project is None:
@@ -214,7 +217,8 @@ async def get_project(project_id: str) -> ProjectResponse:
 )
 async def update_project(
     project_id: str,
-    request: ProjectUpdateRequest,
+    request: Request,
+    request_body: ProjectUpdateRequest,
 ) -> ProjectResponse:
     """
     Update a project's status.
@@ -222,14 +226,16 @@ async def update_project(
     Updates the status of a project and broadcasts the change to
     all connected WebSocket clients.
     """
-    aggregator = get_aggregator()
-    ws_manager = get_ws_manager()
+
+    """
+    aggregator = request.app.state.aggregator # Alternative access pattern
+    ws_manager = request.app.state.ws_manager
 
     project = aggregator.update_project_status(
         project_id=project_id,
-        status=request.status,
-        details=request.details,
-        duration=request.duration,
+        status=request_body.status,
+        details=request_body.details,
+        duration=request_body.duration,
     )
 
     # Broadcast update to WebSocket clients
@@ -237,7 +243,7 @@ async def update_project(
         event_type="project_update",
         data={
             "project_id": project_id,
-            "status": request.status,
+            "status": request_body.status,
             "health_score": project.health_score,
         },
         project_id=project_id,
@@ -262,14 +268,16 @@ async def update_project(
     summary="Get Metrics Data",
     description="Get current validation metrics and statistics.",
 )
-async def get_metrics() -> MetricsResponse:
+async def get_metrics(
+    aggregator: DataAggregator = Depends(get_aggregator)
+) -> MetricsResponse:
     """
     Get metrics data.
 
     Returns current validation metrics including success rates,
     response times, error counts, and health scores.
     """
-    aggregator = get_aggregator()
+    # aggregator = get_aggregator() # DI
     snapshot = aggregator.get_metrics()
 
     return MetricsResponse(
@@ -293,13 +301,15 @@ async def get_metrics() -> MetricsResponse:
     summary="Get WebSocket Connection Stats",
     description="Get statistics about active WebSocket connections.",
 )
-async def get_connection_stats() -> ConnectionStatsResponse:
+async def get_connection_stats(
+    ws_manager: WebSocketManager = Depends(get_ws_manager)
+) -> ConnectionStatsResponse:
     """
     Get WebSocket connection statistics.
 
     Returns information about all active WebSocket connections.
     """
-    ws_manager = get_ws_manager()
+    # ws_manager = get_ws_manager() # DI
     stats = ws_manager.get_connection_stats()
 
     return ConnectionStatsResponse(
@@ -318,64 +328,36 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     Message Types:
     - `connected`: Sent on connection establishment
-    - `project_update`: Sent when a project's status changes
+    - `project_update`: Sent when a project status changes
     - `metrics_update`: Sent periodically with updated metrics
     - `heartbeat`: Sent periodically to keep connection alive
     """
-    ws_manager = get_ws_manager()
+    # Access via app state directly for WebSocket endpoint
+    ws_manager = websocket.app.state.ws_manager
     await ws_manager.handle_connection(websocket)
 
 
-# Background task for demo/mock data updates
-async def mock_data_updater() -> None:
-    """
-    Simulate real-time updates for demonstration.
-
-    This background task periodically updates project statuses
-    and broadcasts changes to connected WebSocket clients.
-    """
-    projects = ["proj-alpha", "proj-beta", "proj-gamma"]
-    statuses = ["healthy", "valid", "error", "warning"]
-
-    aggregator = get_aggregator()
-    ws_manager = get_ws_manager()
-
-    # Initialize demo projects
-    for pid in projects:
-        aggregator.register_project(pid, name=f"Demo Project {pid.split('-')[1].title()}")
-
-    while True:
-        await asyncio.sleep(5)
-
-        # Pick a random project and update it
-        pid = random.choice(projects)
-        new_status = random.choice(statuses)
-
-        project = aggregator.update_project_status(pid, new_status)
-
-        # Broadcast update
-        await ws_manager.broadcast_event(
-            event_type="project_update",
-            data={
-                "project_id": pid,
-                "status": new_status,
-                "health_score": project.health_score,
-                "summary": aggregator.get_project_summary().to_dict(),
-            },
-            project_id=pid,
-        )
+# Mock data updater moved to mock_data.py
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan manager."""
+    # Initialize shared state
+    app.state.aggregator = DataAggregator()
+    app.state.ws_manager = WebSocketManager()
+    
+    # Global ref for background task management
     global _background_task
 
     logger.info("Starting Lattice Lock Dashboard Backend v%s", API_VERSION)
 
     # Start background mock updater (for demo purposes)
     # In production, remove this or make it configurable
-    _background_task = asyncio.create_task(mock_data_updater())
+    if hasattr(app.state, "enable_mock_updates") and app.state.enable_mock_updates:
+         _background_task = asyncio.create_task(
+             mock_data_updater(app.state.aggregator, app.state.ws_manager)
+         )
 
     yield
 
@@ -388,8 +370,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             pass
 
     # Close WebSocket connections
-    ws_manager = get_ws_manager()
-    await ws_manager.close_all()
+    if hasattr(app.state, "ws_manager"):
+        await app.state.ws_manager.close_all()
 
     logger.info("Shutting down Lattice Lock Dashboard Backend")
 
@@ -444,8 +426,12 @@ ws.onmessage = (event) => {
     )
 
     # Configure CORS
+    # Use explicit origins if provided, otherwise default to typical local development
     if cors_origins is None:
-        cors_origins = ["*"]
+        cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    
+    # Store config in app state for lifespan access
+    app.state.enable_mock_updates = enable_mock_updates
 
     app.add_middleware(
         CORSMiddleware,

@@ -2,6 +2,8 @@ import os
 import logging
 from typing import Optional, Dict, Any, List
 from ..types import ModelCapabilities, APIResponse
+import json
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -37,27 +39,24 @@ class BedrockClient:
         else:
             logger.warning("Bedrock credentials missing. Client disabled.")
 
-    def generate(self, model: str, messages: List[Dict[str, str]], **kwargs) -> APIResponse:
+    def generate(self, model: str, messages: List[Dict[str, str]], max_tokens: int = 4096, **kwargs) -> APIResponse:
+        """Generate response from Bedrock model."""
         if not self.enabled:
-            # Return error response instead of raising exception to allow fallback
             return APIResponse(
                 content=None,
                 model=model,
                 provider="bedrock",
-                error="Bedrock provider is not configured (missing AWS credentials or boto3)",
-                usage={},
-                latency_ms=0.0
+                error="Bedrock client not initialized (missing AWS credentials?)"
             )
-
-        try:
-            import json
-            import time
             
+        start_time = time.time()
+        
+        try:
             # Simple body construction for Claude (most common Bedrock model for this project)
             # In a full implementation, this would handle different schemas for different models
             body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": kwargs.get("max_tokens", 4096),
+                "anthropic_version": kwargs.get("anthropic_version", "bedrock-2023-05-31"),
+                "max_tokens": max_tokens,
                 "messages": messages
             })
 

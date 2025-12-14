@@ -6,6 +6,7 @@ import json
 import logging
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
+from .utils import parse_sections
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,8 @@ class QualityScorer:
         result = QualityScore(prompt_path=prompt_id)
 
         # Parse sections
-        sections = self._parse_sections(content)
+        # Parse sections
+        sections = parse_sections(content)
 
         # Score each dimension
         result.clarity_score = self._score_clarity(content, sections)
@@ -150,25 +152,7 @@ class QualityScorer:
 
         return result
 
-    def _parse_sections(self, content: str) -> Dict[str, str]:
-        """Parse content into sections."""
-        sections = {}
-        current_section = None
-        current_content = []
 
-        for line in content.split('\n'):
-            if line.startswith('## '):
-                if current_section:
-                    sections[current_section] = '\n'.join(current_content).strip()
-                current_section = line[3:].strip()
-                current_content = []
-            elif current_section:
-                current_content.append(line)
-
-        if current_section:
-            sections[current_section] = '\n'.join(current_content).strip()
-
-        return sections
 
     def _score_clarity(self, content: str, sections: Dict[str, str]) -> float:
         """Score prompt clarity (1-10)."""

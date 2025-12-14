@@ -72,9 +72,10 @@ class TypeHintRule(Rule):
                 ))
         return violations
 
+        return violations
+
+
 class VersionComplianceRule(Rule):
-    """Checks for version compliance issues."""
+    """Enforces version compliance checks (placeholder)."""
     def check(self, node: ast.AST, context: RuleContext) -> List[Violation]:
-        # Placeholder for version compliance logic
-        # Could check for deprecated features or version-specific syntax
         return []

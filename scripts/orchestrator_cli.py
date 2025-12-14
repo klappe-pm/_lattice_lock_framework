@@ -16,7 +16,9 @@ from rich.panel import Panel
 from rich.table import Table
 
 # Add src directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add src directory to path for imports
+# sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Assuming package is installed or PYTHONPATH is set correctly
 
 # Import orchestration components from lattice_lock package
 from lattice_lock import ModelOrchestrator, TaskType
@@ -208,49 +210,9 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
         console.print("[yellow]Cost reporting not yet implemented in v3.1[/yellow]")
         return
 
-        """
-        # report = self.orchestrator.get_cost_report()
-
-        # if not report["total_cost"]:
-        #     console.print("[yellow]No usage tracked yet[/yellow]")
-        #     return
-
-        # # Overall stats
-        # stats_content = f"""
-        # [bold]Total Cost:[/bold] ${report['total_cost']:.4f}
-        # [bold]Models Used:[/bold] {len(report['usage_count'])}
-        # [bold]Total Requests:[/bold] {sum(report['usage_count'].values())}
-        # """
-
-        # console.print(Panel(stats_content, title="Usage Statistics", border_style="cyan"))
-
-        # # Cost by provider
-        # if report["by_provider"]:
-        #     table = Table(title="Cost by Provider", show_header=True)
-        #     table.add_column("Provider", style="cyan")
-        #     table.add_column("Cost", justify="right", style="red")
-        #     table.add_column("Percentage", justify="right", style="yellow")
-
-        #     for provider, cost in sorted(report["by_provider"].items(),
-        #                                 key=lambda x: x[1], reverse=True):
-        #         percentage = (cost / report["total_cost"]) * 100
-        #         table.add_row(provider, f"${cost:.4f}", f"{percentage:.1f}%")
-
-        #     console.print(table)
-
-        # # Top used models
-        # if report["usage_count"]:
-        #     table = Table(title="Most Used Models", show_header=True)
-        #     table.add_column("Model", style="green")
-        #     table.add_column("Uses", justify="right", style="cyan")
-        #     table.add_column("Total Cost", justify="right", style="red")
-
-        #     for model_id, count in sorted(report["usage_count"].items(),
-        #                                  key=lambda x: x[1], reverse=True)[:5]:
-        #         cost = report["by_model"].get(model_id, 0)
-        #         table.add_row(model_id, str(count), f"${cost:.4f}")
-
-        #     console.print(table)
+        # Cost tracking report logic placeholder
+        console.print("[yellow]Cost reporting not yet implemented due to dependency updates[/yellow]")
+        return
 
     def create_consensus_group(self, prompt: str, num_models: int = 3):
         """Create a consensus group for the prompt (not yet implemented)."""
@@ -385,9 +347,12 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
 
         # Test 4: Zen MCP Bridge
         console.print("\n[yellow]Test 4: Zen MCP Integration[/yellow]")
-        zen_tools = self.bridge.zen_tools
-        console.print(f"  Zen tools discovered: {len(zen_tools)}")
-        console.print("  Status: [green]✓ PASS[/green]" if zen_tools else "[red]✗ FAIL[/red]")
+        if self.bridge:
+            zen_tools = self.bridge.zen_tools
+            console.print(f"  Zen tools discovered: {len(zen_tools)}")
+            console.print("  Status: [green]✓ PASS[/green]" if zen_tools else "[red]✗ FAIL[/red]")
+        else:
+            console.print("  Zen MCP Bridge: [yellow]Not Available[/yellow]")
 
         console.print("\n[bold green]Integration test complete![/bold green]")
 

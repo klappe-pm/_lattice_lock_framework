@@ -416,7 +416,7 @@ class GoogleAPIClient(BaseAPIClient):
 class AnthropicAPIClient(BaseAPIClient):
     """Anthropic Claude API client (via DIAL or direct)"""
 
-    def __init__(self, api_key: Optional[str] = None, use_dial: bool = False):
+    def __init__(self, api_key: Optional[str] = None, use_dial: bool = False, **kwargs):
         if use_dial:
             api_key = api_key or os.getenv('DIAL_API_KEY')
             if not api_key:
@@ -430,6 +430,7 @@ class AnthropicAPIClient(BaseAPIClient):
             super().__init__(api_key, "https://api.anthropic.com/v1")
 
         self.use_dial = use_dial
+        self.anthropic_version = kwargs.get("api_version", "2023-06-01")
 
     async def chat_completion(self,
                              model: str,
@@ -489,7 +490,7 @@ class AnthropicAPIClient(BaseAPIClient):
             # Direct Anthropic API
             headers = {
                 "x-api-key": self.api_key,
-                "anthropic-version": "2023-06-01",
+                "anthropic-version": self.anthropic_version,
                 "Content-Type": "application/json"
             }
 
@@ -546,11 +547,12 @@ class AnthropicAPIClient(BaseAPIClient):
 class AzureOpenAIClient(BaseAPIClient):
     """Azure OpenAI Service API client"""
 
-    def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None, **kwargs):
         api_key = api_key or os.getenv('AZURE_OPENAI_API_KEY')
         endpoint = endpoint or os.getenv('AZURE_OPENAI_ENDPOINT')
         if not api_key or not endpoint:
             raise ValueError("AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT required")
+        self.api_version = kwargs.get("api_version", "2024-02-15-preview")
         super().__init__(api_key, endpoint)
 
     async def chat_completion(self,
@@ -582,7 +584,7 @@ class AzureOpenAIClient(BaseAPIClient):
             payload["tool_choice"] = tool_choice
 
         # Azure OpenAI uses deployment names in the endpoint
-        endpoint = f"openai/deployments/{model}/chat/completions?api-version=2024-02-15-preview"
+        endpoint = f"openai/deployments/{model}/chat/completions?api-version={self.api_version}"
         data, latency_ms = await self._make_request("POST", endpoint, headers, payload)
 
         response_content = None
@@ -624,10 +626,11 @@ class BedrockAPIClient(BaseAPIClient):
     2. Configure AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION)
     """
 
-    def __init__(self, region: str = "us-east-1"):
+    def __init__(self, region: str = "us-east-1", **kwargs):
         # Bedrock uses AWS credentials, not API keys
         super().__init__("", f"https://bedrock-runtime.{region}.amazonaws.com")
         self.region = region
+        self.anthropic_version = kwargs.get("api_version", "bedrock-2023-05-31")
         self._warned = False
 
         # Import and initialize the actual Bedrock client
@@ -673,7 +676,8 @@ class BedrockAPIClient(BaseAPIClient):
         response = self._bedrock_client.generate(
             model=model,
             messages=messages,
-            max_tokens=max_tokens or 4096
+            max_tokens=max_tokens or 4096,
+            anthropic_version=self.anthropic_version
         )
 
         return response

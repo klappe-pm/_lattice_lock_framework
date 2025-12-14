@@ -24,6 +24,7 @@ class ModelOrchestrator:
     """
 
     def __init__(self, guide_path: Optional[str] = None):
+
         self.registry = ModelRegistry()
         self.analyzer = TaskAnalyzer()
         self.scorer = ModelScorer()
@@ -147,19 +148,8 @@ class ModelOrchestrator:
                 logger.info(f"Function call {function_call_name} executed successfully. Result: {function_result}")
 
                 # Extract the tool_call_id from the first response's raw data
-                tool_call_id = None
-                if first_response.raw_response and \
-                   'choices' in first_response.raw_response and \
-                   first_response.raw_response['choices'] and \
-                   'message' in first_response.raw_response['choices'][0] and \
-                   'tool_calls' in first_response.raw_response['choices'][0]['message'] and \
-                   first_response.raw_response['choices'][0]['message']['tool_calls']:
-                    tool_call_id = first_response.raw_response['choices'][0]['message']['tool_calls'][0]['id']
-
-                if not tool_call_id:
-                    logger.warning("Could not extract tool_call_id from model's first response.")
-                    # Fallback to a dummy ID if it cannot be extracted (though this might cause issues with some APIs)
-                    tool_call_id = "call_dummy_id_fallback"
+                # Extract tool_call_id using helper method
+                tool_call_id = self._extract_tool_call_id(first_response)
 
                 # Append the assistant's function call message
                 messages.append({
@@ -356,4 +346,19 @@ class ModelOrchestrator:
             status = ProviderAvailability.get_status(provider)
             message = ProviderAvailability.get_message(provider)
             result[provider] = f"{status.value}: {message}"
-        return result
+    def _extract_tool_call_id(self, response: APIResponse) -> str:
+        """Safely extract tool_call_id from response with error handling."""
+        try:
+            if (response.raw_response and 
+                'choices' in response.raw_response and 
+                response.raw_response['choices'] and 
+                'message' in response.raw_response['choices'][0] and 
+                'tool_calls' in response.raw_response['choices'][0]['message'] and 
+                response.raw_response['choices'][0]['message']['tool_calls']):
+                
+                return response.raw_response['choices'][0]['message']['tool_calls'][0]['id']
+        except (KeyError, IndexError, TypeError) as e:
+            logger.debug(f"Error extracting tool_call_id: {e}")
+
+        logger.warning("Could not extract tool_call_id from model's first response.")
+        return "call_dummy_id_fallback"

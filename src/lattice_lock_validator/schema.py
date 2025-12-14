@@ -75,8 +75,7 @@ def validate_lattice_schema(file_path: str) -> ValidationResult:
         if section not in data:
             result.add_error(f"Missing required section: {section}")
 
-    if not result.valid and not data.get('entities'): # Stop if critical sections missing, but continue if only some missing to find more errors
-         pass
+
 
     # 2. Validate version format
     if 'version' in data:

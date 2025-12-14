@@ -1,4 +1,5 @@
 from typing import Callable, Dict, Any, Optional
+import inspect
 
 class FunctionCallHandler:
     def __init__(self):
@@ -17,7 +18,7 @@ class FunctionCallHandler:
             raise ValueError(f"Function '{name}' not registered.")
 
         # Assume function is async if it's an awaitable coroutine
-        if hasattr(func, '__call__') and hasattr(func, '__code__') and func.__code__.co_flags & (1 << 7): #inspect.iscoroutinefunction(func)
+        if inspect.iscoroutinefunction(func):
             return await func(**kwargs)
         else:
             return func(**kwargs)
