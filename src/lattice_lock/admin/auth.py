@@ -26,8 +26,8 @@ from fastapi.security import (
     OAuth2PasswordBearer,
     OAuth2PasswordRequestForm,
 )
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel, Field
 
 
@@ -121,8 +121,10 @@ def configure(config: AuthConfig) -> None:
     _config = config
 
 
-# Password hashing context - using argon2 for better Python 3.14 compatibility
-_pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
+# Bcrypt configuration
+# Using bcrypt directly instead of passlib for compatibility with bcrypt 4.x/5.x
+# which strictly enforces the 72-byte password limit
+_BCRYPT_ROUNDS = 12  # Cost factor for bcrypt hashing
 
 
 class TokenData(BaseModel):
@@ -224,7 +226,10 @@ def hash_password(password: str) -> str:
     Returns:
         Bcrypt hash of the password
     """
-    return _pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt(rounds=_BCRYPT_ROUNDS)
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -237,7 +242,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
-    return _pwd_context.verify(plain_password, hashed_password)
+    try:
+        password_bytes = plain_password.encode("utf-8")
+        hashed_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(
