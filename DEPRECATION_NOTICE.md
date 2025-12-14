@@ -1,105 +1,117 @@
-# Vibelocity Orchestrator Deprecation Notice
+# Deprecation Notice: vibelocity-orchestrator
 
-> **This document is intended to be placed in the vibelocity-orchestrator repository.**
+**Effective Date:** 2025-12-01
+**Successor Repository:** [Lattice Lock Framework](https://github.com/klappe-pm/lattice-lock-framework)
 
 ---
 
-## DEPRECATED
+## Summary
 
-**This repository (`vibelocity-orchestrator`) is deprecated and no longer actively maintained.**
+The `vibelocity-orchestrator` project has been deprecated and all functionality has been migrated to the **Lattice Lock Framework**. New users should use Lattice Lock Framework directly. Existing users of vibelocity-orchestrator should migrate to Lattice Lock Framework.
 
-All functionality has been migrated to the [Lattice Lock Framework](https://github.com/klappe-pm/lattice-lock-framework).
+---
+
+## Why This Change?
+
+The Lattice Lock Framework represents a significant evolution:
+
+1. **Governance-First Design**: Built-in schema validation, AST analysis (Sheriff), and semantic testing (Gauntlet)
+2. **Unified Packaging**: Single package structure with clear import paths (`from lattice_lock import ModelOrchestrator`)
+3. **Engineering Framework**: Scaffolding CLI, validation tools, and CI/CD integration
+4. **Better Maintenance**: Consolidated codebase with consistent code quality standards
 
 ---
 
 ## Migration Guide
 
-### For New Projects
+### Quick Migration
 
-Use Lattice Lock Framework directly:
+**Before (vibelocity-orchestrator):**
+```python
+from model_orchestrator import ModelOrchestrator
+from model_orchestrator.types import TaskType, ModelCapabilities
+```
+
+**After (Lattice Lock Framework):**
+```python
+from lattice_lock_orchestrator import ModelOrchestrator
+from lattice_lock_orchestrator.types import TaskType, ModelCapabilities
+```
+
+Or using the public API:
+```python
+from lattice_lock import ModelOrchestrator
+```
+
+### Installation
 
 ```bash
+# Remove old package
+pip uninstall vibelocity-orchestrator
+
+# Install Lattice Lock
 pip install lattice-lock
+# Or for development:
+git clone https://github.com/klappe-pm/lattice-lock-framework
+cd lattice-lock-framework
+pip install -e .
 ```
 
-```python
-from lattice_lock import ModelOrchestrator, TaskType
+### Import Changes
 
-orchestrator = ModelOrchestrator()
-response = await orchestrator.route_request(
-    prompt="Your prompt here",
-    task_type=TaskType.CODE_GENERATION
-)
+| Old Import (vibelocity) | New Import (Lattice Lock) |
+|-------------------------|---------------------------|
+| `from model_orchestrator import *` | `from lattice_lock_orchestrator import *` |
+| `from model_orchestrator.types import *` | `from lattice_lock_orchestrator.types import *` |
+| `from model_orchestrator_v2 import *` | `from lattice_lock_orchestrator import *` |
+| `from zen_mcp_bridge import *` | *Removed* - MCP integration now handled via standard providers |
+| `from api_clients import *` | `from lattice_lock_orchestrator.api_clients import *` |
+
+### Configuration Changes
+
+**Old style (`config.yaml`):**
+```yaml
+provider: openai
+model: gpt-4
 ```
 
-### For Existing Projects
-
-1. **Update your dependencies:**
-
-   Replace:
-   ```
-   vibelocity-orchestrator
-   ```
-
-   With:
-   ```
-   lattice-lock
-   ```
-
-2. **Update your imports:**
-
-   | Old Import | New Import |
-   |------------|------------|
-   | `from model_orchestrator import ...` | `from lattice_lock import ...` |
-   | `from vibelocity_orchestrator import ...` | `from lattice_lock import ...` |
-   | `from model_orchestrator.types import ...` | `from lattice_lock.types import ...` |
-
-3. **API Changes:**
-
-   Most APIs are backwards compatible. Key changes:
-
-   - `ModelOrchestrator` is now imported from `lattice_lock`
-   - Type definitions are in `lattice_lock.types`
-   - Registry is accessible via `lattice_lock.ModelRegistry`
+**New style (`lattice.yaml` + environment):**
+```yaml
+version: "2.0"
+entities:
+  model_config:
+    provider: openai
+    model: gpt-4
+```
 
 ### Feature Mapping
 
-| Vibelocity Feature | Lattice Lock Equivalent |
-|--------------------|------------------------|
+| vibelocity-orchestrator Feature | Lattice Lock Equivalent |
+|---------------------------------|-------------------------|
 | Model routing | `ModelOrchestrator.route_request()` |
-| Cost estimation | `ModelScorer.estimate_cost()` |
-| Task analysis | `TaskAnalyzer.analyze()` |
-| Model registry | `ModelRegistry` |
-| Consensus groups | Coming in v2.2 |
+| Provider clients | `lattice_lock_orchestrator.api_clients` |
+| Task analysis | `lattice_lock_orchestrator.scorer` |
+| CLI tools | `lattice-lock` CLI |
+| Concurrent execution | Built into ModelOrchestrator |
 
 ---
 
 ## Timeline
 
-- **2025-12-01**: Final vibelocity-orchestrator release
-- **2025-12-01**: Lattice Lock Framework v2.1 released (migration complete)
-- **2026-06-01**: vibelocity-orchestrator archived (read-only)
+- **2025-12-01**: Deprecation announced
+- **2025-12-31**: Last maintenance releases for vibelocity-orchestrator
+- **2026-03-01**: Repository archived (read-only)
 
 ---
 
-## Getting Help
+## Support
 
-- **Documentation**: [Lattice Lock Docs](https://github.com/klappe-pm/lattice-lock-framework/tree/main/developer_documentation)
-- **Issues**: [Lattice Lock Issues](https://github.com/klappe-pm/lattice-lock-framework/issues)
-- **Migration Questions**: Open an issue with the `migration` label
-
----
-
-## Why the Migration?
-
-The Lattice Lock Framework provides:
-
-1. **Governance-First Architecture**: Built-in validation and policy enforcement
-2. **Extended Model Support**: 63+ models from 8 providers
-3. **Better Tooling**: Sheriff AST validator, compile-time schema validation
-4. **Active Development**: Regular updates and community support
-5. **Enterprise Features**: Rollback support, audit logging, cost telemetry
+For migration assistance:
+- Open an issue at [Lattice Lock Framework Issues](https://github.com/klappe-pm/lattice-lock-framework/issues)
+- Reference the [Lattice Lock Documentation](https://github.com/klappe-pm/lattice-lock-framework/tree/main/developer_documentation)
 
 ---
 
-*Last updated: 2024-12-14*
+## Acknowledgments
+
+Thank you to all contributors to vibelocity-orchestrator. Your work forms the foundation of Lattice Lock Framework.

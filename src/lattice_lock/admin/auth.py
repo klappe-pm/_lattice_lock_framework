@@ -121,8 +121,8 @@ def configure(config: AuthConfig) -> None:
     _config = config
 
 
-# Password hashing context
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing context - using argon2 for better Python 3.14 compatibility
+_pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 
 class TokenData(BaseModel):

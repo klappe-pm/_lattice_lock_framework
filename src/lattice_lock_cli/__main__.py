@@ -90,6 +90,19 @@ def test():
     console.print("[magenta]Running Gauntlet...[/]")
 
 
+@cli.command()
+@click.pass_context
+def doctor(ctx):
+    """Check environment health for Lattice Lock.
+
+    Verifies Python version, dependencies, environment variables,
+    and optional tools like Ollama.
+    """
+    from lattice_lock_cli.commands.doctor import doctor_command
+
+    doctor_command.invoke(ctx)
+
+
 def main():
     """Main entry point for the CLI."""
     cli()
