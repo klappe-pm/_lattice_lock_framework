@@ -13,6 +13,7 @@ from .api_clients import (
     ProviderUnavailableError,
 )
 from .function_calling import FunctionCallHandler
+from .cost.tracker import CostTracker
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class ModelOrchestrator:
         self.guide = ModelGuideParser(guide_path)
         self.clients = {}
         self.function_call_handler = FunctionCallHandler()
+        self.cost_tracker = CostTracker(self.registry)
 
     def register_function(self, name: str, func: Callable):
         """Registers a function with the internal FunctionCallHandler."""
@@ -192,11 +194,24 @@ class ModelOrchestrator:
                 final_response.function_call = first_response.function_call
                 final_response.function_call_result = first_response.function_call_result
 
+                # Record usage for the final response
+                self.cost_tracker.record_transaction(
+                    final_response, 
+                    task_type="function_call",
+                    trace_id=kwargs.get("trace_id", "unknown")
+                )
                 return final_response
 
             except Exception as e:
                 first_response.error = f"Function call failed: {e}"
                 logger.error(f"Function call {function_call_name} failed: {e}")
+
+        # Record usage for the initial response (if no function call or if it failed)
+        self.cost_tracker.record_transaction(
+            first_response, 
+            task_type=kwargs.get("task_type", "general"),
+            trace_id=kwargs.get("trace_id", "unknown")
+        )
 
         return first_response
 

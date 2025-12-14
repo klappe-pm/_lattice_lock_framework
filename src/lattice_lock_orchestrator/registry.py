@@ -112,41 +112,16 @@ class ModelRegistry:
                 if 'context_window' in model_data:
                     if not isinstance(model_data['context_window'], int):
                         result.add_error(f"Model '{model_id}' context_window must be an integer")
-                    elif model_data['context_window'] <= 0:
-                        result.add_error(f"Model '{model_id}' context_window must be positive")
-
-                for cost_field in ['input_cost', 'output_cost']:
-                    if cost_field in model_data:
-                        if not isinstance(model_data[cost_field], (int, float)):
-                            result.add_error(f"Model '{model_id}' {cost_field} must be a number")
-                        elif model_data[cost_field] < 0:
-                            result.add_error(f"Model '{model_id}' {cost_field} cannot be negative")
-
-                for score_field in ['reasoning_score', 'coding_score', 'speed_rating']:
-                    if score_field in model_data:
-                        if not isinstance(model_data[score_field], (int, float)):
-                            result.add_error(f"Model '{model_id}' {score_field} must be a number")
-                        elif not (0 <= model_data[score_field] <= 100):
-                            result.add_warning(f"Model '{model_id}' {score_field} should be between 0 and 100")
-
-                if 'maturity' in model_data:
-                    if model_data['maturity'] not in VALID_MATURITY_VALUES:
-                        result.add_error(f"Model '{model_id}' has invalid maturity: {model_data['maturity']}")
-
-                if 'status' in model_data:
-                    if model_data['status'] not in VALID_STATUS_VALUES:
-                        result.add_error(f"Model '{model_id}' has invalid status: {model_data['status']}")
-
-                if 'capabilities' in model_data:
-                    caps = model_data['capabilities']
-                    if not isinstance(caps, list):
-                        result.add_error(f"Model '{model_id}' capabilities must be a list")
-                    else:
-                        for cap in caps:
-                            if cap not in VALID_CAPABILITIES:
-                                result.add_warning(f"Model '{model_id}' has unknown capability: {cap}")
-
-        return result
+        try:
+            from .models_schema import RegistryConfig
+            # Pydantic validation
+            config = RegistryConfig.model_validate(data)
+            result.model_count = len(config.models)
+            result.provider_count = len(set(m.provider for m in config.models))
+            return result
+        except Exception as e:
+            result.add_error(f"Schema validation failed: {str(e)}")
+            return result
 
     def _calculate_default_scores(self, coding_score: float, reasoning_score: float, supports_vision: bool) -> Dict[TaskType, float]:
         """Calculate default task scores based on capabilities."""
@@ -179,7 +154,7 @@ class ModelRegistry:
             self._load_defaults()
 
     def _load_from_yaml(self) -> bool:
-        """Load models from registry.yaml with validation."""
+        """Load models from registry.yaml with Pydantic validation."""
         path = Path(self.registry_path)
         if not path.exists():
             return False
@@ -188,56 +163,51 @@ class ModelRegistry:
             with open(path, 'r') as f:
                 data = yaml.safe_load(f)
 
+            # Validate with legacy validator first for validation_result
             self._validation_result = self.validate_registry(data)
 
-            if self._validation_result.errors:
-                for error in self._validation_result.errors:
-                    logger.error(f"Registry validation error: {error}")
+            # Validate with Pydantic
+            from .models_schema import RegistryConfig
+            try:
+                config = RegistryConfig.model_validate(data)
+            except Exception as e:
+                logger.error(f"Registry YAML validation failed: {e}")
+                self._validation_result.add_error(str(e))
+                return False
 
-            if self._validation_result.warnings:
-                for warning in self._validation_result.warnings:
-                    logger.warning(f"Registry validation warning: {warning}")
-
-            for provider_name, provider_data in data.get('providers', {}).items():
+            # Transform to internal ModelCapabilities
+            for model_cfg in config.models:
                 try:
-                    provider_enum = ModelProvider(provider_name.lower())
-                except ValueError:
-                    logger.warning(f"Unknown provider in registry: {provider_name}")
-                    continue
+                    # Calculate default task scores
+                    default_scores = self._calculate_default_scores(
+                        model_cfg.coding_score,
+                        model_cfg.reasoning_score,
+                        model_cfg.supports_vision
+                    )
+                    
+                    # Convert to ModelCapabilities
+                    caps = ModelCapabilities(
+                        name=model_cfg.id,
+                        api_name=model_cfg.api_name or model_cfg.id,
+                        provider=model_cfg.provider,
+                        context_window=model_cfg.context_window,
+                        input_cost=model_cfg.input_cost,
+                        output_cost=model_cfg.output_cost,
+                        reasoning_score=model_cfg.reasoning_score,
+                        coding_score=model_cfg.coding_score,
+                        speed_rating=model_cfg.speed_rating,
+                        maturity=model_cfg.maturity,
+                        status=model_cfg.status,
+                        supports_function_calling=model_cfg.supports_function_calling,
+                        supports_vision=model_cfg.supports_vision,
+                        supports_json_mode=model_cfg.supports_json_mode,
+                        task_scores=default_scores
+                    )
+                    self.models[model_cfg.id] = caps
+                except Exception as e:
+                    logger.error(f"Failed to load model {model_cfg.id}: {e}")
 
-                for model_id, model_data in provider_data.get('models', {}).items():
-                    try:
-                        maturity = ProviderMaturity[model_data.get('maturity', 'BETA')]
-                        status = ModelStatus[model_data.get('status', 'ACTIVE')]
-
-                        # Calculate default task scores if not provided or just init empty
-                        # Logic to calculate scores will be moved to a helper or done here
-                        default_scores = self._calculate_default_scores(
-                             model_data.get('coding_score', 0),
-                             model_data.get('reasoning_score', 0),
-                             'vision' in model_data.get('capabilities', [])
-                        )
-
-                        caps = ModelCapabilities(
-                            name=model_id, # using id as name if not separate
-                            api_name=model_data['api_name'],
-                            provider=provider_enum,
-                            context_window=model_data['context_window'],
-                            input_cost=model_data['input_cost'],
-                            output_cost=model_data['output_cost'],
-                            reasoning_score=model_data['reasoning_score'],
-                            coding_score=model_data['coding_score'],
-                            speed_rating=model_data['speed_rating'],
-                            maturity=maturity,
-                            status=status,
-                            supports_function_calling='function_calling' in model_data.get('capabilities', []),
-                            supports_vision='vision' in model_data.get('capabilities', []),
-                            task_scores=default_scores
-                        )
-                        self.models[model_id] = caps
-                    except Exception as e:
-                        logger.error(f"Failed to load model {model_id}: {e}")
-
+            logger.info(f"Loaded {len(self.models)} models from {path}")
             return True
         except Exception as e:
             logger.error(f"Failed to load registry YAML: {e}")
