@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 from .parsers.spec_parser import MarkdownSpecParser, YAMLSpecParser, JSONSpecParser, SpecParser
-from ..models import SpecificationAnalysis
+from .models import SpecificationAnalysis
 
 class SpecAnalyzer:
     def __init__(self):

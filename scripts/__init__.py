@@ -1,6 +1,3 @@
-from .types import TaskType, ModelProvider, ModelCapabilities, TaskRequirements
-from .registry import ModelRegistry
-from .core import ModelOrchestrator
-from .api_clients import get_api_client
-
-__version__ = "3.1.0"
+# Scripts directory - standalone utility scripts
+# This file exists to make the directory a package for pytest discovery
+# but does not export any modules (the orchestrator lives in src/lattice_lock_orchestrator)
