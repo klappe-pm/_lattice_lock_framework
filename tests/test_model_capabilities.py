@@ -51,6 +51,22 @@ class TestModelCapabilities:
     @pytest.fixture
     def sample_model(self):
         """Create a sample model for testing."""
+        # Calculate task scores similar to how ModelRegistry does
+        coding_norm = 85.0 / 100.0
+        reasoning_norm = 90.0 / 100.0
+        task_scores = {
+            TaskType.CODE_GENERATION: coding_norm,
+            TaskType.DEBUGGING: coding_norm * 0.9 + reasoning_norm * 0.1,
+            TaskType.ARCHITECTURAL_DESIGN: reasoning_norm * 0.7 + coding_norm * 0.3,
+            TaskType.DOCUMENTATION: (coding_norm + reasoning_norm) / 2,
+            TaskType.TESTING: coding_norm * 0.8 + reasoning_norm * 0.2,
+            TaskType.DATA_ANALYSIS: reasoning_norm * 0.6 + coding_norm * 0.4,
+            TaskType.GENERAL: (coding_norm + reasoning_norm) / 2,
+            TaskType.REASONING: reasoning_norm,
+            TaskType.VISION: 1.0,  # supports_vision=True
+            TaskType.SECURITY_AUDIT: coding_norm * 0.7 + reasoning_norm * 0.3,
+            TaskType.CREATIVE_WRITING: reasoning_norm * 0.8,
+        }
         return ModelCapabilities(
             name="Test Model",
             api_name="test-model",
@@ -63,11 +79,28 @@ class TestModelCapabilities:
             speed_rating=8.0,
             supports_vision=True,
             supports_function_calling=True,
+            task_scores=task_scores,
         )
 
     @pytest.fixture
     def low_score_model(self):
         """Create a model with low scores for testing thresholds."""
+        # Calculate task scores similar to how ModelRegistry does
+        coding_norm = 70.0 / 100.0
+        reasoning_norm = 60.0 / 100.0
+        task_scores = {
+            TaskType.CODE_GENERATION: coding_norm,
+            TaskType.DEBUGGING: coding_norm * 0.9 + reasoning_norm * 0.1,
+            TaskType.ARCHITECTURAL_DESIGN: reasoning_norm * 0.7 + coding_norm * 0.3,
+            TaskType.DOCUMENTATION: (coding_norm + reasoning_norm) / 2,
+            TaskType.TESTING: coding_norm * 0.8 + reasoning_norm * 0.2,
+            TaskType.DATA_ANALYSIS: reasoning_norm * 0.6 + coding_norm * 0.4,
+            TaskType.GENERAL: (coding_norm + reasoning_norm) / 2,
+            TaskType.REASONING: reasoning_norm,
+            TaskType.VISION: 0.0,  # supports_vision=False
+            TaskType.SECURITY_AUDIT: coding_norm * 0.7 + reasoning_norm * 0.3,
+            TaskType.CREATIVE_WRITING: reasoning_norm * 0.8,
+        }
         return ModelCapabilities(
             name="Low Score Model",
             api_name="low-score-model",
@@ -80,6 +113,7 @@ class TestModelCapabilities:
             speed_rating=5.0,
             supports_vision=False,
             supports_function_calling=False,
+            task_scores=task_scores,
         )
 
     def test_supports_reasoning_property_exists(self, sample_model):
