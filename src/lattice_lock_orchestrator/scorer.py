@@ -6,10 +6,19 @@ This module provides:
 - TaskAnalysis: Comprehensive analysis result with multi-label support
 - ModelScorer: Scores models based on capabilities and requirements
 """
+
+import hashlib
 import re
+from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Dict, Optional, List, Any, Tuple
-from .types import TaskType, TaskRequirements, ModelCapabilities
+from typing import Any
+
+from .types import ModelCapabilities, TaskRequirements, TaskType
+
+
+def _hash_prompt(prompt: str) -> str:
+    """Create a SHA-256 hash of the prompt for cache key."""
+    return hashlib.sha256(prompt.encode()).hexdigest()
 
 
 @dataclass
@@ -25,10 +34,11 @@ class TaskAnalysis:
         complexity: Estimated complexity ("simple", "moderate", "complex")
         min_context_window: Minimum recommended context window
     """
+
     primary_type: TaskType
-    secondary_types: List[TaskType] = field(default_factory=list)
-    scores: Dict[TaskType, float] = field(default_factory=dict)
-    features: Dict[str, Any] = field(default_factory=dict)
+    secondary_types: list[TaskType] = field(default_factory=list)
+    scores: dict[TaskType, float] = field(default_factory=dict)
+    features: dict[str, Any] = field(default_factory=dict)
     complexity: str = "moderate"
     min_context_window: int = 4000
 
@@ -42,68 +52,172 @@ class TaskAnalyzer:
     - Multi-label classification (prompts can have multiple task types)
     - Confidence scoring for each task type
     - Feature extraction for additional context
+    - LRU caching by prompt hash for performance
     """
 
-    def __init__(self):
+    DEFAULT_CACHE_SIZE = 1024
+
+    def __init__(self, cache_size: int = DEFAULT_CACHE_SIZE):
+        self._cache: OrderedDict[str, TaskAnalysis] = OrderedDict()
+        self._cache_size = cache_size
+        self._cache_hits = 0
+        self._cache_misses = 0
         # Keyword patterns with weights
-        self.keyword_patterns: Dict[TaskType, List[Tuple[str, float]]] = {
+        self.keyword_patterns: dict[TaskType, list[tuple[str, float]]] = {
             TaskType.CODE_GENERATION: [
-                ("write", 0.3), ("implement", 0.4), ("create", 0.3),
-                ("code", 0.3), ("function", 0.3), ("class", 0.3),
-                ("script", 0.3), ("program", 0.3), ("build", 0.2),
-                ("generate", 0.3), ("develop", 0.3), ("make", 0.2),
+                ("write", 0.3),
+                ("implement", 0.4),
+                ("create", 0.3),
+                ("code", 0.3),
+                ("function", 0.3),
+                ("class", 0.3),
+                ("script", 0.3),
+                ("program", 0.3),
+                ("build", 0.2),
+                ("generate", 0.3),
+                ("develop", 0.3),
+                ("make", 0.2),
             ],
             TaskType.DEBUGGING: [
-                ("debug", 0.6), ("fix", 0.5), ("error", 0.5),
-                ("bug", 0.6), ("troubleshoot", 0.5), ("exception", 0.5),
-                ("fail", 0.4), ("broken", 0.4), ("issue", 0.3),
-                ("crash", 0.5), ("wrong", 0.2), ("not working", 0.5),
-                ("why is", 0.3), ("re-rendering", 0.3),
+                ("debug", 0.6),
+                ("fix", 0.5),
+                ("error", 0.5),
+                ("bug", 0.6),
+                ("troubleshoot", 0.5),
+                ("exception", 0.5),
+                ("fail", 0.4),
+                ("broken", 0.4),
+                ("issue", 0.3),
+                ("crash", 0.5),
+                ("wrong", 0.2),
+                ("not working", 0.5),
+                ("why is", 0.3),
+                ("re-rendering", 0.3),
             ],
             TaskType.REASONING: [
-                ("think", 0.3), ("reason", 0.4), ("analyze", 0.3),
-                ("solve", 0.3), ("deduce", 0.4), ("why", 0.3),
-                ("how", 0.3), ("explain", 0.4), ("understand", 0.4),
-                ("logic", 0.4), ("evaluate", 0.3), ("consider", 0.2),
-                ("approach", 0.3), ("best", 0.2),
+                ("think", 0.3),
+                ("reason", 0.4),
+                ("analyze", 0.3),
+                ("solve", 0.3),
+                ("deduce", 0.4),
+                ("why", 0.3),
+                ("how", 0.3),
+                ("explain", 0.4),
+                ("understand", 0.4),
+                ("logic", 0.4),
+                ("evaluate", 0.3),
+                ("consider", 0.2),
+                ("approach", 0.3),
+                ("best", 0.2),
             ],
             TaskType.ARCHITECTURAL_DESIGN: [
-                ("design", 0.4), ("architect", 0.5), ("structure", 0.3),
-                ("system", 0.3), ("pattern", 0.4), ("architecture", 0.5),
-                ("scalable", 0.3), ("microservice", 0.4), ("api design", 0.4),
-                ("database design", 0.4), ("schema", 0.3), ("blueprint", 0.4),
+                ("design", 0.4),
+                ("architect", 0.5),
+                ("structure", 0.3),
+                ("system", 0.3),
+                ("pattern", 0.4),
+                ("architecture", 0.5),
+                ("scalable", 0.3),
+                ("microservice", 0.4),
+                ("api design", 0.4),
+                ("database design", 0.4),
+                ("schema", 0.3),
+                ("blueprint", 0.4),
             ],
             TaskType.DOCUMENTATION: [
-                ("document", 0.5), ("docstring", 0.5), ("readme", 0.5),
-                ("comment", 0.3), ("wiki", 0.4), ("guide", 0.3),
-                ("tutorial", 0.4), ("manual", 0.3), ("documentation", 0.5),
+                ("document", 0.5),
+                ("docstring", 0.5),
+                ("readme", 0.5),
+                ("comment", 0.3),
+                ("wiki", 0.4),
+                ("guide", 0.3),
+                ("tutorial", 0.4),
+                ("manual", 0.3),
+                ("documentation", 0.5),
             ],
             TaskType.TESTING: [
-                ("test", 0.4), ("unit test", 0.5), ("integration", 0.3),
-                ("pytest", 0.5), ("mock", 0.4), ("coverage", 0.4),
-                ("assert", 0.4), ("spec", 0.3), ("e2e", 0.4),
-                ("qa", 0.3), ("validate", 0.3), ("verify", 0.3),
+                ("test", 0.4),
+                ("unit test", 0.5),
+                ("integration", 0.3),
+                ("pytest", 0.5),
+                ("mock", 0.4),
+                ("coverage", 0.4),
+                ("assert", 0.4),
+                ("spec", 0.3),
+                ("e2e", 0.4),
+                ("qa", 0.3),
+                ("validate", 0.3),
+                ("verify", 0.3),
             ],
             TaskType.DATA_ANALYSIS: [
-                ("data", 0.3), ("csv", 0.4), ("plot", 0.4),
-                ("chart", 0.4), ("trend", 0.4), ("statistics", 0.4),
-                ("pandas", 0.5), ("dataframe", 0.5), ("visualization", 0.4),
-                ("graph", 0.3), ("analysis", 0.3), ("metric", 0.3),
+                ("data", 0.3),
+                ("csv", 0.4),
+                ("plot", 0.4),
+                ("chart", 0.4),
+                ("trend", 0.4),
+                ("statistics", 0.4),
+                ("pandas", 0.5),
+                ("dataframe", 0.5),
+                ("visualization", 0.4),
+                ("graph", 0.3),
+                ("analysis", 0.3),
+                ("metric", 0.3),
             ],
             TaskType.VISION: [
-                ("image", 0.5), ("picture", 0.5), ("photo", 0.5),
-                ("screenshot", 0.5), ("visual", 0.4), ("diagram", 0.4),
-                ("see", 0.2), ("look at", 0.3), ("analyze this image", 0.6),
-                ("ocr", 0.5), ("recognize", 0.3),
+                ("image", 0.5),
+                ("picture", 0.5),
+                ("photo", 0.5),
+                ("screenshot", 0.5),
+                ("visual", 0.4),
+                ("diagram", 0.4),
+                ("see", 0.2),
+                ("look at", 0.3),
+                ("analyze this image", 0.6),
+                ("ocr", 0.5),
+                ("recognize", 0.3),
             ],
             TaskType.GENERAL: [
-                ("help", 0.2), ("question", 0.2), ("what", 0.1),
-                ("tell me", 0.2), ("can you", 0.1),
+                ("help", 0.2),
+                ("question", 0.2),
+                ("what", 0.1),
+                ("tell me", 0.2),
+                ("can you", 0.1),
+            ],
+            TaskType.SECURITY_AUDIT: [
+                ("security", 0.5),
+                ("vulnerability", 0.6),
+                ("exploit", 0.5),
+                ("injection", 0.6),
+                ("xss", 0.6),
+                ("csrf", 0.6),
+                ("authentication", 0.3),
+                ("authorization", 0.3),
+                ("oauth", 0.4),
+                ("penetration", 0.5),
+                ("audit", 0.4),
+                ("secure", 0.3),
+                ("sql injection", 0.7),
+                ("sanitize", 0.4),
+                ("encrypt", 0.4),
+            ],
+            TaskType.CREATIVE_WRITING: [
+                ("story", 0.5),
+                ("creative", 0.4),
+                ("write a story", 0.6),
+                ("poem", 0.5),
+                ("narrative", 0.4),
+                ("fiction", 0.5),
+                ("character", 0.3),
+                ("plot", 0.3),
+                ("dialogue", 0.4),
+                ("novel", 0.4),
+                ("essay", 0.3),
+                ("blog post", 0.4),
             ],
         }
 
         # Strong regex patterns for high-confidence detection
-        self.regex_patterns: Dict[TaskType, List[Tuple[str, float]]] = {
+        self.regex_patterns: dict[TaskType, list[tuple[str, float]]] = {
             TaskType.CODE_GENERATION: [
                 (r"def\s+\w+\s*\(", 0.6),  # Python function definition
                 (r"class\s+\w+", 0.5),  # Class definition
@@ -162,6 +276,36 @@ class TaskAnalyzer:
         """
         Performs full task analysis with multi-label classification.
 
+        Uses LRU caching by prompt hash for performance optimization.
+
+        Args:
+            prompt: The user's input prompt.
+
+        Returns:
+            TaskAnalysis: Comprehensive analysis result.
+        """
+        prompt_hash = _hash_prompt(prompt)
+
+        if prompt_hash in self._cache:
+            self._cache_hits += 1
+            self._cache.move_to_end(prompt_hash)
+            return self._cache[prompt_hash]
+
+        self._cache_misses += 1
+        analysis = self._analyze_uncached(prompt)
+
+        self._cache[prompt_hash] = analysis
+        self._cache.move_to_end(prompt_hash)
+
+        while len(self._cache) > self._cache_size:
+            self._cache.popitem(last=False)
+
+        return analysis
+
+    def _analyze_uncached(self, prompt: str) -> TaskAnalysis:
+        """
+        Performs the actual task analysis without caching.
+
         Args:
             prompt: The user's input prompt.
 
@@ -169,8 +313,8 @@ class TaskAnalyzer:
             TaskAnalysis: Comprehensive analysis result.
         """
         prompt_lower = prompt.lower()
-        scores: Dict[TaskType, float] = {task_type: 0.0 for task_type in TaskType}
-        features: Dict[str, Any] = {}
+        scores: dict[TaskType, float] = dict.fromkeys(TaskType, 0.0)
+        features: dict[str, Any] = {}
 
         # 1. Keyword scoring
         for task_type, patterns in self.keyword_patterns.items():
@@ -187,7 +331,9 @@ class TaskAnalyzer:
         # 3. Structural heuristics
         features["has_code_blocks"] = bool(re.search(r"```", prompt))
         features["has_stack_trace"] = bool(re.search(r"traceback|at line \d+", prompt_lower))
-        features["is_question"] = prompt.strip().endswith("?") or prompt_lower.startswith(("how", "why", "what", "can"))
+        features["is_question"] = prompt.strip().endswith("?") or prompt_lower.startswith(
+            ("how", "why", "what", "can")
+        )
         features["prompt_length"] = len(prompt)
         features["has_error_message"] = bool(re.search(r"error|exception|fail", prompt_lower))
 
@@ -207,10 +353,12 @@ class TaskAnalyzer:
 
         # 4. Detect special requirements
         features["requires_vision"] = any(
-            word in prompt_lower for word in ["image", "picture", "screenshot", "photo", "visual", "diagram"]
+            word in prompt_lower
+            for word in ["image", "picture", "screenshot", "photo", "visual", "diagram"]
         )
         features["requires_function_calling"] = any(
-            word in prompt_lower for word in ["function call", "api call", "tool use", "external api"]
+            word in prompt_lower
+            for word in ["function call", "api call", "tool use", "external api"]
         )
 
         if features["requires_vision"]:
@@ -221,7 +369,12 @@ class TaskAnalyzer:
             features["priority"] = "speed"
         elif "cheap" in prompt_lower or "low cost" in prompt_lower or "budget" in prompt_lower:
             features["priority"] = "cost"
-        elif "best" in prompt_lower or "quality" in prompt_lower or "complex" in prompt_lower or "accurate" in prompt_lower:
+        elif (
+            "best" in prompt_lower
+            or "quality" in prompt_lower
+            or "complex" in prompt_lower
+            or "accurate" in prompt_lower
+        ):
             features["priority"] = "quality"
         else:
             features["priority"] = "balanced"
@@ -237,7 +390,7 @@ class TaskAnalyzer:
         sorted_types = sorted(
             [(task_type, score) for task_type, score in normalized_scores.items() if score > 0],
             key=lambda x: x[1],
-            reverse=True
+            reverse=True,
         )
 
         if sorted_types:
@@ -245,9 +398,12 @@ class TaskAnalyzer:
             # Secondary types are those with score >= 0.3 of primary (multi-label)
             primary_score = sorted_types[0][1]
             secondary_types = [
-                task_type for task_type, score in sorted_types[1:]
+                task_type
+                for task_type, score in sorted_types[1:]
                 if score >= primary_score * 0.3 and score > 0.2
-            ][:3]  # Max 3 secondary types
+            ][
+                :3
+            ]  # Max 3 secondary types
         else:
             primary_type = TaskType.GENERAL
             secondary_types = []
@@ -268,7 +424,7 @@ class TaskAnalyzer:
         )
 
     def _estimate_complexity(
-        self, prompt: str, features: Dict[str, Any], scores: Dict[TaskType, float]
+        self, prompt: str, features: dict[str, Any], scores: dict[TaskType, float]
     ) -> str:
         """Estimates task complexity based on various signals."""
         complexity_score = 0.0
@@ -301,7 +457,14 @@ class TaskAnalyzer:
             complexity_score += 0.15
 
         # Complexity keywords - weight appropriately
-        complex_words = ["comprehensive", "enterprise", "distributed", "high availability", "fault tolerant", "memory leak"]
+        complex_words = [
+            "comprehensive",
+            "enterprise",
+            "distributed",
+            "high availability",
+            "fault tolerant",
+            "memory leak",
+        ]
         moderate_words = ["complete", "crud", "full"]
 
         if any(word in prompt_lower for word in complex_words):
@@ -330,7 +493,7 @@ class TaskAnalyzer:
             return "simple"
 
     def _estimate_context_window(
-        self, prompt: str, features: Dict[str, Any], complexity: str
+        self, prompt: str, features: dict[str, Any], complexity: str
     ) -> int:
         """Estimates minimum context window needed."""
         base_context = len(prompt) * 10  # 10x prompt length for response
@@ -348,7 +511,7 @@ class TaskAnalyzer:
 
         return min(base_context, 200000)  # Cap at 200K
 
-    def get_task_scores(self, prompt: str) -> Dict[TaskType, float]:
+    def get_task_scores(self, prompt: str) -> dict[TaskType, float]:
         """
         Returns confidence scores for all task types.
 
@@ -362,6 +525,29 @@ class TaskAnalyzer:
         """
         analysis = self.analyze_full(prompt)
         return analysis.scores
+
+    def get_cache_stats(self) -> dict[str, Any]:
+        """
+        Returns cache statistics for monitoring and debugging.
+
+        Returns:
+            Dict with cache_size, cache_hits, cache_misses, hit_rate.
+        """
+        total = self._cache_hits + self._cache_misses
+        hit_rate = self._cache_hits / total if total > 0 else 0.0
+        return {
+            "cache_size": len(self._cache),
+            "max_cache_size": self._cache_size,
+            "cache_hits": self._cache_hits,
+            "cache_misses": self._cache_misses,
+            "hit_rate": hit_rate,
+        }
+
+    def clear_cache(self) -> None:
+        """Clears the analysis cache."""
+        self._cache.clear()
+        self._cache_hits = 0
+        self._cache_misses = 0
 
 
 class ModelScorer:
@@ -418,9 +604,7 @@ class ModelScorer:
 
         return min(1.0, score)
 
-    def score_with_analysis(
-        self, model: ModelCapabilities, analysis: TaskAnalysis
-    ) -> float:
+    def score_with_analysis(self, model: ModelCapabilities, analysis: TaskAnalysis) -> float:
         """
         Scores a model using full TaskAnalysis for multi-label support.
 
@@ -438,7 +622,10 @@ class ModelScorer:
             return 0.0
         if analysis.features.get("requires_vision") and not model.supports_vision:
             return 0.0
-        if analysis.features.get("requires_function_calling") and not model.supports_function_calling:
+        if (
+            analysis.features.get("requires_function_calling")
+            and not model.supports_function_calling
+        ):
             return 0.0
 
         score = 0.5

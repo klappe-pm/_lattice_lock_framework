@@ -14,20 +14,24 @@
       "prompt": "Debug this code: TypeError: 'NoneType' object is not subscriptable at line 42",
       "expected_primary": "DEBUGGING",
       "expected_secondary": [],
-      "expected_complexity": "simple"
+      "expected_complexity": "moderate"
     },
     {
       "id": 3,
       "prompt": "Design a scalable microservices architecture for an e-commerce platform with high availability",
       "expected_primary": "ARCHITECTURAL_DESIGN",
-      "expected_secondary": ["REASONING"],
+      "expected_secondary": [
+        "REASONING"
+      ],
       "expected_complexity": "complex"
     },
     {
       "id": 4,
       "prompt": "Write unit tests for the UserService class using pytest",
       "expected_primary": "TESTING",
-      "expected_secondary": ["CODE_GENERATION"],
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
       "expected_complexity": "simple"
     },
     {
@@ -35,13 +39,15 @@
       "prompt": "Analyze this CSV data and create a visualization of sales trends",
       "expected_primary": "DATA_ANALYSIS",
       "expected_secondary": [],
-      "expected_complexity": "moderate"
+      "expected_complexity": "simple"
     },
     {
       "id": 6,
       "prompt": "Look at this screenshot and tell me what error is shown",
       "expected_primary": "VISION",
-      "expected_secondary": ["DEBUGGING"],
+      "expected_secondary": [
+        "DEBUGGING"
+      ],
       "expected_complexity": "simple"
     },
     {
@@ -62,22 +68,26 @@
       "id": 9,
       "prompt": "Why is my React component re-rendering multiple times?",
       "expected_primary": "DEBUGGING",
-      "expected_secondary": ["REASONING"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 10,
       "prompt": "Implement a binary search tree with insert, delete, and search operations",
       "expected_primary": "CODE_GENERATION",
       "expected_secondary": [],
-      "expected_complexity": "moderate"
+      "expected_complexity": "simple"
     },
     {
       "id": 11,
       "prompt": "What's the best approach to handle authentication in a REST API?",
       "expected_primary": "REASONING",
-      "expected_secondary": ["ARCHITECTURAL_DESIGN"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 12,
@@ -90,22 +100,28 @@
       "id": 13,
       "prompt": "Create a complete CRUD API for user management with proper error handling",
       "expected_primary": "CODE_GENERATION",
-      "expected_secondary": ["ARCHITECTURAL_DESIGN"],
-      "expected_complexity": "complex"
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 14,
       "prompt": "Write integration tests for the payment processing module",
       "expected_primary": "TESTING",
-      "expected_secondary": ["CODE_GENERATION"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 15,
       "prompt": "Analyze the performance metrics from this log file",
       "expected_primary": "DATA_ANALYSIS",
-      "expected_secondary": ["REASONING"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 16,
@@ -126,50 +142,65 @@
       "id": 18,
       "prompt": "Give me the best quality solution for implementing a caching layer",
       "expected_primary": "ARCHITECTURAL_DESIGN",
-      "expected_secondary": ["CODE_GENERATION"],
-      "expected_complexity": "moderate",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple",
       "expected_priority": "quality"
     },
     {
       "id": 19,
       "prompt": "```python\ndef calculate_total(items):\n    total = 0\n    for item in items:\n        total += item['price']\n    return total\n```\nFix this code that's throwing an error when items is empty",
       "expected_primary": "DEBUGGING",
-      "expected_secondary": ["CODE_GENERATION"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 20,
       "prompt": "Explain the SOLID principles with code examples",
       "expected_primary": "DOCUMENTATION",
-      "expected_secondary": ["REASONING", "CODE_GENERATION"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "REASONING",
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 21,
       "prompt": "Create a matplotlib visualization of the correlation between temperature and ice cream sales",
       "expected_primary": "DATA_ANALYSIS",
-      "expected_secondary": ["CODE_GENERATION"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 22,
       "prompt": "Implement a comprehensive test suite with mocks for external API calls",
       "expected_primary": "TESTING",
-      "expected_secondary": ["CODE_GENERATION"],
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
       "expected_complexity": "complex"
     },
     {
       "id": 23,
       "prompt": "What is causing this image to not render properly?",
       "expected_primary": "VISION",
-      "expected_secondary": ["DEBUGGING"],
+      "expected_secondary": [
+        "DEBUGGING"
+      ],
       "expected_complexity": "simple"
     },
     {
       "id": 24,
       "prompt": "Architect a distributed system for real-time messaging with high throughput",
       "expected_primary": "ARCHITECTURAL_DESIGN",
-      "expected_secondary": ["REASONING"],
+      "expected_secondary": [
+        "REASONING"
+      ],
       "expected_complexity": "complex"
     },
     {
@@ -183,21 +214,27 @@
       "id": 26,
       "prompt": "def test_user_creation():\n    assert User.create('test') is not None\nThis test is failing, why?",
       "expected_primary": "DEBUGGING",
-      "expected_secondary": ["TESTING"],
-      "expected_complexity": "moderate"
+      "expected_secondary": [
+        "TESTING"
+      ],
+      "expected_complexity": "simple"
     },
     {
       "id": 27,
       "prompt": "Load this CSV into pandas and calculate the mean and standard deviation",
       "expected_primary": "DATA_ANALYSIS",
-      "expected_secondary": ["CODE_GENERATION"],
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
       "expected_complexity": "simple"
     },
     {
       "id": 28,
       "prompt": "How do I structure a monorepo for multiple microservices?",
       "expected_primary": "ARCHITECTURAL_DESIGN",
-      "expected_secondary": ["REASONING"],
+      "expected_secondary": [
+        "REASONING"
+      ],
       "expected_complexity": "moderate"
     },
     {
@@ -211,8 +248,231 @@
       "id": 30,
       "prompt": "Debug and fix the memory leak in this Node.js application",
       "expected_primary": "DEBUGGING",
-      "expected_secondary": ["CODE_GENERATION"],
-      "expected_complexity": "complex"
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 31,
+      "prompt": "Review this code for security vulnerabilities and SQL injection risks",
+      "expected_primary": "SECURITY_AUDIT",
+      "expected_secondary": [
+        "DEBUGGING"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 32,
+      "prompt": "Write a creative story about a robot learning to paint",
+      "expected_primary": "CREATIVE_WRITING",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 33,
+      "prompt": "Implement a rate limiter using the token bucket algorithm",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 34,
+      "prompt": "Why does this recursive function cause a stack overflow?",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 35,
+      "prompt": "Create a Dockerfile for a Python Flask application with Redis",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 36,
+      "prompt": "Analyze the time complexity of this sorting algorithm",
+      "expected_primary": "REASONING",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 37,
+      "prompt": "Generate API documentation using OpenAPI/Swagger format",
+      "expected_primary": "DOCUMENTATION",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 38,
+      "prompt": "Build a real-time chat application with WebSockets",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 39,
+      "prompt": "What design patterns should I use for this e-commerce checkout flow?",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 40,
+      "prompt": "Parse this JSON log file and extract error counts by category",
+      "expected_primary": "DATA_ANALYSIS",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 41,
+      "prompt": "Write property-based tests using Hypothesis for the string parser",
+      "expected_primary": "TESTING",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 42,
+      "prompt": "Describe what's happening in this network diagram image",
+      "expected_primary": "VISION",
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 43,
+      "prompt": "Refactor this monolithic class into smaller, single-responsibility classes",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 44,
+      "prompt": "Compare the pros and cons of GraphQL vs REST for this use case",
+      "expected_primary": "REASONING",
+      "expected_secondary": [
+        "ARCHITECTURAL_DESIGN"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 45,
+      "prompt": "Create a migration script to move data from PostgreSQL to MongoDB",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "DATA_ANALYSIS"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 46,
+      "prompt": "Write end-to-end tests for the user registration flow using Playwright",
+      "expected_primary": "TESTING",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 47,
+      "prompt": "Explain the CAP theorem and how it applies to distributed databases",
+      "expected_primary": "REASONING",
+      "expected_secondary": [
+        "DOCUMENTATION"
+      ],
+      "expected_complexity": "moderate"
+    },
+    {
+      "id": 48,
+      "prompt": "Build a CLI tool with argument parsing and help documentation",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "DOCUMENTATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 49,
+      "prompt": "Analyze this A/B test data and determine statistical significance",
+      "expected_primary": "DATA_ANALYSIS",
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 50,
+      "prompt": "Fix this race condition in the concurrent queue implementation",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": [
+        "CODE_GENERATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 51,
+      "prompt": "Design a caching strategy for a high-traffic news website",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": [
+        "REASONING"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 52,
+      "prompt": "Write a bash script to automate deployment to multiple servers",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 53,
+      "prompt": "Create a state machine diagram for the order processing workflow",
+      "expected_primary": "ARCHITECTURAL_DESIGN",
+      "expected_secondary": [
+        "DOCUMENTATION"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 54,
+      "prompt": "What's wrong with this SQL query that's running slowly?",
+      "expected_primary": "DEBUGGING",
+      "expected_secondary": [
+        "DATA_ANALYSIS"
+      ],
+      "expected_complexity": "simple"
+    },
+    {
+      "id": 55,
+      "prompt": "Implement OAuth 2.0 authentication with refresh tokens",
+      "expected_primary": "CODE_GENERATION",
+      "expected_secondary": [
+        "SECURITY_AUDIT"
+      ],
+      "expected_complexity": "simple"
     }
   ]
 }

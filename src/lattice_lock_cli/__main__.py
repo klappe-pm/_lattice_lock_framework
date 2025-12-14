@@ -5,8 +5,9 @@ This module provides the main entry point for the CLI.
 """
 
 import click
-from lattice_lock import __version__
 from rich.console import Console
+
+from lattice_lock import __version__
 
 console = Console()
 
@@ -23,6 +24,7 @@ def cli(ctx, verbose):
         console.log("[bold blue]Verbose mode enabled[/]")
 
 
+from lattice_lock_cli.commands.compile import compile_command
 from lattice_lock_cli.commands.doctor import doctor_command
 from lattice_lock_cli.commands.feedback import feedback
 from lattice_lock_cli.commands.gauntlet import gauntlet_command
@@ -35,6 +37,7 @@ from lattice_lock_cli.commands.validate import validate_command
 # Register commands with the CLI
 cli.add_command(init_command, name="init")
 cli.add_command(validate_command, name="validate")
+cli.add_command(compile_command, name="compile")
 cli.add_command(doctor_command, name="doctor")
 cli.add_command(feedback, name="feedback")
 cli.add_command(gauntlet_command, name="gauntlet")
@@ -42,9 +45,20 @@ cli.add_command(sheriff_command, name="sheriff")
 
 
 @cli.command()
-def test():
-    """Run Gauntlet semantic tests."""
-    console.print("[magenta]Running Gauntlet...[/]")
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=True),
+    default=".",
+    help="Path to project directory (default: current directory)",
+)
+@click.pass_context
+def test(ctx, path):
+    """Run Gauntlet semantic tests.
+
+    This is an alias for the gauntlet command.
+    """
+    ctx.invoke(gauntlet_command, path=path)
 
 
 @cli.command()
