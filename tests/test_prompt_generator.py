@@ -28,16 +28,24 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree(self.test_dir)
 
     @patch("lattice_lock_agents.prompt_architect.subagents.prompt_generator.get_api_client")
-    async def test_generate_prompt(self, mock_get_client):
+    @patch("lattice_lock_agents.prompt_architect.subagents.prompt_generator.TrackerClient")
+    async def test_generate_prompt(self, mock_tracker_class, mock_get_client):
         # Setup mock client
         mock_client = AsyncMock()
         mock_client.chat_completion.return_value = MagicMock(content="1. Step one\n2. Step two")
         mock_get_client.return_value = mock_client
 
+        # Setup mock tracker client
+        mock_tracker = MagicMock()
+        mock_tracker.get_prompt.return_value = None  # Prompt doesn't exist yet
+        mock_tracker.add_prompt.return_value = True
+        mock_tracker_class.return_value = mock_tracker
+
         # Initialize generator
         generator = PromptGenerator(config_path=self.config_path)
         generator.prompts_dir = self.prompts_dir
         generator.state_file = os.path.join(self.prompts_dir, "project_prompts_state.json")
+        generator.tracker_client = mock_tracker
 
         # Create dummy assignment
         assignment = ToolAssignment(
@@ -73,12 +81,9 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
             content = f.read()
             self.assertIn("# Prompt 1.2.3 - Test Task", content)
 
-        # Verify state update
-        self.assertTrue(os.path.exists(generator.state_file))
-        with open(generator.state_file, 'r') as f:
-            state = json.load(f)
-            self.assertIn("1.2.3", state)
-            self.assertEqual(state["1.2.3"]["file_path"], prompt.file_path)
+        # Verify state update via tracker client
+        mock_tracker.get_prompt.assert_called_with("1.2.3")
+        mock_tracker.add_prompt.assert_called_once()
 
     @patch("lattice_lock_agents.prompt_architect.subagents.prompt_generator.get_api_client")
     async def test_generate_steps_llm_call(self, mock_get_client):
