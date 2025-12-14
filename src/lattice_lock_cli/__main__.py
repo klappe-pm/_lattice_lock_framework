@@ -24,6 +24,7 @@ def cli(ctx, verbose):
 
 
 from lattice_lock_cli.commands.doctor import doctor_command
+from lattice_lock_cli.commands.feedback import feedback
 from lattice_lock_cli.commands.gauntlet import gauntlet_command
 
 # Import commands from commands module
@@ -35,6 +36,7 @@ from lattice_lock_cli.commands.validate import validate_command
 cli.add_command(init_command, name="init")
 cli.add_command(validate_command, name="validate")
 cli.add_command(doctor_command, name="doctor")
+cli.add_command(feedback, name="feedback")
 cli.add_command(gauntlet_command, name="gauntlet")
 cli.add_command(sheriff_command, name="sheriff")
 
