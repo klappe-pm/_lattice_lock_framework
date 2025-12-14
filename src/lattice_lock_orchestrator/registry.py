@@ -148,6 +148,26 @@ class ModelRegistry:
 
         return result
 
+    def _calculate_default_scores(self, coding_score: float, reasoning_score: float, supports_vision: bool) -> Dict[TaskType, float]:
+        """Calculate default task scores based on capabilities."""
+        scores: Dict[TaskType, float] = {}
+        coding_norm = coding_score / 100.0
+        reasoning_norm = reasoning_score / 100.0
+
+        scores[TaskType.CODE_GENERATION] = coding_norm
+        scores[TaskType.DEBUGGING] = coding_norm * 0.9 + reasoning_norm * 0.1
+        scores[TaskType.ARCHITECTURAL_DESIGN] = reasoning_norm * 0.7 + coding_norm * 0.3
+        scores[TaskType.DOCUMENTATION] = (coding_norm + reasoning_norm) / 2
+        scores[TaskType.TESTING] = coding_norm * 0.8 + reasoning_norm * 0.2
+        scores[TaskType.DATA_ANALYSIS] = reasoning_norm * 0.6 + coding_norm * 0.4
+        scores[TaskType.GENERAL] = (coding_norm + reasoning_norm) / 2
+        scores[TaskType.REASONING] = reasoning_norm
+        scores[TaskType.VISION] = 1.0 if supports_vision else 0.0
+        scores[TaskType.SECURITY_AUDIT] = coding_norm * 0.7 + reasoning_norm * 0.3
+        scores[TaskType.CREATIVE_WRITING] = reasoning_norm * 0.8
+
+        return scores
+
     def _load_all_models(self):
         """Load all models, preferring YAML config over defaults"""
         loaded_from_yaml = False
@@ -190,6 +210,14 @@ class ModelRegistry:
                         maturity = ProviderMaturity[model_data.get('maturity', 'BETA')]
                         status = ModelStatus[model_data.get('status', 'ACTIVE')]
 
+                        # Calculate default task scores if not provided or just init empty
+                        # Logic to calculate scores will be moved to a helper or done here
+                        default_scores = self._calculate_default_scores(
+                             model_data.get('coding_score', 0),
+                             model_data.get('reasoning_score', 0),
+                             'vision' in model_data.get('capabilities', [])
+                        )
+
                         caps = ModelCapabilities(
                             name=model_id, # using id as name if not separate
                             api_name=model_data['api_name'],
@@ -203,7 +231,8 @@ class ModelRegistry:
                             maturity=maturity,
                             status=status,
                             supports_function_calling='function_calling' in model_data.get('capabilities', []),
-                            supports_vision='vision' in model_data.get('capabilities', [])
+                            supports_vision='vision' in model_data.get('capabilities', []),
+                            task_scores=default_scores
                         )
                         self.models[model_id] = caps
                     except Exception as e:
@@ -238,7 +267,7 @@ class ModelRegistry:
                 coding_score=85.0,
                 speed_rating=7.0,
                 maturity=ProviderMaturity.BETA,
-                # task_scores logic will be handled by scorer based on capabilities
+                task_scores=self._calculate_default_scores(85.0, 95.0, False)
             ),
             "grok-code-fast-1": ModelCapabilities(
                 name="Grok Code Fast 1",
@@ -286,6 +315,7 @@ class ModelRegistry:
                 coding_score=98.0,
                 speed_rating=3.0,
                 maturity=ProviderMaturity.PRODUCTION,
+                task_scores=self._calculate_default_scores(98.0, 99.0, False)
             ),
             "gpt-4o": ModelCapabilities(
                 name="GPT-4o",
@@ -300,6 +330,7 @@ class ModelRegistry:
                 coding_score=85.0,
                 speed_rating=8.0,
                 maturity=ProviderMaturity.PRODUCTION,
+                task_scores=self._calculate_default_scores(85.0, 90.0, True)
             ),
         })
 
@@ -319,6 +350,7 @@ class ModelRegistry:
                 coding_score=85.0,
                 speed_rating=7.0,
                 maturity=ProviderMaturity.BETA,
+                task_scores=self._calculate_default_scores(85.0, 85.0, True)
             ),
             "gemini-2.5-flash": ModelCapabilities(
                 name="Gemini 2.5 Flash",
@@ -333,6 +365,7 @@ class ModelRegistry:
                 coding_score=80.0,
                 speed_rating=9.0,
                 maturity=ProviderMaturity.BETA,
+                task_scores=self._calculate_default_scores(80.0, 80.0, True)
             ),
         })
 
@@ -352,6 +385,7 @@ class ModelRegistry:
                 coding_score=95.0,
                 speed_rating=7.0,
                 maturity=ProviderMaturity.PRODUCTION,
+                task_scores=self._calculate_default_scores(95.0, 95.0, True)
             ),
              "claude-3-opus": ModelCapabilities(
                 name="Claude 3 Opus",
@@ -366,6 +400,7 @@ class ModelRegistry:
                 coding_score=92.0,
                 speed_rating=5.0,
                 maturity=ProviderMaturity.PRODUCTION,
+                task_scores=self._calculate_default_scores(92.0, 98.0, True)
             ),
         })
 
@@ -385,6 +420,7 @@ class ModelRegistry:
                 reasoning_score=85.0,
                 coding_score=95.0,
                 speed_rating=5.0,
+                task_scores=self._calculate_default_scores(95.0, 85.0, False)
             ),
             "qwen2.5:32b": ModelCapabilities(
                 name="Qwen 2.5 32B",
@@ -398,6 +434,7 @@ class ModelRegistry:
                 reasoning_score=88.0,
                 coding_score=85.0,
                 speed_rating=6.0,
+                task_scores=self._calculate_default_scores(85.0, 88.0, False)
             ),
         })
 
@@ -412,3 +449,42 @@ class ModelRegistry:
     def get_all_models(self) -> List[ModelCapabilities]:
         """Get all registered models"""
         return list(self.models.values())
+
+    def validate_credentials(self, provider: ModelProvider) -> bool:
+        """Check if required credentials are present for the provider."""
+        import os
+        
+        required_vars = {
+            ModelProvider.OPENAI: ["OPENAI_API_KEY"],
+            ModelProvider.ANTHROPIC: ["ANTHROPIC_API_KEY"],
+            ModelProvider.GOOGLE: ["GOOGLE_API_KEY"],
+            ModelProvider.XAI: ["XAI_API_KEY"],
+            ModelProvider.AZURE: ["AZURE_OPENAI_KEY", "AZURE_ENDPOINT"],
+            ModelProvider.BEDROCK: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
+            ModelProvider.OLLAMA: [] # Local, always valid or checks OLLAMA_HOST
+        }
+        
+        vars_to_check = required_vars.get(provider, [])
+        missing = [v for v in vars_to_check if not os.getenv(v)]
+        
+        if missing:
+            # Special case for Bedrock implicit auth
+            if provider == ModelProvider.BEDROCK:
+                # If keys missing, it might use profile/role, so we can't definitively say it's invalid
+                # But for explicit check we warn. The client handles implicit auth.
+                # Returning True to allow client to try implicit auth.
+                return True
+                
+            logger.warning(f"Provider {provider.value} missing credentials: {', '.join(missing)}")
+            return False
+            
+        return True
+
+    def get_health_status(self, provider: ModelProvider) -> str:
+        """Get the health status of a provider."""
+        if not self.validate_credentials(provider):
+            return "MISCONFIGURED"
+            
+        # Here we could implement more complex checks (circuit breaker status etc)
+        # For now, if credentials exist, it's ACTIVE
+        return "ACTIVE"

@@ -1,158 +1,404 @@
+"""
+Specification parsers for different file formats.
+
+Supports markdown, YAML, and JSON specification formats.
+"""
+
 import json
-import yaml
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
 from pathlib import Path
-from ..models import SpecificationAnalysis, SpecificationMetadata, Phase, Component, Requirement, Constraint
+from typing import Any, Dict, List, Optional
+
+import yaml
+
+from ..models import (
+    Component,
+    ComponentLayer,
+    Constraint,
+    ConstraintType,
+    Phase,
+    Requirement,
+    RequirementType,
+    SpecificationAnalysis,
+    SpecificationMetadata,
+)
+
 
 class SpecParser(ABC):
+    """Abstract base class for specification parsers."""
+
     @abstractmethod
-    def parse(self, content: str) -> SpecificationAnalysis:
+    def can_parse(self, content: str) -> bool:
+        """Check if this parser can handle the given content.
+
+        Args:
+            content: The content to check.
+
+        Returns:
+            True if this parser can handle the content.
+        """
         pass
 
+    @abstractmethod
+    def parse(
+        self,
+        content: str,
+        source_file: Optional[str] = None,
+    ) -> SpecificationAnalysis:
+        """Parse the content and return a SpecificationAnalysis.
+
+        Args:
+            content: The content to parse.
+            source_file: Optional source file path for metadata.
+
+        Returns:
+            SpecificationAnalysis with extracted data.
+        """
+        pass
+
+
 class JSONSpecParser(SpecParser):
-    def parse(self, content: str) -> SpecificationAnalysis:
-        data = json.loads(content)
-        return _parse_dict_to_analysis(data, file_format="json")
+    """Parser for JSON specification files."""
 
-class YAMLSpecParser(SpecParser):
-    def parse(self, content: str) -> SpecificationAnalysis:
-        data = yaml.safe_load(content)
-        return _parse_dict_to_analysis(data, file_format="yaml")
+    def can_parse(self, content: str) -> bool:
+        """Check if content is valid JSON."""
+        content_stripped = content.strip()
+        if not (content_stripped.startswith('{') or content_stripped.startswith('[')):
+            return False
+        try:
+            json.loads(content)
+            return True
+        except json.JSONDecodeError:
+            return False
 
+    def parse(
+        self,
+        content: str,
+        source_file: Optional[str] = None,
+    ) -> SpecificationAnalysis:
+        """Parse JSON specification content."""
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            return SpecificationAnalysis(
+                metadata=SpecificationMetadata(
+                    source_file=source_file,
+                    file_format="json",
+                ),
+            )
 
-def _parse_dict_to_analysis(data: Dict[str, Any], file_format: str) -> SpecificationAnalysis:
-    """Parse a dictionary into a SpecificationAnalysis object.
-    
-    Handles flexible input formats and maps to the expected model structure.
-    """
-    metadata = SpecificationMetadata(file_format=file_format)
-    
-    # Extract metadata fields
-    if "title" in data:
-        metadata.title = data["title"]
-    if "version" in data:
-        metadata.version = data["version"]
-    if "author" in data:
-        metadata.author = data["author"]
-    
-    # Parse phases
-    phases: List[Phase] = []
-    if "phases" in data and isinstance(data["phases"], list):
-        for phase_data in data["phases"]:
-            if isinstance(phase_data, dict):
-                phases.append(Phase(
-                    name=phase_data.get("name", "Unknown"),
-                    description=phase_data.get("description")
-                ))
-            elif isinstance(phase_data, str):
+        # Extract metadata
+        metadata = SpecificationMetadata(
+            title=data.get("title"),
+            version=data.get("version"),
+            author=data.get("author"),
+            source_file=source_file,
+            file_format="json",
+        )
+
+        # Extract phases
+        phases = []
+        for phase_data in data.get("phases", []):
+            if isinstance(phase_data, str):
                 phases.append(Phase(name=phase_data))
-    
-    # Parse components
-    components: List[Component] = []
-    if "components" in data and isinstance(data["components"], list):
-        for comp_data in data["components"]:
-            if isinstance(comp_data, dict):
-                components.append(Component(
-                    name=comp_data.get("name", "Unknown"),
-                    description=comp_data.get("description")
-                ))
-            elif isinstance(comp_data, str):
+            elif isinstance(phase_data, dict):
+                phases.append(Phase(**phase_data))
+
+        # Extract components
+        components = []
+        for comp_data in data.get("components", []):
+            if isinstance(comp_data, str):
                 components.append(Component(name=comp_data))
-    
-    # Parse requirements
-    requirements: List[Requirement] = []
-    if "requirements" in data and isinstance(data["requirements"], list):
-        for i, req_data in enumerate(data["requirements"]):
-            if isinstance(req_data, dict):
-                requirements.append(Requirement(
-                    id=req_data.get("id", f"REQ-{i+1:03d}"),
-                    description=req_data.get("description", "")
-                ))
-            elif isinstance(req_data, str):
-                requirements.append(Requirement(
-                    id=f"REQ-{i+1:03d}",
-                    description=req_data
-                ))
-    
-    # Parse constraints
-    constraints: List[Constraint] = []
-    if "constraints" in data and isinstance(data["constraints"], list):
-        for i, con_data in enumerate(data["constraints"]):
-            if isinstance(con_data, dict):
-                constraints.append(Constraint(
-                    id=con_data.get("id", f"CON-{i+1:03d}"),
-                    description=con_data.get("description", "")
-                ))
-            elif isinstance(con_data, str):
-                constraints.append(Constraint(
-                    id=f"CON-{i+1:03d}",
-                    description=con_data
-                ))
-    
-    return SpecificationAnalysis(
-        metadata=metadata,
-        phases=phases,
-        components=components,
-        requirements=requirements,
-        constraints=constraints,
-        raw_sections=data
-    )
+            elif isinstance(comp_data, dict):
+                if "layer" in comp_data and isinstance(comp_data["layer"], str):
+                    try:
+                        comp_data["layer"] = ComponentLayer(comp_data["layer"])
+                    except ValueError:
+                        comp_data["layer"] = ComponentLayer.APPLICATION
+                components.append(Component(**comp_data))
 
-class MarkdownSpecParser(SpecParser):
-    def parse(self, content: str) -> SpecificationAnalysis:
-        metadata = SpecificationMetadata(file_format="markdown")
+        # Extract requirements
+        requirements = []
+        for req_data in data.get("requirements", []):
+            if isinstance(req_data, str):
+                requirements.append(
+                    Requirement(
+                        id=f"REQ-{len(requirements) + 1:03d}",
+                        description=req_data,
+                    )
+                )
+            elif isinstance(req_data, dict):
+                if "type" in req_data and isinstance(req_data["type"], str):
+                    try:
+                        req_data["requirement_type"] = RequirementType(req_data.pop("type"))
+                    except ValueError:
+                        pass
+                requirements.append(Requirement(**req_data))
 
-        # Simple heuristic parsing for Markdown
-        # 1. Extract Title from first H1 header
-        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
-        if title_match:
-            metadata.title = title_match.group(1).strip()
-
-        # 2. Extract Version if present
-        version_match = re.search(r'\*\*Version:\*\*\s*(.+?)(?:\n|$)', content)
-        if version_match:
-            metadata.version = version_match.group(1).strip()
-
-        phases: List[Phase] = []
-        requirements: List[Requirement] = []
-        constraints: List[Constraint] = []
-
-        # 3. Extract Phases (Headers starting with "Phase")
-        phase_matches = re.finditer(r'^##\s+(Phase\s+\d+[:\s].+)$', content, re.MULTILINE)
-        for match in phase_matches:
-            phases.append(Phase(name=match.group(1).strip()))
-
-        # 4. Extract Requirements (Bullet points under "Requirements" section - simplified)
-        # Look for lines starting with "- " or "* " that contain "must" or "should"
-        req_counter = 1
-        req_matches = re.finditer(r'^[\-\*]\s+(.+?(?:must|should).+?)$', content, re.MULTILINE | re.IGNORECASE)
-        for match in req_matches:
-            requirements.append(Requirement(
-                id=f"REQ-{req_counter:03d}",
-                description=match.group(1).strip()
-            ))
-            req_counter += 1
-
-        # 5. Extract Constraints (Bullet points under "Constraints" section)
-        constraint_counter = 1
-        constraint_section = re.search(r'##\s+Constraints\s*\n((?:[\-\*]\s+.+\n?)+)', content, re.MULTILINE)
-        if constraint_section:
-            constraint_matches = re.finditer(r'^[\-\*]\s+(.+)$', constraint_section.group(1), re.MULTILINE)
-            for match in constraint_matches:
-                constraints.append(Constraint(
-                    id=f"CON-{constraint_counter:03d}",
-                    description=match.group(1).strip()
-                ))
-                constraint_counter += 1
+        # Extract constraints
+        constraints = []
+        for con_data in data.get("constraints", []):
+            if isinstance(con_data, str):
+                constraints.append(
+                    Constraint(
+                        id=f"CON-{len(constraints) + 1:03d}",
+                        description=con_data,
+                    )
+                )
+            elif isinstance(con_data, dict):
+                if "type" in con_data and isinstance(con_data["type"], str):
+                    try:
+                        con_data["constraint_type"] = ConstraintType(con_data.pop("type"))
+                    except ValueError:
+                        pass
+                constraints.append(Constraint(**con_data))
 
         return SpecificationAnalysis(
             metadata=metadata,
             phases=phases,
+            components=components,
             requirements=requirements,
             constraints=constraints,
-            raw_sections={"content": content}
+        )
+
+
+class YAMLSpecParser(SpecParser):
+    """Parser for YAML specification files."""
+
+    def can_parse(self, content: str) -> bool:
+        """Check if content is valid YAML."""
+        try:
+            yaml.safe_load(content)
+            return True
+        except yaml.YAMLError:
+            return False
+
+    def parse(
+        self,
+        content: str,
+        source_file: Optional[str] = None,
+    ) -> SpecificationAnalysis:
+        """Parse YAML specification content."""
+        try:
+            data = yaml.safe_load(content) or {}
+        except yaml.YAMLError:
+            return SpecificationAnalysis(
+                metadata=SpecificationMetadata(
+                    source_file=source_file,
+                    file_format="yaml",
+                ),
+            )
+
+        # Extract metadata
+        metadata = SpecificationMetadata(
+            title=data.get("title"),
+            version=data.get("version"),
+            author=data.get("author"),
+            source_file=source_file,
+            file_format="yaml",
+        )
+
+        # Extract phases
+        phases = []
+        for phase_data in data.get("phases", []):
+            if isinstance(phase_data, str):
+                phases.append(Phase(name=phase_data))
+            elif isinstance(phase_data, dict):
+                phases.append(Phase(**phase_data))
+
+        # Extract components
+        components = []
+        for comp_data in data.get("components", []):
+            if isinstance(comp_data, str):
+                components.append(Component(name=comp_data))
+            elif isinstance(comp_data, dict):
+                if "layer" in comp_data and isinstance(comp_data["layer"], str):
+                    try:
+                        comp_data["layer"] = ComponentLayer(comp_data["layer"])
+                    except ValueError:
+                        comp_data["layer"] = ComponentLayer.APPLICATION
+                components.append(Component(**comp_data))
+
+        # Extract requirements
+        requirements = []
+        for req_data in data.get("requirements", []):
+            if isinstance(req_data, str):
+                requirements.append(
+                    Requirement(
+                        id=f"REQ-{len(requirements) + 1:03d}",
+                        description=req_data,
+                    )
+                )
+            elif isinstance(req_data, dict):
+                if "type" in req_data and isinstance(req_data["type"], str):
+                    try:
+                        req_data["requirement_type"] = RequirementType(req_data.pop("type"))
+                    except ValueError:
+                        pass
+                requirements.append(Requirement(**req_data))
+
+        # Extract constraints
+        constraints = []
+        for con_data in data.get("constraints", []):
+            if isinstance(con_data, str):
+                constraints.append(
+                    Constraint(
+                        id=f"CON-{len(constraints) + 1:03d}",
+                        description=con_data,
+                    )
+                )
+            elif isinstance(con_data, dict):
+                if "type" in con_data and isinstance(con_data["type"], str):
+                    try:
+                        con_data["constraint_type"] = ConstraintType(con_data.pop("type"))
+                    except ValueError:
+                        pass
+                constraints.append(Constraint(**con_data))
+
+        return SpecificationAnalysis(
+            metadata=metadata,
+            phases=phases,
+            components=components,
+            requirements=requirements,
+            constraints=constraints,
+        )
+
+
+class MarkdownSpecParser(SpecParser):
+    """Parser for Markdown specification files."""
+
+    def can_parse(self, content: str) -> bool:
+        """Check if content appears to be markdown."""
+        # Check for markdown indicators
+        has_header = bool(re.search(r'^#+ ', content, re.MULTILINE))
+        has_list = bool(re.search(r'^[\-\*] ', content, re.MULTILINE))
+        # Not JSON
+        not_json = not content.strip().startswith('{') and not content.strip().startswith('[')
+        return (has_header or has_list) and not_json
+
+    def parse(
+        self,
+        content: str,
+        source_file: Optional[str] = None,
+    ) -> SpecificationAnalysis:
+        """Parse Markdown specification content."""
+        metadata = SpecificationMetadata(
+            source_file=source_file,
+            file_format="markdown",
+        )
+
+        # Extract title from first H1
+        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+        if title_match:
+            metadata.title = title_match.group(1).strip()
+
+        # Extract version
+        version_match = re.search(r'\*\*Version[:\s]*\*\*\s*(\S+)', content, re.IGNORECASE)
+        if version_match:
+            metadata.version = version_match.group(1).strip()
+
+        # Extract author
+        author_match = re.search(r'\*\*Author[:\s]*\*\*\s*(.+?)(?:\n|$)', content, re.IGNORECASE)
+        if author_match:
+            metadata.author = author_match.group(1).strip()
+
+        # Extract phases
+        phases = []
+        phase_pattern = re.compile(
+            r'^##\s+(?:Phase\s+\d+[:\s]*)?(.+)$',
+            re.MULTILINE | re.IGNORECASE,
+        )
+        for match in phase_pattern.finditer(content):
+            phase_name = match.group(1).strip()
+            # Filter out non-phase sections
+            if phase_name.lower() not in ['requirements', 'constraints', 'components', 'overview']:
+                phases.append(Phase(name=phase_name))
+
+        # Extract components from bullet lists under "Components" section
+        components = []
+        comp_section = re.search(
+            r'^##\s+Components?\s*\n((?:[\-\*]\s+.+\n?)+)',
+            content,
+            re.MULTILINE | re.IGNORECASE,
+        )
+        if comp_section:
+            for line in comp_section.group(1).split('\n'):
+                comp_match = re.match(r'^[\-\*]\s+(.+)$', line.strip())
+                if comp_match:
+                    comp_name = comp_match.group(1).strip()
+                    # Remove markdown formatting
+                    comp_name = re.sub(r'[\*_`]', '', comp_name)
+                    components.append(Component(name=comp_name))
+
+        # Extract requirements from bullet lists
+        requirements = []
+        req_idx = 1
+
+        # Look for Requirements section
+        req_section = re.search(
+            r'^##\s+Requirements?\s*\n((?:[\-\*]\s+.+\n?)+)',
+            content,
+            re.MULTILINE | re.IGNORECASE,
+        )
+        if req_section:
+            for line in req_section.group(1).split('\n'):
+                req_match = re.match(r'^[\-\*]\s+(.+)$', line.strip())
+                if req_match:
+                    requirements.append(
+                        Requirement(
+                            id=f"REQ-{req_idx:03d}",
+                            description=req_match.group(1).strip(),
+                        )
+                    )
+                    req_idx += 1
+
+        # Also extract "must" and "should" statements
+        must_should_pattern = re.compile(
+            r'^[\-\*]\s+(.+?(?:must|should).+?)$',
+            re.MULTILINE | re.IGNORECASE,
+        )
+        existing_descs = {r.description.lower() for r in requirements}
+        for match in must_should_pattern.finditer(content):
+            desc = match.group(1).strip()
+            if desc.lower() not in existing_descs:
+                requirements.append(
+                    Requirement(
+                        id=f"REQ-{req_idx:03d}",
+                        description=desc,
+                    )
+                )
+                req_idx += 1
+                existing_descs.add(desc.lower())
+
+        # Extract constraints
+        constraints = []
+        con_idx = 1
+
+        # Look for Constraints section
+        con_section = re.search(
+            r'^##\s+(?:Technical\s+)?Constraints?\s*\n((?:[\-\*]\s+.+\n?)+)',
+            content,
+            re.MULTILINE | re.IGNORECASE,
+        )
+        if con_section:
+            for line in con_section.group(1).split('\n'):
+                con_match = re.match(r'^[\-\*]\s+(.+)$', line.strip())
+                if con_match:
+                    constraints.append(
+                        Constraint(
+                            id=f"CON-{con_idx:03d}",
+                            description=con_match.group(1).strip(),
+                        )
+                    )
+                    con_idx += 1
+
+        return SpecificationAnalysis(
+            metadata=metadata,
+            phases=phases,
+            components=components,
+            requirements=requirements,
+            constraints=constraints,
         )
 
 
@@ -181,7 +427,7 @@ def get_parser_for_file(file_path: str) -> SpecParser:
 
     parser = parsers.get(suffix)
     if parser is None:
-        raise ValueError(f"Unsupported file format: {suffix}")
+        raise ValueError(f"Unsupported file extension: {suffix}")
 
     return parser
 
@@ -197,13 +443,31 @@ def detect_parser(content: str) -> SpecParser:
     """
     content_stripped = content.strip()
 
-    # Try JSON first
+    # Try JSON first (most specific)
     if content_stripped.startswith('{') or content_stripped.startswith('['):
-        return JSONSpecParser()
+        try:
+            json.loads(content)
+            return JSONSpecParser()
+        except json.JSONDecodeError:
+            pass
 
     # Try YAML (if it has YAML-specific patterns)
-    if content_stripped.startswith('---') or ': ' in content_stripped.split('\n')[0]:
-        return YAMLSpecParser()
+    if ':' in content_stripped.split('\n')[0]:
+        try:
+            yaml.safe_load(content)
+            return YAMLSpecParser()
+        except yaml.YAMLError:
+            pass
 
     # Default to Markdown
     return MarkdownSpecParser()
+
+
+__all__ = [
+    "SpecParser",
+    "JSONSpecParser",
+    "YAMLSpecParser",
+    "MarkdownSpecParser",
+    "get_parser_for_file",
+    "detect_parser",
+]

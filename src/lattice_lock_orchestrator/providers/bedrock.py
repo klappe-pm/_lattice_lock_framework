@@ -5,15 +5,31 @@ from ..types import ModelCapabilities, APIResponse
 
 logger = logging.getLogger(__name__)
 
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+    _BOTO3_AVAILABLE = True
+except ImportError:
+    boto3 = None
+    _BOTO3_AVAILABLE = False
+
 class BedrockClient:
     """
     AWS Bedrock Client Provider.
-    Currently mocked/placeholder until boto3 is fully configured in environment.
     """
-    def __init__(self):
-        self.region = os.getenv("AWS_REGION", "us-east-1")
+    def __init__(self, region_name: Optional[str] = None):
+        self.region = region_name or os.getenv("AWS_REGION", "us-east-1")
+        self.region_name = self.region # Alias for compatibility
         self.access_key = os.getenv("AWS_ACCESS_KEY_ID")
         self.secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        
+        # Check Boto3 availability first
+        if not _BOTO3_AVAILABLE:
+            logger.warning("boto3 not found. Bedrock client disabled.")
+            self.enabled = False
+            return
+
+        # Then check credentials
         self.enabled = bool(self.access_key and self.secret_key)
 
         if self.enabled:
@@ -21,21 +37,79 @@ class BedrockClient:
         else:
             logger.warning("Bedrock credentials missing. Client disabled.")
 
-    def generate(self, prompt: str, model: str, **kwargs) -> APIResponse:
+    def generate(self, model: str, messages: List[Dict[str, str]], **kwargs) -> APIResponse:
         if not self.enabled:
-            raise RuntimeError("Bedrock provider is not configured (missing AWS credentials)")
+            # Return error response instead of raising exception to allow fallback
+            return APIResponse(
+                content=None,
+                model=model,
+                provider="bedrock",
+                error="Bedrock provider is not configured (missing AWS credentials or boto3)",
+                usage={},
+                latency_ms=0.0
+            )
 
-        # In a real implementation, we would use boto3 here.
-        # client = boto3.client("bedrock-runtime", region_name=self.region)
-        # response = client.invoke_model(...)
+        try:
+            import json
+            import time
+            
+            # Simple body construction for Claude (most common Bedrock model for this project)
+            # In a full implementation, this would handle different schemas for different models
+            body = json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": kwargs.get("max_tokens", 4096),
+                "messages": messages
+            })
 
-        logger.info(f"Generating with Bedrock model: {model}")
+            if not hasattr(self, '_client'):
+                self._client = boto3.client(
+                    "bedrock-runtime", 
+                    region_name=self.region,
+                    aws_access_key_id=self.access_key,
+                    aws_secret_access_key=self.secret_key
+                )
 
-        # Mock Response
-        return APIResponse(
-            content="[Bedrock] This is a placeholder response.",
-            model=model,
-            provider="bedrock",
-            usage={"input_tokens": 10, "output_tokens": 5},
-            latency_ms=150
-        )
+            logger.info(f"Generating with Bedrock model: {model}")
+            start_time = time.time()
+            
+            response = self._client.invoke_model(
+                body=body,
+                modelId=model,
+                accept="application/json",
+                contentType="application/json"
+            )
+            
+            latency = (time.time() - start_time) * 1000
+            
+            response_body = json.loads(response.get("body").read())
+            
+            # Extract content (assuming Claude structure)
+            content_text = ""
+            if "content" in response_body:
+                for block in response_body["content"]:
+                    if block["type"] == "text":
+                        content_text += block["text"]
+            
+            usage = response_body.get("usage", {})
+            
+            return APIResponse(
+                content=content_text,
+                model=model,
+                provider="bedrock",
+                usage={
+                    "input_tokens": usage.get("input_tokens", 0),
+                    "output_tokens": usage.get("output_tokens", 0)
+                },
+                latency_ms=latency
+            )
+
+        except Exception as e:
+            logger.error(f"Bedrock generation failed: {e}")
+            return APIResponse(
+                content=None,
+                model=model,
+                provider="bedrock",
+                error=str(e),
+                usage={},
+                latency_ms=0.0
+            )

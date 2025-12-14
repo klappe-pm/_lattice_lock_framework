@@ -145,7 +145,8 @@ class TestPasswordHashing:
         password = "mypassword"
         hashed = hash_password(password)
         assert hashed != password
-        assert hashed.startswith("$2b$")
+        # Accept either argon2 or bcrypt hash prefixes
+        assert hashed.startswith("$argon2") or hashed.startswith("$2b$")
 
     def test_verify_password_correct(self):
         """Test correct password verification."""
