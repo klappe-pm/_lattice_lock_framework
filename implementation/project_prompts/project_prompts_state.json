@@ -3,7 +3,7 @@
     "project": "Lattice Lock Framework",
     "version": "1.0.0",
     "created": "2025-12-01",
-    "last_updated": "2025-12-14 20:08:24",
+    "last_updated": "2025-12-14 20:21:49",
     "total_prompts": 46
   },
   "prompts": [
@@ -479,13 +479,13 @@
       "tool": "codex",
       "file": "phase3_error_handling/3.4.2_codex_dashboard_frontend.md",
       "picked_up": false,
-      "done": false,
-      "merged": false,
+      "done": true,
+      "merged": true,
       "model_used": null,
       "start_time": null,
-      "end_time": null,
+      "end_time": "2025-12-14 20:21:49",
       "duration_minutes": null,
-      "pr_url": null
+      "pr_url": "https://github.com/klappe-pm/lattice-lock-framework/pull/39"
     },
     {
       "id": "4.1.1",
@@ -559,13 +559,13 @@
       "tool": "claude_docs",
       "file": "phase4_documentation/4.2.2_claude_docs_advanced_guides.md",
       "picked_up": false,
-      "done": false,
-      "merged": false,
+      "done": true,
+      "merged": true,
       "model_used": null,
       "start_time": null,
-      "end_time": null,
+      "end_time": "2025-12-14 20:21:49",
       "duration_minutes": null,
-      "pr_url": null
+      "pr_url": "https://github.com/klappe-pm/lattice-lock-framework/pull/39"
     },
     {
       "id": "4.3.1",
@@ -575,13 +575,13 @@
       "tool": "devin",
       "file": "phase4_documentation/4.3.1_devin_pilot_project_1.md",
       "picked_up": false,
-      "done": false,
-      "merged": false,
+      "done": true,
+      "merged": true,
       "model_used": null,
       "start_time": null,
-      "end_time": null,
+      "end_time": "2025-12-14 20:21:49",
       "duration_minutes": null,
-      "pr_url": null
+      "pr_url": "https://github.com/klappe-pm/lattice-lock-framework/pull/39"
     },
     {
       "id": "4.3.2",
@@ -591,13 +591,13 @@
       "tool": "devin",
       "file": "phase4_documentation/4.3.2_devin_pilot_project_2.md",
       "picked_up": false,
-      "done": false,
-      "merged": false,
+      "done": true,
+      "merged": true,
       "model_used": null,
       "start_time": null,
-      "end_time": null,
+      "end_time": "2025-12-14 20:21:49",
       "duration_minutes": null,
-      "pr_url": null
+      "pr_url": "https://github.com/klappe-pm/lattice-lock-framework/pull/39"
     },
     {
       "id": "4.4.1",
