@@ -18,7 +18,7 @@ We anticipate the API will look similar to the following:
 ```python
 class Compiler:
     def __init__(self, config: CompilerConfig): ...
-    
+
     def compile(self, schema_path: str, output_dir: str, target: str): ...
 ```
 

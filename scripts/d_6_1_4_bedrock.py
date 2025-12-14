@@ -18,7 +18,7 @@ class BedrockClient:
     def generate(self, prompt: str, model: str):
         if not self.enabled:
             raise RuntimeError("Bedrock not configured")
-        
+
         # Mocking boto3 call
         print(f"[BEDROCK] Generating with {model}...")
         return "Bedrock response placeholder"

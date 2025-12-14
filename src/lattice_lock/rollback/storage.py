@@ -38,7 +38,7 @@ class CheckpointStorage:
         json_str = state.to_json()
         with gzip.open(filepath, 'wt', encoding='utf-8') as f:
             f.write(json_str)
-        
+
         return checkpoint_id
 
     def load_state(self, checkpoint_id: str) -> Optional[RollbackState]:
@@ -48,10 +48,10 @@ class CheckpointStorage:
         # We need to find the file since it has a timestamp prefix
         pattern = str(self.storage_dir / f"*_{checkpoint_id}.json.gz")
         files = glob.glob(pattern)
-        
+
         if not files:
             return None
-        
+
         filepath = files[0]
         try:
             with gzip.open(filepath, 'rt', encoding='utf-8') as f:
@@ -66,10 +66,10 @@ class CheckpointStorage:
         """
         pattern = str(self.storage_dir / "*.json.gz")
         files = glob.glob(pattern)
-        
+
         # Sort by filename (which starts with timestamp)
         files.sort(reverse=True)
-        
+
         checkpoint_ids = []
         for filepath in files:
             # Filename format: timestamp_uuid.json.gz
@@ -82,7 +82,7 @@ class CheckpointStorage:
                     checkpoint_ids.append(uuid_part)
             except IndexError:
                 continue
-                
+
         return checkpoint_ids
 
     def delete_state(self, checkpoint_id: str) -> bool:
@@ -92,10 +92,10 @@ class CheckpointStorage:
         """
         pattern = str(self.storage_dir / f"*_{checkpoint_id}.json.gz")
         files = glob.glob(pattern)
-        
+
         if not files:
             return False
-        
+
         try:
             os.remove(files[0])
             return True
@@ -112,7 +112,7 @@ class CheckpointStorage:
         all_ids = self.list_states()
         if len(all_ids) <= keep_n:
             return
-            
+
         ids_to_delete = all_ids[keep_n:]
         for checkpoint_id in ids_to_delete:
             self.delete_state(checkpoint_id)

@@ -85,8 +85,8 @@ Integration points:
 
 ## Memory Directive Version
 
-**Version**: 1.0  
-**Last Updated**: 2025-12-01  
+**Version**: 1.0
+**Last Updated**: 2025-12-01
 **Status**: Active
 
 This agent follows the Universal Memory Directive located at: `agent_memory/universal_memory_directive.md`

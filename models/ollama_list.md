@@ -1,5 +1,5 @@
 ```text
-ollama list 
+ollama list
 ```
 
 2025-11-09

@@ -53,7 +53,7 @@ class ModelCapabilities:
     status: ModelStatus = ModelStatus.ACTIVE
     supports_vision: bool = False
     supports_function_calling: bool = False
-    
+
     @property
     def blended_cost(self) -> float:
         """Average cost per 1M tokens (assuming 3:1 input:output ratio)."""

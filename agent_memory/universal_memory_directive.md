@@ -179,8 +179,8 @@ agent_memory/ agents/ agent_orchestration_memory.md agent_planning_memory.md age
 
 ## Memory Directive Version
 
-**Version**: 1.0  
-**Last Updated**: 2025-01-16  
+**Version**: 1.0
+**Last Updated**: 2025-01-16
 **Status**: Active
 
 All agents must reference this version and note if they have implemented any local variations (document variations explicitly in their memory file).

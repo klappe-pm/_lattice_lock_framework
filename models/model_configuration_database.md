@@ -606,6 +606,6 @@ All models are accessible through `orchestrator-cli.py`:
 
 ---
 
-**Last Updated**: 2025-10-05  
-**Verification Method**: Direct code audit of `model-orchestrator.py`  
+**Last Updated**: 2025-10-05
+**Verification Method**: Direct code audit of `model-orchestrator.py`
 **Status**: ✅ All 63 models documented and verified

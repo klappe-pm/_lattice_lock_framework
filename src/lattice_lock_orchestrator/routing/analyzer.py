@@ -19,7 +19,7 @@ class TaskAnalyzer:
     def analyze(self, user_prompt: str) -> str:
         """Determines the TaskType from the prompt string."""
         logger.debug(f"Analyzing prompt (len={len(user_prompt)})")
-        
+
         # 1. Fast Heuristics
         for task_type, regexes in self.patterns.items():
             for pattern in regexes:

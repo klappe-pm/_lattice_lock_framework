@@ -18,20 +18,20 @@ class CheckpointManager:
     def __init__(self, storage: CheckpointStorage = None):
         self.storage = storage or CheckpointStorage()
 
-    def create_checkpoint(self, 
-                          files: Dict[str, str], 
-                          config: Dict[str, Any], 
+    def create_checkpoint(self,
+                          files: Dict[str, str],
+                          config: Dict[str, Any],
                           schema_version: str,
                           description: str = "") -> str:
         """
         Create a new checkpoint with the given state.
-        
+
         Args:
             files: Dictionary mapping file paths to their content hashes.
             config: Current configuration dictionary.
             schema_version: Current schema version string.
             description: Optional description for the checkpoint.
-            
+
         Returns:
             The ID of the created checkpoint.
         """
@@ -61,7 +61,7 @@ class CheckpointManager:
         Delete a checkpoint by ID.
         """
         return self.storage.delete_state(checkpoint_id)
-    
+
     def prune_checkpoints(self, keep_n: int):
         """
         Keep only the last N checkpoints.

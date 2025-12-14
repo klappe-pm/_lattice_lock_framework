@@ -51,10 +51,10 @@ def test_parser_parsing(lattice_file):
 def test_generator_creates_files(lattice_file, output_dir):
     generator = GauntletGenerator(lattice_file, str(output_dir))
     generator.generate()
-    
+
     expected_file = output_dir / "test_contract_User.py"
     assert expected_file.exists()
-    
+
     content = expected_file.read_text()
     assert "class TestUserContract:" in content
     assert "def test_age_gt_18" in content
@@ -63,7 +63,7 @@ def test_generator_creates_files(lattice_file, output_dir):
     assert "def test_score_lte_10" in content
     assert "def test_username_unique" in content
     assert "def test_custom_rule" in content
-    
+
     # Check fixture generation
     assert '"age": 19' in content  # gt 18 -> 19
     assert '"score": 0' in content # gte 0 -> 0
@@ -71,9 +71,9 @@ def test_generator_creates_files(lattice_file, output_dir):
 def test_generated_code_is_valid_python(lattice_file, output_dir):
     generator = GauntletGenerator(lattice_file, str(output_dir))
     generator.generate()
-    
+
     expected_file = output_dir / "test_contract_User.py"
-    
+
     # Compile checking
     import ast
     ast.parse(expected_file.read_text())
@@ -82,7 +82,7 @@ def test_generated_test_execution(lattice_file, output_dir):
     # This is a bit meta: we run pytest on the generated file
     generator = GauntletGenerator(lattice_file, str(output_dir))
     generator.generate()
-    
+
     # We need to run pytest on this file.
     # The generated test uses a fixture that returns a dict.
     # The default fixture values should pass the tests.
@@ -92,7 +92,7 @@ def test_generated_test_execution(lattice_file, output_dir):
     # score <= 10 (0) -> Pass
     # unique -> Placeholder (Pass/Skip)
     # custom -> "pass # Unknown constraint" -> Pass
-    
+
     import pytest
     ret = pytest.main([str(output_dir)])
     assert ret == 0

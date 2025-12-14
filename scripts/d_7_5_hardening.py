@@ -14,10 +14,10 @@ def scan_for_secrets(target_dir: str = "."):
     print(f"[SECURITY] Scanning {target_dir} for secrets...")
     root = Path(target_dir)
     findings = []
-    
+
     for fpath in root.glob("**/*.py"):
         if "scripts/" in str(fpath): continue # Skip our own scripts
-        
+
         content = fpath.read_text(errors='ignore')
         for pattern in SENSITIVE_PATTERNS:
             if re.search(pattern, content):
@@ -34,8 +34,8 @@ if __name__ == "__main__":
     # Create a dummy file to test detection
     with open("dummy_secret.py", "w") as f:
         f.write("key = 'AKIA1234567890ABCDEF'")
-    
+
     scan_for_secrets()
-    
+
     # Cleanup
     Path("dummy_secret.py").unlink()

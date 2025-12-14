@@ -21,7 +21,7 @@ class ValidationWarning:
 class ValidationResult:
     """
     Container for validation results.
-    
+
     Attributes:
         valid (bool): Whether the validation passed.
         errors (List[ValidationError]): List of validation errors.
@@ -51,7 +51,7 @@ def validate_lattice_schema(file_path: str) -> ValidationResult:
         ValidationResult: The result of the validation.
     """
     result = ValidationResult()
-    
+
     try:
         with open(file_path, 'r') as f:
             content = f.read()
@@ -74,9 +74,9 @@ def validate_lattice_schema(file_path: str) -> ValidationResult:
     for section in required_sections:
         if section not in data:
             result.add_error(f"Missing required section: {section}")
-    
+
     if not result.valid and not data.get('entities'): # Stop if critical sections missing, but continue if only some missing to find more errors
-         pass 
+         pass
 
     # 2. Validate version format
     if 'version' in data:
@@ -117,11 +117,11 @@ def _validate_ensures(entity_name: str, ensures_def: Any, fields_def: Dict, resu
         if not isinstance(rule, dict):
             result.add_error(f"Ensures rule #{idx} must be a dictionary", field_path=path)
             continue
-            
+
         required_keys = {'name', 'field', 'constraint', 'value'}
         if not all(k in rule for k in required_keys):
              result.add_error(f"Ensures rule #{idx} missing required keys (name, field, constraint, value)", field_path=path)
-        
+
         # Check if field exists
         if 'field' in rule and rule['field'] not in fields_def:
              result.add_error(f"Ensures rule '{rule.get('name', idx)}' references unknown field '{rule['field']}'", field_path=path)
@@ -146,7 +146,7 @@ def _validate_entity(entity_name: str, entity_def: Any, result: ValidationResult
 def _validate_field(entity_name: str, field_name: str, field_def: Any, result: ValidationResult):
     """Validates a single field definition."""
     path = f"entities.{entity_name}.fields.{field_name}"
-    
+
     if not isinstance(field_def, dict):
         result.add_error(f"Definition for field '{field_name}' must be a dictionary", field_path=path)
         return
@@ -154,14 +154,14 @@ def _validate_field(entity_name: str, field_name: str, field_def: Any, result: V
     # Validate type
     valid_types = {'uuid', 'str', 'int', 'decimal', 'bool', 'enum'}
     field_type = field_def.get('type')
-    
-    # Enum is a special case where type might be implicit if enum values are provided, 
+
+    # Enum is a special case where type might be implicit if enum values are provided,
     # but spec says "type: enum". Let's stick to spec: "type: enum" or one of the others.
-    # Actually spec example: "status: { enum: [pending, filled, cancelled], default: pending }" 
-    # implies 'type' key might be missing if 'enum' key is present? 
+    # Actually spec example: "status: { enum: [pending, filled, cancelled], default: pending }"
+    # implies 'type' key might be missing if 'enum' key is present?
     # The prompt says: "Validate field types (supported: uuid, str, int, decimal, bool, enum)"
     # I will assume 'type' is required unless 'enum' is present, or 'type: enum' is explicitly used.
-    
+
     if 'enum' in field_def:
         if 'type' in field_def and field_def['type'] != 'enum':
              result.add_error(f"Field '{field_name}' has enum values but type is '{field_def['type']}'", field_path=path)
@@ -174,20 +174,20 @@ def _validate_field(entity_name: str, field_name: str, field_def: Any, result: V
         result.add_error(f"Field '{field_name}' missing type definition", field_path=path)
 
     # Validate constraints
-    valid_constraints = {'gt', 'lt', 'gte', 'lte', 'unique', 'primary_key', 'default', 'scale', 'nullable'} 
-    # Added 'default', 'scale', 'nullable' as they appear in spec examples or are common. 
+    valid_constraints = {'gt', 'lt', 'gte', 'lte', 'unique', 'primary_key', 'default', 'scale', 'nullable'}
+    # Added 'default', 'scale', 'nullable' as they appear in spec examples or are common.
     # Prompt specifically lists: gt, lt, gte, lte, unique, primary_key.
-    
+
     for key in field_def:
         if key not in valid_constraints and key != 'type' and key != 'enum':
             # We could warn about unknown keys, but let's stick to validating known constraints
             pass
-            
+
     # Check numeric constraints on non-numeric types?
     numeric_constraints = {'gt', 'lt', 'gte', 'lte'}
     if any(k in field_def for k in numeric_constraints):
-        if field_type not in ('int', 'decimal') and 'enum' not in field_def: 
-             # Enums usually aren't numeric in this context, but could be. 
+        if field_type not in ('int', 'decimal') and 'enum' not in field_def:
+             # Enums usually aren't numeric in this context, but could be.
              # For now, let's just check if type is explicitly non-numeric
              if field_type in ('uuid', 'str', 'bool'):
                  result.add_error(f"Numeric constraints used on non-numeric field '{field_name}'", field_path=path)

@@ -10,7 +10,7 @@ def test_main_success(tmp_path):
     (tmp_path / "scripts").mkdir()
     (tmp_path / ".gitignore").touch()
     (tmp_path / "README.md").touch()
-    
+
     with patch.object(sys, 'argv', ['structure.py', str(tmp_path)]), \
          patch.object(sys, 'exit') as mock_exit:
         main()
@@ -26,7 +26,7 @@ def test_main_failure(tmp_path):
 def test_main_naming_only(tmp_path):
     # Create bad file
     (tmp_path / "BadName.py").touch()
-    
+
     with patch.object(sys, 'argv', ['structure.py', '--naming-only', str(tmp_path)]), \
          patch.object(sys, 'exit') as mock_exit:
         main()

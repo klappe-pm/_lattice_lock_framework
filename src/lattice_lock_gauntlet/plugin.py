@@ -7,9 +7,9 @@ import pytest
 class GauntletPlugin:
     """
     Pytest plugin for Gauntlet reporting.
-    
+
     Collects test results and generates JSON and GitHub Summary reports.
-    
+
     Attributes:
         json_report (bool): Whether to generate a JSON report.
         github_report (bool): Whether to generate a GitHub Summary.
@@ -37,7 +37,7 @@ class GauntletPlugin:
                 "duration": report.duration,
                 "error": None
             }
-            
+
             if report.longrepr:
                 result["error"] = str(report.longrepr)
 
@@ -51,14 +51,14 @@ class GauntletPlugin:
                 # lineno is 0-indexed in pytest, GitHub wants 1-indexed? Usually.
                 # Let's assume 1-indexed for safety or check docs. GitHub actions usually take 1-indexed.
                 # pytest report.location lineno is 0-indexed.
-                
+
                 message = str(report.longrepr).replace("\n", "%0A")
                 print(f"::error file={fpath},line={lineno+1}::Test failed: {domain}%0A{message}")
 
     def pytest_sessionfinish(self, session, exitstatus):
         """Hook called at the end of the session to generate reports."""
         duration = time.time() - self.start_time
-        
+
         if self.json_report:
             report_data = {
                 "created": time.time(),
@@ -74,7 +74,7 @@ class GauntletPlugin:
             }
             with open("gauntlet_report.json", "w") as f:
                 json.dump(report_data, f, indent=2)
-                
+
         if self.github_report:
             # Write summary to GITHUB_STEP_SUMMARY
             summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -83,7 +83,7 @@ class GauntletPlugin:
                 failed = len([r for r in self.results if r["outcome"] == "failed"])
                 skipped = len([r for r in self.results if r["outcome"] == "skipped"])
                 total = len(self.results)
-                
+
                 markdown = f"""
 # Gauntlet Test Summary
 

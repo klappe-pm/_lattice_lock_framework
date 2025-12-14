@@ -8,7 +8,7 @@ from .parser import LatticeParser, EntityDefinition, EnsuresClause
 class GauntletGenerator:
     """
     Generates pytest test contracts from Lattice Lock definitions.
-    
+
     Attributes:
         parser (LatticeParser): The parser for reading lattice definitions.
         output_dir (Path): Directory where generated tests will be saved.
@@ -89,5 +89,5 @@ class GauntletGenerator:
             # For now, we'll generate a placeholder or a property-based test hint.
             # In a real Gauntlet, this would check against a dataset fixture.
             return f"# Uniqueness check requires a collection context.\n        # assert is_unique(value, collection)"
-        
+
         return "pass # Unknown constraint"

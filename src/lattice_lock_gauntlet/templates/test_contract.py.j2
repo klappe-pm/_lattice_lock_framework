@@ -30,7 +30,7 @@ class Test{{ entity_name }}Contract:
         """
         # Field value extraction
         value = instance.get("{{ test.field }}") if isinstance(instance, dict) else getattr(instance, "{{ test.field }}", None)
-        
+
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field '{{ test.field }}' is missing in the instance.")

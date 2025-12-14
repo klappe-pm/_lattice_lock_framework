@@ -214,7 +214,7 @@ export GOOGLE_API_KEY="your-google-key-here"
 echo 'alias ai="./orchestrator-cli.py route"' >> ~/.zshrc
 echo 'alias code-ai="./orchestrator-cli.py route --strategy balanced"' >> ~/.zshrc
 
-# For research/analysis work  
+# For research/analysis work
 echo 'alias research-ai="./orchestrator-cli.py route --strategy quality_first"' >> ~/.zshrc
 
 # For quick questions
@@ -268,7 +268,7 @@ curl http://localhost:11434/api/version
 
 ### **Expansion Options**
 1. **More local models**: Add `starcoder2:7b`, `codegemma:7b` if available
-2. **Cloud integration**: Start with OpenAI API key for GPT-4 access  
+2. **Cloud integration**: Start with OpenAI API key for GPT-4 access
 3. **Automation**: Create custom scripts for your most common tasks
 
 ### **Pro Tips**

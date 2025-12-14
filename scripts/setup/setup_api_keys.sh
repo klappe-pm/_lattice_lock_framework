@@ -12,12 +12,12 @@ setup_api_key() {
     local env_var_name="$2"
     local description="$3"
     local signup_url="$4"
-    
+
     echo "📝 Setting up $service_name"
     echo "   Description: $description"
     echo "   Signup URL: $signup_url"
     echo ""
-    
+
     current_key="${!env_var_name}"
     if [[ -n "$current_key" ]]; then
         echo "   ✅ API key already configured for $env_var_name"
@@ -39,7 +39,7 @@ setup_api_key() {
 show_current_setup() {
     echo "🔍 Current API Key Status:"
     echo "=========================="
-    
+
     local keys=(
         "OPENAI_API_KEY:OpenAI"
         "ANTHROPIC_API_KEY:Anthropic (Claude)"
@@ -52,11 +52,11 @@ show_current_setup() {
         "AWS_SECRET_ACCESS_KEY:AWS Secret"
         "AWS_REGION:AWS Region"
     )
-    
+
     for key_info in "${keys[@]}"; do
         IFS=':' read -r var_name display_name <<< "$key_info"
         current_value="${!var_name}"
-        
+
         if [[ -n "$current_value" ]]; then
             echo "  ✅ $display_name ($var_name): Set"
         else
@@ -69,7 +69,7 @@ show_current_setup() {
 # Function to create a .env template
 create_env_template() {
     echo "📄 Creating .env template file..."
-    
+
     cat > .env.example << 'EOF'
 # Power Prompts API Keys Configuration
 # Copy this file to .env and fill in your actual API keys
@@ -133,67 +133,67 @@ main() {
     echo "This script will help you configure API keys for Power Prompts."
     echo "You'll need to sign up for services and generate API keys manually."
     echo ""
-    
+
     # Load existing .env if available
     load_env_file
-    
+
     # Show current status
     show_current_setup
-    
+
     echo "🔧 API Key Setup Instructions:"
     echo "=============================="
     echo ""
-    
+
     # Setup instructions for each provider
     setup_api_key \
         "OpenAI" \
         "OPENAI_API_KEY" \
         "Access to GPT-4, GPT-3.5-turbo, DALL-E, and other OpenAI models" \
         "https://platform.openai.com/api-keys"
-    
+
     setup_api_key \
         "Anthropic (Claude)" \
         "ANTHROPIC_API_KEY" \
         "Access to Claude models (Opus, Sonnet, Haiku)" \
         "https://console.anthropic.com/"
-    
+
     setup_api_key \
         "Google (Gemini)" \
         "GOOGLE_API_KEY" \
         "Access to Gemini Pro, Flash, and other Google AI models" \
         "https://makersuite.google.com/app/apikey"
-    
+
     setup_api_key \
         "xAI (Grok)" \
         "XAI_API_KEY" \
         "Access to Grok models with 2M+ context windows" \
         "https://console.x.ai/"
-    
+
     setup_api_key \
         "Azure OpenAI" \
         "AZURE_OPENAI_API_KEY" \
         "Enterprise access to OpenAI models via Microsoft Azure" \
         "https://portal.azure.com/"
-    
+
     echo "📝 AWS Bedrock Setup"
     echo "   Description: Access to Claude, Llama, Titan models via AWS"
     echo "   Setup: Use AWS CLI 'aws configure' or set environment variables:"
     echo "   - AWS_ACCESS_KEY_ID"
-    echo "   - AWS_SECRET_ACCESS_KEY" 
+    echo "   - AWS_SECRET_ACCESS_KEY"
     echo "   - AWS_REGION (e.g., us-east-1)"
     echo "   Signup URL: https://aws.amazon.com/bedrock/"
     echo ""
     echo "----------------------------------------"
-    
+
     setup_api_key \
         "DIAL API" \
         "DIAL_API_KEY" \
         "Enterprise API access to various models" \
         "Contact your DIAL API provider"
-    
+
     # Create template
     create_env_template
-    
+
     echo "🎯 Next Steps:"
     echo "=============="
     echo "1. Sign up for the services you want to use"

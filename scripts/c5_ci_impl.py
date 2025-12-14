@@ -36,10 +36,10 @@ jobs:
 def generate_workflow():
     dest = Path(".github/workflows")
     dest.mkdir(parents=True, exist_ok=True)
-    
+
     with open(dest / "ci.yml", "w") as f:
         f.write(WORKFLOW_CONTENT)
-    
+
     print("[C5] Generated .github/workflows/ci.yml")
 
 if __name__ == "__main__":

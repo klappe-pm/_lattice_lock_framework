@@ -23,13 +23,13 @@ class DashboardGenerator:
 </head>
 <body>
     <h1>Lattice Lock Admin</h1>
-    
+
     <div class="card">
         <h2>Project Health</h2>
         <p>Status: <span class="{status_class}">{status}</span></p>
         <p>Version: {version}</p>
     </div>
-    
+
     <div class="card">
         <h2>Telemetry</h2>
         <p>Active Models: {active_models}</p>
@@ -41,18 +41,18 @@ class DashboardGenerator:
     def generate(self, output_path: str = "dashboard/index.html", data: Dict[str, Any] = None):
         if data is None:
             data = {"status": "HEALTHY", "version": "2.1.0", "active_models": 5}
-            
+
         logger.info(f"Generating dashboard to {output_path}")
-        
+
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         html = self.DASHBOARD_TEMPLATE.format(
             status=data.get('status', 'UNKNOWN'),
             status_class="status-ok" if data.get('status') == "HEALTHY" else "status-err",
             version=data.get('version', '0.0.0'),
             active_models=data.get('active_models', 0)
         )
-        
+
         with open(path, "w") as f:
             f.write(html)

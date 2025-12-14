@@ -13,13 +13,13 @@ def lock_dependencies():
     Ensures deterministic builds for CI.
     """
     logger.info("Locking dependencies...")
-    
+
     req_in = Path("requirements.in")
     if not req_in.exists():
         logger.warning("requirements.in not found. Creating default.")
         with open("requirements.in", "w") as f:
             f.write("click>=8.0\npydantic>=2.0\npyyaml\n")
-            
+
     # Check if pip-tools is installed
     try:
         subprocess.run(["pip-compile", "--version"], check=True, capture_output=True)

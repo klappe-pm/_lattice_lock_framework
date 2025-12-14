@@ -15,7 +15,7 @@ class FunctionCallHandler:
         func = self._functions.get(name)
         if not func:
             raise ValueError(f"Function '{name}' not registered.")
-        
+
         # Assume function is async if it's an awaitable coroutine
         if hasattr(func, '__call__') and hasattr(func, '__code__') and func.__code__.co_flags & (1 << 7): #inspect.iscoroutinefunction(func)
             return await func(**kwargs)
@@ -30,5 +30,5 @@ class FunctionCallHandler:
         # For simplicity, returning just names for now.
         # In a real scenario, this would involve inspecting function signatures
         # to generate tool specifications (e.g., OpenAPI schema for function arguments).
-        return {name: {"name": name, "description": func.__doc__ or "No description provided."} 
+        return {name: {"name": name, "description": func.__doc__ or "No description provided."}
                 for name, func in self._functions.items()}

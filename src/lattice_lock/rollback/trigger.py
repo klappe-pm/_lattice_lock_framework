@@ -1,10 +1,10 @@
 import logging
 from typing import Optional, List, Callable, Any
 from .state import RollbackState
-# Assuming CheckpointManager will be available or we mock it. 
-# For now, I will import it inside methods or use a protocol if I want to be strict, 
+# Assuming CheckpointManager will be available or we mock it.
+# For now, I will import it inside methods or use a protocol if I want to be strict,
 # but for simplicity I'll assume it exists or I'll create it.
-# from .checkpoint import CheckpointManager 
+# from .checkpoint import CheckpointManager
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,11 @@ class RollbackTrigger:
     def trigger_rollback(self, reason: str, checkpoint_id: Optional[str] = None) -> bool:
         """
         Initiate a rollback.
-        
+
         Args:
             reason: The reason for the rollback.
             checkpoint_id: Specific checkpoint to restore. If None, restores the latest.
-            
+
         Returns:
             bool: True if rollback was successful, False otherwise.
         """
@@ -47,7 +47,7 @@ class RollbackTrigger:
 
         try:
             self._execute_pre_hooks()
-            
+
             state = None
             if checkpoint_id:
                 state = self.checkpoint_manager.get_checkpoint(checkpoint_id)
@@ -60,13 +60,13 @@ class RollbackTrigger:
                     checkpoints.sort(reverse=True)
                     latest_id = checkpoints[0]
                     state = self.checkpoint_manager.get_checkpoint(latest_id)
-            
+
             if state:
                 success = self._restore_state(state)
             else:
                 logger.error("No checkpoint found to restore.")
                 success = False
-            
+
             if success:
                 logger.info("Rollback executed successfully.")
                 self._notify("Rollback executed successfully.")
@@ -94,14 +94,14 @@ class RollbackTrigger:
             # and the prompt focuses on the trigger system.
             # However, to be useful, we should at least pretend to do something.
             logger.info(f"Restoring state from timestamp {state.timestamp}")
-            
+
             # Mock restoration of files
             for file_path, file_hash in state.files.items():
                 logger.debug(f"Restoring file: {file_path} (hash: {file_hash})")
-                
+
             # Restore config
             logger.debug(f"Restoring config: {state.config}")
-            
+
             return True
         except Exception as e:
             logger.error(f"Failed to restore state: {e}")

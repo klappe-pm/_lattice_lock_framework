@@ -19,12 +19,12 @@ def submit_feedback(rating: int, comment: str, project: str):
         "rating": rating,
         "comment": comment
     }
-    
+
     Path(FEEDBACK_FILE).parent.mkdir(exist_ok=True)
-    
+
     with open(FEEDBACK_FILE, "a") as f:
         f.write(json.dumps(entry) + "\n")
-        
+
     print(f"[FEEDBACK] Recorded: {rating}/5 - '{comment}'")
 
 if __name__ == "__main__":

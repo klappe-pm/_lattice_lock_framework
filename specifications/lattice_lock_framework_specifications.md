@@ -1,7 +1,7 @@
 # lattice_lock_framework_specifications
 
-**Version:** 1.0.0  
-**Last Updated:** 2025-11-30  
+**Version:** 1.0.0
+**Last Updated:** 2025-11-30
 **Author:** Kevin Lappe
 
 ---
@@ -270,7 +270,7 @@ The orchestrator detects and routes based on task type:
 Models are scored using weighted criteria:
 
 ```
-Score = (Task Affinity × 0.40) + (Performance × 0.30) + 
+Score = (Task Affinity × 0.40) + (Performance × 0.30) +
         (Accuracy × 0.20) + (Cost Efficiency × 0.10)
 ```
 
@@ -373,16 +373,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Compile Lattice Schema
         run: lattice-lock compile
-        
+
       - name: Run Sheriff (AST Validation)
         run: lattice-lock sheriff src/
-        
+
       - name: Run Gauntlet (Semantic Tests)
         run: lattice-lock gauntlet
-        
+
       - name: Orchestrator Smoke Test
         run: lattice-lock test-orchestrator
 ```
@@ -434,7 +434,7 @@ jobs:
                            ▼                   ▼                   ▼
                     lattice-lock init    Edit lattice.yaml   lattice-lock validate
                                                              lattice-lock compile
-                                                             
+
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Integrate │────▶│    Test     │────▶│   Deploy    │
 │    CI/CD    │     │   Pipeline  │     │             │
@@ -486,7 +486,7 @@ jobs:
                            │                   │
                            ▼                   ▼
                     TaskAnalyzer         ModelScorer
-                    
+
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Execute   │────▶│   Handle    │────▶│   Return    │
 │   Request   │     │   Fallback  │     │   Result    │

@@ -10,10 +10,10 @@ def setup_pilot():
     Creates a 'managed' pilot project to test the framework in-situ.
     """
     print("[PILOT] Setting up 'Alpha Service' pilot...")
-    
+
     root = Path("pilot_projects/alpha_service")
     root.mkdir(parents=True, exist_ok=True)
-    
+
     # Create lattice.yaml
     with open(root / "lattice.yaml", "w") as f:
         f.write("""
@@ -24,7 +24,7 @@ rules:
   - id: "enforce-types"
     severity: "error"
 """)
-    
+
     # Create valid python file
     (root / "src").mkdir(exist_ok=True)
     with open(root / "src/main.py", "w") as f:

@@ -126,7 +126,7 @@ def sheriff_command(
             if potential_lattice.exists():
                 found_lattice = potential_lattice
                 break
-        
+
         if found_lattice:
             actual_lattice_path = found_lattice
         else:
@@ -136,7 +136,7 @@ def sheriff_command(
                     fg="yellow"
                 ), err=True)
             # SheriffConfig.from_yaml will handle the non-existent file by returning a default config
-    
+
     # Load Sheriff configuration
     try:
         sheriff_config = SheriffConfig.from_yaml(str(actual_lattice_path))
@@ -166,7 +166,7 @@ def sheriff_command(
 
     # Output results based on format
     formatter: OutputFormatter = get_formatter(output_format)
-    
+
     if output_format == "json":
         # JsonFormatter should handle both violations and ignored violations
         all_results = {
@@ -307,7 +307,7 @@ def _validate_file_with_cache(
 
     # Not cached, validate and cache result
     # The SheriffVisitor (via validate_file_with_audit) handles ignore_patterns internally
-    violations, ignored_violations = validate_file_with_audit(file_path, config) 
+    violations, ignored_violations = validate_file_with_audit(file_path, config)
 
     # Cache the results (include ignored flag)
     violations_data = []

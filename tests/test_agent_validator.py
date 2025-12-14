@@ -48,7 +48,7 @@ agent:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_agent_manifest(path)
         assert not result.valid
@@ -76,7 +76,7 @@ scope:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_agent_manifest(path)
         # Note: invalid version is an error in _validate_identity
@@ -103,7 +103,7 @@ scope:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_agent_manifest(path)
         assert not result.valid
@@ -122,7 +122,7 @@ scope: "not a dict"
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_agent_manifest(path)
         assert not result.valid
@@ -155,7 +155,7 @@ scope:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_agent_manifest(path)
         assert not result.valid
@@ -186,7 +186,7 @@ scope:
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_agent_manifest(path)
         assert not result.valid

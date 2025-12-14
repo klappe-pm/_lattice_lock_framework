@@ -50,13 +50,13 @@ def generate_markdown(state: dict) -> None:
     prompts = state["prompts"]
     tool_defs = state["tool_definitions"]
     phase_defs = state["phase_definitions"]
-    
+
     # Calculate summary stats
     total = len(prompts)
     delivered = sum(1 for p in prompts if p["merged"])
     in_progress = sum(1 for p in prompts if p["picked_up"] and not p["done"])
     pending = sum(1 for p in prompts if not p["picked_up"])
-    
+
     # Group by phase
     phases = {}
     for p in prompts:
@@ -64,7 +64,7 @@ def generate_markdown(state: dict) -> None:
         if phase not in phases:
             phases[phase] = []
         phases[phase].append(p)
-    
+
     # Build markdown
     lines = [
         "# Lattice Lock Framework - Project Prompts Tracker",
@@ -83,17 +83,17 @@ def generate_markdown(state: dict) -> None:
         "---",
         "",
     ]
-    
+
     # Generate tables for each phase
     for phase_num in sorted(phases.keys()):
         phase_prompts = phases[phase_num]
         phase_name = phase_defs.get(phase_num, f"Phase {phase_num}")
-        
+
         lines.append(f"## Phase {phase_num}: {phase_name}")
         lines.append("")
         lines.append("| ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |")
         lines.append("|:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|")
-        
+
         for p in phase_prompts:
             tool_name = tool_defs.get(p["tool"], p["tool"])
             picked = "Yes" if p["picked_up"] else "-"
@@ -104,13 +104,13 @@ def generate_markdown(state: dict) -> None:
             end = p["end_time"] or "-"
             duration = str(p["duration_minutes"]) if p["duration_minutes"] is not None else "-"
             pr = f"[PR]({p['pr_url']})" if p["pr_url"] else "-"
-            
+
             lines.append(f"| {p['id']} | {p['title']} | {tool_name} | {picked} | {done} | {merged} | {model} | {start} | {end} | {duration} | {pr} |")
-        
+
         lines.append("")
         lines.append("---")
         lines.append("")
-    
+
     # Add usage instructions
     lines.extend([
         "## Usage",
@@ -154,10 +154,10 @@ def generate_markdown(state: dict) -> None:
         "A prompt is considered **DELIVERED** only when Merged = Yes",
         "",
     ])
-    
+
     with open(TRACKER_FILE, "w") as f:
         f.write("\n".join(lines))
-    
+
     print(f"Tracker regenerated: {TRACKER_FILE}")
 
 
@@ -167,7 +167,7 @@ def cmd_next(args) -> None:
     prompts = state["prompts"]
     tool = args.tool
     model = args.model
-    
+
     # First, check for in-progress prompt for this tool
     for p in prompts:
         if p["tool"] == tool and p["picked_up"] and not p["done"] and not p["merged"]:
@@ -179,7 +179,7 @@ def cmd_next(args) -> None:
                 "file": str(PROMPTS_DIR / p["file"])
             }, indent=2))
             return
-    
+
     # Find next available prompt for this tool
     for p in prompts:
         if p["tool"] == tool and not p["picked_up"] and not p["done"] and not p["merged"]:
@@ -188,9 +188,9 @@ def cmd_next(args) -> None:
             p["start_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if model:
                 p["model_used"] = model
-            
+
             save_state(state)
-            
+
             print(json.dumps({
                 "status": "assigned",
                 "id": p["id"],
@@ -199,7 +199,7 @@ def cmd_next(args) -> None:
                 "file": str(PROMPTS_DIR / p["file"])
             }, indent=2))
             return
-    
+
     # No prompts available
     print(json.dumps({
         "status": "none_available",
@@ -212,18 +212,18 @@ def cmd_update(args) -> None:
     """Update a prompt's status."""
     state = load_state()
     prompts = state["prompts"]
-    
+
     # Find prompt by ID
     prompt = None
     for p in prompts:
         if p["id"] == args.id:
             prompt = p
             break
-    
+
     if not prompt:
         print(f"Error: Prompt '{args.id}' not found", file=sys.stderr)
         sys.exit(1)
-    
+
     # Update fields
     if args.done:
         prompt["done"] = True
@@ -231,21 +231,21 @@ def cmd_update(args) -> None:
         prompt["merged"] = True
         if not prompt["end_time"]:
             prompt["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Calculate duration
         if prompt["start_time"] and prompt["end_time"]:
             start = datetime.strptime(prompt["start_time"], "%Y-%m-%d %H:%M:%S")
             end = datetime.strptime(prompt["end_time"], "%Y-%m-%d %H:%M:%S")
             prompt["duration_minutes"] = round((end - start).total_seconds() / 60)
-    
+
     if args.pr:
         prompt["pr_url"] = args.pr
-    
+
     if args.model:
         prompt["model_used"] = args.model
-    
+
     save_state(state)
-    
+
     print(json.dumps({
         "status": "updated",
         "id": prompt["id"],
@@ -259,18 +259,18 @@ def cmd_reset(args) -> None:
     """Reset a prompt to pending state."""
     state = load_state()
     prompts = state["prompts"]
-    
+
     # Find prompt by ID
     prompt = None
     for p in prompts:
         if p["id"] == args.id:
             prompt = p
             break
-    
+
     if not prompt:
         print(f"Error: Prompt '{args.id}' not found", file=sys.stderr)
         sys.exit(1)
-    
+
     # Reset fields
     prompt["picked_up"] = False
     prompt["done"] = False
@@ -280,9 +280,9 @@ def cmd_reset(args) -> None:
     prompt["end_time"] = None
     prompt["duration_minutes"] = None
     prompt["pr_url"] = None
-    
+
     save_state(state)
-    
+
     print(json.dumps({
         "status": "reset",
         "id": prompt["id"]
@@ -294,12 +294,12 @@ def cmd_status(args) -> None:
     state = load_state()
     prompts = state["prompts"]
     tool_defs = state["tool_definitions"]
-    
+
     total = len(prompts)
     delivered = sum(1 for p in prompts if p["merged"])
     in_progress = sum(1 for p in prompts if p["picked_up"] and not p["done"])
     pending = sum(1 for p in prompts if not p["picked_up"])
-    
+
     # Per-tool breakdown
     tool_stats = {}
     for p in prompts:
@@ -313,7 +313,7 @@ def cmd_status(args) -> None:
             tool_stats[tool]["in_progress"] += 1
         elif not p["picked_up"]:
             tool_stats[tool]["pending"] += 1
-    
+
     print(f"\n{'='*60}")
     print("LATTICE LOCK FRAMEWORK - PROMPT TRACKER STATUS")
     print(f"{'='*60}\n")
@@ -324,11 +324,11 @@ def cmd_status(args) -> None:
     print(f"\n{'-'*60}")
     print("BY TOOL:")
     print(f"{'-'*60}")
-    
+
     for tool, stats in sorted(tool_stats.items()):
         tool_name = tool_defs.get(tool, tool)
         print(f"  {tool_name:20} | Total: {stats['total']:2} | Done: {stats['delivered']:2} | WIP: {stats['in_progress']:2} | Pending: {stats['pending']:2}")
-    
+
     print(f"\n{'='*60}\n")
 
 
@@ -563,16 +563,16 @@ Examples:
   python scripts/prompt_tracker.py status
         """
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
+
     # next command
     next_parser = subparsers.add_parser("next", help="Pick up the next available prompt")
-    next_parser.add_argument("--tool", required=True, 
+    next_parser.add_argument("--tool", required=True,
                             choices=["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"],
                             help="Tool identifier")
     next_parser.add_argument("--model", help="Model name being used")
-    
+
     # update command
     update_parser = subparsers.add_parser("update", help="Update a prompt's status")
     update_parser.add_argument("--id", required=True, help="Prompt ID (e.g., 1.1.1)")
@@ -580,14 +580,14 @@ Examples:
     update_parser.add_argument("--merged", action="store_true", help="Mark as merged")
     update_parser.add_argument("--pr", help="PR URL")
     update_parser.add_argument("--model", help="Model name used")
-    
+
     # reset command
     reset_parser = subparsers.add_parser("reset", help="Reset a prompt to pending state")
     reset_parser.add_argument("--id", required=True, help="Prompt ID (e.g., 1.1.1)")
-    
+
     # status command
     subparsers.add_parser("status", help="Show overall status summary")
-    
+
     # regenerate command
     subparsers.add_parser("regenerate", help="Regenerate markdown tracker from JSON")
 
@@ -610,7 +610,7 @@ Examples:
                                  help="Also check for orphan files not tracked in state")
 
     args = parser.parse_args()
-    
+
     if args.command == "next":
         cmd_next(args)
     elif args.command == "update":

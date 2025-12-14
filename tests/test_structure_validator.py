@@ -46,14 +46,14 @@ def test_agent_definition_naming(temp_repo):
     cat_dir = Path(temp_repo) / 'agent_definitions' / 'test_agent'
     cat_dir.mkdir()
     (cat_dir / 'test_agent_my_agent_definition.yaml').touch()
-    
+
     # Invalid name
     (cat_dir / 'wrong_name.yaml').touch()
-    
+
     result = validate_repository_structure(temp_repo)
     assert not result.valid
     assert any("Agent definition 'wrong_name.yaml' must end with '_definition.yaml'" in e.message for e in result.errors)
-    # The category check might depend on how path parts are parsed. 
+    # The category check might depend on how path parts are parsed.
     # Let's check if the category error is present without being too specific on the message format if it's flaky,
     # but it should be deterministic.
     # Let's print errors if assertion fails

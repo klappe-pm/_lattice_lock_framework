@@ -22,7 +22,7 @@ class OutputFormatter(ABC):
             Formatted string output
         """
         pass
-    
+
     @abstractmethod
     def format_error(self, message: str) -> str:
         """Format an error message for output.

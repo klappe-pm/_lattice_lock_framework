@@ -68,7 +68,7 @@ class IntegrationConfig:
 class PromptArchitectIntegration:
     """
     Integration layer between Prompt Architect and Project Agent.
-    
+
     Provides methods for the Project Agent to:
     - Request prompt generation for phases/epics/tasks
     - Track prompt execution status
@@ -137,7 +137,7 @@ class PromptArchitectIntegration:
     ) -> GenerationResult:
         """
         Request prompt generation for an entire phase.
-        
+
         Called by Project Agent when starting a new phase.
         """
         self.load_state()
@@ -165,7 +165,7 @@ class PromptArchitectIntegration:
     ) -> GenerationResult:
         """
         Request prompt generation for a specific epic.
-        
+
         Called by Project Agent when focusing on an epic.
         """
         self.load_state()
@@ -194,7 +194,7 @@ class PromptArchitectIntegration:
     ) -> GenerationResult:
         """
         Request prompt generation for specific tasks.
-        
+
         Called by Project Agent for targeted prompt generation.
         """
         self.load_state()
@@ -242,7 +242,7 @@ class PromptArchitectIntegration:
     ) -> bool:
         """
         Mark a prompt as started (in progress).
-        
+
         Called by Project Agent when a tool begins executing a prompt.
         """
         self.load_state()
@@ -272,7 +272,7 @@ class PromptArchitectIntegration:
     ) -> bool:
         """
         Mark a prompt as completed.
-        
+
         Called by Project Agent when a tool finishes executing a prompt.
         """
         self.load_state()
@@ -301,7 +301,7 @@ class PromptArchitectIntegration:
     ) -> bool:
         """
         Mark a prompt as failed.
-        
+
         Called by Project Agent when a tool fails to execute a prompt.
         """
         self.load_state()
@@ -334,7 +334,7 @@ class PromptArchitectIntegration:
     ) -> bool:
         """
         Mark a prompt as blocked.
-        
+
         Called by Project Agent when a prompt cannot proceed.
         """
         self.load_state()
@@ -380,7 +380,7 @@ class PromptArchitectIntegration:
     def get_prompt_status(self, prompt_id: str) -> Optional[PromptExecutionStatus]:
         """
         Get the current status of a prompt.
-        
+
         Called by Project Agent to check on prompt progress.
         """
         self.load_state()
@@ -389,7 +389,7 @@ class PromptArchitectIntegration:
     def get_phase_status(self, phase: str) -> dict[str, Any]:
         """
         Get the status of all prompts in a phase.
-        
+
         Called by Project Agent for phase-level reporting.
         """
         self.load_state()
@@ -423,7 +423,7 @@ class PromptArchitectIntegration:
     def get_metrics(self) -> dict[str, Any]:
         """
         Get metrics for prompt generation and execution.
-        
+
         Called by Project Agent for reporting and analytics.
         """
         self.load_state()
@@ -468,7 +468,7 @@ class PromptArchitectIntegration:
     ) -> list[PromptExecutionStatus]:
         """
         Get all pending prompts, optionally filtered by tool.
-        
+
         Called by Project Agent to find work for tools.
         """
         self.load_state()
@@ -487,7 +487,7 @@ class PromptArchitectIntegration:
     def retry_failed_prompts(self) -> list[str]:
         """
         Retry all failed prompts.
-        
+
         Called by Project Agent to recover from failures.
         """
         self.load_state()
@@ -512,7 +512,7 @@ class PromptArchitectIntegration:
 class ProjectAgentInterface:
     """
     Interface for Project Agent to interact with Prompt Architect.
-    
+
     Provides a simplified API for common operations.
     """
 

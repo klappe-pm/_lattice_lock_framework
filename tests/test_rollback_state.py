@@ -33,7 +33,7 @@ def test_rollback_state_serialization(sample_state):
     """Test serialization and deserialization of RollbackState."""
     json_str = sample_state.to_json()
     restored_state = RollbackState.from_json(json_str)
-    
+
     assert restored_state.timestamp == sample_state.timestamp
     assert restored_state.files == sample_state.files
     assert restored_state.config == sample_state.config
@@ -54,18 +54,18 @@ def test_rollback_state_diff():
         config={"c": 2},
         schema_version="1.1"
     )
-    
+
     # Diff state2 against state1 (what changed in state2 compared to state1)
-    # Wait, my diff logic was: diff(self, other). 
+    # Wait, my diff logic was: diff(self, other).
     # If self is NEW (state2) and other is OLD (state1).
-    
+
     diff = state2.diff(state1)
-    
+
     assert "f2" in diff["files_changed"]
     assert "f3" in diff["files_added"]
     assert diff["config_changed"] is True
     assert diff["schema_version_changed"] is True
-    
+
     # Test removal
     state3 = RollbackState(
         timestamp=300,
@@ -73,7 +73,7 @@ def test_rollback_state_diff():
         config={"c": 2},
         schema_version="1.1"
     )
-    
+
     diff_rem = state3.diff(state2)
     assert "f2" in diff_rem["files_removed"]
     assert "f3" in diff_rem["files_removed"]
@@ -82,9 +82,9 @@ def test_storage_save_load(temp_storage_dir, sample_state):
     """Test saving and loading states."""
     storage = CheckpointStorage(temp_storage_dir)
     checkpoint_id = storage.save_state(sample_state)
-    
+
     assert checkpoint_id is not None
-    
+
     loaded_state = storage.load_state(checkpoint_id)
     assert loaded_state is not None
     assert loaded_state.files == sample_state.files
@@ -92,39 +92,39 @@ def test_storage_save_load(temp_storage_dir, sample_state):
 def test_storage_list_delete(temp_storage_dir, sample_state):
     """Test listing and deleting states."""
     storage = CheckpointStorage(temp_storage_dir)
-    
+
     # Create two states
     id1 = storage.save_state(sample_state)
     time.sleep(0.01) # Ensure timestamp difference
     sample_state.timestamp = time.time()
     id2 = storage.save_state(sample_state)
-    
+
     states = storage.list_states()
     assert len(states) == 2
     assert states[0] == id2 # Newest first
     assert states[1] == id1
-    
+
     # Delete one
     assert storage.delete_state(id1) is True
     states = storage.list_states()
     assert len(states) == 1
     assert states[0] == id2
-    
+
     # Delete non-existent
     assert storage.delete_state("non_existent") is False
 
 def test_storage_prune(temp_storage_dir, sample_state):
     """Test pruning states."""
     storage = CheckpointStorage(temp_storage_dir)
-    
+
     ids = []
     for _ in range(5):
         sample_state.timestamp = time.time()
         ids.append(storage.save_state(sample_state))
         time.sleep(0.01)
-        
+
     assert len(storage.list_states()) == 5
-    
+
     storage.prune_states(3)
     remaining = storage.list_states()
     assert len(remaining) == 3
@@ -134,18 +134,18 @@ def test_checkpoint_manager(temp_storage_dir):
     """Test CheckpointManager high-level API."""
     storage = CheckpointStorage(temp_storage_dir)
     manager = CheckpointManager(storage)
-    
+
     files = {"f1": "h1"}
     config = {"c": 1}
-    
+
     cp_id = manager.create_checkpoint(files, config, "1.0", "Initial")
     assert cp_id is not None
-    
+
     cp = manager.get_checkpoint(cp_id)
     assert cp.files == files
     assert cp.description == "Initial"
-    
+
     assert len(manager.list_checkpoints()) == 1
-    
+
     manager.delete_checkpoint(cp_id)
     assert len(manager.list_checkpoints()) == 0

@@ -107,13 +107,13 @@ echo -e "\nWould you like to add 'orchestrator' command to your shell profile? (
 read -r response
 if [[ "$response" =~ ^[Yy]$ ]]; then
     shell_profile=""
-    
+
     if [ -n "$ZSH_VERSION" ]; then
         shell_profile="$HOME/.zshrc"
     elif [ -n "$BASH_VERSION" ]; then
         shell_profile="$HOME/.bashrc"
     fi
-    
+
     if [ -n "$shell_profile" ]; then
         echo "" >> "$shell_profile"
         echo "# Model Orchestrator" >> "$shell_profile"

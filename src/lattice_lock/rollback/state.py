@@ -46,7 +46,7 @@ class RollbackState:
             hash_other = other.files.get(file_path)
 
             if hash_self and not hash_other:
-                diff_result["files_removed"].append(file_path) # Removed in 'other' (current) compared to 'self' (old)? 
+                diff_result["files_removed"].append(file_path) # Removed in 'other' (current) compared to 'self' (old)?
                 # Usually diff is new - old. Let's assume self is NEW, other is OLD.
                 # Wait, usually we diff current state against a checkpoint.
                 # Let's define diff as: changes to get from OTHER to SELF.
@@ -57,14 +57,14 @@ class RollbackState:
 
         # Let's restart the logic for clarity.
         # Diff: What changed from OTHER -> SELF
-        
+
         # Files
         for file_path, file_hash in self.files.items():
             if file_path not in other.files:
                 diff_result["files_added"].append(file_path)
             elif other.files[file_path] != file_hash:
                 diff_result["files_changed"].append(file_path)
-        
+
         for file_path in other.files:
             if file_path not in self.files:
                 diff_result["files_removed"].append(file_path)

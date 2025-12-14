@@ -34,7 +34,7 @@ MY_API_KEY=12345-actual-secret-key
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_env_file(path)
         assert not result.valid
@@ -49,7 +49,7 @@ LOG_LEVEL=INFO
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_env_file(path)
         assert not result.valid
@@ -66,10 +66,10 @@ lowercase_var=value
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_env_file(path)
-        # Warnings don't invalidate the result by default in our implementation, 
+        # Warnings don't invalidate the result by default in our implementation,
         # but let's check if the warning is present.
         assert len(result.warnings) > 0
         assert any("does not follow UPPER_SNAKE_CASE" in w.message for w in result.warnings)
@@ -86,7 +86,7 @@ VAULT_SECRET=vault:secret/data/app
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
         f.write(content)
         path = f.name
-    
+
     try:
         result = validate_env_file(path)
         assert result.valid

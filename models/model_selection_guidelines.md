@@ -6,57 +6,57 @@
 ## Task-to-Model Mapping Rules
 
 ### Code Tasks
-- **Code Generation**: 
+- **Code Generation**:
   - **Premium**: codellama:34b (local, free) > grok-code-fast-1 > claude-sonnet-4.5 > o3 > magicoder:7b (local, free)
   - **Balanced**: magicoder:7b (local, free) > codellama:13b (local, free) > gemma:7b (local, free) > claude-sonnet-4 > gpt-4o > qwen2.5:32b (local, free)
   - **Fast**: deepseek-coder:1.3b (local, free) > gpt-4o-mini > claude-3-haiku
-- **Code Review**: 
+- **Code Review**:
   - **Ultimate**: deepseek-r1:70b (local, free) > claude-opus-4.1 > o1-pro > codellama:34b (local, free)
   - **Balanced**: claude-opus-4 > grok-3 > codellama:13b (local, free) > claude-sonnet-4.5
-- **Debugging**: 
+- **Debugging**:
   - **Best**: deepseek-r1:70b (local, free) > o1-pro > grok-code-fast-1 > codellama:34b (local, free)
   - **Fast**: magicoder:7b (local, free) > gpt-4o > o3-mini > deepseek-coder:1.3b (local, free)
 
 ### Reasoning & Analysis
-- **Complex Reasoning**: 
+- **Complex Reasoning**:
   - **Ultimate**: deepseek-r1:70b (local, free) > claude-opus-4.1 > o1-pro > grok-4-fast-reasoning
   - **Balanced**: qwen2.5:32b (local, free) > qwen2.5:7b-instruct (local, free) > claude-opus-4 > o1 > gemini-2.0-pro
-- **System Design**: 
+- **System Design**:
   - **Best**: deepseek-r1:70b (local, free) > claude-opus-4.1 > llama-3.1-405b (local, free) > o1-pro
   - **Practical**: qwen2.5:32b (local, free) > claude-sonnet-4.5 > gemini-2.0-pro > grok-3
-- **Data Analysis**: 
+- **Data Analysis**:
   - **Advanced**: deepseek-r1:70b (local, free) > gemini-2.0-pro > claude-opus-4 > qwen2.5:32b (local, free)
   - **Quick**: qwen3:8b (local, free) > gemini-2.0-flash > gpt-4o-mini
-- **Research**: 
+- **Research**:
   - **Deep**: deepseek-r1:70b (local, free) > gemini-2.0-pro > claude-opus-4.1 > grok-4-fast-reasoning
   - **Fast**: qwen2.5:32b (local, free) > gemini-2.0-flash > claude-3.5-sonnet
 
 ### Creative Tasks
-- **Creative Writing**: 
+- **Creative Writing**:
   - **Premium**: claude-opus-4.1 > gpt-4.1-2025 > qwen2.5:32b (local, free) > claude-opus-4
   - **Balanced**: claude-sonnet-4.5 > qwen3:8b (local, free) > gemma:7b (local, free) > gpt-4o > gemini-2.0-pro
-- **Storytelling**: 
+- **Storytelling**:
   - **Best**: gpt-4.1-2025 > claude-opus-4.1 > qwen2.5:32b (local, free) > claude-sonnet-4.5
   - **Quick**: qwen3:8b (local, free) > llama3.1:8b (local, free) > gpt-4o-mini
-- **Poetry**: 
+- **Poetry**:
   - **Artistic**: claude-opus-4.1 > gpt-4.1-2025 > qwen2.5:32b (local, free) > claude-3.5-sonnet
 
 ### Vision & Images
-- **Image Analysis**: 
+- **Image Analysis**:
   - **Best**: llama-3.2-90b (local, free, vision) > gpt-4o > grok-2-vision-1212 > llama-3.2-11b (local, free, vision)
   - **Cloud**: gpt-4-turbo > grok-2-vision-1212 > gemini-2.0-pro
-- **Screenshot Analysis**: 
+- **Screenshot Analysis**:
   - **Local**: llama-3.2-90b (local, free, vision) > llama-3.2-11b (local, free, vision)
   - **Cloud**: gpt-4o > grok-2-vision-1212 > gemini-2.0-flash
 
 ### Fast Tasks
-- **Quick Answers**: 
+- **Quick Answers**:
   - **Instant**: deepseek-coder:1.3b (local, free) > llama3.2:3b (local, free) > gemma:7b (local, free) > llama3.1:8b (local, free)
   - **Cloud**: gemini-2.0-flash > claude-3-haiku > gpt-4o-mini
-- **Translation**: 
+- **Translation**:
   - **Best**: qwen2.5:32b (local, free) > qwen2.5:7b-instruct (local, free) > qwen3:8b (local, free) > gemini-2.0-flash > claude-3.5-sonnet
   - **Quick**: qwen2.5:7b-instruct (local, free) > qwen3:8b (local, free) > llama3.1:8b (local, free) > gemini-2.0-flash
-- **Summarization**: 
+- **Summarization**:
   - **Fast**: llama3.2:3b (local, free) > llama3.1:8b (local, free) > claude-3-haiku
   - **Quality**: qwen2.5:32b (local, free) > grok-4-fast-non-reasoning > gemini-2.0-flash
 
@@ -111,7 +111,7 @@
 8. gpt-4o-mini (0.9 speed)
 9. grok-4-fast-non-reasoning (0.9 speed)
 
-### Accuracy Priority  
+### Accuracy Priority
 **Ultimate Accuracy:**
 1. claude-opus-4.1 (0.95 accuracy) - Premium cloud
 2. deepseek-r1:70b (0.92 accuracy) - **FREE local**
@@ -128,7 +128,7 @@
 ### Balanced Selection
 **Local Models (Free + Balanced):**
 1. magicoder:7b (excellent code balance, **FREE**)
-2. qwen2.5:32b (premium intelligence, **FREE**) 
+2. qwen2.5:32b (premium intelligence, **FREE**)
 3. codellama:13b (solid code quality, **FREE**)
 4. gemma:7b (Google's balanced model, **FREE**)
 5. qwen2.5:7b-instruct (instruction-tuned, **FREE**)
@@ -441,7 +441,7 @@ export GOOGLE_API_KEY="your-google-key-here"
 echo 'alias ai="./orchestrator-cli.py route"' >> ~/.zshrc
 echo 'alias code-ai="./orchestrator-cli.py route --strategy balanced"' >> ~/.zshrc
 
-# For research/analysis work  
+# For research/analysis work
 echo 'alias research-ai="./orchestrator-cli.py route --strategy quality_first"' >> ~/.zshrc
 
 # For quick questions
@@ -495,7 +495,7 @@ curl http://localhost:11434/api/version
 
 ### **Expansion Options**
 1. **More local models**: Add `starcoder2:7b`, `codegemma:7b` if available
-2. **Cloud integration**: Start with OpenAI API key for GPT-4 access  
+2. **Cloud integration**: Start with OpenAI API key for GPT-4 access
 3. **Automation**: Create custom scripts for your most common tasks
 
 ### **Pro Tips**

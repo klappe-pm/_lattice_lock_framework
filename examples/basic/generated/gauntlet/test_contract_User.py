@@ -17,20 +17,20 @@ class TestUserContract:
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-            
+
             "id": None,
-            
+
             "username": None,
-            
+
             "email": None,
-            
+
             "age": 0,
-            
+
             "active": None,
-            
+
         }
 
-    
+
     def test_username_unique(self, instance: Any):
         """
         Ensure username is unique
@@ -38,7 +38,7 @@ class TestUserContract:
         """
         # Field value extraction
         value = instance.get("username") if isinstance(instance, dict) else getattr(instance, "username", None)
-        
+
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'username' is missing in the instance.")
@@ -46,7 +46,7 @@ class TestUserContract:
         # Assertion
         # Uniqueness check requires a collection context.
         # assert is_unique(value, collection)
-    
+
     def test_email_unique(self, instance: Any):
         """
         Ensure email is unique
@@ -54,7 +54,7 @@ class TestUserContract:
         """
         # Field value extraction
         value = instance.get("email") if isinstance(instance, dict) else getattr(instance, "email", None)
-        
+
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'email' is missing in the instance.")
@@ -62,7 +62,7 @@ class TestUserContract:
         # Assertion
         # Uniqueness check requires a collection context.
         # assert is_unique(value, collection)
-    
+
     def test_age_gte_0(self, instance: Any):
         """
         Ensure age >= 0
@@ -70,14 +70,14 @@ class TestUserContract:
         """
         # Field value extraction
         value = instance.get("age") if isinstance(instance, dict) else getattr(instance, "age", None)
-        
+
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'age' is missing in the instance.")
 
         # Assertion
         assert value >= 0, f'Expected age >= 0, got {value}'
-    
+
     def test_age_lte_150(self, instance: Any):
         """
         Ensure age <= 150
@@ -85,17 +85,17 @@ class TestUserContract:
         """
         # Field value extraction
         value = instance.get("age") if isinstance(instance, dict) else getattr(instance, "age", None)
-        
+
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'age' is missing in the instance.")
 
         # Assertion
         assert value <= 150, f'Expected age <= 150, got {value}'
-    
+
 
     # Boundary Tests
-    
+
     def test_boundary_age_gte_0(self):
         """
         Boundary test for age.
@@ -104,7 +104,7 @@ class TestUserContract:
         # This test requires a way to instantiate the object with specific values.
         # Since we don't have a factory, we will skip or use a placeholder.
         pytest.skip("Boundary testing requires a factory implementation.")
-    
+
     def test_boundary_age_lte_150(self):
         """
         Boundary test for age.
@@ -113,4 +113,3 @@ class TestUserContract:
         # This test requires a way to instantiate the object with specific values.
         # Since we don't have a factory, we will skip or use a placeholder.
         pytest.skip("Boundary testing requires a factory implementation.")
-    

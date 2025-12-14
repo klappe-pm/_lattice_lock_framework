@@ -18,9 +18,9 @@ class SheriffConfig:
         try:
             with open(path, "r") as f:
                 data = yaml.safe_load(f) or {}
-                
+
             config_data = data.get("config", {})
-            
+
             return cls(
                 forbidden_imports=config_data.get("forbidden_imports", []),
                 enforce_type_hints=config_data.get("enforce_type_hints", True),

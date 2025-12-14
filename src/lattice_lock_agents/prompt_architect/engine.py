@@ -27,10 +27,10 @@ Constraints:
         Generates a prompt string based on the provided specification.
         """
         logger.info("Generating prompt from spec...")
-        
+
         context_files = spec.get('files', [])
         context_str = "\n".join([f"- {f}" for f in context_files])
-        
+
         return self.PROMPT_TEMPLATE.substitute(
             task_type=spec.get('type', 'Implementation'),
             context=context_str if context_str else "No context files provided.",

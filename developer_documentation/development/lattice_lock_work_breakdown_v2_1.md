@@ -1,8 +1,8 @@
 # Lattice Lock Framework - Work Breakdown Structure v2.1
 
-**Version:** 2.1.0  
-**Last Updated:** 2025-12-01  
-**Status:** Active  
+**Version:** 2.1.0
+**Last Updated:** 2025-12-01
+**Status:** Active
 **Owner:** Engineering Team
 
 ---
@@ -45,7 +45,7 @@ The recommended sequence for addressing work streams:
 
 ### Agent Update Requirements
 
-1. **Before Starting Work**: 
+1. **Before Starting Work**:
    - Update the work item status to `in_progress`
    - Add your agent name to the `Owner Agent` field
    - Append entry to your agent memory file: `[memory] {agent_name}: started task {ID} ({title})`
@@ -161,15 +161,15 @@ The `zen_mcp_bridge.py` file references attributes and methods that do not exist
 
 ### A1 - Establish Linting and Formatting Policy
 
-**ID:** A1  
-**Title:** Define target toolchain and linting policy  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** High  
-**Dependencies:** None  
+**ID:** A1
+**Title:** Define target toolchain and linting policy
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** High
+**Dependencies:** None
 
-**Description:**  
+**Description:**
 Define the target toolchain for code quality enforcement. This is a planning task - no implementation yet.
 
 **Deliverables:**
@@ -190,15 +190,15 @@ Define the target toolchain for code quality enforcement. This is a planning tas
 
 ### A2 - Implement Auto-fix for Hygiene Pylint Issues
 
-**ID:** A2  
-**Title:** Configure automated formatters and linters  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** High  
-**Dependencies:** A1, B1  
+**ID:** A2
+**Title:** Configure automated formatters and linters
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** High
+**Dependencies:** A1, B1
 
-**Description:**  
+**Description:**
 Configure and run automated tools to fix ~600 hygiene issues that don't require manual intervention.
 
 **Files to Create/Modify:**
@@ -229,15 +229,15 @@ Configure and run automated tools to fix ~600 hygiene issues that don't require 
 
 ### A3 - Fix Critical Error and Exception Patterns
 
-**ID:** A3  
-**Title:** Resolve critical Pylint errors and exception handling  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** Critical  
-**Dependencies:** B2, B3  
+**ID:** A3
+**Title:** Resolve critical Pylint errors and exception handling
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** Critical
+**Dependencies:** B2, B3
 
-**Description:**  
+**Description:**
 Manually fix critical issues that cannot be auto-fixed: bare excepts, overly general exceptions, and duplicate code.
 
 **Files to Modify:**
@@ -262,15 +262,15 @@ Manually fix critical issues that cannot be auto-fixed: bare excepts, overly gen
 
 ### A4 - Add Missing Documentation
 
-**ID:** A4  
-**Title:** Add module and function docstrings  
-**Status:** `planned`  
-**Owner Agent:** Documentation Agent  
-**Subagents:** None  
-**Priority:** Medium  
-**Dependencies:** A2  
+**ID:** A4
+**Title:** Add module and function docstrings
+**Status:** `planned`
+**Owner Agent:** Documentation Agent
+**Subagents:** None
+**Priority:** Medium
+**Dependencies:** A2
 
-**Description:**  
+**Description:**
 Add missing docstrings to modules, classes, and public functions.
 
 **Pylint Codes Addressed:**
@@ -291,15 +291,15 @@ Add missing docstrings to modules, classes, and public functions.
 
 ### B1 - Define Package Shape and Create pyproject.toml
 
-**ID:** B1  
-**Title:** Create proper Python package structure  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** Critical  
-**Dependencies:** None  
+**ID:** B1
+**Title:** Create proper Python package structure
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** Critical
+**Dependencies:** None
 
-**Description:**  
+**Description:**
 Create the package structure that enables `from lattice_lock import ModelOrchestrator`. This is the foundation for all other work.
 
 **Reference:** `engineering_framework_phase_1_plan.md` Task 3.x
@@ -326,15 +326,15 @@ from lattice_lock.types import TaskType, TaskRequirements, ModelCapabilities
 
 ### B2 - Normalize Imports in Scripts and Tests
 
-**ID:** B2  
-**Title:** Fix all import errors in scripts/ and tests/  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** Critical  
-**Dependencies:** B1  
+**ID:** B2
+**Title:** Fix all import errors in scripts/ and tests/
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** Critical
+**Dependencies:** B1
 
-**Description:**  
+**Description:**
 Update all imports to use the new `lattice_lock` package structure. Decide fate of legacy test files.
 
 **Files to Modify:**
@@ -344,7 +344,7 @@ Update all imports to use the new `lattice_lock` package structure. Decide fate 
 - `tests/test_integration.py` - Migrate or move to legacy/
 - `tests/test_real_world.py` - Migrate or move to legacy/
 
-**Decision Required:**  
+**Decision Required:**
 For tests that import `model_orchestrator*` and other legacy modules:
 - Option A: Migrate tests to new package structure
 - Option B: Move to `tests/legacy/` and exclude from CI
@@ -361,15 +361,15 @@ For tests that import `model_orchestrator*` and other legacy modules:
 
 ### B3 - Align zen_mcp_bridge.py with Actual API
 
-**ID:** B3  
-**Title:** Fix or quarantine zen_mcp_bridge.py  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** High  
-**Dependencies:** B1  
+**ID:** B3
+**Title:** Fix or quarantine zen_mcp_bridge.py
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** High
+**Dependencies:** B1
 
-**Description:**  
+**Description:**
 The `zen_mcp_bridge.py` file references many attributes and methods that don't exist. Either update it to work with the actual API or move it to experimental/.
 
 **Current Issues:**
@@ -401,15 +401,15 @@ The `zen_mcp_bridge.py` file references many attributes and methods that don't e
 
 ### C1 - Link to Engineering Framework Phase 1 Plan
 
-**ID:** C1  
-**Title:** Integrate with existing Phase 1 plan  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** Documentation Agent  
-**Priority:** Medium  
-**Dependencies:** B1  
+**ID:** C1
+**Title:** Integrate with existing Phase 1 plan
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** Documentation Agent
+**Priority:** Medium
+**Dependencies:** B1
 
-**Description:**  
+**Description:**
 The authoritative breakdown for Phase 1 deliverables is in `developer_documentation/development/engineering_framework_phase_1_plan.md`. This work breakdown references those tasks and adds cross-cutting governance and agent-tracking requirements.
 
 **Phase 1 Tasks (from existing plan):**
@@ -423,22 +423,22 @@ The authoritative breakdown for Phase 1 deliverables is in `developer_documentat
 - [ ] Status tracking aligned between both documents
 - [ ] No duplicate task definitions
 
-**Links:** 
+**Links:**
 - `developer_documentation/development/engineering_framework_phase_1_plan.md`
 
 ---
 
 ### C2 - Implement Sheriff AST Validator
 
-**ID:** C2  
-**Title:** Create sheriff.py with initial rule set  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** Testing Agent  
-**Priority:** High  
-**Dependencies:** B1, A1  
+**ID:** C2
+**Title:** Create sheriff.py with initial rule set
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** Testing Agent
+**Priority:** High
+**Dependencies:** B1, A1
 
-**Description:**  
+**Description:**
 Implement the Sheriff AST validator as specified in Framework Specification Section 3.1.3. Sheriff enforces Lattice-specific rules that generic linters cannot.
 
 **File to Create:** `sheriff.py` (root) or `src/lattice_lock/sheriff.py`
@@ -467,22 +467,22 @@ python sheriff.py src/
 - [ ] JSON output mode for CI integration
 - [ ] Unit tests for each rule
 
-**Links:** 
+**Links:**
 - Framework Specification Section 3.1.3
 
 ---
 
 ### C3 - Scaffold Polyglot Compiler and Lattice Schema
 
-**ID:** C3  
-**Title:** Create compile_lattice.py and example lattice.yaml  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** Medium  
-**Dependencies:** C2  
+**ID:** C3
+**Title:** Create compile_lattice.py and example lattice.yaml
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** Medium
+**Dependencies:** C2
 
-**Description:**  
+**Description:**
 Create the Polyglot Compiler and an example lattice schema as specified in Framework Specification Sections 3.1.1 and 3.1.2.
 
 **Files to Create:**
@@ -509,15 +509,15 @@ Create the Polyglot Compiler and an example lattice schema as specified in Frame
 
 ### C4 - Create Code Policy Configuration
 
-**ID:** C4  
-**Title:** Define machine-readable code policy  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** Medium  
-**Dependencies:** C2  
+**ID:** C4
+**Title:** Define machine-readable code policy
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** Medium
+**Dependencies:** C2
 
-**Description:**  
+**Description:**
 Create a policy file that both Sheriff and agents can read to understand code constraints.
 
 **File to Create:** `specifications/code_policy.yaml`
@@ -564,15 +564,15 @@ size_limits:
 
 ### D1 - Declare and Communicate Deprecation
 
-**ID:** D1  
-**Title:** Add deprecation notice to vibelocity-orchestrator  
-**Status:** `planned`  
-**Owner Agent:** Documentation Agent  
-**Subagents:** None  
-**Priority:** High  
-**Dependencies:** None  
+**ID:** D1
+**Title:** Add deprecation notice to vibelocity-orchestrator
+**Status:** `planned`
+**Owner Agent:** Documentation Agent
+**Subagents:** None
+**Priority:** High
+**Dependencies:** None
 
-**Description:**  
+**Description:**
 Add clear deprecation notices to the vibelocity-orchestrator repository pointing users to lattice-lock-framework.
 
 **Files to Create/Modify (in vibelocity-orchestrator):**
@@ -583,7 +583,7 @@ Add clear deprecation notices to the vibelocity-orchestrator repository pointing
 ```markdown
 ## DEPRECATED
 
-This repository is deprecated and no longer actively maintained. 
+This repository is deprecated and no longer actively maintained.
 All functionality has been migrated to [Lattice Lock Framework](https://github.com/klappe-pm/lattice-lock-framework).
 
 For new projects, please use Lattice Lock Framework.
@@ -601,15 +601,15 @@ For migration guidance, see DEPRECATION.md.
 
 ### D2 - Audit Vibelocity-Only Functionality
 
-**ID:** D2  
-**Title:** Identify features unique to vibelocity that need migration  
-**Status:** `planned`  
-**Owner Agent:** Analysis Agent  
-**Subagents:** None  
-**Priority:** Medium  
-**Dependencies:** D1  
+**ID:** D2
+**Title:** Identify features unique to vibelocity that need migration
+**Status:** `planned`
+**Owner Agent:** Analysis Agent
+**Subagents:** None
+**Priority:** Medium
+**Dependencies:** D1
 
-**Description:**  
+**Description:**
 Scan vibelocity-orchestrator for features not yet in lattice-lock-framework. Create migration map.
 
 **Areas to Audit:**
@@ -636,15 +636,15 @@ Scan vibelocity-orchestrator for features not yet in lattice-lock-framework. Cre
 
 ### D3 - Update References to Vibelocity/Power-Prompts
 
-**ID:** D3  
-**Title:** Remove or update legacy references in Lattice Lock  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** Low  
-**Dependencies:** D2  
+**ID:** D3
+**Title:** Remove or update legacy references in Lattice Lock
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** Low
+**Dependencies:** D2
 
-**Description:**  
+**Description:**
 Search lattice-lock-framework for references to old module names, repo URLs, or patterns that should be updated.
 
 **Search Patterns:**
@@ -665,15 +665,15 @@ Search lattice-lock-framework for references to old module names, repo URLs, or 
 
 ### E1 - Update GitHub Actions Workflows
 
-**ID:** E1  
-**Title:** Enhance CI with new quality checks  
-**Status:** `planned`  
-**Owner Agent:** Engineering Agent  
-**Subagents:** None  
-**Priority:** High  
-**Dependencies:** A2, C2  
+**ID:** E1
+**Title:** Enhance CI with new quality checks
+**Status:** `planned`
+**Owner Agent:** Engineering Agent
+**Subagents:** None
+**Priority:** High
+**Dependencies:** A2, C2
 
-**Description:**  
+**Description:**
 Update GitHub Actions workflows to run the new quality tools and Sheriff.
 
 **Files to Modify:**
@@ -744,6 +744,6 @@ Update GitHub Actions workflows to run the new quality tools and Sheriff.
 
 ---
 
-**Document Version:** 2.1.0  
-**Last Updated:** 2025-12-01  
+**Document Version:** 2.1.0
+**Last Updated:** 2025-12-01
 **Next Review:** After Stream B completion

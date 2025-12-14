@@ -14,20 +14,20 @@ def test_compiler_pipeline():
     source_path = base_dir / "examples" / "lattice.yaml"
     output_dir = base_dir / "src" / "generated"
     test_dir = base_dir / "tests" / "gauntlet"
-    
+
     # Ensure dirs exist
     output_dir.mkdir(parents=True, exist_ok=True)
     test_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"\nCompiling {source_path}...")
     result = compile_lattice(str(source_path), str(output_dir), str(test_dir))
-    
+
     # Output errors/warnings for debug
     for err in result.errors:
         print(f"ERROR: {err}")
     for warn in result.warnings:
         print(f"WARN: {warn}")
-        
+
     assert result.success, "Compilation failed"
     # Basic validation of result
     assert result.errors == []

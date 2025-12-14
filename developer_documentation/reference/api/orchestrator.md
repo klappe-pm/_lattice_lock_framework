@@ -23,10 +23,10 @@ class ModelOrchestrator:
 
 ```python
 async def route_request(
-    self, 
-    prompt: str, 
-    model_id: Optional[str] = None, 
-    task_type: Optional[TaskType] = None, 
+    self,
+    prompt: str,
+    model_id: Optional[str] = None,
+    task_type: Optional[TaskType] = None,
     **kwargs
 ) -> APIResponse:
 ```
@@ -58,11 +58,11 @@ from lattice_lock.orchestrator import ModelOrchestrator
 
 async def main():
     orchestrator = ModelOrchestrator()
-    
+
     response = await orchestrator.route_request(
         prompt="Write a Python function to calculate fibonacci numbers."
     )
-    
+
     print(response.content)
 
 if __name__ == "__main__":

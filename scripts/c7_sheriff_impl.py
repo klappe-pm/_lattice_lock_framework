@@ -10,13 +10,13 @@ def run_sheriff(target_dir: str = "."):
     Analyzes AST for architecture violations based on lattice.yaml.
     """
     print(f"SHERIFF: Analyzing {target_dir}...")
-    
+
     # Mock analysis logic for skeleton
     violations = []
-    
+
     # Check for forbidden imports (simulated)
     # In real impl, use 'ast' module and visit Import nodes
-    
+
     if violations:
         print(f"[FAIL] Found {len(violations)} architecture violations.")
         sys.exit(1)

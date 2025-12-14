@@ -24,7 +24,7 @@ def compile_lattice(
 ) -> CompilationResult:
     """
     Orchestrates the full compilation pipeline.
-    
+
     Args:
         source_path: Path to lattice.yaml
         output_dir: Where to write generated type definitions
@@ -35,7 +35,7 @@ def compile_lattice(
     generated_files = []
     errors = []
     warnings = []
-    
+
     source_file = Path(source_path)
     if not source_file.exists():
         return CompilationResult(False, [], [f"Source file not found: {source_path}"], [])
@@ -43,7 +43,7 @@ def compile_lattice(
     # 1. Parsing & Validation
     logger.info(f"Validating schema from {source_path}...")
     validation_result = validate_lattice_schema(str(source_path))
-    
+
     if not validation_result.valid:
         error_msgs = [f"Validation Error ({e.field_path or 'root'}): {e.message}" for e in validation_result.errors]
         return CompilationResult(False, [], error_msgs, [w.message for w in validation_result.warnings])
@@ -66,5 +66,5 @@ def compile_lattice(
     # TODO: Implement ContractGenerator
     logger.info("Generating contract tests...")
     # generated_files.append(str(Path(test_dir) / "test_contracts.py"))
-    
+
     return CompilationResult(True, generated_files, [], [w.message for w in validation_result.warnings])

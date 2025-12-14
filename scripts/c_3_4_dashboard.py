@@ -27,7 +27,7 @@ DASHBOARD_HTML = """
             activeModels: 5,
             costToday: "$1.24"
         };
-        
+
         document.getElementById('app').innerHTML = `
             <div class="card">
                 <h3>Build Status: <span class="success">${status.lastBuild}</span></h3>

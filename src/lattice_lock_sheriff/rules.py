@@ -43,7 +43,7 @@ class ImportDisciplineRule(Rule):
     def _check_import(self, module_name: Optional[str], node: ast.AST, context: RuleContext, violations: List[Violation]):
         if not module_name:
             return
-            
+
         # Check if the imported module starts with any of the forbidden imports
         for forbidden in context.config.forbidden_imports:
             if module_name == forbidden or module_name.startswith(f"{forbidden}."):

@@ -14,7 +14,7 @@ def validate_agent_manifest(file_path: str) -> ValidationResult:
         ValidationResult: The result of the validation.
     """
     result = ValidationResult()
-    
+
     try:
         with open(file_path, 'r') as f:
             content = f.read()
@@ -45,15 +45,15 @@ def validate_agent_manifest(file_path: str) -> ValidationResult:
     # directive: ...
     # responsibilities: ...
     # scope: ...
-    
-    # Wait, the prompt says "required top-level sections: agent.identity". 
+
+    # Wait, the prompt says "required top-level sections: agent.identity".
     # If it meant nested, it would usually say "agent" is top level.
     # However, let's check if 'agent' is the top level key containing identity, or if 'agent.identity' is a key.
     # Given "agent definition files", it's likely:
     # agent:
     #   identity: ...
     # Let's support checking for 'agent' key first.
-    
+
     if 'agent' not in data:
         result.add_error("Missing required top-level section: agent")
     else:
@@ -125,7 +125,7 @@ def _validate_responsibilities(responsibilities: Any, result: ValidationResult):
         if not isinstance(resp, dict):
             result.add_error(f"Responsibility item #{i+1} must be a dictionary")
             continue
-        
+
         if 'name' not in resp:
             result.add_error(f"Responsibility item #{i+1} missing required field: name")
         if 'description' not in resp:
@@ -136,12 +136,12 @@ def _validate_scope(scope: Any, result: ValidationResult):
     if not isinstance(scope, dict):
         result.add_error("scope section must be a dictionary")
         return
-    
-    # Prompt implies checking scope exists, but doesn't explicitly list required fields inside scope 
+
+    # Prompt implies checking scope exists, but doesn't explicitly list required fields inside scope
     # other than mentioning "can_access, cannot_access" in step 2.
     # Let's check for them if they are required. Step 2 says: "scope (can_access, cannot_access)".
     # I'll treat them as required based on that.
-    
+
     if 'can_access' not in scope:
         result.add_error("Missing required field in scope: can_access")
     if 'cannot_access' not in scope:

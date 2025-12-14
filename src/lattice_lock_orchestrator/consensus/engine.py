@@ -16,22 +16,22 @@ class ConsensusEngine:
         """
         logger.info(f"Executing consensus vote with models: {models}")
         votes = []
-        
+
         for model in models:
             # In real system, this calls orchestrator.generate(model=model)
             logger.debug(f"Querying {model}...")
-            
+
             # Mock Logic for demonstration
             # Deterministic hash of prompt + model to simulate consistency
             seed = hash(prompt + model)
             random.seed(seed)
             vote = "Approved" if random.random() > 0.3 else "Rejected"
             votes.append(vote)
-            
+
         tally = {v: votes.count(v) for v in set(votes)}
         winner = max(tally, key=tally.get) if tally else "Indeterminate"
-        
+
         confidence = tally[winner] / len(votes) if votes else 0.0
         logger.info(f"Consensus reached: {winner} (Confidence: {confidence:.2f})")
-        
+
         return winner
