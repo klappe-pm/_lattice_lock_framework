@@ -720,12 +720,12 @@
       "file": "phase5_prompt_automation/5.4.1_claude_app_tracker_integration.md",
       "picked_up": true,
       "done": true,
-      "merged": false,
+      "merged": true,
       "model_used": "claude-opus-4-5-20251101",
       "start_time": "2025-12-14 13:30:00",
-      "end_time": null,
-      "duration_minutes": null,
-      "pr_url": null
+      "end_time": "2025-12-14 13:45:00",
+      "duration_minutes": 15,
+      "pr_url": "https://github.com/klappe-pm/lattice-lock-framework/pull/45"
     },
     {
       "id": "5.4.2",
@@ -736,12 +736,12 @@
       "file": "phase5_prompt_automation/5.4.2_claude_app_validation_integration.md",
       "picked_up": true,
       "done": true,
-      "merged": false,
+      "merged": true,
       "model_used": "claude-opus-4-5-20251101",
       "start_time": "2025-12-14 13:30:00",
-      "end_time": null,
-      "duration_minutes": null,
-      "pr_url": null
+      "end_time": "2025-12-14 13:45:00",
+      "duration_minutes": 15,
+      "pr_url": "https://github.com/klappe-pm/lattice-lock-framework/pull/45"
     },
     {
       "id": "6.1.1",
