@@ -145,7 +145,7 @@ class PromptGenerator:
         }
 
         # Render template
-        template = Template(template_content, autoescape=False)
+        template = Template(template_content, autoescape=True)
         rendered_content = template.render(**variables)
 
         # Determine file path
@@ -314,7 +314,7 @@ class PromptGenerator:
 
         # Re-render template
         template_content = await self._load_template()
-        template = Template(template_content, autoescape=False)
+        template = Template(template_content, autoescape=True)
         rendered_content = template.render(**variables)
 
         # Create new prompt

@@ -149,7 +149,7 @@ class TestPasswordHashing:
 
     def test_hash_password(self):
         """Test password hashing."""
-        password = "mypassword"
+        password = TEST_PASSWORD
         hashed = hash_password(password)
         assert hashed != password
         # Accept either argon2 or bcrypt hash prefixes
@@ -157,13 +157,13 @@ class TestPasswordHashing:
 
     def test_verify_password_correct(self):
         """Test correct password verification."""
-        password = "mypassword"
+        password = TEST_PASSWORD
         hashed = hash_password(password)
         assert verify_password(password, hashed) is True
 
     def test_verify_password_incorrect(self):
         """Test incorrect password verification."""
-        password = "mypassword"
+        password = TEST_PASSWORD
         hashed = hash_password(password)
         assert verify_password("wrongpassword", hashed) is False
 

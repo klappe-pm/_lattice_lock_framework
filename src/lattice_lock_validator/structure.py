@@ -25,6 +25,14 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     """
     result = ValidationResult()
 
+    try:
+        # Sanitize the input path
+        repo_path = resolve_under_root(repo_path)
+    except ValueError as e:
+        result.add_error(str(e))
+        result.valid = False
+        return result
+
     # 1. Directory Structure
     dir_result = validate_directory_structure(repo_path)
     result.errors.extend(dir_result.errors)
