@@ -274,14 +274,14 @@ class TestDashboardBackend:
     def client(self):
         """Create a test client without mock updates."""
         app = create_app(enable_mock_updates=False)
-        return TestClient(app)
+        # Use context manager to trigger lifespan events
+        with TestClient(app) as client:
+            yield client
 
     @pytest.fixture(autouse=True)
     def reset_state(self):
         """Reset global state before each test."""
-        import lattice_lock.dashboard.backend as backend
-        backend._aggregator = None
-        backend._ws_manager = None
+        # State is now managed via app.state in lifespan, no global reset needed
         yield
 
     def test_root_endpoint(self, client):
@@ -432,9 +432,7 @@ class TestWebSocketEndpoint:
     @pytest.fixture(autouse=True)
     def reset_state(self):
         """Reset global state before each test."""
-        import lattice_lock.dashboard.backend as backend
-        backend._aggregator = None
-        backend._ws_manager = None
+        # State is now managed via app.state in lifespan, no global reset needed
         yield
 
     def test_websocket_connection(self):

@@ -346,6 +346,8 @@ class ModelOrchestrator:
             status = ProviderAvailability.get_status(provider)
             message = ProviderAvailability.get_message(provider)
             result[provider] = f"{status.value}: {message}"
+        return result
+
     def _extract_tool_call_id(self, response: APIResponse) -> str:
         """Safely extract tool_call_id from response with error handling."""
         try:

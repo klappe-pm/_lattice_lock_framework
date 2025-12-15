@@ -656,12 +656,11 @@ class BedrockAPIClient(BaseAPIClient):
             )
             self._warned = True
 
-        # If functions are requested, note that Bedrock has model-specific tool support
-        if functions and not self._bedrock_client.enabled:
-            error_msg = (
-                "Bedrock provider is not configured. "
-                "Additionally, Bedrock function calling requires model-specific tool definitions."
-            )
+        # Check if Bedrock client is enabled
+        if not self._bedrock_client.enabled:
+            error_msg = "Bedrock provider is not configured (boto3 not installed or missing AWS credentials)."
+            if functions:
+                error_msg += " Additionally, Bedrock function calling requires model-specific tool definitions."
             return APIResponse(
                 content=None,
                 model=model,
@@ -672,23 +671,25 @@ class BedrockAPIClient(BaseAPIClient):
                 error=error_msg
             )
 
-        # Delegate to the actual Bedrock client with retry
-        # Use tenacity retry logic similar to _make_request
-        @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-        async def _call_bedrock():
-            return self._bedrock_client.generate(
+        # Delegate to the actual Bedrock client (sync call)
+        try:
+            response = self._bedrock_client.generate(
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens or 4096,
                 anthropic_version=self.anthropic_version
             )
-
-        try:
-             response = await _call_bedrock()
-             return response
+            return response
         except Exception as e:
-            logger.error(f"Bedrock generation failed after retries: {e}")
-            raise
+            logger.error(f"Bedrock generation failed: {e}")
+            return APIResponse(
+                content=None,
+                model=model,
+                provider="bedrock",
+                usage={'input_tokens': 0, 'output_tokens': 0},
+                latency_ms=0,
+                error=str(e)
+            )
 
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""
