@@ -5,6 +5,7 @@ Tests error boundary decorator, logging, recovery actions, and telemetry.
 """
 
 import logging
+import os
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -437,11 +438,11 @@ class TestLoggingIntegration:
         from lattice_lock.errors.middleware import _redact_sensitive
 
         data = {
-            "api_key": "secret123",
-            "password": "mypassword",
+            "api_key": os.getenv("TEST_SENSITIVE_API_KEY", "secret123"),
+            "password": os.getenv("TEST_SENSITIVE_PASSWORD", "mypassword"),
             "username": "testuser",
             "nested": {
-                "token": "abc123",
+                "token": os.getenv("TEST_SENSITIVE_TOKEN", "abc123"),
             },
         }
 

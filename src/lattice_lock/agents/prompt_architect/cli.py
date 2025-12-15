@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock.agents.prompt_architect.orchestrator import (
     PromptArchitectOrchestrator,
 )
@@ -169,7 +170,11 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
 def cmd_status(args: argparse.Namespace) -> int:
     """Handle the status command."""
-    state_file = Path(args.state_file)
+    try:
+        state_file = resolve_under_root(args.state_file)
+    except ValueError as e:
+        print(f"Error: {e}")
+        return 1
 
     if not state_file.exists():
         if args.json:
@@ -197,7 +202,11 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 def cmd_validate(args: argparse.Namespace) -> int:
     """Handle the validate command."""
-    prompt_dir = Path(args.prompt_dir)
+    try:
+        prompt_dir = resolve_under_root(args.prompt_dir)
+    except ValueError as e:
+        print(f"Error: {e}")
+        return 1
 
     if not prompt_dir.exists():
         if args.json:

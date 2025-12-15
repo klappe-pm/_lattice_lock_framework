@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 import json
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
+from defusedxml import minidom
 
 from .rules import Violation # Import the updated Violation
 

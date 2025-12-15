@@ -7,7 +7,7 @@ Template loader and renderer for project scaffolding.
 from pathlib import Path
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 
 # Get the templates directory path
 TEMPLATES_DIR = Path(__file__).parent
@@ -17,6 +17,7 @@ def get_template_env() -> Environment:
     """Get the Jinja2 environment configured for the templates directory."""
     return Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
+        autoescape=select_autoescape(enabled_extensions=("html", "htm", "xml"), default_for_string=False, default=False),
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,

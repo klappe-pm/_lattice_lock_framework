@@ -6,7 +6,7 @@ Tests output formats, GitHub annotations, JUnit XML, and caching behavior.
 import json
 import os
 import tempfile
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 

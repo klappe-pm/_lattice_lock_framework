@@ -2,6 +2,12 @@ import json
 import os
 import time
 from typing import Dict, List, Any, Optional
+from pathlib import Path
+try:
+    from lattice_lock.utils.safe_path import resolve_under_root
+except ImportError:
+     def resolve_under_root(p, root=None): return Path(p).resolve()
+
 import pytest
 
 class GauntletPlugin:
@@ -79,6 +85,13 @@ class GauntletPlugin:
             # Write summary to GITHUB_STEP_SUMMARY
             summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
             if summary_file:
+                # Allow absolute path anywhere since it's from env var
+                try:
+                    summary_path = resolve_under_root(summary_file, root=Path('/'))
+                except ValueError:
+                    # Fallback if somehow fails or on windows (root=/ not valid)
+                     summary_path = Path(summary_file).resolve()
+
                 passed = len([r for r in self.results if r["outcome"] == "passed"])
                 failed = len([r for r in self.results if r["outcome"] == "failed"])
                 skipped = len([r for r in self.results if r["outcome"] == "skipped"])
@@ -104,5 +117,5 @@ class GauntletPlugin:
                             if r["error"]:
                                 markdown += f"  ```\n  {r['error']}\n  ```\n"
 
-                with open(summary_file, "a") as f:
+                with open(summary_path, "a") as f:
                     f.write(markdown)
