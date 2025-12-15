@@ -25,11 +25,23 @@ class FunctionCallHandler:
 
     def get_registered_functions_metadata(self) -> Dict[str, Dict[str, Any]]:
         """
-        Returns metadata for all registered functions.
-        This could be expanded to parse function signatures for more detailed schema.
+        Returns metadata for all registered functions, including parameter schemas.
         """
-        # For simplicity, returning just names for now.
-        # In a real scenario, this would involve inspecting function signatures
-        # to generate tool specifications (e.g., OpenAPI schema for function arguments).
-        return {name: {"name": name, "description": func.__doc__ or "No description provided."}
-                for name, func in self._functions.items()}
+        metadata = {}
+        for name, func in self._functions.items():
+            sig = inspect.signature(func)
+            parameters = {}
+            for param_name, param in sig.parameters.items():
+                param_info = {
+                    "kind": str(param.kind),
+                    "default": str(param.default) if param.default != inspect.Parameter.empty else None,
+                    "annotation": str(param.annotation) if param.annotation != inspect.Parameter.empty else None
+                }
+                parameters[param_name] = param_info
+
+            metadata[name] = {
+                "name": name,
+                "description": func.__doc__ or "No description provided.",
+                "parameters": parameters
+            }
+        return metadata

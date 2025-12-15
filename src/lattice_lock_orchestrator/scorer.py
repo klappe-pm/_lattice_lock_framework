@@ -57,197 +57,198 @@ class TaskAnalyzer:
 
     DEFAULT_CACHE_SIZE = 1024
 
+    # Keyword patterns with weights
+    KEYWORD_PATTERNS: dict[TaskType, list[tuple[str, float]]] = {
+        TaskType.CODE_GENERATION: [
+            ("write", 0.3),
+            ("implement", 0.4),
+            ("create", 0.3),
+            ("code", 0.3),
+            ("function", 0.3),
+            ("class", 0.3),
+            ("script", 0.3),
+            ("program", 0.3),
+            ("build", 0.2),
+            ("generate", 0.3),
+            ("develop", 0.3),
+            ("make", 0.2),
+        ],
+        TaskType.DEBUGGING: [
+            ("debug", 0.6),
+            ("fix", 0.5),
+            ("error", 0.5),
+            ("bug", 0.6),
+            ("troubleshoot", 0.5),
+            ("exception", 0.5),
+            ("fail", 0.4),
+            ("broken", 0.4),
+            ("issue", 0.3),
+            ("crash", 0.5),
+            ("wrong", 0.2),
+            ("not working", 0.5),
+            ("why is", 0.3),
+            ("re-rendering", 0.3),
+        ],
+        TaskType.REASONING: [
+            ("think", 0.3),
+            ("reason", 0.4),
+            ("analyze", 0.3),
+            ("solve", 0.3),
+            ("deduce", 0.4),
+            ("why", 0.3),
+            ("how", 0.3),
+            ("explain", 0.4),
+            ("understand", 0.4),
+            ("logic", 0.4),
+            ("evaluate", 0.3),
+            ("consider", 0.2),
+            ("approach", 0.3),
+            ("best", 0.2),
+        ],
+        TaskType.ARCHITECTURAL_DESIGN: [
+            ("design", 0.4),
+            ("architect", 0.5),
+            ("structure", 0.3),
+            ("system", 0.3),
+            ("pattern", 0.4),
+            ("architecture", 0.5),
+            ("scalable", 0.3),
+            ("microservice", 0.4),
+            ("api design", 0.4),
+            ("database design", 0.4),
+            ("schema", 0.3),
+            ("blueprint", 0.4),
+        ],
+        TaskType.DOCUMENTATION: [
+            ("document", 0.5),
+            ("docstring", 0.5),
+            ("readme", 0.5),
+            ("comment", 0.3),
+            ("wiki", 0.4),
+            ("guide", 0.3),
+            ("tutorial", 0.4),
+            ("manual", 0.3),
+            ("documentation", 0.5),
+        ],
+        TaskType.TESTING: [
+            ("test", 0.4),
+            ("unit test", 0.5),
+            ("integration", 0.3),
+            ("pytest", 0.5),
+            ("mock", 0.4),
+            ("coverage", 0.4),
+            ("assert", 0.4),
+            ("spec", 0.3),
+            ("e2e", 0.4),
+            ("qa", 0.3),
+            ("validate", 0.3),
+            ("verify", 0.3),
+        ],
+        TaskType.DATA_ANALYSIS: [
+            ("data", 0.3),
+            ("csv", 0.4),
+            ("plot", 0.4),
+            ("chart", 0.4),
+            ("trend", 0.4),
+            ("statistics", 0.4),
+            ("pandas", 0.5),
+            ("dataframe", 0.5),
+            ("visualization", 0.4),
+            ("graph", 0.3),
+            ("analysis", 0.3),
+            ("metric", 0.3),
+        ],
+        TaskType.VISION: [
+            ("image", 0.5),
+            ("picture", 0.5),
+            ("photo", 0.5),
+            ("screenshot", 0.5),
+            ("visual", 0.4),
+            ("diagram", 0.4),
+            ("see", 0.2),
+            ("look at", 0.3),
+            ("analyze this image", 0.6),
+            ("ocr", 0.5),
+            ("recognize", 0.3),
+        ],
+        TaskType.GENERAL: [
+            ("help", 0.2),
+            ("question", 0.2),
+            ("what", 0.1),
+            ("tell me", 0.2),
+            ("can you", 0.1),
+        ],
+        TaskType.SECURITY_AUDIT: [
+            ("security", 0.5),
+            ("vulnerability", 0.6),
+            ("exploit", 0.5),
+            ("injection", 0.6),
+            ("xss", 0.6),
+            ("csrf", 0.6),
+            ("authentication", 0.3),
+            ("authorization", 0.3),
+            ("oauth", 0.4),
+            ("penetration", 0.5),
+            ("audit", 0.4),
+            ("secure", 0.3),
+            ("sql injection", 0.7),
+            ("sanitize", 0.4),
+            ("encrypt", 0.4),
+        ],
+        TaskType.CREATIVE_WRITING: [
+            ("story", 0.5),
+            ("creative", 0.4),
+            ("write a story", 0.6),
+            ("poem", 0.5),
+            ("narrative", 0.4),
+            ("fiction", 0.5),
+            ("character", 0.3),
+            ("plot", 0.3),
+            ("dialogue", 0.4),
+            ("novel", 0.4),
+            ("essay", 0.3),
+            ("blog post", 0.4),
+        ],
+    }
+
+    # Strong regex patterns for high-confidence detection
+    REGEX_PATTERNS: dict[TaskType, list[tuple[str, float]]] = {
+        TaskType.CODE_GENERATION: [
+            (r"def\s+\w+\s*\(", 0.6),  # Python function definition
+            (r"class\s+\w+", 0.5),  # Class definition
+            (r"function\s+\w+", 0.5),  # JS function
+            (r"import\s+\w+", 0.3),  # Import statements
+            (r"```\w*\n", 0.4),  # Code blocks
+        ],
+        TaskType.DEBUGGING: [
+            (r"traceback", 0.8),  # Python traceback
+            (r"error:\s*", 0.6),  # Error messages
+            (r"exception", 0.5),  # Exception
+            (r"line\s+\d+", 0.4),  # Line numbers in errors
+            (r"TypeError|ValueError|KeyError|AttributeError", 0.7),
+            (r"stack\s*trace", 0.7),
+        ],
+        TaskType.TESTING: [
+            (r"@pytest", 0.7),
+            (r"def\s+test_", 0.7),
+            (r"assert\s+", 0.5),
+            (r"unittest", 0.6),
+            (r"\.test\(\)", 0.5),
+        ],
+        TaskType.DATA_ANALYSIS: [
+            (r"pd\.", 0.6),  # Pandas
+            (r"df\[", 0.5),  # DataFrame access
+            (r"\.csv", 0.5),
+            (r"\.xlsx", 0.5),
+            (r"matplotlib|seaborn|plotly", 0.6),
+        ],
+    }
+
     def __init__(self, cache_size: int = DEFAULT_CACHE_SIZE):
         self._cache: OrderedDict[str, TaskAnalysis] = OrderedDict()
         self._cache_size = cache_size
         self._cache_hits = 0
         self._cache_misses = 0
-        # Keyword patterns with weights
-        self.keyword_patterns: dict[TaskType, list[tuple[str, float]]] = {
-            TaskType.CODE_GENERATION: [
-                ("write", 0.3),
-                ("implement", 0.4),
-                ("create", 0.3),
-                ("code", 0.3),
-                ("function", 0.3),
-                ("class", 0.3),
-                ("script", 0.3),
-                ("program", 0.3),
-                ("build", 0.2),
-                ("generate", 0.3),
-                ("develop", 0.3),
-                ("make", 0.2),
-            ],
-            TaskType.DEBUGGING: [
-                ("debug", 0.6),
-                ("fix", 0.5),
-                ("error", 0.5),
-                ("bug", 0.6),
-                ("troubleshoot", 0.5),
-                ("exception", 0.5),
-                ("fail", 0.4),
-                ("broken", 0.4),
-                ("issue", 0.3),
-                ("crash", 0.5),
-                ("wrong", 0.2),
-                ("not working", 0.5),
-                ("why is", 0.3),
-                ("re-rendering", 0.3),
-            ],
-            TaskType.REASONING: [
-                ("think", 0.3),
-                ("reason", 0.4),
-                ("analyze", 0.3),
-                ("solve", 0.3),
-                ("deduce", 0.4),
-                ("why", 0.3),
-                ("how", 0.3),
-                ("explain", 0.4),
-                ("understand", 0.4),
-                ("logic", 0.4),
-                ("evaluate", 0.3),
-                ("consider", 0.2),
-                ("approach", 0.3),
-                ("best", 0.2),
-            ],
-            TaskType.ARCHITECTURAL_DESIGN: [
-                ("design", 0.4),
-                ("architect", 0.5),
-                ("structure", 0.3),
-                ("system", 0.3),
-                ("pattern", 0.4),
-                ("architecture", 0.5),
-                ("scalable", 0.3),
-                ("microservice", 0.4),
-                ("api design", 0.4),
-                ("database design", 0.4),
-                ("schema", 0.3),
-                ("blueprint", 0.4),
-            ],
-            TaskType.DOCUMENTATION: [
-                ("document", 0.5),
-                ("docstring", 0.5),
-                ("readme", 0.5),
-                ("comment", 0.3),
-                ("wiki", 0.4),
-                ("guide", 0.3),
-                ("tutorial", 0.4),
-                ("manual", 0.3),
-                ("documentation", 0.5),
-            ],
-            TaskType.TESTING: [
-                ("test", 0.4),
-                ("unit test", 0.5),
-                ("integration", 0.3),
-                ("pytest", 0.5),
-                ("mock", 0.4),
-                ("coverage", 0.4),
-                ("assert", 0.4),
-                ("spec", 0.3),
-                ("e2e", 0.4),
-                ("qa", 0.3),
-                ("validate", 0.3),
-                ("verify", 0.3),
-            ],
-            TaskType.DATA_ANALYSIS: [
-                ("data", 0.3),
-                ("csv", 0.4),
-                ("plot", 0.4),
-                ("chart", 0.4),
-                ("trend", 0.4),
-                ("statistics", 0.4),
-                ("pandas", 0.5),
-                ("dataframe", 0.5),
-                ("visualization", 0.4),
-                ("graph", 0.3),
-                ("analysis", 0.3),
-                ("metric", 0.3),
-            ],
-            TaskType.VISION: [
-                ("image", 0.5),
-                ("picture", 0.5),
-                ("photo", 0.5),
-                ("screenshot", 0.5),
-                ("visual", 0.4),
-                ("diagram", 0.4),
-                ("see", 0.2),
-                ("look at", 0.3),
-                ("analyze this image", 0.6),
-                ("ocr", 0.5),
-                ("recognize", 0.3),
-            ],
-            TaskType.GENERAL: [
-                ("help", 0.2),
-                ("question", 0.2),
-                ("what", 0.1),
-                ("tell me", 0.2),
-                ("can you", 0.1),
-            ],
-            TaskType.SECURITY_AUDIT: [
-                ("security", 0.5),
-                ("vulnerability", 0.6),
-                ("exploit", 0.5),
-                ("injection", 0.6),
-                ("xss", 0.6),
-                ("csrf", 0.6),
-                ("authentication", 0.3),
-                ("authorization", 0.3),
-                ("oauth", 0.4),
-                ("penetration", 0.5),
-                ("audit", 0.4),
-                ("secure", 0.3),
-                ("sql injection", 0.7),
-                ("sanitize", 0.4),
-                ("encrypt", 0.4),
-            ],
-            TaskType.CREATIVE_WRITING: [
-                ("story", 0.5),
-                ("creative", 0.4),
-                ("write a story", 0.6),
-                ("poem", 0.5),
-                ("narrative", 0.4),
-                ("fiction", 0.5),
-                ("character", 0.3),
-                ("plot", 0.3),
-                ("dialogue", 0.4),
-                ("novel", 0.4),
-                ("essay", 0.3),
-                ("blog post", 0.4),
-            ],
-        }
-
-        # Strong regex patterns for high-confidence detection
-        self.regex_patterns: dict[TaskType, list[tuple[str, float]]] = {
-            TaskType.CODE_GENERATION: [
-                (r"def\s+\w+\s*\(", 0.6),  # Python function definition
-                (r"class\s+\w+", 0.5),  # Class definition
-                (r"function\s+\w+", 0.5),  # JS function
-                (r"import\s+\w+", 0.3),  # Import statements
-                (r"```\w*\n", 0.4),  # Code blocks
-            ],
-            TaskType.DEBUGGING: [
-                (r"traceback", 0.8),  # Python traceback
-                (r"error:\s*", 0.6),  # Error messages
-                (r"exception", 0.5),  # Exception
-                (r"line\s+\d+", 0.4),  # Line numbers in errors
-                (r"TypeError|ValueError|KeyError|AttributeError", 0.7),
-                (r"stack\s*trace", 0.7),
-            ],
-            TaskType.TESTING: [
-                (r"@pytest", 0.7),
-                (r"def\s+test_", 0.7),
-                (r"assert\s+", 0.5),
-                (r"unittest", 0.6),
-                (r"\.test\(\)", 0.5),
-            ],
-            TaskType.DATA_ANALYSIS: [
-                (r"pd\.", 0.6),  # Pandas
-                (r"df\[", 0.5),  # DataFrame access
-                (r"\.csv", 0.5),
-                (r"\.xlsx", 0.5),
-                (r"matplotlib|seaborn|plotly", 0.6),
-            ],
-        }
 
     def analyze(self, prompt: str) -> TaskRequirements:
         """
@@ -317,13 +318,13 @@ class TaskAnalyzer:
         features: dict[str, Any] = {}
 
         # 1. Keyword scoring
-        for task_type, patterns in self.keyword_patterns.items():
+        for task_type, patterns in self.KEYWORD_PATTERNS.items():
             for keyword, weight in patterns:
                 if keyword in prompt_lower:
                     scores[task_type] += weight
 
         # 2. Regex pattern scoring
-        for task_type, patterns in self.regex_patterns.items():
+        for task_type, patterns in self.REGEX_PATTERNS.items():
             for pattern, weight in patterns:
                 if re.search(pattern, prompt, re.IGNORECASE):
                     scores[task_type] += weight
