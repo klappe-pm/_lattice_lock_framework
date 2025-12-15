@@ -417,7 +417,12 @@ Examples:
     # Load config if provided
     config = DEFAULT_CONFIG
     if args.config:
-        config_path = Path(args.config)
+        try:
+            config_path = resolve_under_root(args.config)
+        except ValueError as e:
+            print(f"Error validating config path: {e}")
+            sys.exit(1)
+
         if config_path.exists():
             import yaml
             with open(config_path) as f:
