@@ -18,7 +18,8 @@ class GauntletGenerator:
         self.parser = LatticeParser(lattice_file)
         self.output_dir = Path(output_dir)
         self.env = Environment(
-            loader=FileSystemLoader(Path(__file__).parent / "templates")
+            loader=FileSystemLoader(Path(__file__).parent / "templates"),
+            autoescape=False
         )
 
     def generate(self):

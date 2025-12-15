@@ -409,7 +409,14 @@ def cmd_batch_add(args) -> None:
     prompts = state["prompts"]
 
     # Read prompts from file
-    batch_file = Path(args.file)
+    try:
+        # Add src to sys.path to import safe_path
+        sys.path.append(str(REPO_ROOT / "src"))
+        from lattice_lock.utils.safe_path import resolve_under_root
+        batch_file = resolve_under_root(args.file)
+    except (ImportError, ValueError) as e:
+        print(f"Error validating path: {e}", file=sys.stderr)
+        sys.exit(1)
     if not batch_file.exists():
         print(f"Error: Batch file not found at {batch_file}", file=sys.stderr)
         sys.exit(1)

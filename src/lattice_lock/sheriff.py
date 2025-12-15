@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+from lattice_lock.utils.safe_path import resolve_under_root
 
 
 class ViolationSeverity(Enum):
@@ -426,7 +427,20 @@ Examples:
                     config = json.load(f)
 
     # Run analysis
-    result = run_sheriff(args.target, config)
+    try:
+        target_path = resolve_under_root(args.target)
+    except ValueError as e:
+         print(f"Error: {e}")
+         sys.exit(1)
+         
+    if args.config:
+         try:
+             resolve_under_root(args.config) # Just validate
+         except ValueError as e:
+             print(f"Error: {e}")
+             sys.exit(1)
+
+    result = run_sheriff(target_path, config)
 
     # Output results
     if args.json:

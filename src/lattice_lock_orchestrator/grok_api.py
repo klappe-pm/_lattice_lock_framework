@@ -13,6 +13,7 @@ import requests
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime
+from lattice_lock.utils.safe_path import resolve_under_root
 
 class GrokAPI:
     def __init__(self, api_key: Optional[str] = None, config_path: Optional[str] = None):
@@ -23,7 +24,7 @@ class GrokAPI:
 
         # Load configuration
         if config_path:
-            self.config_path = Path(config_path)
+            self.config_path = resolve_under_root(config_path)
         else:
             # Look for config in models directory relative to project root
             project_root = Path(__file__).parent.parent.parent
@@ -102,7 +103,8 @@ class GrokAPI:
         """Send vision completion request with image input"""
         if image_path:
             # Encode image to base64
-            with open(image_path, 'rb') as img_file:
+            img_path_obj = resolve_under_root(image_path)
+            with open(img_path_obj, 'rb') as img_file:
                 image_data = base64.b64encode(img_file.read()).decode('utf-8')
 
             # Add image to the last user message

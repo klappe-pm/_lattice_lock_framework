@@ -19,7 +19,7 @@ def test_format_json(runner, mock_pytest):
     """Test that --format json passes correct args and env vars."""
     with patch("pathlib.Path.exists", return_value=True):
         with patch.dict(os.environ, {}, clear=True):
-            result = runner.invoke(cli, ["gauntlet", "--format", "json"])
+            result = runner.invoke(cli, ["test", "--format", "json"])
             assert result.exit_code == 0
 
             # Check pytest args
@@ -33,7 +33,7 @@ def test_format_json(runner, mock_pytest):
 def test_format_junit(runner, mock_pytest):
     """Test that --format junit passes correct args."""
     with patch("pathlib.Path.exists", return_value=True):
-        result = runner.invoke(cli, ["gauntlet", "--format", "junit"])
+        result = runner.invoke(cli, ["test", "--format", "junit"])
         assert result.exit_code == 0
 
         args = mock_pytest.main.call_args[0][0]
@@ -43,7 +43,7 @@ def test_format_github(runner, mock_pytest):
     """Test that --format github passes correct args and env vars."""
     with patch("pathlib.Path.exists", return_value=True):
         with patch.dict(os.environ, {}, clear=True):
-            result = runner.invoke(cli, ["gauntlet", "--format", "github"])
+            result = runner.invoke(cli, ["test", "--format", "github"])
             assert result.exit_code == 0
 
             args = mock_pytest.main.call_args[0][0]
@@ -57,7 +57,7 @@ def test_parallel_auto(runner, mock_pytest):
     with patch("pathlib.Path.exists", return_value=True):
         # Mock xdist import
         with patch.dict("sys.modules", {"xdist": MagicMock()}):
-            result = runner.invoke(cli, ["gauntlet", "--parallel", "auto"])
+            result = runner.invoke(cli, ["test", "--parallel", "auto"])
             assert result.exit_code == 0
 
             args = mock_pytest.main.call_args[0][0]
@@ -68,7 +68,7 @@ def test_parallel_count(runner, mock_pytest):
     """Test that --parallel N passes -n N."""
     with patch("pathlib.Path.exists", return_value=True):
         with patch.dict("sys.modules", {"xdist": MagicMock()}):
-            result = runner.invoke(cli, ["gauntlet", "--parallel", "4"])
+            result = runner.invoke(cli, ["test", "--parallel", "4"])
             assert result.exit_code == 0
 
             args = mock_pytest.main.call_args[0][0]
@@ -101,7 +101,7 @@ def test_multiple_formats(runner, mock_pytest):
     """Test multiple formats."""
     with patch("pathlib.Path.exists", return_value=True):
         with patch.dict(os.environ, {}, clear=True):
-            result = runner.invoke(cli, ["gauntlet", "--format", "json", "--format", "junit"])
+            result = runner.invoke(cli, ["test", "--format", "json", "--format", "junit"])
             assert result.exit_code == 0
 
             args = mock_pytest.main.call_args[0][0]

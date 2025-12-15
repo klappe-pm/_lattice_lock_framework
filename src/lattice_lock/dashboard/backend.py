@@ -346,9 +346,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Initialize shared state
     app.state.aggregator = DataAggregator()
     app.state.ws_manager = WebSocketManager()
-    
-    # Global ref for background task management
-    global _background_task
+
+    # Track background task for cleanup
+    _background_task = None
 
     logger.info("Starting Lattice Lock Dashboard Backend v%s", API_VERSION)
 
@@ -422,7 +422,7 @@ ws.onmessage = (event) => {
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
-        lifespan=lifespan if enable_mock_updates else None,
+        lifespan=lifespan,
     )
 
     # Configure CORS

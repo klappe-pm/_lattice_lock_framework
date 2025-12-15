@@ -4,9 +4,13 @@ from unittest.mock import patch, MagicMock, AsyncMock
 import os
 import sys
 from pathlib import Path
+import pytest
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+# Skip bedrock tests if boto3 is not installed
+boto3 = pytest.importorskip("boto3", reason="boto3 not installed")
 
 from lattice_lock_orchestrator.providers.bedrock import BedrockClient
 from lattice_lock_orchestrator.providers.fallback import FallbackManager, ProviderUnavailableError

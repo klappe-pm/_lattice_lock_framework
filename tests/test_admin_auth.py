@@ -10,6 +10,7 @@ Tests cover:
 - OAuth2 password flow endpoints
 """
 
+import os
 from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi import FastAPI, HTTPException
@@ -47,6 +48,12 @@ from lattice_lock.admin.auth import (
 )
 from lattice_lock.admin.auth_routes import router as auth_router
 
+# Test Secrets
+TEST_SECRET_KEY = os.getenv("LATTICE_TEST_SECRET_KEY", "test-secret-key-that-is-at-least-32-chars")
+TEST_PASSWORD = os.getenv("LATTICE_TEST_PASSWORD", "password123")
+ADMIN_PASSWORD = os.getenv("LATTICE_TEST_ADMIN_PASSWORD", "adminpass123")
+OPERATOR_PASSWORD = os.getenv("LATTICE_TEST_OPERATOR_PASSWORD", "operatorpass123")
+CUSTOM_SECRET_KEY = os.getenv("LATTICE_TEST_CUSTOM_SECRET_KEY", "custom-secret-key-that-is-at-least-32-chars")
 
 @pytest.fixture(autouse=True)
 def reset_auth_state():
@@ -55,7 +62,7 @@ def reset_auth_state():
     clear_api_keys()
     clear_users()
     configure(AuthConfig(
-        secret_key="test-secret-key-that-is-at-least-32-chars",
+        secret_key=TEST_SECRET_KEY,
         access_token_expire_minutes=30,
         refresh_token_expire_days=7,
     ))
@@ -68,19 +75,19 @@ def reset_auth_state():
 @pytest.fixture
 def test_user() -> User:
     """Create a test user."""
-    return create_user("testuser", "password123", Role.VIEWER)
+    return create_user("testuser", TEST_PASSWORD, Role.VIEWER)
 
 
 @pytest.fixture
 def admin_user() -> User:
     """Create an admin test user."""
-    return create_user("adminuser", "adminpass123", Role.ADMIN)
+    return create_user("adminuser", ADMIN_PASSWORD, Role.ADMIN)
 
 
 @pytest.fixture
 def operator_user() -> User:
     """Create an operator test user."""
-    return create_user("operatoruser", "operatorpass123", Role.OPERATOR)
+    return create_user("operatoruser", OPERATOR_PASSWORD, Role.OPERATOR)
 
 
 @pytest.fixture
@@ -112,7 +119,7 @@ class TestAuthConfig:
     def test_custom_config(self):
         """Test custom configuration."""
         custom_config = AuthConfig(
-            secret_key="custom-secret-key-that-is-at-least-32-chars",
+            secret_key=CUSTOM_SECRET_KEY,
             access_token_expire_minutes=60,
             refresh_token_expire_days=14,
             api_key_prefix="custom_",
@@ -132,7 +139,7 @@ class TestAuthConfig:
         """Test that invalid token expiry raises ValueError."""
         with pytest.raises(ValueError, match="at least 1 minute"):
             AuthConfig(
-                secret_key="test-secret-key-that-is-at-least-32-chars",
+                secret_key=TEST_SECRET_KEY,
                 access_token_expire_minutes=0,
             )
 
@@ -414,7 +421,7 @@ class TestAuthRoutes:
         """Test successful login."""
         response = client.post(
             "/api/v1/auth/token",
-            data={"username": test_user.username, "password": "password123"},
+            data={"username": test_user.username, "password": TEST_PASSWORD},
         )
         assert response.status_code == 200
         data = response.json()
@@ -434,7 +441,7 @@ class TestAuthRoutes:
         """Test login with nonexistent user."""
         response = client.post(
             "/api/v1/auth/token",
-            data={"username": "nonexistent", "password": "password123"},
+            data={"username": "nonexistent", "password": TEST_PASSWORD},
         )
         assert response.status_code == 401
 
@@ -443,7 +450,7 @@ class TestAuthRoutes:
         # First login to get tokens
         login_response = client.post(
             "/api/v1/auth/token",
-            data={"username": test_user.username, "password": "password123"},
+            data={"username": test_user.username, "password": TEST_PASSWORD},
         )
         refresh_token = login_response.json()["refresh_token"]
 
@@ -460,7 +467,7 @@ class TestAuthRoutes:
         """Test getting current user info with token."""
         login_response = client.post(
             "/api/v1/auth/token",
-            data={"username": test_user.username, "password": "password123"},
+            data={"username": test_user.username, "password": TEST_PASSWORD},
         )
         access_token = login_response.json()["access_token"]
 
