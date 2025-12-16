@@ -5,13 +5,14 @@ Defines the structures for prompt templates, contexts, and generation results.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
 
 class ToolType(Enum):
     """Supported tool types for prompt generation."""
+
     DEVIN = "devin"
     GEMINI_CLI = "gemini_cli"
     CODEX_CLI = "codex_cli"
@@ -22,6 +23,7 @@ class ToolType(Enum):
 
 class PromptStatus(Enum):
     """Status of a generated prompt."""
+
     DRAFT = "draft"
     READY = "ready"
     IN_PROGRESS = "in_progress"
@@ -32,6 +34,7 @@ class PromptStatus(Enum):
 
 class TaskPriority(Enum):
     """Priority levels for tasks."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -41,6 +44,7 @@ class TaskPriority(Enum):
 @dataclass
 class FileOwnership:
     """Defines file ownership for a tool to prevent conflicts."""
+
     tool: ToolType
     paths: list[str]
     patterns: list[str] = field(default_factory=list)
@@ -62,6 +66,7 @@ class FileOwnership:
 @dataclass
 class ToolCapability:
     """Describes the capabilities of a tool."""
+
     tool: ToolType
     name: str
     description: str
@@ -85,6 +90,7 @@ class ToolCapability:
 @dataclass
 class TaskAssignment:
     """Assignment of a task to a specific tool."""
+
     task_id: str
     task_name: str
     description: str
@@ -99,6 +105,7 @@ class TaskAssignment:
 @dataclass
 class PromptContext:
     """Context information for prompt generation."""
+
     project_name: str
     phase_name: str
     epic_name: str
@@ -116,6 +123,7 @@ class PromptContext:
 @dataclass
 class PromptTemplate:
     """Template for generating prompts."""
+
     name: str
     tool: ToolType
     sections: list[str]
@@ -137,6 +145,7 @@ class PromptTemplate:
 @dataclass
 class PromptOutput:
     """Generated prompt output."""
+
     prompt_id: str
     task_id: str
     tool: ToolType
@@ -150,14 +159,15 @@ class PromptOutput:
 
     def __post_init__(self) -> None:
         if self.created_at is None:
-            self.created_at = datetime.utcnow()
+            self.created_at = datetime.now(timezone.utc)
         if self.updated_at is None:
-            self.updated_at = datetime.utcnow()
+            self.updated_at = datetime.now(timezone.utc)
 
 
 @dataclass
 class GenerationRequest:
     """Request to generate prompts."""
+
     project_name: str
     phase: Optional[str] = None
     epic: Optional[str] = None
@@ -170,6 +180,7 @@ class GenerationRequest:
 @dataclass
 class GenerationResult:
     """Result of prompt generation."""
+
     success: bool
     prompts_generated: int
     prompts_updated: int
@@ -198,6 +209,7 @@ class GenerationResult:
 @dataclass
 class PhaseSpec:
     """Specification for a project phase."""
+
     phase_id: str
     name: str
     description: str
@@ -209,6 +221,7 @@ class PhaseSpec:
 @dataclass
 class EpicSpec:
     """Specification for an epic within a phase."""
+
     epic_id: str
     name: str
     description: str
@@ -219,6 +232,7 @@ class EpicSpec:
 @dataclass
 class TaskSpec:
     """Specification for a task within an epic."""
+
     task_id: str
     name: str
     description: str

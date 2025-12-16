@@ -6,14 +6,14 @@ Transformers apply rules to convert extracted data into the target format.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Optional
-import json
+from typing import Any, Optional
 
 
 class TransformType(Enum):
     """Types of transformations."""
+
     MAP = "map"
     FILTER = "filter"
     AGGREGATE = "aggregate"
@@ -23,6 +23,7 @@ class TransformType(Enum):
 
 class ValidationStatus(Enum):
     """Status of validation."""
+
     PENDING = "pending"
     VALID = "valid"
     INVALID = "invalid"
@@ -32,6 +33,7 @@ class ValidationStatus(Enum):
 @dataclass
 class TransformationRule:
     """Rule defining how to transform data."""
+
     id: int
     name: str
     source_field: str
@@ -51,6 +53,7 @@ class TransformationRule:
 @dataclass
 class TransformedRecord:
     """Data record after transformation."""
+
     id: int
     source_record_id: int
     transformed_data: dict[str, Any]
@@ -65,10 +68,7 @@ class BaseTransformer(ABC):
     """Base class for all data transformers."""
 
     def __init__(self, rules: list[TransformationRule]) -> None:
-        self.rules = sorted(
-            [r for r in rules if r.is_active],
-            key=lambda r: r.priority
-        )
+        self.rules = sorted([r for r in rules if r.is_active], key=lambda r: r.priority)
         self._records_transformed = 0
 
     @abstractmethod
@@ -220,7 +220,7 @@ class TransformationPipeline:
             source_record_id=source_record_id,
             transformed_data=result,
             applied_rules=applied_rules,
-            transformed_at=datetime.utcnow(),
+            transformed_at=datetime.now(timezone.utc),
             validation_status=ValidationStatus.PENDING,
         )
         self._next_id += 1

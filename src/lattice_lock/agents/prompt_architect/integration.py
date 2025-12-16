@@ -7,21 +7,20 @@ and track prompt execution status.
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from lattice_lock.agents.prompt_architect.models import (
-    ToolType,
-    PromptStatus,
     GenerationRequest,
     GenerationResult,
     PromptOutput,
+    PromptStatus,
+    ToolType,
 )
-from lattice_lock.agents.prompt_architect.orchestrator import (
-    PromptArchitectOrchestrator,
-)
+from lattice_lock.agents.prompt_architect.orchestrator import PromptArchitectOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProjectContext:
     """Context from the Project Agent for prompt generation."""
+
     project_id: str
     project_name: str
     current_phase: str
@@ -43,6 +43,7 @@ class ProjectContext:
 @dataclass
 class PromptExecutionStatus:
     """Status of prompt execution for Project Agent tracking."""
+
     prompt_id: str
     task_id: str
     tool: ToolType
@@ -57,6 +58,7 @@ class PromptExecutionStatus:
 @dataclass
 class IntegrationConfig:
     """Configuration for the integration."""
+
     auto_assign: bool = True
     notify_on_completion: bool = True
     track_metrics: bool = True
@@ -107,7 +109,7 @@ class PromptArchitectIntegration:
     def save_state(self) -> None:
         """Save integration state to disk."""
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
-        self._state["updated_at"] = datetime.utcnow().isoformat()
+        self._state["updated_at"] = datetime.now(timezone.utc).isoformat()
         self.state_file.write_text(json.dumps(self._state, indent=2))
 
     def register_callback(
@@ -231,7 +233,7 @@ class PromptArchitectIntegration:
             "file_path": prompt.file_path,
             "project_id": context.project_id,
             "phase": context.current_phase,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "assigned_to": context.team_assignments.get(prompt.task_id),
         }
 
@@ -254,7 +256,7 @@ class PromptArchitectIntegration:
             return False
 
         self._state["prompts"][prompt_id]["status"] = PromptStatus.IN_PROGRESS.value
-        self._state["prompts"][prompt_id]["started_at"] = datetime.utcnow().isoformat()
+        self._state["prompts"][prompt_id]["started_at"] = datetime.now(timezone.utc).isoformat()
         if assigned_to:
             self._state["prompts"][prompt_id]["assigned_to"] = assigned_to
 
@@ -284,7 +286,7 @@ class PromptArchitectIntegration:
             return False
 
         self._state["prompts"][prompt_id]["status"] = PromptStatus.COMPLETED.value
-        self._state["prompts"][prompt_id]["completed_at"] = datetime.utcnow().isoformat()
+        self._state["prompts"][prompt_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
         self._state["prompts"][prompt_id]["output_summary"] = output_summary
 
         self.save_state()
@@ -314,7 +316,7 @@ class PromptArchitectIntegration:
 
         prompt_state = self._state["prompts"][prompt_id]
         prompt_state["status"] = PromptStatus.FAILED.value
-        prompt_state["completed_at"] = datetime.utcnow().isoformat()
+        prompt_state["completed_at"] = datetime.now(timezone.utc).isoformat()
 
         if "errors" not in prompt_state:
             prompt_state["errors"] = []
@@ -412,11 +414,13 @@ class PromptArchitectIntegration:
                 prompt_status = prompt_data.get("status", "draft")
                 if prompt_status in status:
                     status[prompt_status] += 1
-                status["prompts"].append({
-                    "prompt_id": prompt_id,
-                    "task_id": prompt_data.get("task_id"),
-                    "status": prompt_status,
-                })
+                status["prompts"].append(
+                    {
+                        "prompt_id": prompt_id,
+                        "task_id": prompt_data.get("task_id"),
+                        "status": prompt_status,
+                    }
+                )
 
         return status
 

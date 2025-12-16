@@ -6,15 +6,15 @@ Loaders write transformed data to target destinations
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
-import json
 
 
 class TargetType(Enum):
     """Types of load targets."""
+
     DATABASE = "database"
     DATA_WAREHOUSE = "data_warehouse"
     FILE = "file"
@@ -23,6 +23,7 @@ class TargetType(Enum):
 
 class LoadMode(Enum):
     """Modes for loading data."""
+
     APPEND = "append"
     UPSERT = "upsert"
     REPLACE = "replace"
@@ -31,6 +32,7 @@ class LoadMode(Enum):
 
 class JobStatus(Enum):
     """Status of a load job."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -41,6 +43,7 @@ class JobStatus(Enum):
 @dataclass
 class LoadTarget:
     """Configuration for a data load destination."""
+
     id: int
     name: str
     target_type: TargetType
@@ -55,6 +58,7 @@ class LoadTarget:
 @dataclass
 class LoadJob:
     """Record of a data load operation."""
+
     id: int
     target_id: int
     records_loaded: int = 0
@@ -131,7 +135,7 @@ class DatabaseLoader(BaseLoader):
         job = LoadJob(
             id=self._next_job_id,
             target_id=self.target.id,
-            started_at=datetime.utcnow(),
+            started_at=datetime.now(timezone.utc),
             status=JobStatus.RUNNING,
         )
         self._next_job_id += 1
@@ -142,11 +146,11 @@ class DatabaseLoader(BaseLoader):
                 job.records_loaded += 1
 
             job.status = JobStatus.COMPLETED
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
         except Exception as e:
             job.status = JobStatus.FAILED
             job.error_message = str(e)
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
 
         return job
 
@@ -176,7 +180,7 @@ class DataWarehouseLoader(BaseLoader):
         job = LoadJob(
             id=self._next_job_id,
             target_id=self.target.id,
-            started_at=datetime.utcnow(),
+            started_at=datetime.now(timezone.utc),
             status=JobStatus.RUNNING,
         )
         self._next_job_id += 1
@@ -184,17 +188,17 @@ class DataWarehouseLoader(BaseLoader):
         try:
             batch_size = 1000
             for i in range(0, len(records), batch_size):
-                batch = records[i:i + batch_size]
+                batch = records[i : i + batch_size]
                 for record in batch:
                     self._records_loaded += 1
                     job.records_loaded += 1
 
             job.status = JobStatus.COMPLETED
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
         except Exception as e:
             job.status = JobStatus.FAILED
             job.error_message = str(e)
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
 
         return job
 
@@ -224,7 +228,7 @@ class FileLoader(BaseLoader):
         job = LoadJob(
             id=self._next_job_id,
             target_id=self.target.id,
-            started_at=datetime.utcnow(),
+            started_at=datetime.now(timezone.utc),
             status=JobStatus.RUNNING,
         )
         self._next_job_id += 1
@@ -235,11 +239,11 @@ class FileLoader(BaseLoader):
                 job.records_loaded += 1
 
             job.status = JobStatus.COMPLETED
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
         except Exception as e:
             job.status = JobStatus.FAILED
             job.error_message = str(e)
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
 
         return job
 
