@@ -19,7 +19,7 @@ class GauntletGenerator:
         self.output_dir = Path(output_dir)
         self.env = Environment(
             loader=FileSystemLoader(Path(__file__).parent / "templates"),
-            autoescape=True
+            autoescape=False  # Generating Python code, not HTML
         )
 
     def generate(self):

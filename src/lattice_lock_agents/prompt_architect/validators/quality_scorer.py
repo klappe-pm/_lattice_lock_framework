@@ -4,7 +4,7 @@ import re
 import os
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 from .utils import parse_sections
 
