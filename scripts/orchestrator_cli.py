@@ -436,7 +436,7 @@ async def main():
             console.print("[red]Cost tracking module not available.[/red]")
         return
 
-    if args.list:
+    if args.command is None:
         parser.print_help()
         return
 
