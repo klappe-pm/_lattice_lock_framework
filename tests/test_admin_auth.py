@@ -12,39 +12,37 @@ Tests cover:
 
 import os
 from datetime import datetime, timedelta, timezone
+
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
-
 from lattice_lock.admin.auth import (
     AuthConfig,
     Role,
-    User,
     TokenData,
+    User,
+    authenticate_user,
+    clear_api_keys,
+    clear_revoked_tokens,
+    clear_users,
+    configure,
     create_access_token,
     create_refresh_token,
-    verify_token,
-    verify_api_key,
-    generate_api_key,
-    revoke_token,
-    is_token_revoked,
-    revoke_api_key,
-    list_api_keys,
-    rotate_api_key,
     create_user,
-    get_user,
-    authenticate_user,
     delete_user,
-    hash_password,
-    verify_password,
-    configure,
+    generate_api_key,
     get_config,
-    clear_revoked_tokens,
-    clear_api_keys,
-    clear_users,
-    get_current_user,
+    get_user,
+    hash_password,
+    is_token_revoked,
+    list_api_keys,
     require_roles,
-    require_permission,
+    revoke_api_key,
+    revoke_token,
+    rotate_api_key,
+    verify_api_key,
+    verify_password,
+    verify_token,
 )
 from lattice_lock.admin.auth_routes import router as auth_router
 
@@ -53,7 +51,10 @@ TEST_SECRET_KEY = os.getenv("LATTICE_TEST_SECRET_KEY", "test-secret-key-that-is-
 TEST_PASSWORD = os.getenv("LATTICE_TEST_PASSWORD", "password123")
 ADMIN_PASSWORD = os.getenv("LATTICE_TEST_ADMIN_PASSWORD", "adminpass123")
 OPERATOR_PASSWORD = os.getenv("LATTICE_TEST_OPERATOR_PASSWORD", "operatorpass123")
-CUSTOM_SECRET_KEY = os.getenv("LATTICE_TEST_CUSTOM_SECRET_KEY", "custom-secret-key-that-is-at-least-32-chars")
+CUSTOM_SECRET_KEY = os.getenv(
+    "LATTICE_TEST_CUSTOM_SECRET_KEY", "custom-secret-key-that-is-at-least-32-chars"
+)
+
 
 @pytest.fixture(autouse=True)
 def reset_auth_state():
@@ -61,11 +62,13 @@ def reset_auth_state():
     clear_revoked_tokens()
     clear_api_keys()
     clear_users()
-    configure(AuthConfig(
-        secret_key=TEST_SECRET_KEY,
-        access_token_expire_minutes=30,
-        refresh_token_expire_days=7,
-    ))
+    configure(
+        AuthConfig(
+            secret_key=TEST_SECRET_KEY,
+            access_token_expire_minutes=30,
+            refresh_token_expire_days=7,
+        )
+    )
     yield
     clear_revoked_tokens()
     clear_api_keys()
@@ -497,9 +500,7 @@ class TestAuthRoutes:
         response = client.get("/api/v1/auth/me")
         assert response.status_code == 401
 
-    def test_create_api_key_admin_only(
-        self, client: TestClient, admin_user: User, test_user: User
-    ):
+    def test_create_api_key_admin_only(self, client: TestClient, admin_user: User, test_user: User):
         """Test that only admins can create API keys."""
         # Admin can create
         admin_token = create_access_token(admin_user.username, admin_user.role)
@@ -544,9 +545,7 @@ class TestAuthRoutes:
         keys = response.json()
         assert len(keys) == 2
 
-    def test_revoke_token_admin_only(
-        self, client: TestClient, admin_user: User, test_user: User
-    ):
+    def test_revoke_token_admin_only(self, client: TestClient, admin_user: User, test_user: User):
         """Test that only admins can revoke tokens."""
         admin_token = create_access_token(admin_user.username, admin_user.role)
         viewer_token = create_access_token(test_user.username, test_user.role)
@@ -579,16 +578,15 @@ class TestRoleBasedAccess:
     @pytest.fixture
     def protected_app(self) -> FastAPI:
         """Create app with role-protected endpoints."""
-        from fastapi import Depends
         from typing import Annotated
+
+        from fastapi import Depends
 
         app = FastAPI()
         app.include_router(auth_router, prefix="/api/v1")
 
         @app.get("/admin-only")
-        async def admin_only(
-            user: Annotated[TokenData, Depends(require_roles(Role.ADMIN))]
-        ):
+        async def admin_only(user: Annotated[TokenData, Depends(require_roles(Role.ADMIN))]):
             return {"message": "admin access granted", "user": user.sub}
 
         @app.get("/operator-access")
@@ -599,7 +597,9 @@ class TestRoleBasedAccess:
 
         @app.get("/viewer-access")
         async def viewer_access(
-            user: Annotated[TokenData, Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.VIEWER))]
+            user: Annotated[
+                TokenData, Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.VIEWER))
+            ]
         ):
             return {"message": "viewer access granted", "user": user.sub}
 
@@ -610,9 +610,7 @@ class TestRoleBasedAccess:
         """Create test client for protected app."""
         return TestClient(protected_app)
 
-    def test_admin_can_access_admin_endpoint(
-        self, protected_client: TestClient, admin_user: User
-    ):
+    def test_admin_can_access_admin_endpoint(self, protected_client: TestClient, admin_user: User):
         """Test admin can access admin-only endpoint."""
         token = create_access_token(admin_user.username, admin_user.role)
         response = protected_client.get(
@@ -654,9 +652,7 @@ class TestRoleBasedAccess:
         )
         assert response.status_code == 200
 
-    def test_viewer_can_access_viewer_endpoint(
-        self, protected_client: TestClient, test_user: User
-    ):
+    def test_viewer_can_access_viewer_endpoint(self, protected_client: TestClient, test_user: User):
         """Test viewer can access viewer endpoint."""
         token = create_access_token(test_user.username, test_user.role)
         response = protected_client.get(

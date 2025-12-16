@@ -4,10 +4,10 @@ Tests for the Lattice Lock CLI validate command.
 Tests the validate command with various options and scenarios.
 """
 
-import pytest
 from pathlib import Path
-from click.testing import CliRunner
 
+import pytest
+from click.testing import CliRunner
 from lattice_lock_cli.__main__ import cli
 
 
@@ -25,7 +25,8 @@ def temp_project(tmp_path: Path) -> Path:
 
     # Create a valid lattice.yaml
     lattice_yaml = project_dir / "lattice.yaml"
-    lattice_yaml.write_text("""
+    lattice_yaml.write_text(
+        """
 version: v1.0.0
 generated_module: test_module
 entities:
@@ -36,7 +37,8 @@ entities:
         primary_key: true
       name:
         type: str
-""")
+"""
+    )
 
     return project_dir
 
@@ -49,10 +51,12 @@ def temp_project_with_env(tmp_path: Path) -> Path:
 
     # Create a .env file
     env_file = project_dir / ".env"
-    env_file.write_text("""
+    env_file.write_text(
+        """
 ORCHESTRATOR_STRATEGY=round_robin
 LOG_LEVEL=DEBUG
-""")
+"""
+    )
 
     return project_dir
 
@@ -74,55 +78,47 @@ class TestValidateCommand:
 
     def test_validate_with_valid_schema(self, runner: CliRunner, temp_project: Path) -> None:
         """Test validate with a valid lattice.yaml."""
-        result = runner.invoke(cli, [
-            "validate", "--path", str(temp_project), "--schema-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(temp_project), "--schema-only"])
 
         assert "Schema Validation:" in result.output
         assert "passed" in result.output
 
     def test_validate_schema_only_flag(self, runner: CliRunner, temp_project: Path) -> None:
         """Test that --schema-only only runs schema validation."""
-        result = runner.invoke(cli, [
-            "validate", "--path", str(temp_project), "--schema-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(temp_project), "--schema-only"])
 
         assert "Schema Validation:" in result.output
         # Should not run other validations
-        assert "Environment Validation:" not in result.output or "No .env file found" in result.output
+        assert (
+            "Environment Validation:" not in result.output or "No .env file found" in result.output
+        )
 
     def test_validate_env_only_flag(self, runner: CliRunner, temp_project_with_env: Path) -> None:
         """Test that --env-only only runs environment validation."""
-        result = runner.invoke(cli, [
-            "validate", "--path", str(temp_project_with_env), "--env-only"
-        ])
+        result = runner.invoke(
+            cli, ["validate", "--path", str(temp_project_with_env), "--env-only"]
+        )
 
         assert "Environment Validation:" in result.output
         assert "Schema Validation:" not in result.output
 
     def test_validate_structure_only_flag(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test that --structure-only only runs structure validation."""
-        result = runner.invoke(cli, [
-            "validate", "--path", str(tmp_path), "--structure-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(tmp_path), "--structure-only"])
 
         assert "Structure Validation:" in result.output
         assert "Schema Validation:" not in result.output
 
     def test_validate_nonexistent_path(self, runner: CliRunner) -> None:
         """Test validate with nonexistent path."""
-        result = runner.invoke(cli, [
-            "validate", "--path", "/nonexistent/path"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", "/nonexistent/path"])
 
         # Click should report invalid path
         assert result.exit_code != 0
 
     def test_validate_no_lattice_yaml(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test validate on project without lattice.yaml."""
-        result = runner.invoke(cli, [
-            "validate", "--path", str(tmp_path), "--schema-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(tmp_path), "--schema-only"])
 
         assert "No lattice.yaml found" in result.output
 
@@ -142,9 +138,7 @@ class TestValidateFixFlag:
         test_file = tmp_path / "test.py"
         test_file.write_text("line with trailing    \nnormal line\n")
 
-        result = runner.invoke(cli, [
-            "-v", "validate", "--path", str(tmp_path), "--fix"
-        ])
+        result = runner.invoke(cli, ["-v", "validate", "--path", str(tmp_path), "--fix"])
 
         assert "Applying auto-fixes" in result.output
         content = test_file.read_text()
@@ -156,9 +150,7 @@ class TestValidateFixFlag:
         test_file = tmp_path / "test.py"
         test_file.write_text("line without newline")
 
-        result = runner.invoke(cli, [
-            "-v", "validate", "--path", str(tmp_path), "--fix"
-        ])
+        result = runner.invoke(cli, ["-v", "validate", "--path", str(tmp_path), "--fix"])
 
         assert "Applying auto-fixes" in result.output
         content = test_file.read_text()
@@ -169,9 +161,7 @@ class TestValidateFixFlag:
         test_file = tmp_path / "test.py"
         test_file.write_text("clean file\n")
 
-        result = runner.invoke(cli, [
-            "validate", "--path", str(tmp_path), "--fix"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(tmp_path), "--fix"])
 
         assert "No fixable issues found" in result.output
 
@@ -181,9 +171,7 @@ class TestValidateExitCodes:
 
     def test_exit_code_success(self, runner: CliRunner, temp_project: Path) -> None:
         """Test exit code 0 on success."""
-        result = runner.invoke(cli, [
-            "validate", "--path", str(temp_project), "--schema-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(temp_project), "--schema-only"])
 
         assert result.exit_code == 0
 
@@ -193,9 +181,7 @@ class TestValidateExitCodes:
         lattice_yaml = tmp_path / "lattice.yaml"
         lattice_yaml.write_text("invalid: yaml: syntax")
 
-        result = runner.invoke(cli, [
-            "validate", "--path", str(tmp_path), "--schema-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(tmp_path), "--schema-only"])
 
         assert result.exit_code == 1
 
@@ -207,15 +193,17 @@ class TestValidateVerbose:
         """Test that verbose mode shows warnings."""
         # Create env with warning-triggering content
         env_file = temp_project_with_env / ".env"
-        env_file.write_text("""
+        env_file.write_text(
+            """
 ORCHESTRATOR_STRATEGY=round_robin
 LOG_LEVEL=DEBUG
 some_lower_case=value
-""")
+"""
+        )
 
-        result = runner.invoke(cli, [
-            "-v", "validate", "--path", str(temp_project_with_env), "--env-only"
-        ])
+        result = runner.invoke(
+            cli, ["-v", "validate", "--path", str(temp_project_with_env), "--env-only"]
+        )
 
         # Verbose should show more details
         assert "Environment Validation:" in result.output
@@ -231,7 +219,8 @@ class TestValidateAgents:
         agent_dir.mkdir(parents=True)
 
         agent_file = agent_dir / "test_agent_definition.yaml"
-        agent_file.write_text("""
+        agent_file.write_text(
+            """
 agent:
   identity:
     name: test_agent
@@ -248,11 +237,10 @@ scope:
     - /tests
   cannot_access:
     - /secrets
-""")
+"""
+        )
 
-        result = runner.invoke(cli, [
-            "validate", "--path", str(tmp_path), "--agents-only"
-        ])
+        result = runner.invoke(cli, ["validate", "--path", str(tmp_path), "--agents-only"])
 
         assert "Agent Manifest Validation:" in result.output
         assert "passed" in result.output

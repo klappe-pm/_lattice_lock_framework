@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import logging
 import subprocess
 import sys
-import logging
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 
 def lock_dependencies():
     """
@@ -29,13 +30,20 @@ def lock_dependencies():
 
     try:
         subprocess.run(
-            ["pip-compile", "requirements.in", "--output-file", "requirements.lock", "--generate-hashes"],
-            check=True
+            [
+                "pip-compile",
+                "requirements.in",
+                "--output-file",
+                "requirements.lock",
+                "--generate-hashes",
+            ],
+            check=True,
         )
         logger.info("Successfully generated requirements.lock")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to lock dependencies: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     lock_dependencies()

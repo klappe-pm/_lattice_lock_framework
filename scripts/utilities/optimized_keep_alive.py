@@ -5,20 +5,19 @@ Keeps 3-4 most-used models loaded for Power Prompts project
 Based on usage patterns: code analysis, documentation, general tasks
 """
 
-import subprocess
-import time
-import threading
 import json
+import subprocess
+import threading
+import time
 from datetime import datetime
-from typing import List, Dict
 
 # OPTIMIZED: 3-4 most-used models based on project needs
 # Total target: ~16GB RAM usage
 CORE_MODELS = [
-    "deepseek-coder:1.3b",    # 776MB  - Quick code analysis, fast iterations
-    "magicoder:7b",           # 3.8GB  - Production code generation
-    "llama3.1:8b",            # 4.9GB  - General tasks, documentation
-    "qwen2.5:7b-instruct",    # 4.7GB  - Technical documentation, instructions
+    "deepseek-coder:1.3b",  # 776MB  - Quick code analysis, fast iterations
+    "magicoder:7b",  # 3.8GB  - Production code generation
+    "llama3.1:8b",  # 4.9GB  - General tasks, documentation
+    "qwen2.5:7b-instruct",  # 4.7GB  - Technical documentation, instructions
 ]
 
 # TOTAL: ~14.2GB for core models (leaves 22GB free for system + on-demand models)
@@ -45,9 +44,9 @@ def update_status(model: str, status: str, message: str = ""):
         }
         # Write to file for external monitoring
         try:
-            with open(STATUS_FILE, 'w') as f:
+            with open(STATUS_FILE, "w") as f:
                 json.dump(model_status, f, indent=2)
-        except (OSError, IOError, PermissionError):
+        except (OSError, PermissionError):
             pass  # Status file write failed, continue without persisting status
 
 
@@ -70,15 +69,24 @@ def keep_model_alive(model: str):
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Keep-alive: {model}", flush=True)
                 update_status(model, "active", "Model loaded and responding")
             else:
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Keep-alive warning: {model}", flush=True)
+                print(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Keep-alive warning: {model}",
+                    flush=True,
+                )
                 update_status(model, "warning", f"Non-zero return code: {result.returncode}")
 
         except subprocess.TimeoutExpired:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] ⏱️  Keep-alive timeout: {model}", flush=True)
+            print(
+                f"[{datetime.now().strftime('%H:%M:%S')}] ⏱️  Keep-alive timeout: {model}",
+                flush=True,
+            )
             update_status(model, "timeout", "Request timed out after 30s")
 
         except Exception as e:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Keep-alive error for {model}: {e}", flush=True)
+            print(
+                f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Keep-alive error for {model}: {e}",
+                flush=True,
+            )
             update_status(model, "error", str(e))
 
         # Wait for next keep-alive interval (unless stopping)
@@ -120,7 +128,7 @@ def get_ram_usage() -> tuple:
 
         return total_used, total_free
 
-    except Exception as e:
+    except Exception:
         return 0, 0
 
 
@@ -135,7 +143,7 @@ def main():
         print(f"  {i}. {model}", flush=True)
     print(flush=True)
 
-    print(f"Target RAM usage: ~14GB (leaves 22GB free)", flush=True)
+    print("Target RAM usage: ~14GB (leaves 22GB free)", flush=True)
     print(f"Keep-alive interval: {KEEPALIVE_INTERVAL}s (3 minutes)", flush=True)
     print(f"Status file: {STATUS_FILE}", flush=True)
     print(flush=True)
@@ -161,10 +169,14 @@ def main():
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Loaded {model}", flush=True)
                 update_status(model, "loaded", "Initial load successful")
             else:
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Load warning {model}", flush=True)
+                print(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Load warning {model}", flush=True
+                )
                 update_status(model, "load_warning", f"Return code: {result.returncode}")
         except Exception as e:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Failed to load {model}: {e}", flush=True)
+            print(
+                f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Failed to load {model}: {e}", flush=True
+            )
             update_status(model, "load_failed", str(e))
 
     print(flush=True)
@@ -191,13 +203,16 @@ def main():
         iteration = 0
         while True:
             iteration += 1
-            print(f"\n[Iteration {iteration}] Status at {datetime.now().strftime('%H:%M:%S')}", flush=True)
+            print(
+                f"\n[Iteration {iteration}] Status at {datetime.now().strftime('%H:%M:%S')}",
+                flush=True,
+            )
             print("-" * 70, flush=True)
 
             # Check loaded models
             loaded = check_loaded_models()
             print("Currently loaded:", flush=True)
-            for line in loaded.strip().split('\n'):
+            for line in loaded.strip().split("\n"):
                 if line.strip():
                     print(f"  {line}", flush=True)
 

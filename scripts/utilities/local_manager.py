@@ -7,17 +7,17 @@ Provides intelligent local model selection and availability checking
 
 import json
 import subprocess
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from pathlib import Path
+from typing import Optional
 
 # Import RAM monitor
-from .ram_monitor import RAMMonitor, RAMStatus
+from .ram_monitor import RAMMonitor
 
 
 @dataclass
 class LocalModel:
     """Local model information"""
+
     name: str
     size_gb: float
     is_loaded: bool
@@ -62,18 +62,13 @@ class LocalModelManager:
     def __init__(self):
         self.ram_monitor = RAMMonitor()
 
-    def get_installed_models(self) -> List[str]:
+    def get_installed_models(self) -> list[str]:
         """Get list of installed Ollama models"""
         try:
-            result = subprocess.run(
-                ["ollama", "list"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(["ollama", "list"], capture_output=True, text=True, check=True)
 
             models = []
-            for line in result.stdout.strip().split('\n')[1:]:  # Skip header
+            for line in result.stdout.strip().split("\n")[1:]:  # Skip header
                 if line.strip():
                     parts = line.split()
                     if parts:
@@ -84,18 +79,13 @@ class LocalModelManager:
         except Exception:
             return []
 
-    def get_loaded_models(self) -> List[str]:
+    def get_loaded_models(self) -> list[str]:
         """Get currently loaded models from ollama ps"""
         try:
-            result = subprocess.run(
-                ["ollama", "ps"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(["ollama", "ps"], capture_output=True, text=True, check=True)
 
             models = []
-            for line in result.stdout.strip().split('\n')[1:]:  # Skip header
+            for line in result.stdout.strip().split("\n")[1:]:  # Skip header
                 if line.strip():
                     parts = line.split()
                     if parts:
@@ -106,10 +96,10 @@ class LocalModelManager:
         except Exception:
             return []
 
-    def get_keep_alive_status(self) -> Dict:
+    def get_keep_alive_status(self) -> dict:
         """Get status from keep-alive system"""
         try:
-            with open(self.STATUS_FILE, 'r') as f:
+            with open(self.STATUS_FILE) as f:
                 return json.load(f)
         except Exception:
             return {}
@@ -126,11 +116,11 @@ class LocalModelManager:
             name=model_name,
             size_gb=self.MODEL_SIZES[model_name],
             is_loaded=model_name in loaded_models,
-            is_keep_alive=model_name in keep_alive_status and
-                          keep_alive_status[model_name].get("status") == "active"
+            is_keep_alive=model_name in keep_alive_status
+            and keep_alive_status[model_name].get("status") == "active",
         )
 
-    def can_load_model(self, model_name: str) -> Tuple[bool, str]:
+    def can_load_model(self, model_name: str) -> tuple[bool, str]:
         """Check if a model can be loaded given current RAM"""
         if model_name not in self.MODEL_SIZES:
             return False, f"Unknown model: {model_name}"
@@ -140,7 +130,7 @@ class LocalModelManager:
 
         return can_load, reason
 
-    def select_best_model(self, task_type: str, candidates: List[str]) -> Optional[str]:
+    def select_best_model(self, task_type: str, candidates: list[str]) -> Optional[str]:
         """
         Select best available model for task from candidates
         Prioritizes: keep-alive models > loaded models > installable models
@@ -164,8 +154,7 @@ class LocalModelManager:
             score = 0
 
             # Highest priority: keep-alive and active
-            if (model in keep_alive_status and
-                keep_alive_status[model].get("status") == "active"):
+            if model in keep_alive_status and keep_alive_status[model].get("status") == "active":
                 score += 1000
 
             # Medium priority: already loaded
@@ -193,7 +182,7 @@ class LocalModelManager:
         scored_models.sort(key=lambda x: x[1], reverse=True)
         return scored_models[0][0]
 
-    def get_recommended_models_for_task(self, task_type: str) -> List[str]:
+    def get_recommended_models_for_task(self, task_type: str) -> list[str]:
         """Get recommended models for specific task type"""
         task_recommendations = {
             "code_generation": [
@@ -226,7 +215,7 @@ class LocalModelManager:
 
         return task_recommendations.get(task_type, task_recommendations["general"])
 
-    def get_status_summary(self) -> Dict:
+    def get_status_summary(self) -> dict:
         """Get comprehensive status summary"""
         ram_status = self.ram_monitor.get_current_status()
         keep_alive_status = self.get_keep_alive_status()
@@ -240,8 +229,7 @@ class LocalModelManager:
                 "installed": len(installed_models),
                 "loaded": len(loaded_models),
                 "keep_alive_active": sum(
-                    1 for s in keep_alive_status.values()
-                    if s.get("status") == "active"
+                    1 for s in keep_alive_status.values() if s.get("status") == "active"
                 ),
             },
             "keep_alive_models": list(keep_alive_status.keys()),

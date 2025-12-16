@@ -1,14 +1,23 @@
-import pytest
 import os
+
+import pytest
+from lattice_lock_agents.prompt_architect.subagents.parsers.roadmap_parser import (
+    Epic,
+    Phase,
+    RoadmapStructure,
+)
 from lattice_lock_agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
-from lattice_lock_agents.prompt_architect.subagents.parsers.roadmap_parser import RoadmapStructure, Phase, Epic
 
 # Path to the actual WBS file
-WBS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'project_prompts', 'work_breakdown_structure.md')
+WBS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "project_prompts", "work_breakdown_structure.md"
+)
+
 
 @pytest.fixture
 def parser():
     return RoadmapParser()
+
 
 def test_parse_wbs_structure(parser):
     """Test parsing the actual work breakdown structure file."""
@@ -32,6 +41,7 @@ def test_parse_wbs_structure(parser):
     assert epic1_1.name == "Package Model Orchestrator"
     assert epic1_1.owner == "Devin AI"
 
+
 def test_dependency_graph(parser):
     """Test dependency graph construction with a synthetic structure."""
     # Create a synthetic structure for predictable testing
@@ -51,10 +61,7 @@ def test_dependency_graph(parser):
     structure.phases = [p1, p2]
 
     # Dependencies: 1.1 -> 2.1, 1.2 -> 2.1
-    structure.dependencies = {
-        "1.1": ["2.1"],
-        "1.2": ["2.1"]
-    }
+    structure.dependencies = {"1.1": ["2.1"], "1.2": ["2.1"]}
 
     # Test circular dependency detection
     assert parser.detect_circular_dependencies(structure) == False
@@ -62,6 +69,7 @@ def test_dependency_graph(parser):
     # Add cycle: 2.1 -> 1.1
     structure.dependencies["2.1"] = ["1.1"]
     assert parser.detect_circular_dependencies(structure) == True
+
 
 def test_critical_path(parser):
     """Test critical path calculation."""
@@ -78,17 +86,14 @@ def test_critical_path(parser):
     # A -> C -> D
     # Assume unit duration. Path length: 3 nodes (A, B, D) or (A, C, D)
 
-    structure.dependencies = {
-        "A": ["B", "C"],
-        "B": ["D"],
-        "C": ["D"]
-    }
+    structure.dependencies = {"A": ["B", "C"], "B": ["D"], "C": ["D"]}
 
     path = parser.get_critical_path(structure)
     # Should be A -> B -> D or A -> C -> D
     assert path[0] == "A"
     assert path[-1] == "D"
     assert len(path) == 3
+
 
 def test_parallel_execution(parser):
     """Test parallel execution opportunities."""
@@ -104,9 +109,7 @@ def test_parallel_execution(parser):
     # A -> C
     # B and C can be parallel
 
-    structure.dependencies = {
-        "A": ["B", "C"]
-    }
+    structure.dependencies = {"A": ["B", "C"]}
 
     levels = parser.get_parallel_execution_opportunities(structure)
     # Level 0: [A]
@@ -116,6 +119,7 @@ def test_parallel_execution(parser):
     assert "A" in levels[0]
     assert "B" in levels[1]
     assert "C" in levels[1]
+
 
 def test_malformed_roadmap(parser):
     """Test error handling."""

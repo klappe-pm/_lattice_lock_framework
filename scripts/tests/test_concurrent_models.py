@@ -5,10 +5,9 @@ Tests true parallel execution with multiple Ollama models to maximize RAM usage
 """
 
 import subprocess
-import time
 import threading
+import time
 from datetime import datetime
-from typing import List, Dict
 
 # Models to test concurrently
 MODELS = [
@@ -71,7 +70,12 @@ def run_model(model: str, prompt: str):
             print(f"[{timestamp}] ❌ Failed: {model} ({duration}s)")
             with results_lock:
                 results.append(
-                    {"model": model, "status": "failed", "duration": duration, "error": result.stderr}
+                    {
+                        "model": model,
+                        "status": "failed",
+                        "duration": duration,
+                        "error": result.stderr,
+                    }
                 )
 
     except subprocess.TimeoutExpired:
@@ -88,7 +92,9 @@ def run_model(model: str, prompt: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] ❌ Error: {model} ({duration}s) - {str(e)}")
         with results_lock:
-            results.append({"model": model, "status": "error", "duration": duration, "error": str(e)})
+            results.append(
+                {"model": model, "status": "error", "duration": duration, "error": str(e)}
+            )
 
 
 def check_loaded_models():
@@ -129,7 +135,7 @@ def get_ram_usage():
 
         return total_used, total_free
 
-    except Exception as e:
+    except Exception:
         return 0, 0
 
 

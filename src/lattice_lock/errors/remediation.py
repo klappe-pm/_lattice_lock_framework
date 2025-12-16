@@ -5,20 +5,18 @@ Maps error types to remediation steps and documentation links.
 Provides actionable guidance for resolving errors.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 from lattice_lock.errors.types import (
-    LatticeError,
-    SchemaValidationError,
-    SheriffViolationError,
+    AgentError,
+    ConfigurationError,
     GauntletFailureError,
     LatticeRuntimeError,
-    ConfigurationError,
     NetworkError,
-    AgentError,
+    SchemaValidationError,
+    SheriffViolationError,
 )
-
 
 DOCS_BASE_URL = "https://docs.lattice-lock.dev"
 
@@ -49,7 +47,9 @@ def _remediate_schema_validation(error: SchemaValidationError) -> RemediationInf
     ]
 
     if error.validation_errors:
-        steps.insert(0, f"Fix the following validation errors: {', '.join(error.validation_errors)}")
+        steps.insert(
+            0, f"Fix the following validation errors: {', '.join(error.validation_errors)}"
+        )
 
     if error.schema_path:
         steps.insert(0, f"Open the schema file at: {error.schema_path}")

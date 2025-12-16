@@ -7,10 +7,10 @@ Command-line interface for the intelligent model orchestration system
 import argparse
 import asyncio
 import os
-import sys
-from pathlib import Path
 from typing import Optional
 
+# Import orchestration components from lattice_lock package
+from lattice_lock import ModelOrchestrator, TaskType
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -20,8 +20,6 @@ from rich.table import Table
 # sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 # Assuming package is installed or PYTHONPATH is set correctly
 
-# Import orchestration components from lattice_lock package
-from lattice_lock import ModelOrchestrator, TaskType
 
 try:
     from lattice_lock_orchestrator.zen_mcp_bridge import ModelRouter, ZenMCPBridge
@@ -211,7 +209,9 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
         return
 
         # Cost tracking report logic placeholder
-        console.print("[yellow]Cost reporting not yet implemented due to dependency updates[/yellow]")
+        console.print(
+            "[yellow]Cost reporting not yet implemented due to dependency updates[/yellow]"
+        )
         return
 
     def create_consensus_group(self, prompt: str, num_models: int = 3):

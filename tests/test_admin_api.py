@@ -5,24 +5,21 @@ Tests all REST endpoints for project management and monitoring.
 """
 
 import time
+
 import pytest
-from unittest.mock import patch
-
 from fastapi.testclient import TestClient
-
 from lattice_lock.admin import (
-    create_app,
-    get_project_store,
-    reset_project_store,
+    API_VERSION,
     Project,
     ProjectError,
     ProjectStatus,
     ValidationStatus,
-    RollbackInfo,
-    record_project_error,
     add_rollback_checkpoint,
+    create_app,
+    get_project_store,
+    record_project_error,
+    reset_project_store,
     update_validation_status,
-    API_VERSION,
 )
 
 
@@ -65,9 +62,7 @@ class TestHealthEndpoint:
         assert "projects_count" in data
         assert "uptime_seconds" in data
 
-    def test_health_check_projects_count(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_health_check_projects_count(self, client: TestClient, sample_project: Project) -> None:
         """Test that health check returns correct project count."""
         response = client.get("/api/v1/health")
         data = response.json()
@@ -87,9 +82,7 @@ class TestProjectsListEndpoint:
         assert data["projects"] == []
         assert data["total"] == 0
 
-    def test_list_projects_with_projects(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_list_projects_with_projects(self, client: TestClient, sample_project: Project) -> None:
         """Test listing projects when projects exist."""
         response = client.get("/api/v1/projects")
         assert response.status_code == 200
@@ -170,9 +163,7 @@ class TestRegisterProjectEndpoint:
 class TestProjectStatusEndpoint:
     """Tests for GET /api/v1/projects/{id}/status."""
 
-    def test_get_status_success(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_status_success(self, client: TestClient, sample_project: Project) -> None:
         """Test getting project status."""
         response = client.get(f"/api/v1/projects/{sample_project.id}/status")
         assert response.status_code == 200
@@ -190,9 +181,7 @@ class TestProjectStatusEndpoint:
         response = client.get("/api/v1/projects/non_existent/status")
         assert response.status_code == 404
 
-    def test_get_status_with_validation(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_status_with_validation(self, client: TestClient, sample_project: Project) -> None:
         """Test getting status with validation data."""
         update_validation_status(
             sample_project.id,
@@ -214,9 +203,7 @@ class TestProjectStatusEndpoint:
 class TestProjectErrorsEndpoint:
     """Tests for GET /api/v1/projects/{id}/errors."""
 
-    def test_get_errors_empty(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_errors_empty(self, client: TestClient, sample_project: Project) -> None:
         """Test getting errors when none exist."""
         response = client.get(f"/api/v1/projects/{sample_project.id}/errors")
         assert response.status_code == 200
@@ -226,9 +213,7 @@ class TestProjectErrorsEndpoint:
         assert data["errors"] == []
         assert data["total"] == 0
 
-    def test_get_errors_with_errors(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_errors_with_errors(self, client: TestClient, sample_project: Project) -> None:
         """Test getting errors when errors exist."""
         record_project_error(
             sample_project.id,
@@ -251,9 +236,7 @@ class TestProjectErrorsEndpoint:
         response = client.get("/api/v1/projects/non_existent/errors")
         assert response.status_code == 404
 
-    def test_get_errors_exclude_resolved(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_errors_exclude_resolved(self, client: TestClient, sample_project: Project) -> None:
         """Test that resolved errors are excluded by default."""
         store = get_project_store()
 
@@ -287,9 +270,7 @@ class TestProjectErrorsEndpoint:
         assert data["total"] == 1
         assert data["errors"][0]["id"] == "err_001"
 
-    def test_get_errors_include_resolved(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_errors_include_resolved(self, client: TestClient, sample_project: Project) -> None:
         """Test including resolved errors."""
         store = get_project_store()
 
@@ -307,17 +288,13 @@ class TestProjectErrorsEndpoint:
         project = store.get_project(sample_project.id)
         project.errors.append(error)
 
-        response = client.get(
-            f"/api/v1/projects/{sample_project.id}/errors?include_resolved=true"
-        )
+        response = client.get(f"/api/v1/projects/{sample_project.id}/errors?include_resolved=true")
         data = response.json()
 
         assert data["total"] == 1
         assert data["errors"][0]["resolved"] is True
 
-    def test_get_errors_limit(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_get_errors_limit(self, client: TestClient, sample_project: Project) -> None:
         """Test error limit parameter."""
         # Add multiple errors
         for i in range(5):
@@ -329,9 +306,7 @@ class TestProjectErrorsEndpoint:
                 category="validation",
             )
 
-        response = client.get(
-            f"/api/v1/projects/{sample_project.id}/errors?limit=3"
-        )
+        response = client.get(f"/api/v1/projects/{sample_project.id}/errors?limit=3")
         data = response.json()
 
         assert data["total"] == 3
@@ -341,9 +316,7 @@ class TestProjectErrorsEndpoint:
 class TestRollbackEndpoint:
     """Tests for POST /api/v1/projects/{id}/rollback."""
 
-    def test_rollback_no_checkpoints(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_rollback_no_checkpoints(self, client: TestClient, sample_project: Project) -> None:
         """Test rollback when no checkpoints exist."""
         response = client.post(
             f"/api/v1/projects/{sample_project.id}/rollback",
@@ -359,9 +332,7 @@ class TestRollbackEndpoint:
         )
         assert response.status_code == 404
 
-    def test_rollback_dry_run(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_rollback_dry_run(self, client: TestClient, sample_project: Project) -> None:
         """Test rollback dry run."""
         add_rollback_checkpoint(
             sample_project.id,
@@ -436,26 +407,18 @@ class TestRollbackEndpoint:
 class TestRollbackCheckpointsEndpoint:
     """Tests for GET /api/v1/projects/{id}/rollback/checkpoints."""
 
-    def test_list_checkpoints_empty(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_list_checkpoints_empty(self, client: TestClient, sample_project: Project) -> None:
         """Test listing checkpoints when none exist."""
-        response = client.get(
-            f"/api/v1/projects/{sample_project.id}/rollback/checkpoints"
-        )
+        response = client.get(f"/api/v1/projects/{sample_project.id}/rollback/checkpoints")
         assert response.status_code == 200
         assert response.json() == []
 
-    def test_list_checkpoints(
-        self, client: TestClient, sample_project: Project
-    ) -> None:
+    def test_list_checkpoints(self, client: TestClient, sample_project: Project) -> None:
         """Test listing checkpoints."""
         add_rollback_checkpoint(sample_project.id, "First checkpoint", 5)
         add_rollback_checkpoint(sample_project.id, "Second checkpoint", 10)
 
-        response = client.get(
-            f"/api/v1/projects/{sample_project.id}/rollback/checkpoints"
-        )
+        response = client.get(f"/api/v1/projects/{sample_project.id}/rollback/checkpoints")
         assert response.status_code == 200
 
         data = response.json()
@@ -467,9 +430,7 @@ class TestRollbackCheckpointsEndpoint:
 
     def test_list_checkpoints_not_found(self, client: TestClient) -> None:
         """Test listing checkpoints for non-existent project."""
-        response = client.get(
-            "/api/v1/projects/non_existent/rollback/checkpoints"
-        )
+        response = client.get("/api/v1/projects/non_existent/rollback/checkpoints")
         assert response.status_code == 404
 
 
@@ -596,9 +557,7 @@ class TestHelperFunctions:
 class TestProjectStatusUpdates:
     """Tests for automatic project status updates."""
 
-    def test_status_healthy_after_passing_validation(
-        self, sample_project: Project
-    ) -> None:
+    def test_status_healthy_after_passing_validation(self, sample_project: Project) -> None:
         """Test project status becomes healthy after passing validation."""
         update_validation_status(
             sample_project.id,
@@ -622,9 +581,7 @@ class TestProjectStatusUpdates:
         project = store.get_project(sample_project.id)
         assert project.status == ProjectStatus.ERROR
 
-    def test_status_warning_on_gauntlet_failure(
-        self, sample_project: Project
-    ) -> None:
+    def test_status_warning_on_gauntlet_failure(self, sample_project: Project) -> None:
         """Test project status becomes warning on gauntlet failure only."""
         update_validation_status(
             sample_project.id,
@@ -651,9 +608,7 @@ class TestProjectStatusUpdates:
         project = store.get_project(sample_project.id)
         assert project.status == ProjectStatus.ERROR
 
-    def test_status_warning_on_low_severity_error(
-        self, sample_project: Project
-    ) -> None:
+    def test_status_warning_on_low_severity_error(self, sample_project: Project) -> None:
         """Test project status becomes warning on low severity error."""
         record_project_error(
             sample_project.id,

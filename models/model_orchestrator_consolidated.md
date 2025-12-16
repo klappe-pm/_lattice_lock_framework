@@ -197,5 +197,3 @@ Create a `MODELS.md` file for custom routing rules:
 ### Blocked Models
 - llama3.2: Not suitable for production
 ```
-
-

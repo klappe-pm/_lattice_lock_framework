@@ -1,49 +1,50 @@
-import os
-import json
-import yaml
 import logging
-import aiofiles
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+import os
 from datetime import datetime
-from pathlib import Path
-from jinja2 import Template
+from typing import Any, Optional
 
+import aiofiles
+import yaml
+from jinja2 import Template
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
 from lattice_lock_agents.prompt_architect.validators import (
-    PromptValidator,
     ConventionChecker,
+    ConventionResult,
+    PromptValidator,
+    QualityScore,
     QualityScorer,
     ValidationResult,
-    ConventionResult,
-    QualityScore,
 )
 from lattice_lock_orchestrator.api_clients import get_api_client
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
+
 
 class GeneratedPrompt(BaseModel):
     prompt_id: str
     file_path: str
     content: str
-    sections: Dict[str, Any]
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    validation_result: Optional[Dict[str, Any]] = None
-    convention_result: Optional[Dict[str, Any]] = None
-    quality_score: Optional[Dict[str, Any]] = None
+    sections: dict[str, Any]
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    validation_result: Optional[dict[str, Any]] = None
+    convention_result: Optional[dict[str, Any]] = None
+    quality_score: Optional[dict[str, Any]] = None
+
 
 class PromptGenerator:
     # Default configuration for validation
     DEFAULT_QUALITY_THRESHOLD = 6.0
     DEFAULT_MAX_RETRIES = 3
 
-    def __init__(self, config_path: str = "agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"):
+    def __init__(
+        self,
+        config_path: str = "agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml",
+    ):
         self.config = self._load_config(config_path)
         self.template_path = os.path.join(
-            os.path.dirname(__file__),
-            "templates",
-            "prompt_template.md"
+            os.path.dirname(__file__), "templates", "prompt_template.md"
         )
         self.prompts_dir = "project_prompts"
         self.state_file = os.path.join(self.prompts_dir, "project_prompts_state.json")
@@ -62,12 +63,8 @@ class PromptGenerator:
         self.quality_threshold = validation_config.get(
             "quality_threshold", self.DEFAULT_QUALITY_THRESHOLD
         )
-        self.max_retries = validation_config.get(
-            "max_retries", self.DEFAULT_MAX_RETRIES
-        )
-        self.validate_before_write = validation_config.get(
-            "validate_before_write", True
-        )
+        self.max_retries = validation_config.get("max_retries", self.DEFAULT_MAX_RETRIES)
+        self.validate_before_write = validation_config.get("validate_before_write", True)
 
         self.prompt_validator = PromptValidator(strict_mode=False)
         self.convention_checker = ConventionChecker(prompts_root=self.prompts_dir)
@@ -75,10 +72,10 @@ class PromptGenerator:
             threshold=self.quality_threshold,
             use_llm=validation_config.get("use_llm_scoring", False),
             llm_client=self.client if validation_config.get("use_llm_scoring", False) else None,
-            model=self.model
+            model=self.model,
         )
 
-    def _load_config(self, path: str) -> Dict[str, Any]:
+    def _load_config(self, path: str) -> dict[str, Any]:
         if not os.path.exists(path):
             # Fallback for testing or if path is relative to project root
             if os.path.exists(os.path.join(os.getcwd(), path)):
@@ -87,16 +84,18 @@ class PromptGenerator:
                 logger.warning(f"Config file not found at {path}, using defaults")
                 return {}
 
-        with open(path, 'r') as f:
+        with open(path) as f:
             return yaml.safe_load(f)
 
     async def _load_template(self) -> str:
         if os.path.exists(self.template_path):
-            async with aiofiles.open(self.template_path, 'r') as f:
+            async with aiofiles.open(self.template_path, "r") as f:
                 return await f.read()
         return ""
 
-    async def generate(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> GeneratedPrompt:
+    async def generate(
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
+    ) -> GeneratedPrompt:
         """
         Generate a detailed prompt based on the tool assignment and context.
         """
@@ -110,7 +109,7 @@ class PromptGenerator:
 
         # Parse task_id to get phase, epic, task numbers
         # Assuming task_id format like "1.1.1" or "5.3.2"
-        parts = task_id.split('.')
+        parts = task_id.split(".")
         phase_number = parts[0] if len(parts) > 0 else "0"
         epic_id = f"{parts[0]}.{parts[1]}" if len(parts) > 1 else "0.0"
 
@@ -141,7 +140,7 @@ class PromptGenerator:
             "steps": steps_text,
             "do_not_touch": do_not_touch_text,
             "success_criteria": success_criteria_text,
-            "notes": notes_text
+            "notes": notes_text,
         }
 
         # Render template
@@ -156,7 +155,9 @@ class PromptGenerator:
         filename = f"{task_id}_{tool_name.lower()}_{clean_title}.md"
 
         # Determine phase directory
-        phase_dir_name = f"phase{phase_number}_automation" # This needs to be dynamic based on phase name
+        phase_dir_name = (
+            f"phase{phase_number}_automation"  # This needs to be dynamic based on phase name
+        )
         # For now, we try to find the directory or create a generic one
         # In a real implementation, we'd map phase number to directory name
         # We'll use a simple mapping or search
@@ -172,8 +173,8 @@ class PromptGenerator:
             metadata={
                 "generated_at": datetime.now().isoformat(),
                 "model": self.model,
-                "assignment": assignment.model_dump()
-            }
+                "assignment": assignment.model_dump(),
+            },
         )
 
         # Validate before writing if enabled
@@ -194,10 +195,7 @@ class PromptGenerator:
         return prompt
 
     async def _validate_and_retry(
-        self,
-        prompt: GeneratedPrompt,
-        assignment: ToolAssignment,
-        context_data: Dict[str, Any]
+        self, prompt: GeneratedPrompt, assignment: ToolAssignment, context_data: dict[str, Any]
     ) -> tuple[bool, GeneratedPrompt]:
         """
         Validate prompt and retry generation if validation fails.
@@ -234,9 +232,9 @@ class PromptGenerator:
 
             # Check if validation passed
             all_valid = (
-                validation_result.is_valid and
-                convention_result.is_valid and
-                quality_score.passes_threshold
+                validation_result.is_valid
+                and convention_result.is_valid
+                and quality_score.passes_threshold
             )
 
             if all_valid:
@@ -250,8 +248,7 @@ class PromptGenerator:
                     "regenerating with feedback..."
                 )
                 prompt = await self._regenerate_with_feedback(
-                    prompt, assignment, context_data,
-                    validation_result, quality_score
+                    prompt, assignment, context_data, validation_result, quality_score
                 )
             else:
                 logger.warning(
@@ -264,9 +261,9 @@ class PromptGenerator:
         self,
         prompt: GeneratedPrompt,
         assignment: ToolAssignment,
-        context_data: Dict[str, Any],
+        context_data: dict[str, Any],
         validation_result: ValidationResult,
-        quality_score: QualityScore
+        quality_score: QualityScore,
     ) -> GeneratedPrompt:
         """
         Regenerate prompt sections based on validation feedback.
@@ -308,9 +305,7 @@ class PromptGenerator:
 
         # If context was unclear, enhance it
         if quality_score.clarity_score < 6:
-            variables["context"] = await self._enhance_context(
-                assignment, enhanced_context
-            )
+            variables["context"] = await self._enhance_context(assignment, enhanced_context)
 
         # Re-render template
         template_content = await self._load_template()
@@ -326,15 +321,12 @@ class PromptGenerator:
             metadata={
                 **prompt.metadata,
                 "regenerated_at": datetime.now().isoformat(),
-                "regeneration_feedback": feedback
-            }
+                "regeneration_feedback": feedback,
+            },
         )
 
     async def _generate_steps_with_feedback(
-        self,
-        assignment: ToolAssignment,
-        context_data: Dict[str, Any],
-        feedback: List[str]
+        self, assignment: ToolAssignment, context_data: dict[str, Any], feedback: list[str]
     ) -> str:
         """Generate steps with validation feedback incorporated."""
         feedback_text = "\n".join(f"- {f}" for f in feedback)
@@ -361,7 +353,7 @@ Format as a numbered list.
             response = await self.client.chat_completion(
                 model=self.model,
                 messages=[{"role": "user", "content": llm_prompt}],
-                temperature=0.5  # Lower temperature for more focused output
+                temperature=0.5,  # Lower temperature for more focused output
             )
             return response.content or await self._generate_steps(assignment, context_data)
         except Exception as e:
@@ -369,9 +361,7 @@ Format as a numbered list.
             return await self._generate_steps(assignment, context_data)
 
     async def _enhance_context(
-        self,
-        assignment: ToolAssignment,
-        context_data: Dict[str, Any]
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
     ) -> str:
         """Enhance the context section for clarity."""
         original_context = context_data.get("context", "")
@@ -396,7 +386,7 @@ Return only the enhanced context text.
             response = await self.client.chat_completion(
                 model=self.model,
                 messages=[{"role": "user", "content": llm_prompt}],
-                temperature=0.5
+                temperature=0.5,
             )
             return response.content or original_context
         except Exception as e:
@@ -408,14 +398,16 @@ Return only the enhanced context text.
         prompt_id: str,
         validation_result: ValidationResult,
         convention_result: ConventionResult,
-        quality_score: QualityScore
+        quality_score: QualityScore,
     ) -> None:
         """Log validation results for visibility."""
         logger.info(f"Validation results for {prompt_id}:")
         logger.info(f"  Structure valid: {validation_result.is_valid}")
         logger.info(f"  Convention valid: {convention_result.is_valid}")
-        logger.info(f"  Quality score: {quality_score.overall_score:.1f}/10 "
-                   f"(threshold: {self.quality_threshold})")
+        logger.info(
+            f"  Quality score: {quality_score.overall_score:.1f}/10 "
+            f"(threshold: {self.quality_threshold})"
+        )
 
         if validation_result.errors:
             for error in validation_result.errors:
@@ -429,15 +421,19 @@ Return only the enhanced context text.
             for fb in quality_score.feedback:
                 logger.info(f"  Quality feedback: {fb}")
 
-    async def _generate_context(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> str:
+    async def _generate_context(
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
+    ) -> str:
         # In a real implementation, this would call the LLM with specific context
         # For now, we return the provided context or a placeholder
         return context_data.get("context", "Context not provided.")
 
-    async def _generate_goal(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> str:
+    async def _generate_goal(self, assignment: ToolAssignment, context_data: dict[str, Any]) -> str:
         return context_data.get("goal", "Goal not provided.")
 
-    async def _generate_steps(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> str:
+    async def _generate_steps(
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
+    ) -> str:
         # Use LLM to generate steps
         prompt = f"""
         Generate 4-8 specific, actionable steps for the following task:
@@ -451,27 +447,34 @@ Return only the enhanced context text.
 
         try:
             response = await self.client.chat_completion(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7
+                model=self.model, messages=[{"role": "user", "content": prompt}], temperature=0.7
             )
-            return response.content or "1. Analyze requirements\n2. Implement changes\n3. Verify implementation"
+            return (
+                response.content
+                or "1. Analyze requirements\n2. Implement changes\n3. Verify implementation"
+            )
         except Exception as e:
             logger.error(f"Failed to generate steps: {e}")
             return "1. Analyze requirements\n2. Implement changes\n3. Verify implementation"
 
-    async def _generate_constraints(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> str:
+    async def _generate_constraints(
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
+    ) -> str:
         # Default constraints + specific ones
         constraints = [
             "- Existing prompt files in `project_prompts/`",
-            "- `src/lattice_lock_cli/` (owned by Claude Code CLI)"
+            "- `src/lattice_lock_cli/` (owned by Claude Code CLI)",
         ]
         return "\n".join(constraints)
 
-    async def _generate_success_criteria(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> str:
+    async def _generate_success_criteria(
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
+    ) -> str:
         return "- Code compiles and runs\n- Tests pass"
 
-    async def _generate_notes(self, assignment: ToolAssignment, context_data: Dict[str, Any]) -> str:
+    async def _generate_notes(
+        self, assignment: ToolAssignment, context_data: dict[str, Any]
+    ) -> str:
         return "- Follow the guardrails in prompt_generator.yaml"
 
     def _find_phase_directory(self, phase_number: str) -> str:
@@ -480,17 +483,19 @@ Return only the enhanced context text.
             return "phase" + phase_number
 
         for d in os.listdir(self.prompts_dir):
-            if d.startswith(f"phase{phase_number}") and os.path.isdir(os.path.join(self.prompts_dir, d)):
+            if d.startswith(f"phase{phase_number}") and os.path.isdir(
+                os.path.join(self.prompts_dir, d)
+            ):
                 return d
         return f"phase{phase_number}_generic"
 
     async def _write_prompt_file(self, prompt: GeneratedPrompt):
         os.makedirs(os.path.dirname(prompt.file_path), exist_ok=True)
-        async with aiofiles.open(prompt.file_path, 'w') as f:
+        async with aiofiles.open(prompt.file_path, "w") as f:
             await f.write(prompt.content)
         logger.info(f"Generated prompt written to {prompt.file_path}")
 
-    def _update_state(self, prompt: GeneratedPrompt, context_data: Dict[str, Any]):
+    def _update_state(self, prompt: GeneratedPrompt, context_data: dict[str, Any]):
         """
         Update the tracker state with the newly generated prompt.
 
@@ -510,7 +515,7 @@ Return only the enhanced context text.
         # We need just "phase5_prompt_automation/5.4.1_claude_app_tracker.md"
         file_path = prompt.file_path
         if file_path.startswith(self.prompts_dir):
-            file_path = file_path[len(self.prompts_dir):].lstrip("/\\")
+            file_path = file_path[len(self.prompts_dir) :].lstrip("/\\")
 
         try:
             # Check if prompt already exists in tracker
@@ -524,7 +529,7 @@ Return only the enhanced context text.
                 prompt_id=prompt.prompt_id,
                 title=context_data.get("task_title", prompt.sections.get("title", "Untitled")),
                 tool=tool,
-                file_path=file_path
+                file_path=file_path,
             )
             logger.info(f"Added prompt {prompt.prompt_id} to tracker: {result}")
         except ValueError as e:

@@ -2,29 +2,29 @@
 Tests for rollback state management.
 """
 
-import os
-import time
-import json
-import unittest
 import shutil
 import tempfile
+import time
+import unittest
 from pathlib import Path
+
+from lattice_lock.rollback.checkpoint import CheckpointManager
 from lattice_lock.rollback.state import RollbackState
 from lattice_lock.rollback.storage import CheckpointStorage
-from lattice_lock.rollback.checkpoint import CheckpointManager
+
 
 class TestRollbackState(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.test_dir = tempfile.mkdtemp()
         self.storage_dir = Path(self.test_dir) / "checkpoints"
-        
+
         self.sample_state = RollbackState(
             timestamp=time.time(),
             files={"/path/to/file1": "hash1", "/path/to/file2": "hash2"},
             config={"key": "value"},
             schema_version="1.0.0",
-            description="Test state"
+            description="Test state",
         )
 
     def tearDown(self):
@@ -45,16 +45,13 @@ class TestRollbackState(unittest.TestCase):
     def test_rollback_state_diff(self):
         """Test state comparison."""
         state1 = RollbackState(
-            timestamp=100.0,
-            files={"f1": "h1", "f2": "h2"},
-            config={"c": 1},
-            schema_version="1.0"
+            timestamp=100.0, files={"f1": "h1", "f2": "h2"}, config={"c": 1}, schema_version="1.0"
         )
         state2 = RollbackState(
             timestamp=200.0,
             files={"f1": "h1", "f2": "h2_new", "f3": "h3"},
             config={"c": 2},
-            schema_version="1.1"
+            schema_version="1.1",
         )
 
         diff = state2.diff(state1)
@@ -67,9 +64,9 @@ class TestRollbackState(unittest.TestCase):
         # Test removal
         state3 = RollbackState(
             timestamp=300.0,
-            files={"f1": "h1"}, # f2, f3 removed
+            files={"f1": "h1"},  # f2, f3 removed
             config={"c": 2},
-            schema_version="1.1"
+            schema_version="1.1",
         )
 
         # Diff state3 against state2 (changes from state2 to state3)
@@ -94,13 +91,13 @@ class TestRollbackState(unittest.TestCase):
 
         # Create two states
         id1 = storage.save_state(self.sample_state)
-        time.sleep(0.01) # Ensure timestamp difference
+        time.sleep(0.01)  # Ensure timestamp difference
         self.sample_state.timestamp = time.time()
         id2 = storage.save_state(self.sample_state)
 
         states = storage.list_states()
         self.assertEqual(len(states), 2)
-        self.assertEqual(states[0], id2) # Newest first
+        self.assertEqual(states[0], id2)  # Newest first
         self.assertEqual(states[1], id1)
 
         # Delete one
@@ -127,7 +124,7 @@ class TestRollbackState(unittest.TestCase):
         storage.prune_states(3)
         remaining = storage.list_states()
         self.assertEqual(len(remaining), 3)
-        self.assertEqual(remaining[0], ids[-1]) # Newest should be kept
+        self.assertEqual(remaining[0], ids[-1])  # Newest should be kept
 
     def test_checkpoint_manager(self):
         """Test CheckpointManager high-level API."""
@@ -149,5 +146,6 @@ class TestRollbackState(unittest.TestCase):
         manager.delete_checkpoint(cp_id)
         self.assertEqual(len(manager.list_checkpoints()), 0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -19,28 +19,26 @@ Model Usage:
 - Fallback: Llama 3.1 8B (lightweight tests)
 """
 
-import pytest
 import asyncio
-import os
-import sys
 import json
-import time
-import tempfile
 import shutil
+import sys
+import tempfile
+import time
 from pathlib import Path
-from typing import Dict, List, Optional
-from unittest.mock import Mock, AsyncMock, patch, MagicMock, call
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import using filename with hyphens
 import importlib.util
+
 spec = importlib.util.spec_from_file_location(
     "model_orchestrator_consolidated",
-    Path(__file__).parent.parent / "model-orchestrator-consolidated.py"
+    Path(__file__).parent.parent / "model-orchestrator-consolidated.py",
 )
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
@@ -60,6 +58,7 @@ APIResponse = mod.APIResponse
 # ============================================================================
 # Test Fixtures and Mocks
 # ============================================================================
+
 
 @pytest.fixture
 def temp_dir():
@@ -86,7 +85,7 @@ def mock_api_responses():
             provider="test",
             usage={"input_tokens": 0, "output_tokens": 0},
             latency_ms=0,
-            error="API Error: Rate limit exceeded"
+            error="API Error: Rate limit exceeded",
         ),
         "timeout": APIResponse(
             content="",
@@ -94,8 +93,8 @@ def mock_api_responses():
             provider="test",
             usage={"input_tokens": 0, "output_tokens": 0},
             latency_ms=30000,
-            error="Timeout after 30s"
-        )
+            error="Timeout after 30s",
+        ),
     }
 
 
@@ -108,29 +107,30 @@ def mock_multi_agent_context():
                 "name": "Architecture Discovery Agent",
                 "role": "system_analysis",
                 "model": "codellama:34b",
-                "status": "active"
+                "status": "active",
             },
             {
                 "name": "Testing Specialist",
                 "role": "test_generation",
                 "model": "qwen2.5:32b",
-                "status": "active"
+                "status": "active",
             },
             {
                 "name": "Documentation Writer",
                 "role": "documentation",
                 "model": "llama3.1:8b",
-                "status": "active"
-            }
+                "status": "active",
+            },
         ],
         "workflow": "parallel",
-        "coordination_protocol": "asynchronous"
+        "coordination_protocol": "asynchronous",
     }
 
 
 @pytest.fixture
 def orchestrator_with_mocks(mock_api_responses):
     """Create orchestrator with mocked API clients"""
+
     def mock_client_factory(provider):
         client = AsyncMock()
         client.chat_completion.return_value = mock_api_responses["success"]
@@ -146,7 +146,7 @@ def orchestrator_with_mocks(mock_api_responses):
         guide=guide,
         analyzer=TaskAnalyzer(),
         scorer=ModelScorer(),
-        api_client_factory=mock_client_factory
+        api_client_factory=mock_client_factory,
     )
 
 
@@ -154,11 +154,14 @@ def orchestrator_with_mocks(mock_api_responses):
 # 1. Multi-Agent Workflow Tests
 # ============================================================================
 
+
 class TestMultiAgentWorkflows:
     """Test multi-agent coordination and workflows"""
 
     @pytest.mark.asyncio
-    async def test_parallel_agent_execution(self, orchestrator_with_mocks, mock_multi_agent_context):
+    async def test_parallel_agent_execution(
+        self, orchestrator_with_mocks, mock_multi_agent_context
+    ):
         """Test parallel execution of multiple agents"""
         agents = mock_multi_agent_context["agents"]
 
@@ -167,7 +170,7 @@ class TestMultiAgentWorkflows:
         for agent in agents:
             task = orchestrator_with_mocks.call_model(
                 model_id=agent["model"],
-                messages=[{"role": "user", "content": f"Task for {agent['name']}"}]
+                messages=[{"role": "user", "content": f"Task for {agent['name']}"}],
             )
             tasks.append(task)
 
@@ -189,8 +192,7 @@ class TestMultiAgentWorkflows:
         """Test sequential agent handoffs"""
         # Agent 1: Analyze
         response1 = await orchestrator_with_mocks.call_model(
-            model_id="codellama:34b",
-            messages=[{"role": "user", "content": "Analyze the codebase"}]
+            model_id="codellama:34b", messages=[{"role": "user", "content": "Analyze the codebase"}]
         )
 
         # Agent 2: Design (uses Agent 1 output)
@@ -199,8 +201,8 @@ class TestMultiAgentWorkflows:
             messages=[
                 {"role": "user", "content": "Analyze the codebase"},
                 {"role": "assistant", "content": response1.content},
-                {"role": "user", "content": "Design improvements based on analysis"}
-            ]
+                {"role": "user", "content": "Design improvements based on analysis"},
+            ],
         )
 
         # Agent 3: Implement (uses Agent 2 output)
@@ -209,8 +211,8 @@ class TestMultiAgentWorkflows:
             messages=[
                 {"role": "user", "content": "Design improvements based on analysis"},
                 {"role": "assistant", "content": response2.content},
-                {"role": "user", "content": "Implement the design"}
-            ]
+                {"role": "user", "content": "Implement the design"},
+            ],
         )
 
         # Verify sequential handoff worked
@@ -225,7 +227,7 @@ class TestMultiAgentWorkflows:
         client = orchestrator_with_mocks.api_clients[ModelProvider.LOCAL]
         client.chat_completion.side_effect = [
             mock_api_responses["error"],  # First call fails
-            mock_api_responses["success"]  # Retry succeeds
+            mock_api_responses["success"],  # Retry succeeds
         ]
 
         # Should retry and succeed
@@ -233,7 +235,7 @@ class TestMultiAgentWorkflows:
             model_id="codellama:34b",
             messages=[{"role": "user", "content": "Test"}],
             retry_on_failure=True,
-            max_retries=2
+            max_retries=2,
         )
 
         assert response.content == "Test response successful"
@@ -242,9 +244,7 @@ class TestMultiAgentWorkflows:
     def test_agent_consensus_selection(self, orchestrator_with_mocks):
         """Test consensus group creation for multi-agent decisions"""
         group = orchestrator_with_mocks.create_consensus_group(
-            prompt="Complex decision requiring consensus",
-            num_models=3,
-            diverse=True
+            prompt="Complex decision requiring consensus", num_models=3, diverse=True
         )
 
         # Verify diverse provider selection
@@ -260,6 +260,7 @@ class TestMultiAgentWorkflows:
 # ============================================================================
 # 2. Model Orchestrator Integration Tests
 # ============================================================================
+
 
 class TestModelOrchestratorIntegration:
     """Test complete orchestrator workflows"""
@@ -300,8 +301,7 @@ class TestModelOrchestratorIntegration:
 
         # Step 3: Make API call
         response = await orchestrator_with_mocks.call_model(
-            model_id=model_id,
-            messages=[{"role": "user", "content": prompt}]
+            model_id=model_id, messages=[{"role": "user", "content": prompt}]
         )
 
         # Step 4: Verify tracking
@@ -318,21 +318,19 @@ class TestModelOrchestratorIntegration:
 
         # Cost optimize should prefer free/cheap models
         model_id_cost, model_cost = orchestrator_with_mocks.select_model(
-            prompt,
-            strategy="cost_optimize",
-            use_guide=False
+            prompt, strategy="cost_optimize", use_guide=False
         )
 
         # Quality first should prefer accurate models
         model_id_quality, model_quality = orchestrator_with_mocks.select_model(
-            prompt,
-            strategy="quality_first",
-            use_guide=False
+            prompt, strategy="quality_first", use_guide=False
         )
 
         # Verify cost optimization
-        assert model_cost.input_cost + model_cost.output_cost <= \
-               model_quality.input_cost + model_quality.output_cost
+        assert (
+            model_cost.input_cost + model_cost.output_cost
+            <= model_quality.input_cost + model_quality.output_cost
+        )
 
     def test_fallback_chain_execution(self, orchestrator_with_mocks):
         """Test fallback when primary model unavailable"""
@@ -340,10 +338,7 @@ class TestModelOrchestratorIntegration:
         orchestrator_with_mocks.registry.models["codellama:34b"].available = False
 
         # Should fall back to next best model
-        model_id, model = orchestrator_with_mocks.select_model(
-            "Write Python code",
-            use_guide=False
-        )
+        model_id, model = orchestrator_with_mocks.select_model("Write Python code", use_guide=False)
 
         assert model_id != "codellama:34b"
         assert model.available is True
@@ -353,6 +348,7 @@ class TestModelOrchestratorIntegration:
 # ============================================================================
 # 3. API Endpoint Testing with Mocks
 # ============================================================================
+
 
 class TestAPIEndpointMocking:
     """Test API endpoints with comprehensive mocking"""
@@ -365,15 +361,15 @@ class TestAPIEndpointMocking:
         # Simulate rate limit then success
         client.chat_completion.side_effect = [
             Exception("Rate limit exceeded"),
-            mock_api_responses["success"]
+            mock_api_responses["success"],
         ]
 
-        with patch('asyncio.sleep', return_value=None):  # Skip actual sleep
+        with patch("asyncio.sleep", return_value=None):  # Skip actual sleep
             response = await orchestrator_with_mocks.call_model(
                 model_id="codellama:34b",
                 messages=[{"role": "user", "content": "Test"}],
                 retry_on_failure=True,
-                max_retries=3
+                max_retries=3,
             )
 
         assert response.content == "Test response successful"
@@ -394,7 +390,7 @@ class TestAPIEndpointMocking:
             await orchestrator_with_mocks.call_model(
                 model_id="codellama:34b",
                 messages=[{"role": "user", "content": "Test"}],
-                timeout=0.05  # Very short timeout
+                timeout=0.05,  # Very short timeout
             )
 
     @pytest.mark.asyncio
@@ -412,8 +408,7 @@ class TestAPIEndpointMocking:
             client.chat_completion.return_value = invalid_response
 
             response = await orchestrator_with_mocks.call_model(
-                model_id="codellama:34b",
-                messages=[{"role": "user", "content": "Test"}]
+                model_id="codellama:34b", messages=[{"role": "user", "content": "Test"}]
             )
 
             # Should handle gracefully
@@ -426,8 +421,7 @@ class TestAPIEndpointMocking:
         tasks = []
         for i in range(10):
             task = orchestrator_with_mocks.call_model(
-                model_id="codellama:34b",
-                messages=[{"role": "user", "content": f"Request {i}"}]
+                model_id="codellama:34b", messages=[{"role": "user", "content": f"Request {i}"}]
             )
             tasks.append(task)
 
@@ -443,6 +437,7 @@ class TestAPIEndpointMocking:
 # 4. Database/File System Integration Tests
 # ============================================================================
 
+
 class TestDatabaseFileSystemIntegration:
     """Test file system and database-like operations"""
 
@@ -454,14 +449,14 @@ class TestDatabaseFileSystemIntegration:
 
         # Save to file
         cost_file = Path(temp_dir) / "cost_tracking.json"
-        with open(cost_file, 'w') as f:
+        with open(cost_file, "w") as f:
             json.dump(orchestrator_with_mocks.cost_tracker, f)
 
         # Verify file exists and contains data
         assert cost_file.exists()
 
         # Load and verify
-        with open(cost_file, 'r') as f:
+        with open(cost_file) as f:
             loaded_data = json.load(f)
 
         assert "codellama:34b" in loaded_data
@@ -472,21 +467,18 @@ class TestDatabaseFileSystemIntegration:
         # Add performance data
         for i in range(50):
             orchestrator_with_mocks.track_usage(
-                f"model-{i % 5}",
-                1000 + i * 10,
-                500 + i * 5,
-                200 + i
+                f"model-{i % 5}", 1000 + i * 10, 500 + i * 5, 200 + i
             )
 
         # Save to file
         perf_file = Path(temp_dir) / "performance.json"
-        with open(perf_file, 'w') as f:
+        with open(perf_file, "w") as f:
             json.dump(orchestrator_with_mocks.performance_history, f, default=str)
 
         # Verify
         assert perf_file.exists()
 
-        with open(perf_file, 'r') as f:
+        with open(perf_file) as f:
             loaded_history = json.load(f)
 
         assert len(loaded_history) == 50
@@ -503,17 +495,17 @@ class TestDatabaseFileSystemIntegration:
                 "provider": model.provider.value,
                 "context_window": model.context_window,
                 "speed": model.speed,
-                "accuracy": model.accuracy
+                "accuracy": model.accuracy,
             }
 
-        with open(registry_file, 'w') as f:
+        with open(registry_file, "w") as f:
             json.dump(models_data, f)
 
         # Verify
         assert registry_file.exists()
 
         # Reload
-        with open(registry_file, 'r') as f:
+        with open(registry_file) as f:
             loaded_data = json.load(f)
 
         assert len(loaded_data) > 0
@@ -523,6 +515,7 @@ class TestDatabaseFileSystemIntegration:
 # ============================================================================
 # 5. External Service Mocking Framework
 # ============================================================================
+
 
 class TestExternalServiceMocking:
     """Test mocking of external services and dependencies"""
@@ -537,15 +530,14 @@ class TestExternalServiceMocking:
             model="codellama:34b",
             provider="local",
             usage={"input_tokens": 100, "output_tokens": 50},
-            latency_ms=150
+            latency_ms=150,
         )
 
         # Replace client
         orchestrator_with_mocks.api_clients[ModelProvider.LOCAL] = mock_ollama
 
         response = await orchestrator_with_mocks.call_model(
-            model_id="codellama:34b",
-            messages=[{"role": "user", "content": "Test"}]
+            model_id="codellama:34b", messages=[{"role": "user", "content": "Test"}]
         )
 
         assert response.content == "Mock Ollama response"
@@ -561,7 +553,7 @@ class TestExternalServiceMocking:
             model="claude-sonnet-4.5",
             provider="anthropic",
             usage={"input_tokens": 200, "output_tokens": 100},
-            latency_ms=500
+            latency_ms=500,
         )
 
         orchestrator_with_mocks.api_clients[ModelProvider.ANTHROPIC] = mock_anthropic
@@ -572,12 +564,11 @@ class TestExternalServiceMocking:
             model_id="claude-sonnet-4.5",
             context_window=200000,
             speed=0.7,
-            accuracy=0.95
+            accuracy=0.95,
         )
 
         response = await orchestrator_with_mocks.call_model(
-            model_id="claude-sonnet-4.5",
-            messages=[{"role": "user", "content": "Test"}]
+            model_id="claude-sonnet-4.5", messages=[{"role": "user", "content": "Test"}]
         )
 
         assert response.content == "Mock Claude response"
@@ -597,11 +588,11 @@ class TestExternalServiceMocking:
 """
 
         guide_file = Path(temp_dir) / "MODELS.md"
-        with open(guide_file, 'w') as f:
+        with open(guide_file, "w") as f:
             f.write(guide_content)
 
         # Create parser with mock file
-        from importlib import reload
+
         parser = mod.ModelGuideParser(str(guide_file))
 
         # Verify it loaded
@@ -612,16 +603,18 @@ class TestExternalServiceMocking:
 # 6. Error Scenario Testing
 # ============================================================================
 
+
 class TestErrorScenarios:
     """Test comprehensive error handling"""
 
     def test_invalid_model_id_error(self, orchestrator_with_mocks):
         """Test error when model ID doesn't exist"""
         with pytest.raises(ValueError, match="Unknown model"):
-            asyncio.run(orchestrator_with_mocks.call_model(
-                model_id="nonexistent-model-xyz",
-                messages=[{"role": "user", "content": "Test"}]
-            ))
+            asyncio.run(
+                orchestrator_with_mocks.call_model(
+                    model_id="nonexistent-model-xyz", messages=[{"role": "user", "content": "Test"}]
+                )
+            )
 
     def test_insufficient_context_window(self, orchestrator_with_mocks):
         """Test handling when no model has sufficient context"""
@@ -644,8 +637,7 @@ class TestErrorScenarios:
 
         with pytest.raises(ConnectionError):
             await orchestrator_with_mocks.call_model(
-                model_id="codellama:34b",
-                messages=[{"role": "user", "content": "Test"}]
+                model_id="codellama:34b", messages=[{"role": "user", "content": "Test"}]
             )
 
     def test_malformed_task_analysis(self, orchestrator_with_mocks):
@@ -665,7 +657,7 @@ class TestErrorScenarios:
                 if isinstance(invalid_input, str):
                     result = analyzer.analyze(invalid_input)
                     assert isinstance(result, TaskRequirements)
-            except (TypeError, ValueError) as e:
+            except (TypeError, ValueError):
                 # Expected for non-string inputs
                 assert True
 
@@ -681,7 +673,7 @@ class TestErrorScenarios:
             model="test",
             provider="local",
             usage={"input_tokens": 100, "output_tokens": 50},
-            latency_ms=200
+            latency_ms=200,
         )
 
         async def mixed_response(*args, **kwargs):
@@ -696,8 +688,7 @@ class TestErrorScenarios:
         # Create concurrent tasks
         tasks = [
             orchestrator_with_mocks.call_model(
-                model_id="codellama:34b",
-                messages=[{"role": "user", "content": f"Task {i}"}]
+                model_id="codellama:34b", messages=[{"role": "user", "content": f"Task {i}"}]
             )
             for i in range(5)
         ]
@@ -716,6 +707,7 @@ class TestErrorScenarios:
 # 7. Performance Integration Tests
 # ============================================================================
 
+
 class TestPerformanceIntegration:
     """Test performance characteristics"""
 
@@ -725,7 +717,7 @@ class TestPerformanceIntegration:
             "Write code",
             "Debug error",
             "Translate text",
-            "Analyze data"
+            "Analyze data",
         ] * 25  # 100 selections
 
         start_time = time.time()
@@ -746,8 +738,7 @@ class TestPerformanceIntegration:
         start_time = time.time()
         tasks = [
             orchestrator_with_mocks.call_model(
-                model_id="codellama:34b",
-                messages=[{"role": "user", "content": f"Request {i}"}]
+                model_id="codellama:34b", messages=[{"role": "user", "content": f"Request {i}"}]
             )
             for i in range(num_requests)
         ]
@@ -766,12 +757,7 @@ class TestPerformanceIntegration:
         """Test cost calculation scales well"""
         # Add 1000 usage entries
         for i in range(1000):
-            orchestrator_with_mocks.track_usage(
-                f"model-{i % 10}",
-                1000,
-                500,
-                200
-            )
+            orchestrator_with_mocks.track_usage(f"model-{i % 10}", 1000, 500, 200)
 
         # Cost report should still be fast
         start_time = time.time()
@@ -785,12 +771,7 @@ class TestPerformanceIntegration:
         """Test memory doesn't grow unbounded"""
         # Add 2000 performance entries
         for i in range(2000):
-            orchestrator_with_mocks.track_usage(
-                "test-model",
-                1000,
-                500,
-                200
-            )
+            orchestrator_with_mocks.track_usage("test-model", 1000, 500, 200)
 
         # Should cap at 1000 entries
         assert len(orchestrator_with_mocks.performance_history) == 1000
@@ -799,6 +780,7 @@ class TestPerformanceIntegration:
 # ============================================================================
 # 8. End-to-End User Flow Tests
 # ============================================================================
+
 
 class TestEndToEndUserFlows:
     """Test complete user workflows"""
@@ -815,8 +797,7 @@ class TestEndToEndUserFlows:
 
         # Step 2: Generate code
         response = await orchestrator_with_mocks.call_model(
-            model_id=model_id,
-            messages=[{"role": "user", "content": prompt}]
+            model_id=model_id, messages=[{"role": "user", "content": prompt}]
         )
         assert response.content
 
@@ -841,8 +822,7 @@ Error: RecursionError: maximum recursion depth exceeded
 
         # Get debugging help
         response = await orchestrator_with_mocks.call_model(
-            model_id=model_id,
-            messages=[{"role": "user", "content": error_prompt}]
+            model_id=model_id, messages=[{"role": "user", "content": error_prompt}]
         )
 
         assert response.content
@@ -856,24 +836,21 @@ Error: RecursionError: maximum recursion depth exceeded
         # Turn 1
         conversation.append({"role": "user", "content": "What is Python?"})
         response1 = await orchestrator_with_mocks.call_model(
-            model_id="codellama:34b",
-            messages=conversation
+            model_id="codellama:34b", messages=conversation
         )
         conversation.append({"role": "assistant", "content": response1.content})
 
         # Turn 2
         conversation.append({"role": "user", "content": "How do I install it?"})
         response2 = await orchestrator_with_mocks.call_model(
-            model_id="codellama:34b",
-            messages=conversation
+            model_id="codellama:34b", messages=conversation
         )
         conversation.append({"role": "assistant", "content": response2.content})
 
         # Turn 3
         conversation.append({"role": "user", "content": "Show me a hello world example"})
         response3 = await orchestrator_with_mocks.call_model(
-            model_id="codellama:34b",
-            messages=conversation
+            model_id="codellama:34b", messages=conversation
         )
 
         # Verify all responses
@@ -887,9 +864,7 @@ Error: RecursionError: maximum recursion depth exceeded
         """Test consensus-based decision workflow"""
         # Create consensus group
         group = orchestrator_with_mocks.create_consensus_group(
-            prompt="Should we use async or sync for this API?",
-            num_models=3,
-            diverse=True
+            prompt="Should we use async or sync for this API?", num_models=3, diverse=True
         )
 
         # Get responses from all models
@@ -897,7 +872,7 @@ Error: RecursionError: maximum recursion depth exceeded
         for model_id, model in group:
             task = orchestrator_with_mocks.call_model(
                 model_id=model_id,
-                messages=[{"role": "user", "content": "Should we use async or sync for this API?"}]
+                messages=[{"role": "user", "content": "Should we use async or sync for this API?"}],
             )
             tasks.append(task)
 
@@ -911,16 +886,12 @@ Error: RecursionError: maximum recursion depth exceeded
         """Test enforcing cost budget in selection"""
         # Low budget - should select cheap model
         cheap_model_id, cheap_model = orchestrator_with_mocks.select_model(
-            "Simple task",
-            strategy="cost_optimize",
-            use_guide=False
+            "Simple task", strategy="cost_optimize", use_guide=False
         )
 
         # High budget - can select quality model
         quality_model_id, quality_model = orchestrator_with_mocks.select_model(
-            "Complex analysis requiring accuracy",
-            strategy="quality_first",
-            use_guide=False
+            "Complex analysis requiring accuracy", strategy="quality_first", use_guide=False
         )
 
         # Verify cost difference
@@ -935,10 +906,13 @@ Error: RecursionError: maximum recursion depth exceeded
 # ============================================================================
 
 if __name__ == "__main__":
-    pytest.main([
-        __file__,
-        "-v",
-        "--tb=short",
-        "--asyncio-mode=auto",
-        "-k", "not slow"  # Skip slow tests by default
-    ])
+    pytest.main(
+        [
+            __file__,
+            "-v",
+            "--tb=short",
+            "--asyncio-mode=auto",
+            "-k",
+            "not slow",  # Skip slow tests by default
+        ]
+    )

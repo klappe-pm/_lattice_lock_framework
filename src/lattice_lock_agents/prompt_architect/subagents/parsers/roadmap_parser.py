@@ -1,53 +1,62 @@
-from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Any
-from pydantic import BaseModel, Field
 import re
+from abc import ABC, abstractmethod
+from typing import Optional
+
+from pydantic import BaseModel, Field
+
 
 class Task(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
     epic_id: Optional[str] = None
-    dependencies: List[str] = Field(default_factory=list)
+    dependencies: list[str] = Field(default_factory=list)
     estimated_hours: Optional[float] = None
     owner: Optional[str] = None
     status: Optional[str] = None
+
 
 class Epic(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
-    tasks: List[Task] = Field(default_factory=list)
+    tasks: list[Task] = Field(default_factory=list)
     owner: Optional[str] = None
+
 
 class Phase(BaseModel):
     number: int
     name: str
     duration: Optional[str] = None
-    exit_criteria: List[str] = Field(default_factory=list)
-    epics: List[Epic] = Field(default_factory=list)
+    exit_criteria: list[str] = Field(default_factory=list)
+    epics: list[Epic] = Field(default_factory=list)
+
 
 class RoadmapStructure(BaseModel):
-    phases: List[Phase] = Field(default_factory=list)
-    dependencies: Dict[str, List[str]] = Field(default_factory=dict)
+    phases: list[Phase] = Field(default_factory=list)
+    dependencies: dict[str, list[str]] = Field(default_factory=dict)
+
 
 class BaseRoadmapParser(ABC):
     @abstractmethod
     def parse(self, content: str) -> RoadmapStructure:
         pass
 
+
 class WorkBreakdownParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
         structure = RoadmapStructure()
-        lines = content.split('\n')
+        lines = content.split("\n")
         current_phase: Optional[Phase] = None
         current_section = None
 
         # Regex patterns
-        phase_pattern = re.compile(r'### Phase (\d+): (.+) \((.+)\)')
-        epic_row_pattern = re.compile(r'\|\s*(\d+\.\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|')
-        dependency_header_pattern = re.compile(r'### Phase \d+ Dependencies')
-        dependency_item_pattern = re.compile(r'Epic (\d+\.\d+) .*depends on.*') # Simplified, needs robust parsing
+        phase_pattern = re.compile(r"### Phase (\d+): (.+) \((.+)\)")
+        epic_row_pattern = re.compile(r"\|\s*(\d+\.\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|")
+        dependency_header_pattern = re.compile(r"### Phase \d+ Dependencies")
+        dependency_item_pattern = re.compile(
+            r"Epic (\d+\.\d+) .*depends on.*"
+        )  # Simplified, needs robust parsing
 
         # More robust dependency parsing
         # Example: "1. Epic 1.1 (Package Orchestrator) - No dependencies, start first"
@@ -138,7 +147,7 @@ class WorkBreakdownParser(BaseRoadmapParser):
         except IndexError:
             return
 
-        lines = dep_section.split('\n')
+        lines = dep_section.split("\n")
         current_phase_deps = None
 
         for line in lines:
@@ -147,7 +156,7 @@ class WorkBreakdownParser(BaseRoadmapParser):
             # "Epic 5.2 ... depends on ..."
             # "1. Epic 1.1 ... - No dependencies"
 
-            subject_match = re.search(r'Epic (\d+\.\d+)', line)
+            subject_match = re.search(r"Epic (\d+\.\d+)", line)
             if subject_match:
                 subject_id = subject_match.group(1)
 
@@ -160,10 +169,10 @@ class WorkBreakdownParser(BaseRoadmapParser):
 
                     # Find all other epic IDs in the line after "depends on"
                     after_depends = line.split("depends on")[1]
-                    target_ids = re.findall(r'(\d+\.\d+)', after_depends)
+                    target_ids = re.findall(r"(\d+\.\d+)", after_depends)
 
                     # Also handle "depends on Phase X completion"
-                    phase_dep_match = re.search(r'Phase (\d+) completion', after_depends)
+                    phase_dep_match = re.search(r"Phase (\d+) completion", after_depends)
                     if phase_dep_match:
                         phase_num = int(phase_dep_match.group(1))
                         # Find all epics in that phase
@@ -176,7 +185,10 @@ class WorkBreakdownParser(BaseRoadmapParser):
                         structure.dependencies[subject_id] = []
 
                     for target_id in target_ids:
-                        if target_id != subject_id and target_id not in structure.dependencies[subject_id]:
+                        if (
+                            target_id != subject_id
+                            and target_id not in structure.dependencies[subject_id]
+                        ):
                             structure.dependencies[subject_id].append(target_id)
 
                 # Handle "All Phase X epics depend on Phase Y completion"
@@ -184,7 +196,7 @@ class WorkBreakdownParser(BaseRoadmapParser):
 
             if line.startswith("- All Phase") or line.startswith("All Phase"):
                 # "All Phase 5 epics depend on Phase 1 completion"
-                phase_match = re.search(r'Phase (\d+) epics depend on Phase (\d+) completion', line)
+                phase_match = re.search(r"Phase (\d+) epics depend on Phase (\d+) completion", line)
                 if phase_match:
                     subject_phase_num = int(phase_match.group(1))
                     target_phase_num = int(phase_match.group(2))
@@ -210,6 +222,7 @@ class GanttParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
         # Placeholder for Gantt chart parsing
         return RoadmapStructure()
+
 
 class KanbanParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:

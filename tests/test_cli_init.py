@@ -4,12 +4,12 @@ Tests for the Lattice Lock CLI init command.
 Tests project scaffolding, validation, and template rendering.
 """
 
-import pytest
 from pathlib import Path
-from click.testing import CliRunner
 
+import pytest
+from click.testing import CliRunner
 from lattice_lock_cli.__main__ import cli
-from lattice_lock_cli.commands.init import validate_project_name, create_project_structure
+from lattice_lock_cli.commands.init import create_project_structure, validate_project_name
 
 
 @pytest.fixture
@@ -61,10 +61,15 @@ class TestInitCommand:
 
     def test_successful_project_creation(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that a project is created successfully."""
-        result = runner.invoke(cli, [
-            "init", "my_test_project",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_test_project",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Project created successfully!" in result.output
@@ -82,10 +87,15 @@ class TestInitCommand:
 
     def test_invalid_project_name_rejected(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that invalid project names are rejected."""
-        result = runner.invoke(cli, [
-            "init", "Invalid-Name",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "Invalid-Name",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code != 0
         assert "Invalid project name" in result.output
@@ -96,21 +106,32 @@ class TestInitCommand:
         existing_dir = temp_dir / "existing_project"
         existing_dir.mkdir()
 
-        result = runner.invoke(cli, [
-            "init", "existing_project",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "existing_project",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code != 0
         assert "already exists" in result.output
 
     def test_service_template_creates_service_file(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that service template creates the service scaffold."""
-        result = runner.invoke(cli, [
-            "init", "my_service",
-            "--template", "service",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_service",
+                "--template",
+                "service",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         service_file = temp_dir / "my_service" / "src" / "services" / "my_service.py"
@@ -121,11 +142,17 @@ class TestInitCommand:
 
     def test_agent_template_creates_agent_file(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that agent template creates the agent definition."""
-        result = runner.invoke(cli, [
-            "init", "my_agent",
-            "--template", "agent",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_agent",
+                "--template",
+                "agent",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         agent_file = temp_dir / "my_agent" / "agent.yaml"
@@ -137,11 +164,17 @@ class TestInitCommand:
 
     def test_library_template_creates_library_file(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that library template creates the library init file."""
-        result = runner.invoke(cli, [
-            "init", "my_library",
-            "--template", "library",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_library",
+                "--template",
+                "library",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         lib_file = temp_dir / "my_library" / "src" / "my_library" / "__init__.py"
@@ -152,10 +185,15 @@ class TestInitCommand:
 
     def test_default_template_is_service(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that the default template is 'service'."""
-        result = runner.invoke(cli, [
-            "init", "default_project",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "default_project",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         # Service template creates a service file
@@ -164,11 +202,16 @@ class TestInitCommand:
 
     def test_verbose_output(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that verbose flag produces detailed output."""
-        result = runner.invoke(cli, [
-            "-v",
-            "init", "verbose_project",
-            "--output-dir", str(temp_dir),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "-v",
+                "init",
+                "verbose_project",
+                "--output-dir",
+                str(temp_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Created directory:" in result.output or "Created file:" in result.output

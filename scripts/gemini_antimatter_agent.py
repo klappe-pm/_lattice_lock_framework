@@ -100,13 +100,11 @@ Workflow:
   3. Open Gemini in your Antimatter workspace
   4. Paste the prompt and review the output
   5. Save the design document to the repo
-        """
+        """,
     )
 
     parser.add_argument(
-        "task_id",
-        nargs="?",
-        help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
+        "task_id", nargs="?", help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
     )
 
     args = parser.parse_args()

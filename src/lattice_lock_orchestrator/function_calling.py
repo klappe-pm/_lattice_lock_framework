@@ -1,9 +1,11 @@
-from typing import Callable, Dict, Any, Optional
 import inspect
+from collections.abc import Callable
+from typing import Any
+
 
 class FunctionCallHandler:
     def __init__(self):
-        self._functions: Dict[str, Callable] = {}
+        self._functions: dict[str, Callable] = {}
 
     def register_function(self, name: str, func: Callable):
         """Registers a function to be callable by the orchestrator."""
@@ -23,7 +25,7 @@ class FunctionCallHandler:
         else:
             return func(**kwargs)
 
-    def get_registered_functions_metadata(self) -> Dict[str, Dict[str, Any]]:
+    def get_registered_functions_metadata(self) -> dict[str, dict[str, Any]]:
         """
         Returns metadata for all registered functions, including parameter schemas.
         """
@@ -34,14 +36,18 @@ class FunctionCallHandler:
             for param_name, param in sig.parameters.items():
                 param_info = {
                     "kind": str(param.kind),
-                    "default": str(param.default) if param.default != inspect.Parameter.empty else None,
-                    "annotation": str(param.annotation) if param.annotation != inspect.Parameter.empty else None
+                    "default": str(param.default)
+                    if param.default != inspect.Parameter.empty
+                    else None,
+                    "annotation": str(param.annotation)
+                    if param.annotation != inspect.Parameter.empty
+                    else None,
                 }
                 parameters[param_name] = param_info
 
             metadata[name] = {
                 "name": name,
                 "description": func.__doc__ or "No description provided.",
-                "parameters": parameters
+                "parameters": parameters,
             }
         return metadata

@@ -3,16 +3,17 @@ Rollback state definition and serialization.
 """
 
 import json
-from dataclasses import dataclass, asdict
-from typing import Dict, Any, List, Optional
-import time
+from dataclasses import asdict, dataclass
+from typing import Any
+
 
 @dataclass
 class RollbackState:
     """Represents a snapshot of the system state for rollback."""
+
     timestamp: float
-    files: Dict[str, str]  # path -> hash
-    config: Dict[str, Any]
+    files: dict[str, str]  # path -> hash
+    config: dict[str, Any]
     schema_version: str
     description: str = ""
 
@@ -21,12 +22,12 @@ class RollbackState:
         return json.dumps(asdict(self), sort_keys=True)
 
     @classmethod
-    def from_json(cls, json_str: str) -> 'RollbackState':
+    def from_json(cls, json_str: str) -> "RollbackState":
         """Deserialize state from JSON string."""
         data = json.loads(json_str)
         return cls(**data)
 
-    def diff(self, other: 'RollbackState') -> Dict[str, Any]:
+    def diff(self, other: "RollbackState") -> dict[str, Any]:
         """
         Compare this state with another state.
         Returns a dictionary describing the differences.
@@ -36,7 +37,7 @@ class RollbackState:
             "files_added": [],
             "files_removed": [],
             "config_changed": False,
-            "schema_version_changed": False
+            "schema_version_changed": False,
         }
 
         # Compare files
@@ -46,14 +47,16 @@ class RollbackState:
             hash_other = other.files.get(file_path)
 
             if hash_self and not hash_other:
-                diff_result["files_removed"].append(file_path) # Removed in 'other' (current) compared to 'self' (old)?
+                diff_result["files_removed"].append(
+                    file_path
+                )  # Removed in 'other' (current) compared to 'self' (old)?
                 # Usually diff is new - old. Let's assume self is NEW, other is OLD.
                 # Wait, usually we diff current state against a checkpoint.
                 # Let's define diff as: changes to get from OTHER to SELF.
                 # So if file is in SELF but not OTHER, it was added.
             elif hash_self and not hash_other:
-                 # This logic is getting confusing. Let's be explicit.
-                 pass
+                # This logic is getting confusing. Let's be explicit.
+                pass
 
         # Let's restart the logic for clarity.
         # Diff: What changed from OTHER -> SELF

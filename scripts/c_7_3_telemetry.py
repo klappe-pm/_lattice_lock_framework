@@ -1,9 +1,9 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent C_7_3)
 # Task 7.3: Advanced Telemetry
 
-import time
 import functools
+import time
+
 
 class Telemetry:
     def __init__(self):
@@ -19,11 +19,14 @@ class Telemetry:
                 finally:
                     duration = (time.perf_counter() - start) * 1000
                     print(f"[METRIC] {name}_latency_ms: {duration:.2f}")
+
             return wrapper
+
         return decorator
 
     def inc_counter(self, name: str, value: int = 1):
         print(f"[METRIC] {name}_count: +{value}")
+
 
 if __name__ == "__main__":
     telemetry = Telemetry()

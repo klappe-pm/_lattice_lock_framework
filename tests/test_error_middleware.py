@@ -4,28 +4,25 @@ Tests for the Lattice Lock error handling middleware.
 Tests error boundary decorator, logging, recovery actions, and telemetry.
 """
 
-import logging
 import os
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 from lattice_lock.errors import (
+    ConfigurationError,
+    ErrorContext,
+    ErrorHandler,
+    ErrorMetrics,
     LatticeError,
     NetworkError,
-    ConfigurationError,
-    LatticeRuntimeError,
-    Severity,
-    ErrorContext,
-    ErrorMetrics,
     RetryConfig,
-    ErrorHandler,
-    error_boundary,
-    handle_errors,
-    with_graceful_degradation,
-    get_metrics,
-    reset_metrics,
-    format_error_report,
     classify_error,
+    error_boundary,
+    format_error_report,
+    get_metrics,
+    handle_errors,
+    reset_metrics,
+    with_graceful_degradation,
 )
 
 

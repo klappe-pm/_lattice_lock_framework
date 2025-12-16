@@ -5,20 +5,21 @@ Collects and calculates validation metrics, error frequencies,
 response time percentiles, and project health trends.
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
-import time
 import statistics
+import time
 from collections import deque
+from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class MetricsSnapshot:
     """Snapshot of current metrics state."""
+
     total_validations: int
     success_rate: float
     avg_response_time: float
-    error_counts: Dict[str, int]
+    error_counts: dict[str, int]
     health_score: int
     timestamp: float
     # Extended metrics
@@ -32,9 +33,10 @@ class MetricsSnapshot:
 @dataclass
 class ProjectHealthTrend:
     """Health trend data for a project."""
+
     project_id: str
-    health_scores: List[float]
-    timestamps: List[float]
+    health_scores: list[float]
+    timestamps: list[float]
     trend_direction: str  # "improving", "declining", "stable"
     trend_magnitude: float
 
@@ -55,7 +57,7 @@ class MetricsCollector:
     def __init__(self):
         self.validation_count = 0
         self.success_count = 0
-        self.error_counts: Dict[str, int] = {}
+        self.error_counts: dict[str, int] = {}
         self.response_times: deque = deque(maxlen=self.MAX_RESPONSE_TIMES)
         self._start_time = time.time()
 
@@ -63,9 +65,9 @@ class MetricsCollector:
         self._validation_timestamps: deque = deque(maxlen=1000)
 
         # Project-specific metrics
-        self._project_validations: Dict[str, int] = {}
-        self._project_successes: Dict[str, int] = {}
-        self._project_health_history: Dict[str, deque] = {}
+        self._project_validations: dict[str, int] = {}
+        self._project_successes: dict[str, int] = {}
+        self._project_health_history: dict[str, deque] = {}
 
     def record_validation(
         self,
@@ -98,20 +100,14 @@ class MetricsCollector:
 
         # Update project-specific metrics
         if project_id:
-            self._project_validations[project_id] = (
-                self._project_validations.get(project_id, 0) + 1
-            )
+            self._project_validations[project_id] = self._project_validations.get(project_id, 0) + 1
             if success:
-                self._project_successes[project_id] = (
-                    self._project_successes.get(project_id, 0) + 1
-                )
+                self._project_successes[project_id] = self._project_successes.get(project_id, 0) + 1
 
             # Record health score in project history
             health = self._calculate_project_health(project_id)
             if project_id not in self._project_health_history:
-                self._project_health_history[project_id] = deque(
-                    maxlen=self.MAX_HEALTH_HISTORY
-                )
+                self._project_health_history[project_id] = deque(maxlen=self.MAX_HEALTH_HISTORY)
             self._project_health_history[project_id].append((current_time, health))
 
     def _calculate_project_health(self, project_id: str) -> float:
@@ -152,9 +148,7 @@ class MetricsCollector:
         current_time = time.time()
         # Count validations in the last minute
         one_minute_ago = current_time - 60
-        recent_count = sum(
-            1 for ts in self._validation_timestamps if ts >= one_minute_ago
-        )
+        recent_count = sum(1 for ts in self._validation_timestamps if ts >= one_minute_ago)
 
         return float(recent_count)
 
@@ -216,9 +210,7 @@ class MetricsCollector:
         )
 
         avg_time = (
-            sum(self.response_times) / len(self.response_times)
-            if self.response_times
-            else 0.0
+            sum(self.response_times) / len(self.response_times) if self.response_times else 0.0
         )
 
         # Calculate health score (0-100)

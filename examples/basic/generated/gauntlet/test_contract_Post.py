@@ -1,8 +1,9 @@
+from typing import Any
+
 import pytest
-from decimal import Decimal
-from typing import Any, Dict
 
 # Generated Test Contract for Post
+
 
 class TestPostContract:
     """
@@ -11,25 +12,17 @@ class TestPostContract:
     """
 
     @pytest.fixture
-    def instance(self) -> Dict[str, Any]:
+    def instance(self) -> dict[str, Any]:
         """
         Fixture to provide an instance of Post.
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-
             "id": None,
-
             "title": None,
-
             "content": None,
-
             "author_id": None,
-
             "published": None,
-
         }
-
-
 
     # Boundary Tests

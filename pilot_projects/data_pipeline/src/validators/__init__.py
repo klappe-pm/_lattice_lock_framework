@@ -4,16 +4,17 @@ Data validators for the pipeline.
 Validators check transformed data against rules before loading.
 """
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Pattern
-import re
+from typing import Any, Optional
 
 
 class RuleType(Enum):
     """Types of validation rules."""
+
     REQUIRED = "required"
     TYPE_CHECK = "type_check"
     RANGE = "range"
@@ -23,6 +24,7 @@ class RuleType(Enum):
 
 class Severity(Enum):
     """Severity levels for validation errors."""
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
@@ -31,6 +33,7 @@ class Severity(Enum):
 @dataclass
 class ValidationRule:
     """Rule for validating transformed data."""
+
     id: int
     name: str
     rule_type: RuleType
@@ -45,6 +48,7 @@ class ValidationRule:
 @dataclass
 class ValidationResult:
     """Result of validating a single record."""
+
     is_valid: bool
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
@@ -118,7 +122,9 @@ class TypeCheckValidator(BaseValidator):
 
         expected = type_mapping.get(expected_type)
         if expected and not isinstance(value, expected):
-            message = f"Field '{field_name}' expected type {expected_type}, got {type(value).__name__}"
+            message = (
+                f"Field '{field_name}' expected type {expected_type}, got {type(value).__name__}"
+            )
             if self.rule.severity == Severity.ERROR:
                 result.is_valid = False
                 result.errors.append(message)

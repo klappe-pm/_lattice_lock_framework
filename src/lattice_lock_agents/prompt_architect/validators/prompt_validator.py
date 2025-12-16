@@ -1,11 +1,11 @@
 """Prompt validator for ensuring generated prompts meet quality standards."""
 
-import re
-import os
 import logging
-from typing import List, Optional, Dict, Any
+import os
+import re
+from typing import Any
+
 from pydantic import BaseModel, Field
-from pathlib import Path
 
 from .utils import parse_sections
 
@@ -18,8 +18,8 @@ class SectionValidation(BaseModel):
     section_name: str
     is_valid: bool
     is_present: bool
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
     content_length: int = 0
 
 
@@ -28,10 +28,10 @@ class ValidationResult(BaseModel):
 
     prompt_path: str
     is_valid: bool
-    sections: Dict[str, SectionValidation] = Field(default_factory=dict)
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    sections: dict[str, SectionValidation] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     def add_error(self, error: str) -> None:
         """Add a global error."""
@@ -51,36 +51,31 @@ class PromptValidator:
         "Context": {
             "min_length": 50,
             "required_patterns": [],
-            "description": "Must reference relevant files/specs"
+            "description": "Must reference relevant files/specs",
         },
         "Goal": {
             "min_length": 20,
             "required_patterns": [],
-            "description": "Must be single, clear objective"
+            "description": "Must be single, clear objective",
         },
         "Steps": {
             "min_length": 50,
             "required_patterns": [r"^\d+\.", r"^-\s"],  # Numbered or bulleted list
-            "description": "Must be 4-8 specific, actionable items"
+            "description": "Must be 4-8 specific, actionable items",
         },
         "Do NOT Touch": {
             "min_length": 10,
             "required_patterns": [r"^-\s"],  # Bulleted list
-            "description": "Must list files owned by other tools"
+            "description": "Must list files owned by other tools",
         },
         "Success Criteria": {
             "min_length": 20,
             "required_patterns": [r"^-\s"],  # Bulleted list
-            "description": "Must be measurable"
+            "description": "Must be measurable",
         },
     }
 
-    OPTIONAL_SECTIONS = {
-        "Notes": {
-            "min_length": 10,
-            "description": "Optional but recommended"
-        }
-    }
+    OPTIONAL_SECTIONS = {"Notes": {"min_length": 10, "description": "Optional but recommended"}}
 
     # Header patterns
     HEADER_PATTERN = re.compile(r"^#\s+Prompt\s+(\d+\.\d+\.\d+)\s*-\s*(.+)$", re.MULTILINE)
@@ -118,7 +113,7 @@ class PromptValidator:
 
         # Read file content
         try:
-            with open(prompt_path, 'r', encoding='utf-8') as f:
+            with open(prompt_path, encoding="utf-8") as f:
                 content = f.read()
         except Exception as e:
             result.add_error(f"Failed to read prompt file: {e}")
@@ -165,7 +160,9 @@ class PromptValidator:
         """Validate the prompt header format."""
         match = self.HEADER_PATTERN.search(content)
         if not match:
-            result.add_error("Missing or invalid prompt header. Expected format: '# Prompt X.Y.Z - Title'")
+            result.add_error(
+                "Missing or invalid prompt header. Expected format: '# Prompt X.Y.Z - Title'"
+            )
         else:
             result.metadata["prompt_id"] = match.group(1)
             result.metadata["title"] = match.group(2).strip()
@@ -200,27 +197,20 @@ class PromptValidator:
         # Validate optional sections
         for section_name, rules in self.OPTIONAL_SECTIONS.items():
             section_content = sections.get(section_name, "")
-            validation = self._validate_section(section_name, section_content, rules, required=False)
+            validation = self._validate_section(
+                section_name, section_content, rules, required=False
+            )
             result.sections[section_name] = validation
 
             for warning in validation.warnings:
                 result.add_warning(warning)
 
-
-
     def _validate_section(
-        self,
-        name: str,
-        content: str,
-        rules: Dict[str, Any],
-        required: bool
+        self, name: str, content: str, rules: dict[str, Any], required: bool
     ) -> SectionValidation:
         """Validate a single section against its rules."""
         validation = SectionValidation(
-            section_name=name,
-            is_valid=True,
-            is_present=bool(content),
-            content_length=len(content)
+            section_name=name, is_valid=True, is_present=bool(content), content_length=len(content)
         )
 
         # Check presence
@@ -243,8 +233,7 @@ class PromptValidator:
         required_patterns = rules.get("required_patterns", [])
         if required_patterns:
             has_pattern = any(
-                re.search(pattern, content, re.MULTILINE)
-                for pattern in required_patterns
+                re.search(pattern, content, re.MULTILINE) for pattern in required_patterns
             )
             if not has_pattern:
                 validation.warnings.append(
@@ -281,7 +270,7 @@ class PromptValidator:
     def _validate_goal_section(self, content: str, validation: SectionValidation) -> None:
         """Validate the Goal section is a single, clear objective."""
         # Check for multiple sentences that might indicate multiple goals
-        sentences = re.split(r'(?<=[.!?])\s+', content.strip())
+        sentences = re.split(r"(?<=[.!?])\s+", content.strip())
         if len(sentences) > 3:
             validation.warnings.append(
                 "Goal section may contain multiple objectives. Consider focusing on a single goal."
@@ -290,33 +279,35 @@ class PromptValidator:
     def _validate_context_section(self, content: str, validation: SectionValidation) -> None:
         """Validate the Context section references files or specs."""
         # Check for file references (backticks with paths)
-        file_refs = re.findall(r'`[^`]+\.(py|md|yaml|json|txt|toml)`', content)
-        dir_refs = re.findall(r'`[^`]+/`', content)
+        file_refs = re.findall(r"`[^`]+\.(py|md|yaml|json|txt|toml)`", content)
+        dir_refs = re.findall(r"`[^`]+/`", content)
 
         if not file_refs and not dir_refs:
             validation.warnings.append(
                 "Context section should reference specific files or directories (use backticks)."
             )
 
-    def _validate_success_criteria_section(self, content: str, validation: SectionValidation) -> None:
+    def _validate_success_criteria_section(
+        self, content: str, validation: SectionValidation
+    ) -> None:
         """Validate the Success Criteria section contains measurable items."""
         # Check for bullet points
         bullets = re.findall(r"^-\s", content, re.MULTILINE)
         if len(bullets) < 2:
-            validation.warnings.append(
-                "Success Criteria should list multiple measurable outcomes."
-            )
+            validation.warnings.append("Success Criteria should list multiple measurable outcomes.")
 
         # Check for action words that indicate measurable criteria
         action_patterns = [
-            r'\bworks?\b', r'\bpass(es)?\b', r'\breturns?\b',
-            r'\bshows?\b', r'\bcreates?\b', r'\bvalidates?\b',
-            r'\bcatches?\b', r'\bprovides?\b'
+            r"\bworks?\b",
+            r"\bpass(es)?\b",
+            r"\breturns?\b",
+            r"\bshows?\b",
+            r"\bcreates?\b",
+            r"\bvalidates?\b",
+            r"\bcatches?\b",
+            r"\bprovides?\b",
         ]
-        has_action = any(
-            re.search(pattern, content, re.IGNORECASE)
-            for pattern in action_patterns
-        )
+        has_action = any(re.search(pattern, content, re.IGNORECASE) for pattern in action_patterns)
         if not has_action:
             validation.warnings.append(
                 "Success Criteria should use action verbs for measurability."

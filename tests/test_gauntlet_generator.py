@@ -1,8 +1,7 @@
+
 import pytest
-import os
-from pathlib import Path
 from lattice_lock_gauntlet.generator import GauntletGenerator
-from lattice_lock_gauntlet.parser import LatticeParser, EntityDefinition, EnsuresClause
+from lattice_lock_gauntlet.parser import LatticeParser
 
 TEST_LATTICE_YAML = """
 entities:
@@ -24,15 +23,18 @@ entities:
         description: "Score must be even"
 """
 
+
 @pytest.fixture
 def lattice_file(tmp_path):
     f = tmp_path / "lattice.yaml"
     f.write_text(TEST_LATTICE_YAML)
     return str(f)
 
+
 @pytest.fixture
 def output_dir(tmp_path):
     return tmp_path / "output"
+
 
 def test_parser_parsing(lattice_file):
     parser = LatticeParser(lattice_file)
@@ -47,6 +49,7 @@ def test_parser_parsing(lattice_file):
     # explicit: 1
     # Total: 6
     assert len(user.ensures) == 6
+
 
 def test_generator_creates_files(lattice_file, output_dir):
     generator = GauntletGenerator(lattice_file, str(output_dir))
@@ -66,7 +69,8 @@ def test_generator_creates_files(lattice_file, output_dir):
 
     # Check fixture generation
     assert '"age": 19' in content  # gt 18 -> 19
-    assert '"score": 0' in content # gte 0 -> 0
+    assert '"score": 0' in content  # gte 0 -> 0
+
 
 def test_generated_code_is_valid_python(lattice_file, output_dir):
     generator = GauntletGenerator(lattice_file, str(output_dir))
@@ -76,7 +80,9 @@ def test_generated_code_is_valid_python(lattice_file, output_dir):
 
     # Compile checking
     import ast
+
     ast.parse(expected_file.read_text())
+
 
 def test_generated_test_execution(lattice_file, output_dir):
     # This is a bit meta: we run pytest on the generated file
@@ -94,5 +100,6 @@ def test_generated_test_execution(lattice_file, output_dir):
     # custom -> "pass # Unknown constraint" -> Pass
 
     import pytest
+
     ret = pytest.main([str(output_dir)])
     assert ret == 0

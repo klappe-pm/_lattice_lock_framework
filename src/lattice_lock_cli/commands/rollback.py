@@ -1,12 +1,14 @@
-import click
 import logging
-from lattice_lock.rollback import RollbackTrigger, CheckpointManager
+
+import click
+from lattice_lock.rollback import CheckpointManager, RollbackTrigger
 
 logger = logging.getLogger(__name__)
 
+
 @click.command()
-@click.option('--checkpoint', help='Checkpoint ID to restore')
-@click.option('--latest', is_flag=True, help='Restore latest checkpoint')
+@click.option("--checkpoint", help="Checkpoint ID to restore")
+@click.option("--latest", is_flag=True, help="Restore latest checkpoint")
 def rollback(checkpoint, latest):
     """
     Manually trigger a rollback to a previous state.
@@ -30,7 +32,9 @@ def rollback(checkpoint, latest):
     if latest:
         success = trigger.trigger_rollback("Manual rollback (latest)")
     else:
-        success = trigger.trigger_rollback(f"Manual rollback ({checkpoint})", checkpoint_id=checkpoint)
+        success = trigger.trigger_rollback(
+            f"Manual rollback ({checkpoint})", checkpoint_id=checkpoint
+        )
 
     if success:
         click.echo("Rollback completed successfully.")

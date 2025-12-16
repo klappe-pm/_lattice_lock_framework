@@ -6,43 +6,37 @@ Tests the models, orchestrator, and CLI components.
 
 import json
 import tempfile
-from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-from lattice_lock.agents.prompt_architect.models import (
-    ToolType,
-    PromptStatus,
-    TaskPriority,
-    FileOwnership,
-    ToolCapability,
-    TaskAssignment,
-    PromptContext,
-    PromptTemplate,
-    PromptOutput,
-    GenerationRequest,
-    GenerationResult,
-    PhaseSpec,
-    EpicSpec,
-    TaskSpec,
-)
-
-from lattice_lock.agents.prompt_architect.orchestrator import (
-    SpecificationAnalyzer,
-    RoadmapParser,
-    ToolMatcher,
-    PromptGenerator,
-    PromptArchitectOrchestrator,
-    DEFAULT_TOOL_CAPABILITIES,
-)
-
 from lattice_lock.agents.prompt_architect.cli import (
     create_parser,
-    validate_prompts,
     format_result_json,
     main,
+    validate_prompts,
+)
+from lattice_lock.agents.prompt_architect.models import (
+    FileOwnership,
+    GenerationRequest,
+    GenerationResult,
+    PromptContext,
+    PromptOutput,
+    PromptStatus,
+    PromptTemplate,
+    TaskAssignment,
+    TaskPriority,
+    TaskSpec,
+    ToolCapability,
+    ToolType,
+)
+from lattice_lock.agents.prompt_architect.orchestrator import (
+    DEFAULT_TOOL_CAPABILITIES,
+    PromptArchitectOrchestrator,
+    PromptGenerator,
+    RoadmapParser,
+    SpecificationAnalyzer,
+    ToolMatcher,
 )
 
 

@@ -1,9 +1,10 @@
-
 # IMPLEMENTATION SKELETON (Agent C8)
 # Task 2.5: Gauntlet Test Runner Implementation
 
 import sys
+
 import pytest
+
 
 def run_gauntlet(target_dir: str = "tests/gauntlet"):
     """
@@ -13,6 +14,7 @@ def run_gauntlet(target_dir: str = "tests/gauntlet"):
 
     # Check if directory exists
     from pathlib import Path
+
     if not Path(target_dir).exists():
         print(f"[WARN] No gauntlet tests found in {target_dir}. Skipping.")
         return
@@ -25,6 +27,7 @@ def run_gauntlet(target_dir: str = "tests/gauntlet"):
     else:
         print(f"[FAIL] Semantic tests failed (Exit Code: {retcode}).")
         sys.exit(retcode)
+
 
 if __name__ == "__main__":
     run_gauntlet()

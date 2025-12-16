@@ -537,4 +537,3 @@ curl http://localhost:11434/api/version
 - **Enterprise Options**: Azure (4), Bedrock (8), DIAL (2)
 
 🎉 **You now have access to a professional-grade AI orchestration system with 63 total models across all major providers!**
-

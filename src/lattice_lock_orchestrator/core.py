@@ -1,21 +1,22 @@
-import logging
-import asyncio
 import json
-from typing import Optional, Dict, List, Any, Callable
-from .types import TaskType, TaskRequirements, APIResponse, ModelCapabilities, FunctionCall
-from .registry import ModelRegistry
-from .scorer import TaskAnalyzer, ModelScorer
-from .guide import ModelGuideParser
+import logging
+from collections.abc import Callable
+from typing import Optional
+
 from .api_clients import (
-    get_api_client,
     ProviderAvailability,
-    ProviderStatus,
     ProviderUnavailableError,
+    get_api_client,
 )
-from .function_calling import FunctionCallHandler
 from .cost.tracker import CostTracker
+from .function_calling import FunctionCallHandler
+from .guide import ModelGuideParser
+from .registry import ModelRegistry
+from .scorer import ModelScorer, TaskAnalyzer
+from .types import APIResponse, ModelCapabilities, TaskRequirements, TaskType
 
 logger = logging.getLogger(__name__)
+
 
 class ModelOrchestrator:
     """
@@ -24,7 +25,6 @@ class ModelOrchestrator:
     """
 
     def __init__(self, guide_path: Optional[str] = None):
-
         self.registry = ModelRegistry()
         self.analyzer = TaskAnalyzer()
         self.scorer = ModelScorer()
@@ -37,11 +37,13 @@ class ModelOrchestrator:
         """Registers a function with the internal FunctionCallHandler."""
         self.function_call_handler.register_function(name, func)
 
-    async def route_request(self,
-                          prompt: str,
-                          model_id: Optional[str] = None,
-                          task_type: Optional[TaskType] = None,
-                          **kwargs) -> APIResponse:
+    async def route_request(
+        self,
+        prompt: str,
+        model_id: Optional[str] = None,
+        task_type: Optional[TaskType] = None,
+        **kwargs,
+    ) -> APIResponse:
         """
         Route a request to the appropriate model.
 
@@ -57,7 +59,9 @@ class ModelOrchestrator:
         if task_type:
             requirements.task_type = task_type
 
-        logger.info(f"Analyzed task: {requirements.task_type.name}, Priority: {requirements.priority}")
+        logger.info(
+            f"Analyzed task: {requirements.task_type.name}, Priority: {requirements.priority}"
+        )
 
         # 2. Select Model
         selected_model_id = model_id
@@ -69,7 +73,7 @@ class ModelOrchestrator:
 
         model_cap = self.registry.get_model(selected_model_id)
         if not model_cap:
-             raise ValueError(f"Model {selected_model_id} not found in registry")
+            raise ValueError(f"Model {selected_model_id} not found in registry")
 
         logger.info(f"Selected model: {selected_model_id} ({model_cap.provider.value})")
 
@@ -78,7 +82,9 @@ class ModelOrchestrator:
             return await self._call_model(model_cap, prompt, **kwargs)
         except Exception as e:
             logger.error(f"Primary model failed: {e}. Attempting fallback...")
-            return await self._handle_fallback(requirements, prompt, failed_model=selected_model_id, **kwargs)
+            return await self._handle_fallback(
+                requirements, prompt, failed_model=selected_model_id, **kwargs
+            )
 
     def _select_best_model(self, requirements: TaskRequirements) -> Optional[str]:
         """Select the best model based on requirements and guide"""
@@ -94,7 +100,7 @@ class ModelOrchestrator:
                     valid_recs.append(mid)
 
             if valid_recs:
-                return valid_recs[0] # Return top recommendation
+                return valid_recs[0]  # Return top recommendation
 
         # 2. Score all models
         candidates = []
@@ -128,8 +134,8 @@ class ModelOrchestrator:
         first_response = await client.chat_completion(
             model=model.api_name,
             messages=messages,
-            functions=list(functions_metadata.values()), # Pass functions metadata
-            **kwargs
+            functions=list(functions_metadata.values()),  # Pass functions metadata
+            **kwargs,
         )
 
         # Check for function call in the first response
@@ -137,47 +143,56 @@ class ModelOrchestrator:
             function_call_name = first_response.function_call.name
             function_call_args = first_response.function_call.arguments
 
-            logger.info(f"Model requested function call: {function_call_name} with args {function_call_args}")
+            logger.info(
+                f"Model requested function call: {function_call_name} with args {function_call_args}"
+            )
 
             try:
                 function_result = await self.function_call_handler.execute_function_call(
-                    function_call_name,
-                    **function_call_args
+                    function_call_name, **function_call_args
                 )
                 first_response.function_call_result = function_result
-                logger.info(f"Function call {function_call_name} executed successfully. Result: {function_result}")
+                logger.info(
+                    f"Function call {function_call_name} executed successfully. Result: {function_result}"
+                )
 
                 # Extract the tool_call_id from the first response's raw data
                 # Extract tool_call_id using helper method
                 tool_call_id = self._extract_tool_call_id(first_response)
 
                 # Append the assistant's function call message
-                messages.append({
-                    "role": "assistant",
-                    "content": None, # Function call doesn't have content directly
-                    "tool_calls": [{
-                        "id": tool_call_id,
-                        "type": "function",
-                        "function": {
-                            "name": function_call_name,
-                            "arguments": json.dumps(function_call_args)
-                        }
-                    }]
-                })
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": None,  # Function call doesn't have content directly
+                        "tool_calls": [
+                            {
+                                "id": tool_call_id,
+                                "type": "function",
+                                "function": {
+                                    "name": function_call_name,
+                                    "arguments": json.dumps(function_call_args),
+                                },
+                            }
+                        ],
+                    }
+                )
 
                 # Append the tool's response message
-                messages.append({
-                    "role": "tool",
-                    "content": str(function_result),
-                    "tool_call_id": tool_call_id # Must match the ID from the assistant's tool_calls
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "content": str(function_result),
+                        "tool_call_id": tool_call_id,  # Must match the ID from the assistant's tool_calls
+                    }
+                )
 
                 # Make a second call to the model with the tool's response
                 final_response = await client.chat_completion(
                     model=model.api_name,
                     messages=messages,
-                    functions=list(functions_metadata.values()), # Pass functions metadata again
-                    **kwargs
+                    functions=list(functions_metadata.values()),  # Pass functions metadata again
+                    **kwargs,
                 )
 
                 # Update the final response with the function call details and result from the first turn
@@ -186,9 +201,9 @@ class ModelOrchestrator:
 
                 # Record usage for the final response
                 self.cost_tracker.record_transaction(
-                    final_response, 
+                    final_response,
                     task_type="function_call",
-                    trace_id=kwargs.get("trace_id", "unknown")
+                    trace_id=kwargs.get("trace_id", "unknown"),
                 )
                 return final_response
 
@@ -198,14 +213,16 @@ class ModelOrchestrator:
 
         # Record usage for the initial response (if no function call or if it failed)
         self.cost_tracker.record_transaction(
-            first_response, 
+            first_response,
             task_type=kwargs.get("task_type", "general"),
-            trace_id=kwargs.get("trace_id", "unknown")
+            trace_id=kwargs.get("trace_id", "unknown"),
         )
 
         return first_response
 
-    async def _handle_fallback(self, requirements: TaskRequirements, prompt: str, failed_model: str, **kwargs) -> APIResponse:
+    async def _handle_fallback(
+        self, requirements: TaskRequirements, prompt: str, failed_model: str, **kwargs
+    ) -> APIResponse:
         """
         Handle fallback logic when primary model fails.
 
@@ -241,7 +258,9 @@ class ModelOrchestrator:
                 # Skip models from unavailable providers
                 provider_name = model.provider.value
                 if not self._is_provider_available(provider_name):
-                    logger.debug(f"Skipping model {model.api_name}: provider '{provider_name}' unavailable")
+                    logger.debug(
+                        f"Skipping model {model.api_name}: provider '{provider_name}' unavailable"
+                    )
                     continue
 
                 score = self.scorer.score(model, requirements)
@@ -272,7 +291,9 @@ class ModelOrchestrator:
             # Check provider availability before attempting
             provider_name = model_cap.provider.value
             if not self._is_provider_available(provider_name):
-                logger.info(f"Skipping fallback model {model_id}: provider '{provider_name}' unavailable")
+                logger.info(
+                    f"Skipping fallback model {model_id}: provider '{provider_name}' unavailable"
+                )
                 continue
 
             logger.info(f"Attempting fallback to: {model_id} ({provider_name})")
@@ -295,7 +316,11 @@ class ModelOrchestrator:
                 continue
 
         # Build detailed error message
-        error_details = "; ".join([f"{m}: {e}" for m, e in failed_attempts]) if failed_attempts else "No models attempted"
+        error_details = (
+            "; ".join([f"{m}: {e}" for m, e in failed_attempts])
+            if failed_attempts
+            else "No models attempted"
+        )
         available = self.get_available_providers()
         raise RuntimeError(
             f"All fallback models failed. "
@@ -329,11 +354,11 @@ class ModelOrchestrator:
         """Check if a provider is available (has credentials configured)."""
         return ProviderAvailability.is_available(provider)
 
-    def get_available_providers(self) -> List[str]:
+    def get_available_providers(self) -> list[str]:
         """Get list of providers that have credentials configured."""
         return ProviderAvailability.get_available_providers()
 
-    def check_provider_status(self) -> Dict[str, str]:
+    def check_provider_status(self) -> dict[str, str]:
         """
         Check and return the status of all providers.
 
@@ -351,14 +376,15 @@ class ModelOrchestrator:
     def _extract_tool_call_id(self, response: APIResponse) -> str:
         """Safely extract tool_call_id from response with error handling."""
         try:
-            if (response.raw_response and 
-                'choices' in response.raw_response and 
-                response.raw_response['choices'] and 
-                'message' in response.raw_response['choices'][0] and 
-                'tool_calls' in response.raw_response['choices'][0]['message'] and 
-                response.raw_response['choices'][0]['message']['tool_calls']):
-                
-                return response.raw_response['choices'][0]['message']['tool_calls'][0]['id']
+            if (
+                response.raw_response
+                and "choices" in response.raw_response
+                and response.raw_response["choices"]
+                and "message" in response.raw_response["choices"][0]
+                and "tool_calls" in response.raw_response["choices"][0]["message"]
+                and response.raw_response["choices"][0]["message"]["tool_calls"]
+            ):
+                return response.raw_response["choices"][0]["message"]["tool_calls"][0]["id"]
         except (KeyError, IndexError, TypeError) as e:
             logger.debug(f"Error extracting tool_call_id: {e}")
 

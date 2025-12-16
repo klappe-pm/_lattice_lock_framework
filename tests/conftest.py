@@ -7,7 +7,6 @@ This module configures pytest to:
 """
 import pytest
 
-
 # Legacy test files skip list - imports normalized as of 2025-12-14
 # Only skip files that genuinely can't be run
 LEGACY_TEST_FILES = [
@@ -31,10 +30,10 @@ def sample_prompt():
 @pytest.fixture
 def sample_code_with_error():
     """Sample code with error for debugging tests."""
-    return '''
+    return """
 def calculate_total(items):
     total = 0
     for item in items:
         total += item['price']  # KeyError if items empty
     return total
-'''
+"""

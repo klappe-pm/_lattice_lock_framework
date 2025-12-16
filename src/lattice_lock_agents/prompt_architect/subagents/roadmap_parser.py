@@ -1,26 +1,25 @@
 import os
+
 import yaml
-from typing import Optional, List, Dict, Set
+
 from .parsers.roadmap_parser import (
-    RoadmapStructure,
-    WorkBreakdownParser,
     GanttParser,
     KanbanParser,
-    Phase,
-    Epic,
-    Task
+    RoadmapStructure,
+    WorkBreakdownParser,
 )
+
 
 class RoadmapParser:
     def __init__(self):
         self.definition = self._load_definition()
         self.parsers = {
-            'wbs': WorkBreakdownParser(),
-            'gantt': GanttParser(),
-            'kanban': KanbanParser()
+            "wbs": WorkBreakdownParser(),
+            "gantt": GanttParser(),
+            "kanban": KanbanParser(),
         }
 
-    def _load_definition(self) -> Dict:
+    def _load_definition(self) -> dict:
         # Assuming the agent definition is at a fixed relative path or we can find it
         # The prompt says: agent_definitions/prompt_architect_agent/subagents/roadmap_parser.yaml
         # We are in src/lattice_lock_agents/prompt_architect/subagents/roadmap_parser.py
@@ -31,10 +30,16 @@ class RoadmapParser:
         # Go up 4 levels to root: subagents -> prompt_architect -> lattice_lock_agents -> src -> root
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
 
-        def_path = os.path.join(root_dir, 'agent_definitions', 'prompt_architect_agent', 'subagents', 'roadmap_parser.yaml')
+        def_path = os.path.join(
+            root_dir,
+            "agent_definitions",
+            "prompt_architect_agent",
+            "subagents",
+            "roadmap_parser.yaml",
+        )
 
         if os.path.exists(def_path):
-            with open(def_path, 'r') as f:
+            with open(def_path) as f:
                 return yaml.safe_load(f)
         return {}
 
@@ -44,13 +49,13 @@ class RoadmapParser:
 
         # Determine format
         # For now, simplistic extension/name check
-        if roadmap_path.endswith('.md') or 'work_breakdown' in roadmap_path:
-            parser = self.parsers['wbs']
+        if roadmap_path.endswith(".md") or "work_breakdown" in roadmap_path:
+            parser = self.parsers["wbs"]
         else:
             # Default to WBS for now as it's the only one fully implemented
-            parser = self.parsers['wbs']
+            parser = self.parsers["wbs"]
 
-        with open(roadmap_path, 'r') as f:
+        with open(roadmap_path) as f:
             content = f.read()
 
         structure = parser.parse(content)
@@ -65,7 +70,7 @@ class RoadmapParser:
         if self.detect_circular_dependencies(structure):
             raise ValueError("Circular dependency detected in roadmap")
 
-    def get_dependency_graph(self, structure: RoadmapStructure) -> Dict[str, List[str]]:
+    def get_dependency_graph(self, structure: RoadmapStructure) -> dict[str, list[str]]:
         """Returns the adjacency list of the dependency graph."""
         return structure.dependencies
 
@@ -102,7 +107,7 @@ class RoadmapParser:
 
         return False
 
-    def get_critical_path(self, structure: RoadmapStructure) -> List[str]:
+    def get_critical_path(self, structure: RoadmapStructure) -> list[str]:
         """
         Identifies the critical path.
         Since we don't have task durations in the WBS, we assume unit duration or rely on structure.
@@ -182,7 +187,7 @@ class RoadmapParser:
 
         return path[::-1]
 
-    def get_parallel_execution_opportunities(self, structure: RoadmapStructure) -> List[List[str]]:
+    def get_parallel_execution_opportunities(self, structure: RoadmapStructure) -> list[list[str]]:
         """
         Identifies groups of tasks that can be executed in parallel.
         This is effectively finding tasks at the same 'level' or depth in the DAG.

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import os
-import yaml
 import sys
+
+import yaml
+
 
 def validate_agent_file(filepath):
     """Validates a single agent YAML file against v2.1 spec requirements."""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             data = yaml.safe_load(f)
 
         if not data:
@@ -14,10 +16,25 @@ def validate_agent_file(filepath):
 
         # Check root keys
         required_sections = [
-            "agent", "directive", "responsibilities", "scope", "context",
-            "planning", "estimation", "model_selection", "delegation",
-            "workflow", "output", "error_handling", "interaction",
-            "metrics", "guardrails", "examples", "tests", "metadata", "versioning"
+            "agent",
+            "directive",
+            "responsibilities",
+            "scope",
+            "context",
+            "planning",
+            "estimation",
+            "model_selection",
+            "delegation",
+            "workflow",
+            "output",
+            "error_handling",
+            "interaction",
+            "metrics",
+            "guardrails",
+            "examples",
+            "tests",
+            "metadata",
+            "versioning",
         ]
 
         missing = [sec for sec in required_sections if sec not in data]
@@ -36,6 +53,7 @@ def validate_agent_file(filepath):
 
     except Exception as e:
         return False, f"YAML Error: {str(e)}"
+
 
 def main():
     root_dir = "Agents-v3"
@@ -61,7 +79,7 @@ def main():
                 else:
                     errors.append(f"{filepath}: {message}")
 
-    print(f"\nValidation Complete.")
+    print("\nValidation Complete.")
     print(f"Total Agent Files: {total_files}")
     print(f"Valid Files: {valid_files}")
     print(f"Invalid Files: {len(errors)}")
@@ -74,6 +92,7 @@ def main():
     else:
         print("\nAll files passed validation! ✅")
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

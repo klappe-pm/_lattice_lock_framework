@@ -1,11 +1,12 @@
-
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Any
+
 
 @dataclass
 class UsageRecord:
     """Record of a single LLM usage event."""
+
     timestamp: datetime
     session_id: str
     trace_id: str
@@ -15,9 +16,9 @@ class UsageRecord:
     input_tokens: int
     output_tokens: int
     cost_usd: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -29,5 +30,5 @@ class UsageRecord:
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "cost_usd": self.cost_usd,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }

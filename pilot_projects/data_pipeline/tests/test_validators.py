@@ -4,17 +4,16 @@ Tests for data validators.
 Validates validation rule enforcement.
 """
 
-import pytest
+
 from src.validators import (
-    RuleType,
-    Severity,
-    ValidationRule,
-    ValidationResult,
-    RequiredValidator,
-    TypeCheckValidator,
     RangeValidator,
     RegexValidator,
+    RequiredValidator,
+    RuleType,
+    Severity,
+    TypeCheckValidator,
     ValidationEngine,
+    ValidationRule,
 )
 
 
@@ -240,20 +239,24 @@ class TestValidationEngine:
         """Test engine with multiple rules."""
         engine = ValidationEngine()
 
-        engine.add_rule(ValidationRule(
-            id=1,
-            name="require_name",
-            rule_type=RuleType.REQUIRED,
-            field_name="name",
-            rule_config={},
-        ))
-        engine.add_rule(ValidationRule(
-            id=2,
-            name="check_age_range",
-            rule_type=RuleType.RANGE,
-            field_name="age",
-            rule_config={"min": 0, "max": 120},
-        ))
+        engine.add_rule(
+            ValidationRule(
+                id=1,
+                name="require_name",
+                rule_type=RuleType.REQUIRED,
+                field_name="name",
+                rule_config={},
+            )
+        )
+        engine.add_rule(
+            ValidationRule(
+                id=2,
+                name="check_age_range",
+                rule_type=RuleType.RANGE,
+                field_name="age",
+                rule_config={"min": 0, "max": 120},
+            )
+        )
 
         result = engine.validate({"name": "John", "age": 25})
 
@@ -263,22 +266,26 @@ class TestValidationEngine:
         """Test that engine combines errors from multiple validators."""
         engine = ValidationEngine()
 
-        engine.add_rule(ValidationRule(
-            id=1,
-            name="require_name",
-            rule_type=RuleType.REQUIRED,
-            field_name="name",
-            rule_config={},
-            severity=Severity.ERROR,
-        ))
-        engine.add_rule(ValidationRule(
-            id=2,
-            name="check_age_range",
-            rule_type=RuleType.RANGE,
-            field_name="age",
-            rule_config={"min": 18},
-            severity=Severity.ERROR,
-        ))
+        engine.add_rule(
+            ValidationRule(
+                id=1,
+                name="require_name",
+                rule_type=RuleType.REQUIRED,
+                field_name="name",
+                rule_config={},
+                severity=Severity.ERROR,
+            )
+        )
+        engine.add_rule(
+            ValidationRule(
+                id=2,
+                name="check_age_range",
+                rule_type=RuleType.RANGE,
+                field_name="age",
+                rule_config={"min": 18},
+                severity=Severity.ERROR,
+            )
+        )
 
         result = engine.validate({"age": 15})
 
@@ -289,14 +296,16 @@ class TestValidationEngine:
         """Test that inactive rules are ignored."""
         engine = ValidationEngine()
 
-        engine.add_rule(ValidationRule(
-            id=1,
-            name="require_name",
-            rule_type=RuleType.REQUIRED,
-            field_name="name",
-            rule_config={},
-            is_active=False,
-        ))
+        engine.add_rule(
+            ValidationRule(
+                id=1,
+                name="require_name",
+                rule_type=RuleType.REQUIRED,
+                field_name="name",
+                rule_config={},
+                is_active=False,
+            )
+        )
 
         result = engine.validate({})
 

@@ -1,23 +1,19 @@
 """Unit tests for prompt validators."""
 
-import unittest
-import tempfile
 import shutil
-import asyncio
-from pathlib import Path
 import sys
+import tempfile
+import unittest
+from pathlib import Path
 
 # Ensure src is in path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from lattice_lock_agents.prompt_architect.validators import (
-    PromptValidator,
     ConventionChecker,
+    PromptValidator,
     QualityScorer,
-    ValidationResult,
-    ConventionResult,
-    QualityScore,
 )
 
 # Sample valid prompt content
@@ -258,7 +254,7 @@ Single goal.
 
 class TestConventionChecker(unittest.TestCase):
     """Tests for ConventionChecker class."""
-    
+
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         self.test_path = Path(self.test_dir)
@@ -352,11 +348,7 @@ class TestConventionChecker(unittest.TestCase):
         """Test filename suggestion."""
         checker = ConventionChecker()
         suggested = checker.suggest_filename(
-            phase=1,
-            epic=2,
-            task=3,
-            tool="devin",
-            description="Package Infrastructure Setup"
+            phase=1, epic=2, task=3, tool="devin", description="Package Infrastructure Setup"
         )
 
         self.assertEqual(suggested, "1.2.3_devin_package_infrastructure_setup.md")
@@ -373,7 +365,7 @@ class TestConventionChecker(unittest.TestCase):
 
 class TestQualityScorer(unittest.IsolatedAsyncioTestCase):
     """Tests for QualityScorer class."""
-    
+
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         self.test_path = Path(self.test_dir)
@@ -470,7 +462,8 @@ class TestValidationWithExistingPrompts(unittest.TestCase):
         # Find all prompt files
         prompt_files = list(self.existing_prompts_dir.glob("**/*.md"))
         prompt_files = [
-            p for p in prompt_files
+            p
+            for p in prompt_files
             if not p.name.startswith("multi_agent")
             and not p.name.startswith("work_breakdown")
             and not p.name.startswith("project_prompts_tracker")
@@ -513,7 +506,7 @@ class TestValidationWithExistingPrompts(unittest.TestCase):
 
 class TestValidatorIntegration(unittest.IsolatedAsyncioTestCase):
     """Integration tests for validators working together."""
-    
+
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         self.test_path = Path(self.test_dir)
@@ -561,5 +554,6 @@ class TestValidatorIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(score_dict, dict)
         self.assertIn("overall_score", score_dict)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

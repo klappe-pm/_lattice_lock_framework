@@ -10,14 +10,14 @@ from enum import Enum
 from typing import Any
 
 from lattice_lock.errors.types import (
+    AgentError,
+    ConfigurationError,
+    GauntletFailureError,
     LatticeError,
+    LatticeRuntimeError,
+    NetworkError,
     SchemaValidationError,
     SheriffViolationError,
-    GauntletFailureError,
-    LatticeRuntimeError,
-    ConfigurationError,
-    NetworkError,
-    AgentError,
 )
 
 
@@ -134,7 +134,11 @@ class ErrorContext:
 ERROR_CLASSIFICATION: dict[type[Exception], tuple[Severity, Category, Recoverability]] = {
     SchemaValidationError: (Severity.HIGH, Category.VALIDATION, Recoverability.MANUAL_INTERVENTION),
     SheriffViolationError: (Severity.HIGH, Category.VALIDATION, Recoverability.MANUAL_INTERVENTION),
-    GauntletFailureError: (Severity.MEDIUM, Category.VALIDATION, Recoverability.MANUAL_INTERVENTION),
+    GauntletFailureError: (
+        Severity.MEDIUM,
+        Category.VALIDATION,
+        Recoverability.MANUAL_INTERVENTION,
+    ),
     LatticeRuntimeError: (Severity.MEDIUM, Category.RUNTIME, Recoverability.RECOVERABLE),
     ConfigurationError: (Severity.HIGH, Category.CONFIGURATION, Recoverability.MANUAL_INTERVENTION),
     NetworkError: (Severity.MEDIUM, Category.NETWORK, Recoverability.RECOVERABLE),

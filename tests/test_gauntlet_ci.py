@@ -1,19 +1,22 @@
-import pytest
-import json
 import os
+from unittest.mock import MagicMock, patch
+
+import pytest
 from click.testing import CliRunner
-from unittest.mock import patch, MagicMock
 from lattice_lock_cli.__main__ import cli
+
 
 @pytest.fixture
 def runner():
     return CliRunner()
+
 
 @pytest.fixture
 def mock_pytest():
     with patch("lattice_lock_cli.commands.gauntlet.pytest") as mock:
         mock.main.return_value = 0
         yield mock
+
 
 def test_format_json(runner, mock_pytest):
     """Test that --format json passes correct args and env vars."""
@@ -30,6 +33,7 @@ def test_format_json(runner, mock_pytest):
             # Check env var
             assert os.environ.get("GAUNTLET_JSON_REPORT") == "true"
 
+
 def test_format_junit(runner, mock_pytest):
     """Test that --format junit passes correct args."""
     with patch("pathlib.Path.exists", return_value=True):
@@ -38,6 +42,7 @@ def test_format_junit(runner, mock_pytest):
 
         args = mock_pytest.main.call_args[0][0]
         assert "--junitxml=test-results.xml" in args
+
 
 def test_format_github(runner, mock_pytest):
     """Test that --format github passes correct args and env vars."""
@@ -52,6 +57,7 @@ def test_format_github(runner, mock_pytest):
 
             assert os.environ.get("GAUNTLET_GITHUB_REPORT") == "true"
 
+
 def test_parallel_auto(runner, mock_pytest):
     """Test that --parallel auto passes -n auto."""
     with patch("pathlib.Path.exists", return_value=True):
@@ -64,6 +70,7 @@ def test_parallel_auto(runner, mock_pytest):
             assert "-n" in args
             assert "auto" in args
 
+
 def test_parallel_count(runner, mock_pytest):
     """Test that --parallel N passes -n N."""
     with patch("pathlib.Path.exists", return_value=True):
@@ -74,6 +81,7 @@ def test_parallel_count(runner, mock_pytest):
             args = mock_pytest.main.call_args[0][0]
             assert "-n" in args
             assert "4" in args
+
 
 def test_parallel_missing_xdist(runner, mock_pytest):
     """Test that missing xdist warns and skips parallel."""
@@ -96,6 +104,7 @@ def test_parallel_missing_xdist(runner, mock_pytest):
             # We can mock `click.echo` to check for warning.
             pass
             # Skipping this specific edge case test for now to avoid complex mocking of imports.
+
 
 def test_multiple_formats(runner, mock_pytest):
     """Test multiple formats."""

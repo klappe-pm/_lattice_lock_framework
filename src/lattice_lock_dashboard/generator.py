@@ -1,13 +1,15 @@
 import logging
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class DashboardGenerator:
     """
     Generates the static Admin Dashboard.
     """
+
     DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -38,7 +40,7 @@ class DashboardGenerator:
 </html>
 """
 
-    def generate(self, output_path: str = "dashboard/index.html", data: Dict[str, Any] = None):
+    def generate(self, output_path: str = "dashboard/index.html", data: dict[str, Any] = None):
         if data is None:
             data = {"status": "HEALTHY", "version": "2.1.0", "active_models": 5}
 
@@ -48,10 +50,10 @@ class DashboardGenerator:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         html = self.DASHBOARD_TEMPLATE.format(
-            status=data.get('status', 'UNKNOWN'),
-            status_class="status-ok" if data.get('status') == "HEALTHY" else "status-err",
-            version=data.get('version', '0.0.0'),
-            active_models=data.get('active_models', 0)
+            status=data.get("status", "UNKNOWN"),
+            status_class="status-ok" if data.get("status") == "HEALTHY" else "status-err",
+            version=data.get("version", "0.0.0"),
+            active_models=data.get("active_models", 0),
         )
 
         with open(path, "w") as f:

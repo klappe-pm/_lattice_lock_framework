@@ -1,9 +1,8 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent D_6_1_4)
 # Task 6.1.4: Provider Client Hardening & Bedrock Behavior
 
 import os
-import sys
+
 
 class BedrockClient:
     def __init__(self):
@@ -23,6 +22,7 @@ class BedrockClient:
         print(f"[BEDROCK] Generating with {model}...")
         return "Bedrock response placeholder"
 
+
 class FallbackManager:
     def execute_with_fallback(self, func, providers: list):
         for provider in providers:
@@ -32,6 +32,7 @@ class FallbackManager:
             except Exception as e:
                 print(f"[FALLBACK] Provider failed: {e}")
         raise RuntimeError("All providers failed")
+
 
 if __name__ == "__main__":
     client = BedrockClient()

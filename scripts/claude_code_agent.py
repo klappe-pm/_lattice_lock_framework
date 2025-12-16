@@ -98,13 +98,11 @@ Workflow:
   3. Open Claude Code in your IDE with the repo open
   4. Paste the prompt and review the output
   5. Apply the generated code to your project
-        """
+        """,
     )
 
     parser.add_argument(
-        "task_id",
-        nargs="?",
-        help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
+        "task_id", nargs="?", help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
     )
 
     args = parser.parse_args()

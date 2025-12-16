@@ -13,6 +13,7 @@ def _utc_now() -> datetime:
     """Get current UTC time in a timezone-aware manner."""
     return datetime.now(timezone.utc)
 
+
 from pydantic import BaseModel, Field
 
 
@@ -57,9 +58,7 @@ class Requirement(BaseModel):
     priority: str = Field(
         default="medium", description="Priority level (critical, high, medium, low)"
     )
-    phase: Optional[str] = Field(
-        default=None, description="Phase this requirement belongs to"
-    )
+    phase: Optional[str] = Field(default=None, description="Phase this requirement belongs to")
     requirement_type: RequirementType = Field(
         default=RequirementType.FUNCTIONAL, description="Type of requirement"
     )
@@ -101,9 +100,7 @@ class Component(BaseModel):
     """A component extracted from a specification document."""
 
     name: str = Field(..., description="Name of the component")
-    description: Optional[str] = Field(
-        default=None, description="Description of the component"
-    )
+    description: Optional[str] = Field(default=None, description="Description of the component")
     layer: ComponentLayer = Field(
         default=ComponentLayer.APPLICATION, description="Architectural layer"
     )
@@ -127,9 +124,7 @@ class Phase(BaseModel):
     """A project phase extracted from a specification document."""
 
     name: str = Field(..., description="Name of the phase")
-    description: Optional[str] = Field(
-        default=None, description="Description of the phase"
-    )
+    description: Optional[str] = Field(default=None, description="Description of the phase")
     scope: Optional[str] = Field(default=None, description="Scope of the phase")
     components: list[str] = Field(
         default_factory=list, description="Components involved in this phase"
@@ -137,12 +132,8 @@ class Phase(BaseModel):
     dependencies: list[str] = Field(
         default_factory=list, description="Names of phases this depends on"
     )
-    deliverables: list[str] = Field(
-        default_factory=list, description="Deliverables for this phase"
-    )
-    start_date: Optional[datetime] = Field(
-        default=None, description="Planned start date"
-    )
+    deliverables: list[str] = Field(default_factory=list, description="Deliverables for this phase")
+    start_date: Optional[datetime] = Field(default=None, description="Planned start date")
     end_date: Optional[datetime] = Field(default=None, description="Planned end date")
 
     model_config = {"extra": "allow"}
@@ -152,16 +143,10 @@ class SpecificationMetadata(BaseModel):
     """Metadata about the specification document."""
 
     title: Optional[str] = Field(default=None, description="Title of the specification")
-    version: Optional[str] = Field(
-        default=None, description="Version of the specification"
-    )
+    version: Optional[str] = Field(default=None, description="Version of the specification")
     author: Optional[str] = Field(default=None, description="Author of the specification")
-    last_updated: Optional[datetime] = Field(
-        default=None, description="Last update timestamp"
-    )
-    source_file: Optional[str] = Field(
-        default=None, description="Path to the source file"
-    )
+    last_updated: Optional[datetime] = Field(default=None, description="Last update timestamp")
+    source_file: Optional[str] = Field(default=None, description="Path to the source file")
     file_format: Optional[str] = Field(
         default=None, description="Format of the source file (md, yaml, json)"
     )
@@ -201,9 +186,7 @@ class SpecificationAnalysis(BaseModel):
         le=1.0,
         description="Confidence score of the analysis (0.0 to 1.0)",
     )
-    llm_assisted: bool = Field(
-        default=False, description="Whether LLM was used for extraction"
-    )
+    llm_assisted: bool = Field(default=False, description="Whether LLM was used for extraction")
     warnings: list[str] = Field(
         default_factory=list, description="Warnings generated during analysis"
     )
@@ -231,16 +214,14 @@ class SpecificationAnalysis(BaseModel):
     def get_requirements_by_phase(self, phase_name: str) -> list[Requirement]:
         """Get all requirements for a specific phase."""
         return [
-            req for req in self.requirements if req.phase and req.phase.lower() == phase_name.lower()
+            req
+            for req in self.requirements
+            if req.phase and req.phase.lower() == phase_name.lower()
         ]
 
-    def get_requirements_by_type(
-        self, requirement_type: RequirementType
-    ) -> list[Requirement]:
+    def get_requirements_by_type(self, requirement_type: RequirementType) -> list[Requirement]:
         """Get all requirements of a specific type."""
-        return [
-            req for req in self.requirements if req.requirement_type == requirement_type
-        ]
+        return [req for req in self.requirements if req.requirement_type == requirement_type]
 
 
 __all__ = [

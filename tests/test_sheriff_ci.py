@@ -8,23 +8,22 @@ Tests:
 """
 
 import json
-import os
-import pytest
-import defusedxml.ElementTree as ET
 from pathlib import Path
-from click.testing import CliRunner
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
+import defusedxml.ElementTree as ET
+import pytest
+from click.testing import CliRunner
 from lattice_lock_cli.commands.sheriff import sheriff_command
-from lattice_lock_sheriff.rules import Violation
-from lattice_lock_sheriff.formatters import (
-    get_formatter,
-    TextFormatter,
-    JSONFormatter,
-    GitHubFormatter,
-    JUnitFormatter,
-)
 from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
+from lattice_lock_sheriff.formatters import (
+    GitHubFormatter,
+    JSONFormatter,
+    JUnitFormatter,
+    TextFormatter,
+    get_formatter,
+)
+from lattice_lock_sheriff.rules import Violation
 
 # Alias for formatter tests - use the same Violation class from rules
 FormatterViolation = Violation
@@ -49,6 +48,7 @@ def mock_validate_file():
 
 class MockSheriffConfig:
     """Mock config class for testing."""
+
     def __init__(self):
         self.forbidden_imports = []
         self.enforce_type_hints = True
@@ -73,7 +73,7 @@ def sample_violation():
         rule_id="SHERIFF_001",
         message="Forbidden import 'os' detected",
         line_number=42,
-        filename="src/module.py"
+        filename="src/module.py",
     )
 
 
@@ -84,19 +84,19 @@ def sample_violations():
             rule_id="SHERIFF_001",
             message="Forbidden import 'os' detected",
             line_number=10,
-            filename="src/module.py"
+            filename="src/module.py",
         ),
         Violation(
             rule_id="SHERIFF_002",
             message="Missing return type hint",
             line_number=25,
-            filename="src/module.py"
+            filename="src/module.py",
         ),
         Violation(
             rule_id="SHERIFF_001",
             message="Forbidden import 'subprocess' detected",
             line_number=5,
-            filename="src/utils.py"
+            filename="src/utils.py",
         ),
     ]
 
@@ -104,6 +104,7 @@ def sample_violations():
 # =============================================================================
 # Output Format Tests
 # =============================================================================
+
 
 class TestTextFormat:
     """Tests for text output format."""
@@ -118,7 +119,9 @@ class TestTextFormat:
         assert result.exit_code == 0
         assert "Sheriff found no violations" in result.output
 
-    def test_text_format_with_violations(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_text_format_with_violations(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         mock_validate_path.return_value = ([sample_violation], [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -130,7 +133,9 @@ class TestTextFormat:
         assert "42" in result.output
         assert "SHERIFF_001" in result.output
 
-    def test_text_format_with_ignored(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_text_format_with_ignored(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         mock_validate_path.return_value = ([], [sample_violation])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -156,7 +161,9 @@ class TestJSONFormat:
         assert data["success"] is True
         assert data["violations"] == []
 
-    def test_json_format_with_violations(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_json_format_with_violations(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         mock_validate_path.return_value = ([sample_violation], [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -170,7 +177,9 @@ class TestJSONFormat:
         assert data["violations"][0]["rule_id"] == "SHERIFF_001"
         assert data["violations"][0]["line_number"] == 42
 
-    def test_json_format_with_ignored(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_json_format_with_ignored(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         mock_validate_path.return_value = ([], [sample_violation])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -182,7 +191,9 @@ class TestJSONFormat:
         assert data["ignored_count"] == 1
         assert data["success"] is True
 
-    def test_deprecated_json_flag(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_deprecated_json_flag(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         """Test that deprecated --json flag still works."""
         mock_validate_path.return_value = ([sample_violation], [])
         with runner.isolated_filesystem():
@@ -206,7 +217,9 @@ class TestGitHubFormat:
         assert result.exit_code == 0
         assert "::notice::Sheriff found no violations" in result.output
 
-    def test_github_format_error_annotation(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_github_format_error_annotation(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         mock_validate_path.return_value = ([sample_violation], [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -217,14 +230,16 @@ class TestGitHubFormat:
         assert "::error file=src/module.py,line=42,title=SHERIFF_001::" in result.output
         assert "[SHERIFF_001]" in result.output
 
-    def test_github_format_warning_annotation(self, runner, mock_validate_path, mock_config_from_yaml):
+    def test_github_format_warning_annotation(
+        self, runner, mock_validate_path, mock_config_from_yaml
+    ):
         """Test that certain rules produce warnings instead of errors."""
         # SHERIFF_002 is configured as a warning rule in GitHubFormatter
         warning_violation = Violation(
             rule_id="SHERIFF_002",
             message="Missing type hint on parameter",
             line_number=10,
-            filename="src/module.py"
+            filename="src/module.py",
         )
         mock_validate_path.return_value = ([warning_violation], [])
         with runner.isolated_filesystem():
@@ -235,7 +250,9 @@ class TestGitHubFormat:
         assert result.exit_code == 0
         assert "::warning file=src/module.py,line=10,title=SHERIFF_002::" in result.output
 
-    def test_github_format_multiple_annotations(self, runner, mock_validate_path, mock_config_from_yaml, sample_violations):
+    def test_github_format_multiple_annotations(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violations
+    ):
         mock_validate_path.return_value = (sample_violations, [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -264,7 +281,9 @@ class TestJUnitFormat:
         assert root.tag == "testsuites"
         assert root.get("failures") == "0"
 
-    def test_junit_format_with_violations(self, runner, mock_validate_path, mock_config_from_yaml, sample_violations):
+    def test_junit_format_with_violations(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violations
+    ):
         mock_validate_path.return_value = (sample_violations, [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -281,7 +300,9 @@ class TestJUnitFormat:
         testsuites = root.findall("testsuite")
         assert len(testsuites) == 2  # Two files with violations
 
-    def test_junit_testcase_structure(self, runner, mock_validate_path, mock_config_from_yaml, sample_violation):
+    def test_junit_testcase_structure(
+        self, runner, mock_validate_path, mock_config_from_yaml, sample_violation
+    ):
         mock_validate_path.return_value = ([sample_violation], [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
@@ -303,6 +324,7 @@ class TestJUnitFormat:
 # GitHub Actions Annotation Format Tests (Detailed)
 # =============================================================================
 
+
 class TestGitHubAnnotationFormat:
     """Detailed tests for GitHub Actions annotation format compliance."""
 
@@ -313,7 +335,7 @@ class TestGitHubAnnotationFormat:
             rule_id="TEST_RULE",
             message="Error with\nnewline and % percent",
             line_number=10,
-            filename="test.py"
+            filename="test.py",
         )
         output = formatter.format([violation], Path("test.py"))
 
@@ -326,15 +348,15 @@ class TestGitHubAnnotationFormat:
         """Test exact format of GitHub annotations."""
         formatter = GitHubFormatter()
         violation = FormatterViolation(
-            rule_id="SHERIFF_001",
-            message="Test message",
-            line_number=42,
-            filename="src/test.py"
+            rule_id="SHERIFF_001", message="Test message", line_number=42, filename="src/test.py"
         )
         output = formatter.format([violation], Path("src/"))
 
         # Should follow exact format: ::level file=path,line=N,title=RULE::message
-        assert "::error file=src/test.py,line=42,title=SHERIFF_001::[SHERIFF_001] Test message" in output
+        assert (
+            "::error file=src/test.py,line=42,title=SHERIFF_001::[SHERIFF_001] Test message"
+            in output
+        )
 
     def test_warning_rules(self):
         """Test that warning rules are correctly identified."""
@@ -342,10 +364,7 @@ class TestGitHubAnnotationFormat:
 
         # SHERIFF_002 is configured as a warning rule in GitHubFormatter
         warning_violation = FormatterViolation(
-            rule_id="SHERIFF_002",
-            message="Missing type hint",
-            line_number=10,
-            filename="test.py"
+            rule_id="SHERIFF_002", message="Missing type hint", line_number=10, filename="test.py"
         )
         output = formatter.format([warning_violation], Path("test.py"))
         assert "::warning" in output
@@ -359,13 +378,13 @@ class TestGitHubAnnotationFormat:
                 rule_id="SHERIFF_001",  # Error
                 message="Forbidden import",
                 line_number=10,
-                filename="test.py"
+                filename="test.py",
             ),
             FormatterViolation(
                 rule_id="SHERIFF_002",  # Warning (configured in GitHubFormatter.WARNING_RULES)
                 message="Missing type hint",
                 line_number=20,
-                filename="test.py"
+                filename="test.py",
             ),
         ]
         output = formatter.format(violations, Path("test.py"))
@@ -379,6 +398,7 @@ class TestGitHubAnnotationFormat:
 # =============================================================================
 # JUnit XML Tests (Detailed)
 # =============================================================================
+
 
 class TestJUnitXMLFormat:
     """Detailed tests for JUnit XML format compliance."""
@@ -394,16 +414,10 @@ class TestJUnitXMLFormat:
         formatter = JUnitFormatter()
         violations = [
             FormatterViolation(
-                rule_id="TEST_001",
-                message="Error 1",
-                line_number=10,
-                filename="file1.py"
+                rule_id="TEST_001", message="Error 1", line_number=10, filename="file1.py"
             ),
             FormatterViolation(
-                rule_id="TEST_002",
-                message="Error 2",
-                line_number=20,
-                filename="file2.py"
+                rule_id="TEST_002", message="Error 2", line_number=20, filename="file2.py"
             ),
         ]
         output = formatter.format(violations, Path("src/"))
@@ -420,10 +434,7 @@ class TestJUnitXMLFormat:
         """Test that failure elements contain complete details."""
         formatter = JUnitFormatter()
         violation = FormatterViolation(
-            rule_id="SHERIFF_001",
-            message="Forbidden import",
-            line_number=42,
-            filename="test.py"
+            rule_id="SHERIFF_001", message="Forbidden import", line_number=42, filename="test.py"
         )
         output = formatter.format([violation], Path("test.py"))
 
@@ -439,6 +450,7 @@ class TestJUnitXMLFormat:
 # =============================================================================
 # Caching Tests
 # =============================================================================
+
 
 class TestCacheBehavior:
     """Tests for caching functionality."""
@@ -467,13 +479,15 @@ class TestCacheBehavior:
         test_file.write_text("import os")
 
         # Set cached violations
-        violations_data = [{
-            "rule_id": "SHERIFF_001",
-            "message": "Forbidden import",
-            "line_number": 1,
-            "filename": str(test_file),
-            "ignored": False,
-        }]
+        violations_data = [
+            {
+                "rule_id": "SHERIFF_001",
+                "message": "Forbidden import",
+                "line_number": 1,
+                "filename": str(test_file),
+                "ignored": False,
+            }
+        ]
         cache.set_violations(test_file, violations_data)
 
         # Verify cache hit - get_cached_violations returns data if cached
@@ -564,10 +578,7 @@ class TestCacheBehavior:
         mock_validate_path.return_value = ([], [])
         with runner.isolated_filesystem():
             Path("test.py").touch()
-            result = runner.invoke(sheriff_command, [
-                "test.py",
-                "--cache-dir", "custom_cache"
-            ])
+            result = runner.invoke(sheriff_command, ["test.py", "--cache-dir", "custom_cache"])
 
         assert result.exit_code == 0
 
@@ -575,6 +586,7 @@ class TestCacheBehavior:
 # =============================================================================
 # Error Handling Tests
 # =============================================================================
+
 
 class TestErrorHandling:
     """Tests for error handling in different output formats."""
@@ -608,6 +620,7 @@ class TestErrorHandling:
 # Formatter Factory Tests
 # =============================================================================
 
+
 class TestFormatterFactory:
     """Tests for the formatter factory function."""
 
@@ -636,6 +649,7 @@ class TestFormatterFactory:
 # =============================================================================
 # Config Hash Tests
 # =============================================================================
+
 
 class TestConfigHash:
     """Tests for configuration hashing."""
