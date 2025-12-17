@@ -46,7 +46,7 @@ jobs:
           pip install .[dev]
           
       - name: Unit Tests
-        run: pytest tests/unit
+        run: pytest tests/ -m "not integration" --tb=short
 
       # Semantic tests run only on limited scope or authorized PRs
       # - name: Semantic Tests (Gauntlet)
