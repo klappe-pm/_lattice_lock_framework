@@ -1,4 +1,17 @@
-version: "2.1"
+version: v2.1
+generated_module: governance_demo_types
+
+entities:
+  GovernanceRule:
+    description: "Governance rule definition"
+    fields:
+      id: {type: str, unique: true}
+      description: {type: str}
+      severity: {enum: [error, warning, info], default: error}
+      scope: {type: str}
+      forbids: {type: str, nullable: true}
+      ensures: {type: str, nullable: true}
+
 rules:
   - id: "no-print"
     description: "Use logger instead of print"
