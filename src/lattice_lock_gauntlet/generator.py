@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
+from typing import List
+from jinja2 import FileSystemLoader
+from lattice_lock.utils.jinja import get_secure_environment
 
-from jinja2 import Environment, FileSystemLoader
-
-from .parser import EnsuresClause, EntityDefinition, LatticeParser
-
+from .parser import LatticeParser, EntityDefinition, EnsuresClause
 
 class GauntletGenerator:
     """
@@ -14,12 +15,11 @@ class GauntletGenerator:
         output_dir (Path): Directory where generated tests will be saved.
         env (Environment): Jinja2 environment for template loading.
     """
-
     def __init__(self, lattice_file: str, output_dir: str):
         self.parser = LatticeParser(lattice_file)
         self.output_dir = Path(output_dir)
-        self.env = Environment(
-            loader=FileSystemLoader(Path(__file__).parent / "templates"), autoescape=True
+        self.env = get_secure_environment(
+            loader=FileSystemLoader(Path(__file__).parent / "templates")
         )
 
     def generate(self):
@@ -40,60 +40,55 @@ class GauntletGenerator:
         tests = []
         for clause in entity.ensures:
             assertion = self._build_assertion(clause)
-            tests.append(
-                {
-                    "name": clause.name,
-                    "description": clause.description,
-                    "constraint": f"{clause.constraint}: {clause.value}",
-                    "field": clause.field,
-                    "assertion": assertion,
-                }
-            )
+            tests.append({
+                "name": clause.name,
+                "description": clause.description,
+                "constraint": f"{clause.constraint}: {clause.value}",
+                "field": clause.field,
+                "assertion": assertion
+            })
 
         # Generate boundary tests (placeholders for now)
         boundary_tests = []
         for clause in entity.ensures:
-            if clause.constraint in ["gt", "lt", "gte", "lte"]:
-                boundary_tests.append(
-                    {
-                        "name": clause.name,
-                        "field": clause.field,
-                        "description": f"Verify boundary for {clause.constraint} {clause.value}",
-                    }
-                )
+            if clause.constraint in ['gt', 'lt', 'gte', 'lte']:
+                 boundary_tests.append({
+                     "name": clause.name,
+                     "field": clause.field,
+                     "description": f"Verify boundary for {clause.constraint} {clause.value}"
+                 })
 
         # Enrich fields with example values for the fixture
         fields_data = {}
         for fname, fdef in entity.fields.items():
             example = "None"
-            if "gt" in fdef:
-                example = str(fdef["gt"] + 1)
-            elif "gte" in fdef:
-                example = str(fdef["gte"])
-            elif "lt" in fdef:
-                example = str(fdef["lt"] - 1)
-            elif "lte" in fdef:
-                example = str(fdef["lte"])
+            if 'gt' in fdef: example = str(fdef['gt'] + 1)
+            elif 'gte' in fdef: example = str(fdef['gte'])
+            elif 'lt' in fdef: example = str(fdef['lt'] - 1)
+            elif 'lte' in fdef: example = str(fdef['lte'])
             fields_data[fname] = {"example_value": example}
 
         return template.render(
-            entity_name=entity.name, tests=tests, boundary_tests=boundary_tests, fields=fields_data
+            entity_name=entity.name,
+            tests=tests,
+            boundary_tests=boundary_tests,
+            fields=fields_data
         )
 
     def _build_assertion(self, clause: EnsuresClause) -> str:
         """Builds a Python assertion string for a given clause."""
-        if clause.constraint == "gt":
+        if clause.constraint == 'gt':
             return f"assert value > {clause.value}, f'Expected {clause.field} > {clause.value}, got {{value}}'"
-        elif clause.constraint == "lt":
+        elif clause.constraint == 'lt':
             return f"assert value < {clause.value}, f'Expected {clause.field} < {clause.value}, got {{value}}'"
-        elif clause.constraint == "gte":
+        elif clause.constraint == 'gte':
             return f"assert value >= {clause.value}, f'Expected {clause.field} >= {clause.value}, got {{value}}'"
-        elif clause.constraint == "lte":
+        elif clause.constraint == 'lte':
             return f"assert value <= {clause.value}, f'Expected {clause.field} <= {clause.value}, got {{value}}'"
-        elif clause.constraint == "unique":
+        elif clause.constraint == 'unique':
             # Uniqueness is hard to test on a single instance without context (DB, list of others).
             # For now, we'll generate a placeholder or a property-based test hint.
             # In a real Gauntlet, this would check against a dataset fixture.
-            return "# Uniqueness check requires a collection context.\n        # assert is_unique(value, collection)"
+            return f"# Uniqueness check requires a collection context.\n        # assert is_unique(value, collection)"
 
-        return "pass # Unknown constraint"
+        raise ValueError(f"Unknown constraint type: {clause.constraint}")

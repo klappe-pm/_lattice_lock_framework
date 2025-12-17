@@ -20,11 +20,15 @@ lattice-lock [OPTIONS] COMMAND [ARGS]...
 
 | Command | Description |
 |---------|-------------|
+| [`compile`](compile.md) | Compile and enforce lattice.yaml specifications |
+| [`admin`](admin.md) | Manage users, keys, and system configuration |
+| [`orchestrator`](orchestrator.md) | Manage model routing and analysis |
+| [`feedback`](feedback.md) | Submit bugs and feature requests |
 | [`init`](init.md) | Initialize a new Lattice Lock project with scaffolding |
 | [`validate`](validate.md) | Validate a Lattice Lock project against schemas and rules |
 | [`doctor`](doctor.md) | Check environment health for Lattice Lock |
 | [`sheriff`](sheriff.md) | AST-based validation for import discipline and type hints |
-| [`gauntlet`](gauntlet.md) | Generate and run semantic tests from lattice.yaml |
+| [`gauntlet`](gauntlet.md) | Generate and run semantic tests (alias: `test`) |
 
 ## Command Categories
 

@@ -4,10 +4,16 @@ Lattice Lock CLI - Command-line interface for the Lattice Lock Framework.
 This module provides the main entry point for the CLI.
 """
 
-import logging
-
 import click
+import logging
+from typing import Optional
+
 from lattice_lock import __version__
+from lattice_lock_cli.utils.console import get_console
+
+# Import command groups
+from lattice_lock_cli.groups.orchestrator import orchestrator_group
+from lattice_lock_cli.groups.admin import admin_group
 
 # Import existing commands
 from lattice_lock_cli.commands.compile import compile_command
@@ -17,16 +23,10 @@ from lattice_lock_cli.commands.gauntlet import gauntlet_command
 from lattice_lock_cli.commands.init import init_command
 from lattice_lock_cli.commands.sheriff import sheriff_command
 from lattice_lock_cli.commands.validate import validate_command
-from lattice_lock_cli.groups.admin import admin_group
-
-# Import command groups
-from lattice_lock_cli.groups.orchestrator import orchestrator_group
-from lattice_lock_cli.utils.console import get_console
 
 # Configuration for logger
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("lattice_lock")
-
 
 @click.group()
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
@@ -46,11 +46,10 @@ def cli(ctx, verbose: bool, json: bool, project_dir: str):
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["JSON"] = json
     ctx.obj["PROJECT_DIR"] = project_dir
-
+    
     if verbose:
         logger.setLevel(logging.DEBUG)
         get_console().print("[info]Verbose mode enabled[/info]")
-
 
 # Register Core Commands
 cli.add_command(init_command, name="init")
@@ -61,9 +60,8 @@ cli.add_command(feedback, name="feedback")
 
 # Alias commands for better UX
 cli.add_command(gauntlet_command, name="test")
-cli.add_command(
-    sheriff_command, name="sheriff"
-)  # Keep sheriff available directly or via validate? Design says 'validate' runs sheriff.
+cli.add_command(gauntlet_command, name="gauntlet")  # Alias for backward compatibility
+cli.add_command(sheriff_command, name="sheriff") # Keep sheriff available directly or via validate? Design says 'validate' runs sheriff.
 
 # Register Groups
 cli.add_command(orchestrator_group)

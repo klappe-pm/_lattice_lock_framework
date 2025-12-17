@@ -7,7 +7,8 @@ Template loader and renderer for project scaffolding.
 from pathlib import Path
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
+from jinja2 import FileSystemLoader, Template, select_autoescape
+from lattice_lock.utils.jinja import get_secure_environment
 
 # Get the templates directory path
 TEMPLATES_DIR = Path(__file__).parent
@@ -15,7 +16,7 @@ TEMPLATES_DIR = Path(__file__).parent
 
 def get_template_env() -> Environment:
     """Get the Jinja2 environment configured for the templates directory."""
-    return Environment(
+    return get_secure_environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         autoescape=select_autoescape(
             enabled_extensions=("html", "htm", "xml"), default_for_string=False, default=False

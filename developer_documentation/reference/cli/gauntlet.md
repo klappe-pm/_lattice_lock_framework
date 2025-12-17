@@ -8,6 +8,8 @@ Generate and run semantic tests from lattice.yaml.
 lattice-lock gauntlet [OPTIONS]
 ```
 
+**Note:** This command is also available as `lattice-lock test`. Both names are supported.
+
 ## Description
 
 The `gauntlet` command generates and executes semantic contract tests based on entity definitions in your `lattice.yaml` file. It creates pytest-compatible test files that validate constraints, ensures conditions, and field types defined in your schema.
