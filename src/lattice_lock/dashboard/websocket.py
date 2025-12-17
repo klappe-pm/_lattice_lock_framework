@@ -10,7 +10,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -24,7 +24,7 @@ class ConnectionInfo:
     websocket: WebSocket
     connected_at: float
     last_activity: float
-    client_id: Optional[str] = None
+    client_id: str | None = None
 
 
 class WebSocketManager:
@@ -46,7 +46,7 @@ class WebSocketManager:
     def __init__(self):
         """Initialize the WebSocket manager."""
         self._connections: dict[int, ConnectionInfo] = {}
-        self._heartbeat_task: Optional[asyncio.Task] = None
+        self._heartbeat_task: asyncio.Task | None = None
         self._running = False
 
     @property
@@ -59,7 +59,7 @@ class WebSocketManager:
         """Get the number of active connections."""
         return len(self._connections)
 
-    async def connect(self, websocket: WebSocket, client_id: Optional[str] = None) -> None:
+    async def connect(self, websocket: WebSocket, client_id: str | None = None) -> None:
         """
         Accept a new WebSocket connection.
 
@@ -285,7 +285,7 @@ class WebSocketManager:
         self,
         event_type: str,
         data: dict[str, Any],
-        project_id: Optional[str] = None,
+        project_id: str | None = None,
     ) -> int:
         """
         Broadcast a typed event to all clients.

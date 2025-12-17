@@ -17,7 +17,6 @@ Usage:
     tasks = list_tasks("gemini_cli")
 """
 
-from typing import Optional
 
 # Claude Code prompts - for IDE-based code generation
 CLAUDE_CODE_PROMPTS = {
@@ -1023,7 +1022,7 @@ with open('project_prompts/project_prompts_state.json') as f:
 }
 
 
-def get_prompt(tool: str, task_id: str) -> Optional[str]:
+def get_prompt(tool: str, task_id: str) -> str | None:
     """Get a prompt for a specific tool and task ID.
 
     Args:

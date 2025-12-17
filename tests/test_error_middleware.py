@@ -8,6 +8,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from lattice_lock.errors import (
     ConfigurationError,
     ErrorContext,
@@ -291,9 +292,8 @@ class TestErrorHandlerContextManager:
 
     def test_error_captured(self) -> None:
         """Test that errors are captured."""
-        with pytest.raises(LatticeError):
-            with ErrorHandler() as handler:
-                raise LatticeError("Test error")
+        with pytest.raises(LatticeError), ErrorHandler() as handler:
+            raise LatticeError("Test error")
 
         assert handler.error is not None
         assert handler.context is not None
@@ -311,9 +311,8 @@ class TestErrorHandlerContextManager:
         """Test on_error callback is called."""
         callback = MagicMock()
 
-        with pytest.raises(LatticeError):
-            with ErrorHandler(on_error=callback) as handler:
-                raise LatticeError("Test error")
+        with pytest.raises(LatticeError), ErrorHandler(on_error=callback) as handler:
+            raise LatticeError("Test error")
 
         callback.assert_called_once()
 

@@ -8,7 +8,6 @@ Provides intelligent local model selection and availability checking
 import json
 import subprocess
 from dataclasses import dataclass
-from typing import Optional
 
 # Import RAM monitor
 from .ram_monitor import RAMMonitor
@@ -104,7 +103,7 @@ class LocalModelManager:
         except Exception:
             return {}
 
-    def get_model_info(self, model_name: str) -> Optional[LocalModel]:
+    def get_model_info(self, model_name: str) -> LocalModel | None:
         """Get detailed information about a specific model"""
         if model_name not in self.MODEL_SIZES:
             return None
@@ -130,7 +129,7 @@ class LocalModelManager:
 
         return can_load, reason
 
-    def select_best_model(self, task_type: str, candidates: list[str]) -> Optional[str]:
+    def select_best_model(self, task_type: str, candidates: list[str]) -> str | None:
         """
         Select best available model for task from candidates
         Prioritizes: keep-alive models > loaded models > installable models

@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import time
-from typing import Optional
 
 from ..types import APIResponse
 
@@ -10,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 try:
     import boto3
-    from botocore.exceptions import ClientError
+    from botocore.exceptions import ClientError  # noqa: F401
 
     _BOTO3_AVAILABLE = True
 except ImportError:
     boto3 = None
+    ClientError = None  # type: ignore[misc, assignment]
     _BOTO3_AVAILABLE = False
 
 
@@ -23,7 +23,7 @@ class BedrockClient:
     AWS Bedrock Client Provider.
     """
 
-    def __init__(self, region_name: Optional[str] = None):
+    def __init__(self, region_name: str | None = None):
         self.region = region_name or os.getenv("AWS_REGION", "us-east-1")
         self.region_name = self.region  # Alias for compatibility
         self.access_key = os.getenv("AWS_ACCESS_KEY_ID")

@@ -1,7 +1,6 @@
 import ast
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 from .config import SheriffConfig
 
@@ -51,7 +50,7 @@ class ImportDisciplineRule(Rule):
 
     def _check_import(
         self,
-        module_name: Optional[str],
+        module_name: str | None,
         node: ast.AST,
         context: RuleContext,
         violations: list[Violation],

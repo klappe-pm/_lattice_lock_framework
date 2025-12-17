@@ -7,7 +7,6 @@ Handles the collection, storage, and retrieval of feedback items.
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 from pydantic import ValidationError
 
@@ -82,7 +81,7 @@ class FeedbackCollector:
         category: FeedbackCategory = FeedbackCategory.OTHER,
         priority: FeedbackPriority = FeedbackPriority.MEDIUM,
         source: str = "user",
-        metadata: Optional[dict] = None,
+        metadata: dict | None = None,
     ) -> str:
         """
         Submit a new piece of feedback.
@@ -112,7 +111,7 @@ class FeedbackCollector:
         logger.info(f"Feedback submitted: {item.id} [{category}]")
         return item.id
 
-    def get(self, feedback_id: str) -> Optional[FeedbackItem]:
+    def get(self, feedback_id: str) -> FeedbackItem | None:
         """
         Retrieve a specific feedback item by ID.
 
@@ -129,7 +128,7 @@ class FeedbackCollector:
         return None
 
     def list_feedback(
-        self, category: Optional[FeedbackCategory] = None, source: Optional[str] = None
+        self, category: FeedbackCategory | None = None, source: str | None = None
     ) -> list[FeedbackItem]:
         """
         List feedback items, optionally filtered.

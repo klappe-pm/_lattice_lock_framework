@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import pytest
+
 from lattice_lock_validator.schema import validate_lattice_schema
 
 

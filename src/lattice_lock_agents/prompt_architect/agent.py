@@ -8,9 +8,10 @@ coordinates subagents, and manages the prompt generation workflow.
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import yaml
+
 from lattice_lock_agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
 from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 from lattice_lock_agents.prompt_architect.subagents.tool_matcher import ToolMatcher
@@ -78,8 +79,8 @@ class PromptArchitectAgent:
 
     def __init__(
         self,
-        definition_path: Optional[str] = None,
-        repo_root: Optional[Path] = None,
+        definition_path: str | None = None,
+        repo_root: Path | None = None,
     ):
         """
         Initialize the PromptArchitectAgent.
@@ -118,11 +119,11 @@ class PromptArchitectAgent:
         }
 
         # Initialize subagents (lazy loading)
-        self._spec_analyzer: Optional[SpecAnalyzer] = None
-        self._roadmap_parser: Optional[RoadmapParser] = None
-        self._tool_matcher: Optional[ToolMatcher] = None
-        self._prompt_generator: Optional[PromptGenerator] = None
-        self._tracker_client: Optional[TrackerClient] = None
+        self._spec_analyzer: SpecAnalyzer | None = None
+        self._roadmap_parser: RoadmapParser | None = None
+        self._tool_matcher: ToolMatcher | None = None
+        self._prompt_generator: PromptGenerator | None = None
+        self._tracker_client: TrackerClient | None = None
 
         logger.info(f"PromptArchitectAgent initialized: {self.config.name} v{self.config.version}")
 
@@ -262,7 +263,7 @@ class PromptArchitectAgent:
         Returns:
             True if the action is allowed, False otherwise.
         """
-        guardrails = self.get_guardrails()
+        _guardrails = self.get_guardrails()  # Reserved for future guardrail checks
 
         # Check for credential/secret access
         if "credentials" in target.lower() or "secrets" in target.lower():

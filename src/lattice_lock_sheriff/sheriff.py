@@ -7,7 +7,6 @@ for import discipline, type hints, and other code quality standards.
 import ast
 import os
 from pathlib import Path
-from typing import Optional
 
 from .ast_visitor import SheriffVisitor
 from .config import SheriffConfig
@@ -15,7 +14,7 @@ from .rules import Violation
 
 
 def validate_file_with_audit(
-    file_path: Path, config: SheriffConfig, ignore_patterns: Optional[list[str]] = None
+    file_path: Path, config: SheriffConfig, ignore_patterns: list[str] | None = None
 ) -> tuple[list[Violation], list[Violation]]:
     """Validate a single Python file and return violations with audit info.
 
@@ -70,7 +69,7 @@ def validate_file_with_audit(
 def validate_path_with_audit(
     path: Path,
     config: SheriffConfig,
-    ignore_patterns: Optional[list[str]] = None,
+    ignore_patterns: list[str] | None = None,
 ) -> tuple[list[Violation], list[Violation]]:
     """Validate a file or directory and return violations with audit info.
 
@@ -153,7 +152,7 @@ def validate_file(file_path: Path, config: SheriffConfig) -> list[Violation]:
 def validate_path(
     path: Path,
     config: SheriffConfig,
-    ignore_patterns: Optional[list[str]] = None,
+    ignore_patterns: list[str] | None = None,
 ) -> list[Violation]:
     """Validate a file or directory.
 

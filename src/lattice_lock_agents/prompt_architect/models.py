@@ -1,10 +1,10 @@
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
 class Requirement(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     description: str
     type: str = "functional"  # functional, non-functional
     priority: str = "medium"
@@ -28,10 +28,10 @@ class Constraint(BaseModel):
 
 
 class SpecificationAnalysis(BaseModel):
-    project_name: Optional[str] = None
+    project_name: str | None = None
     phases: list[Phase] = Field(default_factory=list)
     components: list[Component] = Field(default_factory=list)
     requirements: list[Requirement] = Field(default_factory=list)
     constraints: list[Constraint] = Field(default_factory=list)
-    raw_content: Optional[str] = None
+    raw_content: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)

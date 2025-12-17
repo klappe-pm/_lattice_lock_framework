@@ -9,7 +9,6 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 from lattice_lock.agents.prompt_architect.models import GenerationRequest, GenerationResult
 from lattice_lock.agents.prompt_architect.orchestrator import PromptArchitectOrchestrator
@@ -359,7 +358,7 @@ def print_validation_results(results: dict) -> None:
                 print(f"    - Missing section: {section}")
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Main entry point for the CLI."""
     parser = create_parser()
     args = parser.parse_args(argv)

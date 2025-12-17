@@ -8,9 +8,9 @@ classes, and Gauntlet test contracts.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
 
 import yaml
+
 from lattice_lock_gauntlet.generator import GauntletGenerator
 from lattice_lock_validator.schema import ValidationResult, validate_lattice_schema
 
@@ -21,7 +21,7 @@ class GeneratedFile:
 
     path: Path
     file_type: str  # 'pydantic', 'sqlmodel', 'gauntlet'
-    entity_name: Optional[str] = None
+    entity_name: str | None = None
 
 
 @dataclass
@@ -41,7 +41,7 @@ class CompilationResult:
     generated_files: list[GeneratedFile] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
-    validation_result: Optional[ValidationResult] = None
+    validation_result: ValidationResult | None = None
 
     def add_warning(self, message: str):
         """Add a warning message."""
@@ -52,7 +52,7 @@ class CompilationResult:
         self.success = False
         self.errors.append(message)
 
-    def add_generated_file(self, path: Path, file_type: str, entity_name: Optional[str] = None):
+    def add_generated_file(self, path: Path, file_type: str, entity_name: str | None = None):
         """Add a generated file to the result."""
         self.generated_files.append(
             GeneratedFile(path=path, file_type=file_type, entity_name=entity_name)
@@ -60,8 +60,8 @@ class CompilationResult:
 
 
 def compile_lattice(
-    schema_path: Union[str, Path],
-    output_dir: Optional[Union[str, Path]] = None,
+    schema_path: str | Path,
+    output_dir: str | Path | None = None,
     generate_pydantic: bool = True,
     generate_sqlmodel: bool = False,
     generate_gauntlet: bool = True,
@@ -162,9 +162,7 @@ def compile_lattice(
     return result
 
 
-def _generate_pydantic_models(
-    schema_data: dict, output_dir: Path, module_name: str
-) -> Optional[Path]:
+def _generate_pydantic_models(schema_data: dict, output_dir: Path, module_name: str) -> Path | None:
     """
     Generate Pydantic models from schema data.
 
@@ -279,7 +277,7 @@ def _get_pydantic_field_kwargs(field_def: dict) -> str:
 
 def _generate_sqlmodel_classes(
     schema_data: dict, output_dir: Path, module_name: str
-) -> Optional[Path]:
+) -> Path | None:
     """
     Generate SQLModel ORM classes from schema data.
 

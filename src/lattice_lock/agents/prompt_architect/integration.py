@@ -11,7 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from lattice_lock.agents.prompt_architect.models import (
     GenerationRequest,
@@ -36,8 +36,8 @@ class ProjectContext:
     completed_tasks: list[str] = field(default_factory=list)
     blocked_tasks: list[str] = field(default_factory=list)
     team_assignments: dict[str, str] = field(default_factory=dict)
-    deadline: Optional[datetime] = None
-    priority_override: Optional[str] = None
+    deadline: datetime | None = None
+    priority_override: str | None = None
 
 
 @dataclass
@@ -48,9 +48,9 @@ class PromptExecutionStatus:
     task_id: str
     tool: ToolType
     status: PromptStatus
-    assigned_to: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    assigned_to: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     output_summary: str = ""
     errors: list[str] = field(default_factory=list)
 
@@ -80,8 +80,8 @@ class PromptArchitectIntegration:
 
     def __init__(
         self,
-        orchestrator: Optional[PromptArchitectOrchestrator] = None,
-        config: Optional[IntegrationConfig] = None,
+        orchestrator: PromptArchitectOrchestrator | None = None,
+        config: IntegrationConfig | None = None,
         state_file: str = "project_prompts/integration_state.json",
     ) -> None:
         self.orchestrator = orchestrator or PromptArchitectOrchestrator()
@@ -240,7 +240,7 @@ class PromptArchitectIntegration:
     def mark_prompt_started(
         self,
         prompt_id: str,
-        assigned_to: Optional[str] = None,
+        assigned_to: str | None = None,
     ) -> bool:
         """
         Mark a prompt as started (in progress).
@@ -353,7 +353,7 @@ class PromptArchitectIntegration:
         self.save_state()
         return True
 
-    def _get_execution_status(self, prompt_id: str) -> Optional[PromptExecutionStatus]:
+    def _get_execution_status(self, prompt_id: str) -> PromptExecutionStatus | None:
         """Get the execution status for a prompt."""
         if "prompts" not in self._state:
             return None
@@ -369,17 +369,21 @@ class PromptArchitectIntegration:
             tool=ToolType(prompt_data.get("tool", "devin")),
             status=PromptStatus(prompt_data.get("status", "draft")),
             assigned_to=prompt_data.get("assigned_to"),
-            started_at=datetime.fromisoformat(prompt_data["started_at"])
-            if prompt_data.get("started_at")
-            else None,
-            completed_at=datetime.fromisoformat(prompt_data["completed_at"])
-            if prompt_data.get("completed_at")
-            else None,
+            started_at=(
+                datetime.fromisoformat(prompt_data["started_at"])
+                if prompt_data.get("started_at")
+                else None
+            ),
+            completed_at=(
+                datetime.fromisoformat(prompt_data["completed_at"])
+                if prompt_data.get("completed_at")
+                else None
+            ),
             output_summary=prompt_data.get("output_summary", ""),
             errors=prompt_data.get("errors", []),
         )
 
-    def get_prompt_status(self, prompt_id: str) -> Optional[PromptExecutionStatus]:
+    def get_prompt_status(self, prompt_id: str) -> PromptExecutionStatus | None:
         """
         Get the current status of a prompt.
 
@@ -468,7 +472,7 @@ class PromptArchitectIntegration:
 
     def get_pending_prompts(
         self,
-        tool: Optional[ToolType] = None,
+        tool: ToolType | None = None,
     ) -> list[PromptExecutionStatus]:
         """
         Get all pending prompts, optionally filtered by tool.
@@ -522,7 +526,7 @@ class ProjectAgentInterface:
 
     def __init__(
         self,
-        integration: Optional[PromptArchitectIntegration] = None,
+        integration: PromptArchitectIntegration | None = None,
     ) -> None:
         self.integration = integration or PromptArchitectIntegration()
 
@@ -540,7 +544,7 @@ class ProjectAgentInterface:
         )
         return self.integration.request_prompts_for_phase(context, phase)
 
-    def get_next_task(self, tool: ToolType) -> Optional[PromptExecutionStatus]:
+    def get_next_task(self, tool: ToolType) -> PromptExecutionStatus | None:
         """Get the next pending task for a specific tool."""
         pending = self.integration.get_pending_prompts(tool)
         return pending[0] if pending else None

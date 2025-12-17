@@ -51,8 +51,8 @@ class LoadTarget:
     table_name: str
     load_mode: LoadMode = LoadMode.APPEND
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 @dataclass
@@ -63,11 +63,11 @@ class LoadJob:
     target_id: int
     records_loaded: int = 0
     records_failed: int = 0
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     status: JobStatus = JobStatus.PENDING
     error_message: str = ""
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     def __post_init__(self) -> None:
         if self.records_loaded < 0:

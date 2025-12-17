@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import re
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -49,7 +49,7 @@ class QualityScorer:
         self,
         threshold: float = DEFAULT_THRESHOLD,
         use_llm: bool = True,
-        llm_client: Optional[Any] = None,
+        llm_client: Any | None = None,
         model: str = "codellama:34b",
     ):
         """
@@ -274,7 +274,7 @@ class QualityScorer:
 
         return min(max(score, 1.0), 10.0)
 
-    async def _get_llm_scores(self, content: str) -> Optional[dict[str, Any]]:
+    async def _get_llm_scores(self, content: str) -> dict[str, Any] | None:
         """Get LLM-assisted scores for the prompt."""
         if not self.llm_client:
             return None

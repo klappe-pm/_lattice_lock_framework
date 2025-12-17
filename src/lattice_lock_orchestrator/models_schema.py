@@ -2,8 +2,6 @@
 Pydantic models for registry YAML validation.
 """
 
-from typing import Optional
-
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .types import ModelProvider, ModelStatus, ProviderMaturity
@@ -13,8 +11,8 @@ class ModelConfig(BaseModel):
     """Configuration for a single model in registry.yaml."""
 
     id: str = Field(..., description="Unique identifier for the model (e.g. gpt-4o)")
-    name: Optional[str] = Field(None, description="Human readable name")
-    api_name: Optional[str] = Field(None, description="Actual API model name (defaults to id)")
+    name: str | None = Field(None, description="Human readable name")
+    api_name: str | None = Field(None, description="Actual API model name (defaults to id)")
     provider: ModelProvider
     context_window: int = Field(..., gt=0)
 

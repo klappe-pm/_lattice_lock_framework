@@ -157,9 +157,10 @@ class Project:
 
         if not unresolved_errors:
             # Check validation status
-            if self.validation.schema_status == ValidationStatus.FAILED:
-                self.status = ProjectStatus.ERROR
-            elif self.validation.sheriff_status == ValidationStatus.FAILED:
+            if (
+                self.validation.schema_status == ValidationStatus.FAILED
+                or self.validation.sheriff_status == ValidationStatus.FAILED
+            ):
                 self.status = ProjectStatus.ERROR
             elif self.validation.gauntlet_status == ValidationStatus.FAILED:
                 self.status = ProjectStatus.WARNING

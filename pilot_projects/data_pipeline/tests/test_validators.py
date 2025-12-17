@@ -4,7 +4,6 @@ Tests for data validators.
 Validates validation rule enforcement.
 """
 
-
 from src.validators import (
     RangeValidator,
     RegexValidator,

@@ -11,10 +11,12 @@ This module validates:
 
 Target: >80% accuracy on golden test set
 """
+
 import json
 from pathlib import Path
 
 import pytest
+
 from lattice_lock_orchestrator.scorer import ModelScorer, TaskAnalyzer
 from lattice_lock_orchestrator.types import (
     ModelCapabilities,
@@ -521,7 +523,7 @@ class TestEdgeCases:
 
     def test_unicode_prompt(self, analyzer):
         """Unicode characters should be handled."""
-        prompt = "Write a function to count emoji: \U0001F600 \U0001F609"
+        prompt = "Write a function to count emoji: \U0001f600 \U0001f609"
         analysis = analyzer.analyze_full(prompt)
         assert analysis.primary_type is not None
 

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import click
 import pytest
+
 from lattice_lock_gauntlet.generator import GauntletGenerator
 
 
@@ -95,7 +96,7 @@ def gauntlet_command(
         if parallel:
             # Check if pytest-xdist is installed
             try:
-                import xdist
+                import xdist  # noqa: F401
 
                 if parallel == "auto":
                     pytest_args.extend(["-n", "auto"])

@@ -1,7 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .config import SheriffConfig
 
@@ -11,9 +11,9 @@ class SheriffCache:
         self.cache_dir = cache_dir
         self.config_hash = config_hash
         self.cache_file = self.cache_dir / f"sheriff_cache_{config_hash}.json"
-        self._cache: dict[
-            Path, dict[str, Any]
-        ] = {}  # {file_path: {file_hash: str, violations: List[dict]}}
+        self._cache: dict[Path, dict[str, Any]] = (
+            {}
+        )  # {file_path: {file_hash: str, violations: List[dict]}}
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_file_hash(self, file_path: Path) -> str:
@@ -59,7 +59,7 @@ class SheriffCache:
             except OSError as e:
                 print(f"Error: Failed to delete cache file {self.cache_file}: {e}")
 
-    def get_cached_violations(self, file_path: Path) -> Optional[list[dict[str, Any]]]:
+    def get_cached_violations(self, file_path: Path) -> list[dict[str, Any]] | None:
         """
         Retrieves cached violations for a file if its hash matches.
         Returns a list of dictionaries, not Violation objects.

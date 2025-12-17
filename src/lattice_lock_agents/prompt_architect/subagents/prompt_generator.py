@@ -1,10 +1,12 @@
 import logging
 import os
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import aiofiles
 import yaml
+from pydantic import BaseModel, Field
+
 from lattice_lock.utils.jinja import create_template
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
@@ -17,7 +19,6 @@ from lattice_lock_agents.prompt_architect.validators import (
     ValidationResult,
 )
 from lattice_lock_orchestrator.api_clients import get_api_client
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,9 @@ class GeneratedPrompt(BaseModel):
     content: str
     sections: dict[str, Any]
     metadata: dict[str, Any] = Field(default_factory=dict)
-    validation_result: Optional[dict[str, Any]] = None
-    convention_result: Optional[dict[str, Any]] = None
-    quality_score: Optional[dict[str, Any]] = None
+    validation_result: dict[str, Any] | None = None
+    convention_result: dict[str, Any] | None = None
+    quality_score: dict[str, Any] | None = None
 
 
 class PromptGenerator:
@@ -89,7 +90,7 @@ class PromptGenerator:
 
     async def _load_template(self) -> str:
         if os.path.exists(self.template_path):
-            async with aiofiles.open(self.template_path, "r") as f:
+            async with aiofiles.open(self.template_path) as f:
                 return await f.read()
         return ""
 
@@ -155,8 +156,8 @@ class PromptGenerator:
         filename = f"{task_id}_{tool_name.lower()}_{clean_title}.md"
 
         # Determine phase directory
-        phase_dir_name = (
-            f"phase{phase_number}_automation"  # This needs to be dynamic based on phase name
+        _phase_dir_name = (
+            f"phase{phase_number}_automation"  # Reserved for dynamic phase directory naming
         )
         # For now, we try to find the directory or create a generic one
         # In a real implementation, we'd map phase number to directory name

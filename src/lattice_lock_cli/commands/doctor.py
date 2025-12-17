@@ -258,7 +258,7 @@ def doctor_command(ctx: click.Context) -> None:
     Verifies Python version, dependencies, environment variables,
     and optional tools like Ollama.
     """
-    verbose = ctx.obj.get("verbose", False) if ctx.obj else False
+    _verbose = ctx.obj.get("verbose", False) if ctx.obj else False  # Reserved for verbose output
 
     click.echo(click.style("Lattice Lock Environment Health Check", bold=True))
     click.echo("=" * 50)

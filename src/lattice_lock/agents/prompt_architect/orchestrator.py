@@ -10,7 +10,7 @@ import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from lattice_lock.agents.prompt_architect.models import (
     EpicSpec,
@@ -220,8 +220,8 @@ class RoadmapParser:
     def _parse_roadmap(self, content: str) -> list[PhaseSpec]:
         """Parse roadmap content into phase specifications."""
         phases = []
-        current_phase: Optional[PhaseSpec] = None
-        current_epic: Optional[EpicSpec] = None
+        current_phase: PhaseSpec | None = None
+        current_epic: EpicSpec | None = None
 
         lines = content.split("\n")
         for line in lines:
@@ -274,7 +274,7 @@ class ToolMatcher:
 
     def __init__(
         self,
-        capabilities: Optional[list[ToolCapability]] = None,
+        capabilities: list[ToolCapability] | None = None,
     ) -> None:
         self.capabilities = capabilities or DEFAULT_TOOL_CAPABILITIES
         self._capability_map = {cap.tool: cap for cap in self.capabilities}
@@ -581,7 +581,7 @@ class PromptArchitectOrchestrator:
         epic: EpicSpec,
         task: TaskSpec,
         request: GenerationRequest,
-    ) -> Optional[PromptOutput]:
+    ) -> PromptOutput | None:
         """Generate a prompt for a single task."""
         assignment = self.tool_matcher.match_task(task)
 

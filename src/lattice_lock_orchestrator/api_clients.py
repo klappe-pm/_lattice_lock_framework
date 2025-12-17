@@ -10,7 +10,6 @@ import os
 import time
 from collections.abc import AsyncIterator
 from enum import Enum
-from typing import Optional, Union
 
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -186,7 +185,7 @@ class BaseAPIClient:
 class GrokAPIClient(BaseAPIClient):
     """xAI Grok API client with all models support"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         api_key = api_key or os.getenv("XAI_API_KEY")
         if not api_key:
             raise ValueError("XAI_API_KEY not found")
@@ -197,10 +196,10 @@ class GrokAPIClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         stream: bool = False,
-        functions: Optional[list[dict]] = None,
-        tool_choice: Optional[Union[str, dict]] = None,
+        functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to Grok"""
@@ -276,7 +275,7 @@ class GrokAPIClient(BaseAPIClient):
 class OpenAIAPIClient(BaseAPIClient):
     """OpenAI API client"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found")
@@ -287,10 +286,10 @@ class OpenAIAPIClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         stream: bool = False,
-        functions: Optional[list[dict]] = None,
-        tool_choice: Optional[Union[str, dict]] = None,
+        functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to OpenAI"""
@@ -337,7 +336,7 @@ class OpenAIAPIClient(BaseAPIClient):
 class GoogleAPIClient(BaseAPIClient):
     """Google Gemini API client"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         api_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found")
@@ -348,8 +347,8 @@ class GoogleAPIClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        functions: Optional[list[dict]] = None,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to Google Gemini"""
@@ -414,7 +413,7 @@ class GoogleAPIClient(BaseAPIClient):
 class AnthropicAPIClient(BaseAPIClient):
     """Anthropic Claude API client (via DIAL or direct)"""
 
-    def __init__(self, api_key: Optional[str] = None, use_dial: bool = False, **kwargs):
+    def __init__(self, api_key: str | None = None, use_dial: bool = False, **kwargs):
         if use_dial:
             api_key = api_key or os.getenv("DIAL_API_KEY")
             if not api_key:
@@ -435,8 +434,8 @@ class AnthropicAPIClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        functions: Optional[list[dict]] = None,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to Anthropic/DIAL"""
@@ -539,7 +538,7 @@ class AnthropicAPIClient(BaseAPIClient):
 class AzureOpenAIClient(BaseAPIClient):
     """Azure OpenAI Service API client"""
 
-    def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None, **kwargs):
+    def __init__(self, api_key: str | None = None, endpoint: str | None = None, **kwargs):
         api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
         endpoint = endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
         if not api_key or not endpoint:
@@ -552,9 +551,9 @@ class AzureOpenAIClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        functions: Optional[list[dict]] = None,
-        tool_choice: Optional[Union[str, dict]] = None,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to Azure OpenAI"""
@@ -631,8 +630,8 @@ class BedrockAPIClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        functions: Optional[list[dict]] = None,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
         **kwargs,
     ) -> APIResponse:
         """
@@ -686,7 +685,7 @@ class BedrockAPIClient(BaseAPIClient):
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""
 
-    def __init__(self, base_url: Optional[str] = None):
+    def __init__(self, base_url: str | None = None):
         base_url = base_url or os.getenv("CUSTOM_API_URL", "http://localhost:11434/v1")
         # No API key needed for local models
         super().__init__("", base_url)
@@ -696,9 +695,9 @@ class LocalModelClient(BaseAPIClient):
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        functions: Optional[list[dict]] = None,
-        tool_choice: Optional[Union[str, dict]] = None,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to local model"""

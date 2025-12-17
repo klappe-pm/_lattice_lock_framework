@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from lattice_lock_validator.structure import validate_file_naming, validate_repository_structure
 
 

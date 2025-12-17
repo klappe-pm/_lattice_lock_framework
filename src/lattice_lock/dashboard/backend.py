@@ -9,7 +9,7 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -90,7 +90,7 @@ class ProjectUpdateRequest(BaseModel):
     """Request to update a project's status."""
 
     status: str = Field(description="New status value")
-    details: Optional[dict[str, Any]] = Field(default=None, description="Additional details")
+    details: dict[str, Any] | None = Field(default=None, description="Additional details")
     duration: float = Field(default=0.1, description="Operation duration for metrics")
 
 
@@ -371,7 +371,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app(
-    cors_origins: Optional[list[str]] = None,
+    cors_origins: list[str] | None = None,
     debug: bool = False,
     enable_mock_updates: bool = True,
 ) -> FastAPI:
@@ -460,7 +460,7 @@ def run_server(
     host: str = "127.0.0.1",
     port: int = 8080,
     reload: bool = False,
-    cors_origins: Optional[list[str]] = None,
+    cors_origins: list[str] | None = None,
     debug: bool = False,
 ) -> None:
     """

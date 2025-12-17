@@ -8,7 +8,7 @@ calculates health scores, and caches results for performance.
 import threading
 import time
 from dataclasses import asdict, dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from .metrics import MetricsCollector, MetricsSnapshot, ProjectHealthTrend
 
@@ -64,7 +64,7 @@ class Cache:
         self._ttl = ttl_seconds
         self._lock = threading.Lock()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get cached value if still valid."""
         with self._lock:
             if key not in self._cache:
@@ -82,7 +82,7 @@ class Cache:
         with self._lock:
             self._cache[key] = (value, time.time())
 
-    def invalidate(self, key: Optional[str] = None) -> None:
+    def invalidate(self, key: str | None = None) -> None:
         """Invalidate cache entry or entire cache."""
         with self._lock:
             if key is None:
@@ -122,9 +122,9 @@ class DataAggregator:
     def register_project(
         self,
         project_id: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         status: str = "unknown",
-        details: Optional[dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> ProjectInfo:
         """
         Register a new project or update existing one.
@@ -164,9 +164,9 @@ class DataAggregator:
         self,
         project_id: str,
         status: str,
-        details: Optional[dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
         duration: float = 0.1,
-    ) -> Optional[ProjectInfo]:
+    ) -> ProjectInfo | None:
         """
         Update the status of a specific project.
 
@@ -191,7 +191,7 @@ class DataAggregator:
                 )
 
             project = self.projects[project_id]
-            old_status = project.status
+            _old_status = project.status  # Reserved for status change tracking
             project.status = status
             project.last_updated = time.time()
 
@@ -252,7 +252,7 @@ class DataAggregator:
 
         return max(0, min(100, base_score))
 
-    def get_project(self, project_id: str) -> Optional[ProjectInfo]:
+    def get_project(self, project_id: str) -> ProjectInfo | None:
         """Get project information by ID."""
         return self.projects.get(project_id)
 
@@ -318,7 +318,7 @@ class DataAggregator:
         """Get current metrics snapshot."""
         return self.metrics.get_snapshot()
 
-    def get_project_health_trend(self, project_id: str) -> Optional[ProjectHealthTrend]:
+    def get_project_health_trend(self, project_id: str) -> ProjectHealthTrend | None:
         """Get health trend data for a specific project."""
         return self.metrics.get_project_health_trend(project_id)
 

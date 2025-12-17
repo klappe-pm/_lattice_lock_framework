@@ -9,9 +9,10 @@ import sys
 from pathlib import Path
 
 import click
-from lattice_lock.compile import CompilationResult, compile_lattice
 from rich.console import Console
 from rich.table import Table
+
+from lattice_lock.compile import CompilationResult, compile_lattice
 
 console = Console()
 

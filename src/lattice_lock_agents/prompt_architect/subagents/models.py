@@ -6,7 +6,7 @@ Defines Pydantic models for structured specification analysis output.
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 def _utc_now() -> datetime:
@@ -58,11 +58,11 @@ class Requirement(BaseModel):
     priority: str = Field(
         default="medium", description="Priority level (critical, high, medium, low)"
     )
-    phase: Optional[str] = Field(default=None, description="Phase this requirement belongs to")
+    phase: str | None = Field(default=None, description="Phase this requirement belongs to")
     requirement_type: RequirementType = Field(
         default=RequirementType.FUNCTIONAL, description="Type of requirement"
     )
-    source_section: Optional[str] = Field(
+    source_section: str | None = Field(
         default=None, description="Source section in the specification document"
     )
     acceptance_criteria: list[str] = Field(
@@ -83,13 +83,11 @@ class Constraint(BaseModel):
     constraint_type: ConstraintType = Field(
         default=ConstraintType.TECHNICAL, description="Type of constraint"
     )
-    source_section: Optional[str] = Field(
+    source_section: str | None = Field(
         default=None, description="Source section in the specification document"
     )
-    impact: Optional[str] = Field(
-        default=None, description="Impact of this constraint on the project"
-    )
-    mitigation: Optional[str] = Field(
+    impact: str | None = Field(default=None, description="Impact of this constraint on the project")
+    mitigation: str | None = Field(
         default=None, description="Mitigation strategy for this constraint"
     )
 
@@ -100,7 +98,7 @@ class Component(BaseModel):
     """A component extracted from a specification document."""
 
     name: str = Field(..., description="Name of the component")
-    description: Optional[str] = Field(default=None, description="Description of the component")
+    description: str | None = Field(default=None, description="Description of the component")
     layer: ComponentLayer = Field(
         default=ComponentLayer.APPLICATION, description="Architectural layer"
     )
@@ -124,8 +122,8 @@ class Phase(BaseModel):
     """A project phase extracted from a specification document."""
 
     name: str = Field(..., description="Name of the phase")
-    description: Optional[str] = Field(default=None, description="Description of the phase")
-    scope: Optional[str] = Field(default=None, description="Scope of the phase")
+    description: str | None = Field(default=None, description="Description of the phase")
+    scope: str | None = Field(default=None, description="Scope of the phase")
     components: list[str] = Field(
         default_factory=list, description="Components involved in this phase"
     )
@@ -133,8 +131,8 @@ class Phase(BaseModel):
         default_factory=list, description="Names of phases this depends on"
     )
     deliverables: list[str] = Field(default_factory=list, description="Deliverables for this phase")
-    start_date: Optional[datetime] = Field(default=None, description="Planned start date")
-    end_date: Optional[datetime] = Field(default=None, description="Planned end date")
+    start_date: datetime | None = Field(default=None, description="Planned start date")
+    end_date: datetime | None = Field(default=None, description="Planned end date")
 
     model_config = {"extra": "allow"}
 
@@ -142,12 +140,12 @@ class Phase(BaseModel):
 class SpecificationMetadata(BaseModel):
     """Metadata about the specification document."""
 
-    title: Optional[str] = Field(default=None, description="Title of the specification")
-    version: Optional[str] = Field(default=None, description="Version of the specification")
-    author: Optional[str] = Field(default=None, description="Author of the specification")
-    last_updated: Optional[datetime] = Field(default=None, description="Last update timestamp")
-    source_file: Optional[str] = Field(default=None, description="Path to the source file")
-    file_format: Optional[str] = Field(
+    title: str | None = Field(default=None, description="Title of the specification")
+    version: str | None = Field(default=None, description="Version of the specification")
+    author: str | None = Field(default=None, description="Author of the specification")
+    last_updated: datetime | None = Field(default=None, description="Last update timestamp")
+    source_file: str | None = Field(default=None, description="Path to the source file")
+    file_format: str | None = Field(
         default=None, description="Format of the source file (md, yaml, json)"
     )
 
@@ -197,14 +195,14 @@ class SpecificationAnalysis(BaseModel):
         """Convert the analysis to a dictionary for JSON serialization."""
         return self.model_dump(mode="json")
 
-    def get_phase_by_name(self, name: str) -> Optional[Phase]:
+    def get_phase_by_name(self, name: str) -> Phase | None:
         """Get a phase by its name."""
         for phase in self.phases:
             if phase.name.lower() == name.lower():
                 return phase
         return None
 
-    def get_component_by_name(self, name: str) -> Optional[Component]:
+    def get_component_by_name(self, name: str) -> Component | None:
         """Get a component by its name."""
         for component in self.components:
             if component.name.lower() == name.lower():

@@ -2,7 +2,6 @@ import hashlib
 import logging
 import re
 from collections import OrderedDict
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ class TaskAnalyzer:
 
         return result
 
-    def _run_heuristics(self, prompt: str) -> Optional[str]:
+    def _run_heuristics(self, prompt: str) -> str | None:
         """Run regex-based heuristics."""
         # Check against patterns
         # Simple implementation: First match wins. v2 could use weighting.

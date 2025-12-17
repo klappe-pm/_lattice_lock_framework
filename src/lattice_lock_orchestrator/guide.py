@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class ModelGuideParser:
     """Parse MODELS.md for model selection guidance"""
 
-    def __init__(self, guide_path: Optional[str] = None):
+    def __init__(self, guide_path: str | None = None):
         default_path = Path.home() / "Obsidian/Power Prompts/gitignore/Claude Context/MODELS.md"
         self.guide_path = Path(guide_path) if guide_path else default_path
         self.rules = self._parse_guide()

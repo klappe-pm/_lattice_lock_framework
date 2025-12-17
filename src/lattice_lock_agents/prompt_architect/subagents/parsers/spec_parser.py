@@ -8,7 +8,6 @@ import json
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -44,7 +43,7 @@ class SpecParser(ABC):
     def parse(
         self,
         content: str,
-        source_file: Optional[str] = None,
+        source_file: str | None = None,
     ) -> SpecificationAnalysis:
         """Parse the content and return a SpecificationAnalysis.
 
@@ -75,7 +74,7 @@ class JSONSpecParser(SpecParser):
     def parse(
         self,
         content: str,
-        source_file: Optional[str] = None,
+        source_file: str | None = None,
     ) -> SpecificationAnalysis:
         """Parse JSON specification content."""
         try:
@@ -177,7 +176,7 @@ class YAMLSpecParser(SpecParser):
     def parse(
         self,
         content: str,
-        source_file: Optional[str] = None,
+        source_file: str | None = None,
     ) -> SpecificationAnalysis:
         """Parse YAML specification content."""
         try:
@@ -280,7 +279,7 @@ class MarkdownSpecParser(SpecParser):
     def parse(
         self,
         content: str,
-        source_file: Optional[str] = None,
+        source_file: str | None = None,
     ) -> SpecificationAnalysis:
         """Parse Markdown specification content."""
         metadata = SpecificationMetadata(
