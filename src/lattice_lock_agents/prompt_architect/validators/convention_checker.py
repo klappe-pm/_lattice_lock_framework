@@ -193,9 +193,7 @@ class ConventionChecker:
         match = self.PHASE_DIR_PATTERN.match(parent_dir)
         if not match:
             result.placement_valid = False
-            result.add_error(
-                "Prompt not in a valid phase directory. Expected: phase{N}_{name}"
-            )
+            result.add_error("Prompt not in a valid phase directory. Expected: phase{N}_{name}")
             return
 
         dir_phase = int(match.group(1))

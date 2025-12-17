@@ -1,14 +1,14 @@
 # LLM-Optimized Refactoring Instructions for lattice-lock-framework
 
 **Target Agent:** Claude Code, DevinAI, Gemini 3.
-**Task Type:** Code refactoring with file modifications  
+**Task Type:** Code refactoring with file modifications
 **Execution Mode:** Concurrent task completion with verification steps and PR documentation
 
 ---
 ## Tasks
-This is the summary of tasks to complete. Tasks are logically grouped. Tasks are assigned to one of three agents: Claude Code, Devin.AI, or Gemini 3. Agents are provided the entire task list. Agents are then instructed to execute the tasks assigned to the agent. Agents are instructed to optimize for concurrent execution by using multiple sub-agents the agent delegates too. Agents are instructed to ensure tasks are executed in the correct order of dependencies (if they exist). Agents are instructed to execute as many tasks concurrently as possible. Agents are instructed to rview the work of all other agents (reviewing the PRs created) to ensure accuracy, and resolve issues. 
+This is the summary of tasks to complete. Tasks are logically grouped. Tasks are assigned to one of three agents: Claude Code, Devin.AI, or Gemini 3. Agents are provided the entire task list. Agents are then instructed to execute the tasks assigned to the agent. Agents are instructed to optimize for concurrent execution by using multiple sub-agents the agent delegates too. Agents are instructed to ensure tasks are executed in the correct order of dependencies (if they exist). Agents are instructed to execute as many tasks concurrently as possible. Agents are instructed to rview the work of all other agents (reviewing the PRs created) to ensure accuracy, and resolve issues.
 
-All agents must follow the PR guidelines. 
+All agents must follow the PR guidelines.
 
 ## Prerequisites for LLM Execution
 
@@ -268,8 +268,8 @@ Relates to #[issue-number]
 
 ---
 
-**PR Author:** [Your name/LLM identifier]  
-**Date:** [YYYY-MM-DD]  
+**PR Author:** [Your name/LLM identifier]
+**Date:** [YYYY-MM-DD]
 **Estimated Review Time:** [X minutes/hours]
 ```
 
@@ -299,7 +299,7 @@ Relates to #[issue-number]
    - Confirm it contains: `pytest tests/ -v --tb=short`
    - If different, update to match
 
-**Verification command:** 
+**Verification command:**
 ```bash
 make test
 ```
@@ -354,7 +354,7 @@ pytest tests/test_bedrock_implementation.py -v --tb=short
 pytest tests/ --tb=short
 ```
 
-**Success criteria:** 
+**Success criteria:**
 - Output shows "918 passed" (or higher)
 - Zero failures
 - Skipped tests are acceptable
@@ -429,7 +429,7 @@ lattice-lock test --help
 lattice-lock gauntlet --help
 ```
 
-**Success criteria:** 
+**Success criteria:**
 - Both commands output identical help text
 - Both show the same available options
 - Exit code 0 for both
@@ -503,21 +503,21 @@ For each command where "In Script? = Yes" and "In Packaged CLI? = No":
    #!/usr/bin/env python3
    """
    DEPRECATED: This script is superseded by 'lattice-lock orchestrator'.
-   
+
    This file remains for backward compatibility only.
    Please update your workflows to use: lattice-lock orchestrator <command>
    """
    import sys
    import warnings
-   
+
    warnings.warn(
        "orchestrator_cli.py is deprecated. Use 'lattice-lock orchestrator' instead.",
        DeprecationWarning,
        stacklevel=2
    )
-   
+
    from lattice_lock_cli.__main__ import cli
-   
+
    if __name__ == "__main__":
        sys.exit(cli())
    ```
@@ -575,11 +575,11 @@ python scripts/orchestrator_cli.py --help
    lattice-lock test --help
    lattice-lock gauntlet --help
    diff <(lattice-lock test --help) <(lattice-lock gauntlet --help)
-   
+
    # Test orchestrator consolidation
    lattice-lock orchestrator list
    lattice-lock orchestrator analyze "example task"
-   
+
    # Test deprecation warning
    python scripts/orchestrator_cli.py 2>&1 | grep DEPRECATION
    ```
@@ -628,14 +628,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 def create_template_env(template_dir: Path, **kwargs: Any) -> Environment:
     """Create a Jinja2 environment with explicit autoescape policy.
-    
+
     Args:
         template_dir: Directory containing template files
         **kwargs: Additional arguments passed to Environment()
-    
+
     Returns:
         Configured Jinja2 Environment
-        
+
     Notes:
         - Autoescape is enabled for HTML/XML files (prevents XSS)
         - Disabled for YAML, Markdown, Python (preserves code generation)
@@ -653,11 +653,11 @@ def create_template_env(template_dir: Path, **kwargs: Any) -> Environment:
 
 def template_from_string(env: Environment, template_str: str):
     """Create a template from a string using environment's autoescape policy.
-    
+
     Args:
         env: Jinja2 environment (from create_template_env)
         template_str: Template content as string
-        
+
     Returns:
         Compiled Jinja2 template
     """
@@ -790,30 +790,30 @@ def resolve_safe_path(
     allow_outside_root: bool = False
 ) -> Path:
     """Resolve a user-provided path safely within an allowed root directory.
-    
+
     Args:
         user_path: Path from user input (CLI argument, env var, config file)
         root: The allowed root directory (paths must be within this)
         must_exist: If True, raise FileNotFoundError if path doesn't exist
         allow_outside_root: If True, skip containment check (use cautiously)
-    
+
     Returns:
         Resolved absolute path
-        
+
     Raises:
         PathTraversalError: If path escapes root and allow_outside_root=False
         FileNotFoundError: If must_exist=True and path doesn't exist
-        
+
     Example:
         >>> safe_path = resolve_safe_path("../../etc/passwd", Path.cwd())
         PathTraversalError: Path '/etc/passwd' is outside allowed root '/home/user/project'
-        
+
         >>> safe_path = resolve_safe_path("configs/app.yaml", Path.cwd(), must_exist=True)
         PosixPath('/home/user/project/configs/app.yaml')
     """
     root = root.resolve()
     resolved = Path(user_path).expanduser().resolve()
-    
+
     if not allow_outside_root:
         try:
             resolved.relative_to(root)
@@ -821,10 +821,10 @@ def resolve_safe_path(
             raise PathTraversalError(
                 f"Path '{resolved}' is outside allowed root '{root}'"
             )
-    
+
     if must_exist and not resolved.exists():
         raise FileNotFoundError(f"Path does not exist: {resolved}")
-    
+
     return resolved
 ```
 
@@ -1009,8 +1009,8 @@ pytest tests/test_safe_path.py -v
    ```markdown
    #### src/lattice_lock_gauntlet/generator.py
 
-   **File:** `src/lattice_lock_gauntlet/generator.py`  
-   **Lines:** 20, 45  
+   **File:** `src/lattice_lock_gauntlet/generator.py`
+   **Lines:** 20, 45
    **Snyk Finding:** SNYK-PYTHON-JINJA2-001 (Missing autoescape)
 
    **Changes:**
@@ -1020,7 +1020,7 @@ pytest tests/test_safe_path.py -v
    **Before:**
    ```python
    from jinja2 import Environment, FileSystemLoader
-   
+
    class GauntletGenerator:
        def __init__(self, …):
            self.env = Environment(
@@ -1031,7 +1031,7 @@ pytest tests/test_safe_path.py -v
    **After:**
    ```python
    from lattice_lock.utils.jinja import create_template_env
-   
+
    class GauntletGenerator:
        def __init__(self, …):
            self.env = create_template_env(
@@ -1039,7 +1039,7 @@ pytest tests/test_safe_path.py -v
            )  # Explicit autoescape policy
    ```
 
-   **Rationale:** 
+   **Rationale:**
    - Generator creates YAML test files (not HTML), autoescape would break syntax
    - Centralized config ensures consistent security policy
    - Explicit configuration makes security posture auditable
@@ -1298,15 +1298,15 @@ lattice-lock <COMMAND> --option value
 1. **compile** - Create file: `developer_documentation/reference/cli/compile.md`
    - Run: `lattice-lock compile --help`
    - Fill template with extracted information
-   
+
 2. **admin** - Create file: `developer_documentation/reference/cli/admin.md`
    - Run: `lattice-lock admin --help`
    - Document the `dashboard` subcommand separately
-   
+
 3. **orchestrator** - Create file: `developer_documentation/reference/cli/orchestrator.md`
    - Run: `lattice-lock orchestrator --help`
    - Document all subcommands: `list`, `analyze`, `route`, etc.
-   
+
 4. **feedback** - Create file: `developer_documentation/reference/cli/feedback.md`
    - Run: `lattice-lock feedback --help`
    - Document category and priority options
@@ -1375,14 +1375,14 @@ markdownlint developer_documentation/reference/cli/*.md
    ```markdown
    #### README.md (Quick Start Example)
 
-   **File:** `README.md`  
-   **Lines:** 17-25  
+   **File:** `README.md`
+   **Lines:** 17-25
    **Issue:** Import path uses src. prefix (internal structure)
 
    **Before:**
    ```python
    from src.lattice_lock_orchestrator import ModelOrchestrator
-   
+
    orchestrator = ModelOrchestrator()
    ```
 
@@ -1453,7 +1453,7 @@ markdownlint developer_documentation/reference/cli/*.md
    for cmd in compile admin orchestrator feedback; do
      echo "Testing: lattice-lock $cmd"
      lattice-lock $cmd --help > /tmp/help_output_$cmd.txt
-     
+
      # Compare with documented options in .md file
      # (manual inspection or automated diff)
    done
@@ -1517,7 +1517,7 @@ markdownlint developer_documentation/reference/cli/*.md
    - [x] cli_commands/cli_orchestrator.md - Fixed import paths (lines 39-42)
    - [x] developer_documentation/getting_started/installation.md - Version update
    - [x] developer_documentation/reference/cli/index.md - Added 4 commands to index
-   
+
    Documentation Created:
    - [x] developer_documentation/reference/cli/compile.md - New file
    - [x] developer_documentation/reference/cli/admin.md - New file
@@ -1728,13 +1728,13 @@ pytest tests/test_gauntlet_generator.py -v
    - **Debug Difficulty:** When errors occur, no logs indicate what failed
    - **Placeholder Code:** Test generator returns `pass` for unknown constraints
    - **False Positives:** Tests with `pass` appear to succeed but test nothing
-   
+
    ### Why This Matters
    - **Debugging:** Silent failures make troubleshooting nearly impossible
    - **Observability:** Logging provides visibility into fallback behaviors
    - **Test Validity:** Placeholder tests give false confidence
    - **User Experience:** Explicit errors guide users to fix configuration issues
-   
+
    ### Impact Areas
    - Prompt architect LLM fallback behavior (spec_analyzer.py)
    - Tool ownership conflict resolution (tool_matcher.py)
@@ -1746,8 +1746,8 @@ pytest tests/test_gauntlet_generator.py -v
    ```markdown
    #### spec_analyzer.py - LLM Enhancement Fallback
 
-   **File:** `src/lattice_lock_agents/prompt_architect/subagents/spec_analyzer.py`  
-   **Lines:** 113-114, 135-136, 141-142, 205-206 (4 locations)  
+   **File:** `src/lattice_lock_agents/prompt_architect/subagents/spec_analyzer.py`
+   **Lines:** 113-114, 135-136, 141-142, 205-206 (4 locations)
    **Issue:** LLM enhancement failures are silently swallowed
 
    **Context:** The spec analyzer attempts to use an LLM to enhance specification parsing. If the LLM fails (API timeout, rate limit, invalid response), it should fall back to basic parsing and log the failure.
@@ -1759,7 +1759,7 @@ pytest tests/test_gauntlet_generator.py -v
        return enhanced_spec
    except Exception:
        pass  # Silent fallback to basic parsing
-   
+
    # Basic parsing continues here
    return self._basic_parse(spec_content)
    ```
@@ -1775,7 +1775,7 @@ pytest tests/test_gauntlet_generator.py -v
            f"Falling back to basic parsing."
        )
        # Continue with basic parsing below
-   
+
    return self._basic_parse(spec_content)
    ```
 
@@ -1793,8 +1793,8 @@ pytest tests/test_gauntlet_generator.py -v
 
    #### tool_matcher.py - Ownership Conflict Resolution
 
-   **File:** `src/lattice_lock_agents/prompt_architect/subagents/tool_matcher.py`  
-   **Lines:** 56-61  
+   **File:** `src/lattice_lock_agents/prompt_architect/subagents/tool_matcher.py`
+   **Lines:** 56-61
    **Issue:** Tool ownership conflicts silently resolved without tracking
 
    **Context:** When multiple tools claim ownership of the same files, the system assigns to the first owner but doesn't record the conflict or explain the resolution.
@@ -1836,8 +1836,8 @@ pytest tests/test_gauntlet_generator.py -v
 
    #### generator.py - Constraint Validation
 
-   **File:** `src/lattice_lock_gauntlet/generator.py`  
-   **Lines:** 93  
+   **File:** `src/lattice_lock_gauntlet/generator.py`
+   **Lines:** 93
    **Issue:** Unknown constraints generate placeholder `pass` statements
 
    **Context:** When test generator encounters an unknown constraint type, it generates a test containing only `pass`, which appears to succeed but tests nothing.
@@ -1922,13 +1922,13 @@ pytest tests/test_gauntlet_generator.py -v
    python << 'EOF'
    import logging
    from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
-   
+
    logging.basicConfig(level=logging.DEBUG)
-   
+
    analyzer = SpecAnalyzer()
    # Mock API failure by disconnecting network or using invalid API key
    result = analyzer.analyze("test_spec.yaml")
-   
+
    # Expected log output:
    # WARNING - LLM enhancement failed for spec analysis: ConnectionError…
    # INFO - Falling back to basic parsing
@@ -1940,16 +1940,16 @@ pytest tests/test_gauntlet_generator.py -v
    # Create scenario with ownership conflict
    python << 'EOF'
    from lattice_lock_agents.prompt_architect.subagents.tool_matcher import ToolMatcher
-   
+
    matcher = ToolMatcher()
    # Create task with overlapping file ownership
    task = Task(id="test", files=["shared.py"])
    tool1 = Tool(name="formatter", owner="tool-a")
    tool2 = Tool(name="linter", owner="tool-b")
-   
+
    # Both tools claim same files
    result = matcher.assign(task, [tool1, tool2])
-   
+
    # Expected log output:
    # WARNING - Ownership conflict for task test: files owned by both tool-a and tool-b
    # Expected metadata:
@@ -2034,7 +2034,7 @@ pytest tests/test_gauntlet_generator.py -v
    $ lattice-lock test --generate --file bad_lattice.yaml
    ERROR: Unknown constraint type 'invalid_type' for field 'username'.
    Supported constraints: gt, lt, gte, lte, unique, regex, length
-   
+
    $ echo $?
    1  # Proper error exit code
    ```
@@ -2235,16 +2235,16 @@ import pytest
 @pytest.fixture
 def test_password():
     """Provide test password from environment or safe default.
-    
+
     Set TEST_PASSWORD environment variable to use a specific value.
     Default is clearly marked as non-production.
     """
     return os.getenv("TEST_PASSWORD", "test-fixture-not-real-password-12345")
 
-@pytest.fixture  
+@pytest.fixture
 def test_api_key():
     """Provide test API key from environment or safe default.
-    
+
     Set TEST_API_KEY environment variable to use a specific value.
     Default is clearly marked as non-production.
     """
@@ -2369,7 +2369,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    ### Vulnerabilities Addressed
 
    #### XXE (XML External Entity) Injection - 15 Findings
-   
+
    **Attack Vector:**
    ```xml
    <?xml version="1.0"?>
@@ -2378,7 +2378,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    ]>
    <userdata>&xxe;</userdata>
    ```
-   
+
    If parsed with Python's default `xml` module, this reads `/etc/passwd` and includes content in parsed output.
 
    **Affected Files:**
@@ -2393,7 +2393,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
      - Prevents external entity expansion
      - Prevents billion laughs attack
      - Drop-in replacement for stdlib xml modules
-   
+
    **OR**
 
    - **Option B:** Dropped Python 3.10 support
@@ -2477,12 +2477,12 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
      - XML External Entity (XXE) Injection [15 occurrences]
        Impact: Arbitrary file read, SSRF, DoS
        CVSS: 7.5 (HIGH)
-   
+
    ✗ Low severity vulnerabilities:
      - Hardcoded passwords [14 occurrences]
        Impact: Credential exposure
        CVSS: 3.1 (LOW)
-   
+
    Total: 29 vulnerabilities
    ```
 
@@ -2490,7 +2490,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    ```
    ✓ All high severity vulnerabilities resolved
    ✓ All low severity vulnerabilities resolved
-   
+
    Total: 0 vulnerabilities
    ```
 
@@ -2508,8 +2508,8 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    **[If Option A chosen]**
 
    ##### pyproject.toml
-   **File:** `pyproject.toml`  
-   **Lines:** dependencies section  
+   **File:** `pyproject.toml`
+   **Lines:** dependencies section
    **Change:** Added defusedxml>=0.7.1
 
    **Before:**
@@ -2532,8 +2532,8 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    ```
 
    ##### formatters.py
-   **File:** `src/lattice_lock_sheriff/formatters.py`  
-   **Lines:** 15, 87, 132  
+   **File:** `src/lattice_lock_sheriff/formatters.py`
+   **Lines:** 15, 87, 132
    **Snyk Finding:** SNYK-PYTHON-XML-001
 
    **Before:**
@@ -2600,7 +2600,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    #### Task F2: Hardcoded Secrets Remediation
 
    ##### conftest.py (Created)
-   **File:** `tests/conftest.py`  
+   **File:** `tests/conftest.py`
    **Lines:** 1-24 (new file)
 
    **Content:**
@@ -2613,7 +2613,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    - **Documentation:** Docstrings explain usage
 
    ##### test_admin_auth.py
-   **File:** `tests/test_admin_auth.py`  
+   **File:** `tests/test_admin_auth.py`
    **Lines:** 23, 45, 67, 89, 112, 134 (6 locations)
 
    **Example Change (Line 23):**
@@ -2647,7 +2647,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    [Repeat for all 14 locations across all test files]
 
    ##### CI Workflows
-   **File:** `.github/workflows/python-app.yml`  
+   **File:** `.github/workflows/python-app.yml`
    **Lines:** Test step
 
    **Before:**
@@ -2742,22 +2742,22 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
    # Before
    $ snyk test
    Testing /path/to/lattice-lock-framework…
-   
+
    ✗ High severity vulnerabilities: 15
      - XML External Entity (XXE) [CWE-611]
        Introduced through: xml@stdlib
        Fixed in: defusedxml>=0.7.1 OR Python>=3.11
-   
+
    ✗ Low severity vulnerabilities: 14
      - Hardcoded credentials [CWE-798]
        Found in: tests/test_admin_auth.py +5 others
-   
+
    Organization test limit: 200/200 tests used
 
    # After
    $ snyk test
    Testing /path/to/lattice-lock-framework…
-   
+
    ✓ Tested 47 dependencies for known issues, no vulnerable paths found.
    ```
 
@@ -2879,7 +2879,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
       ```bash
       # Update dependencies
       pip install -e ".[dev]"
-      
+
       # Verify defusedxml works
       python -c "from defusedxml import ElementTree; print('OK')"
       ```
@@ -2888,7 +2888,7 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
       ```bash
       # Verify Python version
       python --version  # Must be >= 3.11
-      
+
       # Reinstall package
       pip install --upgrade lattice-lock-framework
       ```
@@ -2985,13 +2985,13 @@ TEST_PASSWORD="custom123" pytest tests/test_admin_auth.py -v
 - If documentation generation is unclear, ask for clarification on missing details
 
 **Before starting work:**
-Respond with: 
+Respond with:
 ```
 Ready to begin refactoring with PR documentation.
 
 I will complete tasks in this order:
 - Group A (Tasks A1, A2) → PR_GROUP_A_CI_Test_Infrastructure.md
-- Group B (Tasks B1, B2) → PR_GROUP_B_CLI_Consolidation.md  
+- Group B (Tasks B1, B2) → PR_GROUP_B_CLI_Consolidation.md
 - Group C (Tasks C1, C2) → PR_GROUP_C_Security_Utilities.md
 - Group D (Tasks D1, D2) → PR_GROUP_D_Documentation_Fixes.md
 - Group E (Tasks E1, E2) → PR_GROUP_E_Code_Hygiene.md

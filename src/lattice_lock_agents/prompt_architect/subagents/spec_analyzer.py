@@ -4,27 +4,24 @@ Specification Analyzer - Analyzes specification documents and extracts structure
 Supports markdown, YAML, and JSON specification formats with optional LLM enhancement.
 """
 
+import logging
 from pathlib import Path
 from typing import Any, Optional
 
 import yaml
 
+logger = logging.getLogger(__name__)
+
 from .models import (
     Component,
     ComponentLayer,
-    Constraint,
     ConstraintType,
     Phase,
     Requirement,
     RequirementType,
     SpecificationAnalysis,
 )
-from .parsers.spec_parser import (
-    JSONSpecParser,
-    MarkdownSpecParser,
-    YAMLSpecParser,
-    detect_parser,
-)
+from .parsers.spec_parser import JSONSpecParser, MarkdownSpecParser, YAMLSpecParser, detect_parser
 
 
 class LLMClient:
@@ -389,7 +386,9 @@ class SpecAnalyzer:
                         try:
                             comp_data["layer"] = ComponentLayer(comp_data["layer"])
                         except ValueError:
-                            logger.warning(f"Invalid layer '{comp_data['layer']}' for component '{name}'. Defaulting to APPLICATION.")
+                            logger.warning(
+                                f"Invalid layer '{comp_data['layer']}' for component '{name}'. Defaulting to APPLICATION."
+                            )
                             comp_data["layer"] = ComponentLayer.APPLICATION
                     base.components.append(Component(**comp_data))
                     existing_component_names.add(name.lower())
@@ -404,7 +403,9 @@ class SpecAnalyzer:
                         try:
                             req_data["requirement_type"] = RequirementType(req_data.pop("type"))
                         except ValueError:
-                            logger.warning(f"Invalid requirement type '{req_data.get('type')}' for requirement '{req_id}'.")
+                            logger.warning(
+                                f"Invalid requirement type '{req_data.get('type')}' for requirement '{req_id}'."
+                            )
                             pass
                     base.requirements.append(Requirement(**req_data))
                     existing_req_ids.add(req_id.lower())
@@ -419,7 +420,9 @@ class SpecAnalyzer:
                         try:
                             con_data["constraint_type"] = ConstraintType(con_data.pop("type"))
                         except ValueError:
-                            logger.warning(f"Invalid constraint type '{con_data.get('type')}' for constraint '{con_id}'.")
+                            logger.warning(
+                                f"Invalid constraint type '{con_data.get('type')}' for constraint '{con_id}'."
+                            )
                             pass
 
         base.llm_assisted = True

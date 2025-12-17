@@ -7,15 +7,7 @@ error handling using Lattice Lock error types.
 
 from typing import Any
 
-from src.models import (
-    Currency,
-    Order,
-    OrderItem,
-    Payment,
-    PaymentMethod,
-    Product,
-    User,
-)
+from src.models import Currency, Order, OrderItem, Payment, PaymentMethod, Product, User
 from src.services import OrderService, PaymentService, ProductService, UserService
 
 
