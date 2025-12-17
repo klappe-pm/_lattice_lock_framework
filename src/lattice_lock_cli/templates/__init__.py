@@ -7,7 +7,7 @@ Template loader and renderer for project scaffolding.
 from pathlib import Path
 from typing import Any
 
-from jinja2 import FileSystemLoader, Template, select_autoescape
+from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 from lattice_lock.utils.jinja import get_secure_environment
 
 # Get the templates directory path

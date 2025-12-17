@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 import yaml
-
 from lattice_lock_agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
 from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 from lattice_lock_agents.prompt_architect.subagents.tool_matcher import ToolMatcher
@@ -185,7 +184,10 @@ class PromptArchitectAgent:
                 self.repo_root
                 / "agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"
             )
-            from lattice_lock_agents.prompt_architect.subagents.prompt_generator import PromptGenerator
+            from lattice_lock_agents.prompt_architect.subagents.prompt_generator import (
+                PromptGenerator,
+            )
+
             self._prompt_generator = PromptGenerator(config_path=config_path)
         return self._prompt_generator
 

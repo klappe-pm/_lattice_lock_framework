@@ -5,8 +5,10 @@ This module provides a centralized place to configure Jinja2 environments
 with security best practices, particularly enforcing autoescape.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any
+
 import jinja2
+
 
 def get_secure_environment(**kwargs: Any) -> jinja2.Environment:
     """
@@ -21,13 +23,14 @@ def get_secure_environment(**kwargs: Any) -> jinja2.Environment:
     """
     # Enforce autoescape=True unless explicitly select_autoescape is used
     if "autoescape" not in kwargs and "loader" not in kwargs:
-         # Standard secure default
-         kwargs["autoescape"] = True
-    
+        # Standard secure default
+        kwargs["autoescape"] = True
+
     # If autoescape is explicitly passed as False, log a warning (omitted for simplicity here)
     # but we will force strict adherence for this refactor.
-    
+
     return jinja2.Environment(**kwargs)
+
 
 def create_template(source: str, **kwargs: Any) -> jinja2.Template:
     """

@@ -1,5 +1,3 @@
-
-
 def parse_sections(content: str) -> dict[str, str]:
     """
     Parse content into sections based on ## headers.

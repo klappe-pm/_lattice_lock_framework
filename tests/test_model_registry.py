@@ -9,10 +9,7 @@ This module validates that:
 
 from pathlib import Path
 
-from lattice_lock_orchestrator.registry import (
-    ModelRegistry,
-    RegistryValidationResult,
-)
+from lattice_lock_orchestrator.registry import ModelRegistry, RegistryValidationResult
 from lattice_lock_orchestrator.types import ModelProvider
 
 PROJECT_ROOT = Path(__file__).parent.parent

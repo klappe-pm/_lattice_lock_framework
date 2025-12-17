@@ -1,13 +1,11 @@
-import click
-import logging
 import asyncio
-import os
-from typing import Optional
-from rich.table import Table
-from rich.panel import Panel
+import logging
 
-from lattice_lock_cli.utils.console import get_console
+import click
 from lattice_lock import ModelOrchestrator, TaskType
+from lattice_lock_cli.utils.console import get_console
+from rich.panel import Panel
+from rich.table import Table
 
 # Optional imports with graceful degradation
 try:
@@ -25,10 +23,12 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 @click.group(name="orchestrator")
 def orchestrator_group():
     """Manage AI Model Orchestration."""
     pass
+
 
 @orchestrator_group.command(name="list")
 @click.option("--provider", help="Filter by provider")
@@ -37,7 +37,7 @@ def list_models_command(provider, verbose):
     """List available models in the registry."""
     console = get_console()
     orchestrator = ModelOrchestrator()
-    
+
     table = Table(title="Available Models", show_header=True)
     table.add_column("Provider", style="cyan")
     table.add_column("Model ID", style="green")
@@ -80,13 +80,14 @@ def list_models_command(provider, verbose):
 
     console.print(table)
 
+
 @orchestrator_group.command(name="analyze")
 @click.argument("prompt")
 def analyze_prompt_command(prompt):
     """Analyze a prompt and show model selection."""
     console = get_console()
     orchestrator = ModelOrchestrator()
-    
+
     requirements = orchestrator.analyzer.analyze(prompt)
 
     # Create requirements panel
@@ -161,16 +162,27 @@ Requires Functions: [magenta]{'Yes' if requirements.require_functions else 'No'}
 
 @orchestrator_group.command(name="route")
 @click.argument("prompt")
-@click.option("--mode", default="auto", type=click.Choice(["auto", "consensus", "chain", "adaptive"]), help="Routing mode")
-@click.option("--strategy", default="balanced", type=click.Choice(["balanced", "cost_optimize", "quality_first", "speed_priority"]), help="Selection strategy")
+@click.option(
+    "--mode",
+    default="auto",
+    type=click.Choice(["auto", "consensus", "chain", "adaptive"]),
+    help="Routing mode",
+)
+@click.option(
+    "--strategy",
+    default="balanced",
+    type=click.Choice(["balanced", "cost_optimize", "quality_first", "speed_priority"]),
+    help="Selection strategy",
+)
 def route_command(prompt, mode, strategy):
     """Route a request through the system."""
     asyncio.run(_route_async(prompt, mode, strategy))
 
+
 async def _route_async(prompt, mode, strategy):
     console = get_console()
     orchestrator = ModelOrchestrator()
-    
+
     console.print(f"\n[bold]Routing request with mode: {mode}, strategy: {strategy}[/bold]\n")
 
     # Select model
@@ -210,6 +222,7 @@ def cost_command(detailed):
     console = get_console()
     try:
         from lattice_lock_orchestrator.cli.cost_command import handle_cost
+
         handle_cost(console, detailed=detailed)
     except ImportError:
         console.print("[red]Cost tracking module not available.[/red]")
@@ -225,11 +238,14 @@ def cost_command(detailed):
 @click.option("--tools", help="Comma-separated list of tools to filter")
 def generate_prompts_command(spec, roadmap, output_dir, dry_run, from_project, phases, tools):
     """Generate prompts from specifications and roadmaps."""
-    asyncio.run(_generate_prompts_async(spec, roadmap, output_dir, dry_run, from_project, phases, tools))
+    asyncio.run(
+        _generate_prompts_async(spec, roadmap, output_dir, dry_run, from_project, phases, tools)
+    )
+
 
 async def _generate_prompts_async(spec, roadmap, output_dir, dry_run, from_project, phases, tools):
     console = get_console()
-    
+
     if orchestrate_prompt_generation is None:
         console.print("[red]Prompt Architect module not available.[/red]")
         console.print("[dim]Install with: pip install -e .[/dim]")
@@ -239,7 +255,7 @@ async def _generate_prompts_async(spec, roadmap, output_dir, dry_run, from_proje
     tool_list = tools.split(",") if tools else None
 
     console.print("\n[bold cyan]Prompt Architect - Automated Prompt Generation[/bold cyan]\n")
-    
+
     # Show configuration
     config_content = f"""
 [bold]Specification:[/bold] {spec or 'Auto-discover' if from_project else 'Not provided'}

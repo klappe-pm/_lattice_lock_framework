@@ -1,11 +1,11 @@
 import json
 import os
 import time
-from typing import Dict, List, Any, Optional
 from pathlib import Path
+from typing import Any
+
 from lattice_lock.utils.safe_path import resolve_under_root
 
-import pytest
 
 class GauntletPlugin:
     """
@@ -19,11 +19,12 @@ class GauntletPlugin:
         results (List[Dict]): List of test results.
         start_time (float): Session start time.
     """
+
     def __init__(self, json_report: bool = False, github_report: bool = False):
         # Allow configuration via init args OR environment variables
         self.json_report = json_report or os.environ.get("GAUNTLET_JSON_REPORT") == "true"
         self.github_report = github_report or os.environ.get("GAUNTLET_GITHUB_REPORT") == "true"
-        self.results: List[Dict[str, Any]] = []
+        self.results: list[dict[str, Any]] = []
         self.start_time = 0.0
 
     def pytest_sessionstart(self, session):
@@ -38,7 +39,7 @@ class GauntletPlugin:
                 "nodeid": report.nodeid,
                 "outcome": report.outcome,
                 "duration": report.duration,
-                "error": None
+                "error": None,
             }
 
             if report.longrepr:
@@ -73,7 +74,7 @@ class GauntletPlugin:
                     "passed": len([r for r in self.results if r["outcome"] == "passed"]),
                     "failed": len([r for r in self.results if r["outcome"] == "failed"]),
                     "skipped": len([r for r in self.results if r["outcome"] == "skipped"]),
-                }
+                },
             }
             with open("gauntlet_report.json", "w") as f:
                 json.dump(report_data, f, indent=2)
@@ -84,10 +85,10 @@ class GauntletPlugin:
             if summary_file:
                 # Allow absolute path anywhere since it's from env var
                 try:
-                    summary_path = resolve_under_root(summary_file, root=Path('/'))
+                    summary_path = resolve_under_root(summary_file, root=Path("/"))
                 except ValueError:
                     # Fallback if somehow fails or on windows (root=/ not valid)
-                     summary_path = Path(summary_file).resolve()
+                    summary_path = Path(summary_file).resolve()
 
                 passed = len([r for r in self.results if r["outcome"] == "passed"])
                 failed = len([r for r in self.results if r["outcome"] == "failed"])

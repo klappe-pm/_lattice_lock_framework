@@ -16,11 +16,7 @@ from lattice_lock.agents.prompt_architect.integration import (
     PromptArchitectIntegration,
     PromptExecutionStatus,
 )
-from lattice_lock.agents.prompt_architect.models import (
-    GenerationResult,
-    PromptStatus,
-    ToolType,
-)
+from lattice_lock.agents.prompt_architect.models import GenerationResult, PromptStatus, ToolType
 
 
 class TestProjectContext:

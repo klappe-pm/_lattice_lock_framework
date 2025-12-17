@@ -12,10 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar
 
-from lattice_lock.errors.classification import (
-    ErrorContext,
-    classify_error,
-)
+from lattice_lock.errors.classification import ErrorContext, classify_error
 
 P = ParamSpec("P")
 R = TypeVar("R")

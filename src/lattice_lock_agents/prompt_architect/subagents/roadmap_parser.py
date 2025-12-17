@@ -2,12 +2,7 @@ import os
 
 import yaml
 
-from .parsers.roadmap_parser import (
-    GanttParser,
-    KanbanParser,
-    RoadmapStructure,
-    WorkBreakdownParser,
-)
+from .parsers.roadmap_parser import GanttParser, KanbanParser, RoadmapStructure, WorkBreakdownParser
 
 
 class RoadmapParser:

@@ -18,8 +18,6 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-
 
 # Paths relative to repo root
 REPO_ROOT = Path(__file__).parent.parent
@@ -32,7 +30,10 @@ sys.path.append(str(REPO_ROOT / "src"))
 try:
     from lattice_lock.utils.safe_path import resolve_under_root
 except ImportError:
-    print("Error: Could not import lattice_lock.utils.safe_path. Ensure you are running from the project root or src is in PYTHONPATH.", file=sys.stderr)
+    print(
+        "Error: Could not import lattice_lock.utils.safe_path. Ensure you are running from the project root or src is in PYTHONPATH.",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
@@ -41,7 +42,7 @@ def load_state() -> dict:
     if not STATE_FILE.exists():
         print(f"Error: State file not found at {STATE_FILE}", file=sys.stderr)
         sys.exit(1)
-    with open(STATE_FILE, "r") as f:
+    with open(STATE_FILE) as f:
         return json.load(f)
 
 
@@ -99,8 +100,12 @@ def generate_markdown(state: dict) -> None:
 
         lines.append(f"## Phase {phase_num}: {phase_name}")
         lines.append("")
-        lines.append("| ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |")
-        lines.append("|:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|")
+        lines.append(
+            "| ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |"
+        )
+        lines.append(
+            "|:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|"
+        )
 
         for p in phase_prompts:
             tool_name = tool_defs.get(p["tool"], p["tool"])
@@ -113,55 +118,59 @@ def generate_markdown(state: dict) -> None:
             duration = str(p["duration_minutes"]) if p["duration_minutes"] is not None else "-"
             pr = f"[PR]({p['pr_url']})" if p["pr_url"] else "-"
 
-            lines.append(f"| {p['id']} | {p['title']} | {tool_name} | {picked} | {done} | {merged} | {model} | {start} | {end} | {duration} | {pr} |")
+            lines.append(
+                f"| {p['id']} | {p['title']} | {tool_name} | {picked} | {done} | {merged} | {model} | {start} | {end} | {duration} | {pr} |"
+            )
 
         lines.append("")
         lines.append("---")
         lines.append("")
 
     # Add usage instructions
-    lines.extend([
-        "## Usage",
-        "",
-        "### Pick Up Next Prompt",
-        "",
-        "When you receive `cont next`, run:",
-        "",
-        "```bash",
-        'python scripts/prompt_tracker.py next --tool <your-tool> --model "<model-name>"',
-        "```",
-        "",
-        "Tool identifiers: `devin`, `gemini`, `codex`, `claude_cli`, `claude_app`, `claude_docs`",
-        "",
-        "### Mark Prompt as Done/Merged",
-        "",
-        "```bash",
-        'python scripts/prompt_tracker.py update --id 1.1.1 --done --merged --pr "https://github.com/..."',
-        "```",
-        "",
-        "### Reset a Prompt",
-        "",
-        "```bash",
-        "python scripts/prompt_tracker.py reset --id 1.1.1",
-        "```",
-        "",
-        "### View Status",
-        "",
-        "```bash",
-        "python scripts/prompt_tracker.py status",
-        "```",
-        "",
-        "---",
-        "",
-        "## Status Legend",
-        "",
-        "- **Picked Up**: An agent has started working on this prompt",
-        "- **Done**: The implementation is complete",
-        "- **Merged**: The PR has been merged to the remote repository (DELIVERED)",
-        "",
-        "A prompt is considered **DELIVERED** only when Merged = Yes",
-        "",
-    ])
+    lines.extend(
+        [
+            "## Usage",
+            "",
+            "### Pick Up Next Prompt",
+            "",
+            "When you receive `cont next`, run:",
+            "",
+            "```bash",
+            'python scripts/prompt_tracker.py next --tool <your-tool> --model "<model-name>"',
+            "```",
+            "",
+            "Tool identifiers: `devin`, `gemini`, `codex`, `claude_cli`, `claude_app`, `claude_docs`",
+            "",
+            "### Mark Prompt as Done/Merged",
+            "",
+            "```bash",
+            'python scripts/prompt_tracker.py update --id 1.1.1 --done --merged --pr "https://github.com/..."',
+            "```",
+            "",
+            "### Reset a Prompt",
+            "",
+            "```bash",
+            "python scripts/prompt_tracker.py reset --id 1.1.1",
+            "```",
+            "",
+            "### View Status",
+            "",
+            "```bash",
+            "python scripts/prompt_tracker.py status",
+            "```",
+            "",
+            "---",
+            "",
+            "## Status Legend",
+            "",
+            "- **Picked Up**: An agent has started working on this prompt",
+            "- **Done**: The implementation is complete",
+            "- **Merged**: The PR has been merged to the remote repository (DELIVERED)",
+            "",
+            "A prompt is considered **DELIVERED** only when Merged = Yes",
+            "",
+        ]
+    )
 
     with open(TRACKER_FILE, "w") as f:
         f.write("\n".join(lines))
@@ -179,13 +188,18 @@ def cmd_next(args) -> None:
     # First, check for in-progress prompt for this tool
     for p in prompts:
         if p["tool"] == tool and p["picked_up"] and not p["done"] and not p["merged"]:
-            print(json.dumps({
-                "status": "resuming",
-                "id": p["id"],
-                "title": p["title"],
-                "tool": p["tool"],
-                "file": str(PROMPTS_DIR / p["file"])
-            }, indent=2))
+            print(
+                json.dumps(
+                    {
+                        "status": "resuming",
+                        "id": p["id"],
+                        "title": p["title"],
+                        "tool": p["tool"],
+                        "file": str(PROMPTS_DIR / p["file"]),
+                    },
+                    indent=2,
+                )
+            )
             return
 
     # Find next available prompt for this tool
@@ -199,21 +213,31 @@ def cmd_next(args) -> None:
 
             save_state(state)
 
-            print(json.dumps({
-                "status": "assigned",
-                "id": p["id"],
-                "title": p["title"],
-                "tool": p["tool"],
-                "file": str(PROMPTS_DIR / p["file"])
-            }, indent=2))
+            print(
+                json.dumps(
+                    {
+                        "status": "assigned",
+                        "id": p["id"],
+                        "title": p["title"],
+                        "tool": p["tool"],
+                        "file": str(PROMPTS_DIR / p["file"]),
+                    },
+                    indent=2,
+                )
+            )
             return
 
     # No prompts available
-    print(json.dumps({
-        "status": "none_available",
-        "tool": tool,
-        "message": f"No pending prompts for tool '{tool}'"
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "status": "none_available",
+                "tool": tool,
+                "message": f"No pending prompts for tool '{tool}'",
+            },
+            indent=2,
+        )
+    )
 
 
 def cmd_update(args) -> None:
@@ -254,13 +278,18 @@ def cmd_update(args) -> None:
 
     save_state(state)
 
-    print(json.dumps({
-        "status": "updated",
-        "id": prompt["id"],
-        "done": prompt["done"],
-        "merged": prompt["merged"],
-        "duration_minutes": prompt["duration_minutes"]
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "status": "updated",
+                "id": prompt["id"],
+                "done": prompt["done"],
+                "merged": prompt["merged"],
+                "duration_minutes": prompt["duration_minutes"],
+            },
+            indent=2,
+        )
+    )
 
 
 def cmd_reset(args) -> None:
@@ -291,10 +320,7 @@ def cmd_reset(args) -> None:
 
     save_state(state)
 
-    print(json.dumps({
-        "status": "reset",
-        "id": prompt["id"]
-    }, indent=2))
+    print(json.dumps({"status": "reset", "id": prompt["id"]}, indent=2))
 
 
 def cmd_status(args) -> None:
@@ -335,7 +361,9 @@ def cmd_status(args) -> None:
 
     for tool, stats in sorted(tool_stats.items()):
         tool_name = tool_defs.get(tool, tool)
-        print(f"  {tool_name:20} | Total: {stats['total']:2} | Done: {stats['delivered']:2} | WIP: {stats['in_progress']:2} | Pending: {stats['pending']:2}")
+        print(
+            f"  {tool_name:20} | Total: {stats['total']:2} | Done: {stats['delivered']:2} | WIP: {stats['in_progress']:2} | Pending: {stats['pending']:2}"
+        )
 
     print(f"\n{'='*60}\n")
 
@@ -354,19 +382,27 @@ def cmd_add_prompt(args) -> None:
     # Check if prompt ID already exists
     for p in prompts:
         if p["id"] == args.id:
-            print(json.dumps({
-                "status": "error",
-                "message": f"Prompt '{args.id}' already exists"
-            }, indent=2), file=sys.stderr)
+            print(
+                json.dumps(
+                    {"status": "error", "message": f"Prompt '{args.id}' already exists"}, indent=2
+                ),
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     # Parse ID to extract phase and epic
     parts = args.id.split(".")
     if len(parts) < 2:
-        print(json.dumps({
-            "status": "error",
-            "message": f"Invalid prompt ID format: {args.id}. Expected X.X.X"
-        }, indent=2), file=sys.stderr)
+        print(
+            json.dumps(
+                {
+                    "status": "error",
+                    "message": f"Invalid prompt ID format: {args.id}. Expected X.X.X",
+                },
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     phase = parts[0]
@@ -387,7 +423,7 @@ def cmd_add_prompt(args) -> None:
         "start_time": None,
         "end_time": None,
         "duration_minutes": None,
-        "pr_url": None
+        "pr_url": None,
     }
 
     # Find the right position to insert (maintain order by ID)
@@ -402,13 +438,18 @@ def cmd_add_prompt(args) -> None:
 
     save_state(state)
 
-    print(json.dumps({
-        "status": "added",
-        "id": args.id,
-        "title": args.title,
-        "tool": args.tool,
-        "file": args.file
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "status": "added",
+                "id": args.id,
+                "title": args.title,
+                "tool": args.tool,
+                "file": args.file,
+            },
+            indent=2,
+        )
+    )
 
 
 def cmd_batch_add(args) -> None:
@@ -421,6 +462,7 @@ def cmd_batch_add(args) -> None:
         # Add src to sys.path to import safe_path
         sys.path.append(str(REPO_ROOT / "src"))
         from lattice_lock.utils.safe_path import resolve_under_root
+
         batch_file = resolve_under_root(args.file)
     except (ImportError, ValueError) as e:
         print(f"Error validating path: {e}", file=sys.stderr)
@@ -429,7 +471,7 @@ def cmd_batch_add(args) -> None:
         print(f"Error: Batch file not found at {batch_file}", file=sys.stderr)
         sys.exit(1)
 
-    with open(batch_file, "r") as f:
+    with open(batch_file) as f:
         new_prompts = json.load(f)
 
     if not isinstance(new_prompts, list):
@@ -474,7 +516,7 @@ def cmd_batch_add(args) -> None:
             "start_time": None,
             "end_time": None,
             "duration_minutes": None,
-            "pr_url": None
+            "pr_url": None,
         }
 
         prompts.append(new_prompt)
@@ -488,13 +530,18 @@ def cmd_batch_add(args) -> None:
 
     save_state(state)
 
-    print(json.dumps({
-        "status": "batch_complete",
-        "added": added,
-        "added_count": len(added),
-        "skipped": skipped,
-        "skipped_count": len(skipped)
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "status": "batch_complete",
+                "added": added,
+                "added_count": len(added),
+                "skipped": skipped,
+                "skipped_count": len(skipped),
+            },
+            indent=2,
+        )
+    )
 
 
 def cmd_validate_state(args) -> None:
@@ -512,17 +559,9 @@ def cmd_validate_state(args) -> None:
             if path_obj.exists():
                 valid.append(p["id"])
             else:
-                issues.append({
-                    "id": p["id"],
-                    "file": p["file"],
-                    "issue": "file_not_found"
-                })
+                issues.append({"id": p["id"], "file": p["file"], "issue": "file_not_found"})
         except ValueError:
-             issues.append({
-                "id": p["id"],
-                "file": p["file"],
-                "issue": "invalid_path_traversal"
-            })
+            issues.append({"id": p["id"], "file": p["file"], "issue": "invalid_path_traversal"})
 
     # Check for orphan files (files not in state)
     if args.check_orphans:
@@ -532,10 +571,7 @@ def cmd_validate_state(args) -> None:
                 for prompt_file in phase_dir.glob("*.md"):
                     relative_path = f"{phase_dir.name}/{prompt_file.name}"
                     if relative_path not in tracked_files:
-                        issues.append({
-                            "file": relative_path,
-                            "issue": "orphan_file"
-                        })
+                        issues.append({"file": relative_path, "issue": "orphan_file"})
 
     is_valid = len(issues) == 0
 
@@ -543,7 +579,7 @@ def cmd_validate_state(args) -> None:
         "status": "valid" if is_valid else "invalid",
         "total_prompts": len(prompts),
         "valid_count": len(valid),
-        "issue_count": len(issues)
+        "issue_count": len(issues),
     }
 
     if issues:
@@ -560,7 +596,7 @@ def _compare_ids(id1: str, id2: str) -> int:
     parts1 = [int(x) for x in id1.split(".")]
     parts2 = [int(x) for x in id2.split(".")]
 
-    for p1, p2 in zip(parts1, parts2):
+    for p1, p2 in zip(parts1, parts2, strict=False):
         if p1 < p2:
             return -1
         if p1 > p2:
@@ -584,16 +620,19 @@ Examples:
   python scripts/prompt_tracker.py update --id 1.1.1 --done --merged --pr "https://..."
   python scripts/prompt_tracker.py reset --id 1.1.1
   python scripts/prompt_tracker.py status
-        """
+        """,
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # next command
     next_parser = subparsers.add_parser("next", help="Pick up the next available prompt")
-    next_parser.add_argument("--tool", required=True,
-                            choices=["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"],
-                            help="Tool identifier")
+    next_parser.add_argument(
+        "--tool",
+        required=True,
+        choices=["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"],
+        help="Tool identifier",
+    )
     next_parser.add_argument("--model", help="Model name being used")
 
     # update command
@@ -618,19 +657,31 @@ Examples:
     add_parser = subparsers.add_parser("add-prompt", help="Add a newly generated prompt to state")
     add_parser.add_argument("--id", required=True, help="Prompt ID (e.g., 1.1.3)")
     add_parser.add_argument("--title", required=True, help="Prompt title")
-    add_parser.add_argument("--tool", required=True,
-                           choices=["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"],
-                           help="Tool identifier")
-    add_parser.add_argument("--file", required=True, help="Relative file path within project_prompts/")
+    add_parser.add_argument(
+        "--tool",
+        required=True,
+        choices=["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"],
+        help="Tool identifier",
+    )
+    add_parser.add_argument(
+        "--file", required=True, help="Relative file path within project_prompts/"
+    )
 
     # batch-add command
     batch_parser = subparsers.add_parser("batch-add", help="Add multiple prompts from a JSON file")
-    batch_parser.add_argument("--file", required=True, help="Path to JSON file containing prompts array")
+    batch_parser.add_argument(
+        "--file", required=True, help="Path to JSON file containing prompts array"
+    )
 
     # validate-state command
-    validate_parser = subparsers.add_parser("validate-state", help="Validate state matches actual files")
-    validate_parser.add_argument("--check-orphans", action="store_true",
-                                 help="Also check for orphan files not tracked in state")
+    validate_parser = subparsers.add_parser(
+        "validate-state", help="Validate state matches actual files"
+    )
+    validate_parser.add_argument(
+        "--check-orphans",
+        action="store_true",
+        help="Also check for orphan files not tracked in state",
+    )
 
     args = parser.parse_args()
 

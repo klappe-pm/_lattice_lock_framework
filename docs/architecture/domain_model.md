@@ -9,41 +9,41 @@ erDiagram
     PROJECT ||--o{ LATTICE_CONFIG : has
     PROJECT ||--o{ AGENT_DEFINITION : contains
     PROJECT ||--o{ VALIDATION_RESULT : produces
-    
+
     LATTICE_CONFIG ||--o{ GOVERNANCE_RULE : defines
     LATTICE_CONFIG ||--o{ SCHEMA_DEFINITION : contains
-    
+
     GOVERNANCE_RULE ||--o{ VIOLATION : detects
     GOVERNANCE_RULE }o--|| RULE_CATEGORY : belongs_to
-    
+
     AGENT_DEFINITION ||--o{ AGENT_CAPABILITY : has
     AGENT_DEFINITION ||--o{ AGENT_MEMORY : stores
     AGENT_DEFINITION }o--|| AGENT_TYPE : is_type
-    
+
     MODEL_REGISTRY ||--o{ MODEL_CONFIG : contains
     MODEL_CONFIG }o--|| PROVIDER : belongs_to
     MODEL_CONFIG ||--o{ CAPABILITY_FLAG : has
     MODEL_CONFIG ||--o{ COST_RATE : defines
-    
+
     REQUEST ||--o{ TASK_ANALYSIS : produces
     REQUEST ||--o{ MODEL_SELECTION : results_in
     REQUEST ||--o{ RESPONSE : generates
     REQUEST ||--o{ COST_RECORD : incurs
-    
+
     TASK_ANALYSIS }o--|| TASK_TYPE : classifies_as
-    
+
     MODEL_SELECTION }o--|| MODEL_CONFIG : selects
     MODEL_SELECTION ||--|| SCORING_RESULT : based_on
-    
+
     CONSENSUS_GROUP ||--o{ MODEL_SELECTION : includes
     CONSENSUS_GROUP ||--|| CONSENSUS_RESULT : produces
-    
+
     PROMPT_TEMPLATE ||--o{ GENERATED_PROMPT : creates
     GENERATED_PROMPT ||--|| QUALITY_SCORE : receives
-    
+
     CHECKPOINT ||--o{ STATE_SNAPSHOT : contains
     ROLLBACK_TRIGGER ||--o{ CHECKPOINT : uses
-    
+
     FEEDBACK ||--o{ RATING : contains
     FEEDBACK }o--|| REQUEST : references
 
@@ -55,7 +55,7 @@ erDiagram
         datetime updated_at
         string status
     }
-    
+
     LATTICE_CONFIG {
         string id PK
         string project_id FK
@@ -63,7 +63,7 @@ erDiagram
         json schema
         datetime compiled_at
     }
-    
+
     GOVERNANCE_RULE {
         string id PK
         string config_id FK
@@ -73,13 +73,13 @@ erDiagram
         string pattern
         boolean auto_fix
     }
-    
+
     RULE_CATEGORY {
         string id PK
         string name
         string description
     }
-    
+
     SCHEMA_DEFINITION {
         string id PK
         string config_id FK
@@ -87,7 +87,7 @@ erDiagram
         json properties
         json required_fields
     }
-    
+
     VIOLATION {
         string id PK
         string rule_id FK
@@ -97,7 +97,7 @@ erDiagram
         string suggested_fix
         datetime detected_at
     }
-    
+
     VALIDATION_RESULT {
         string id PK
         string project_id FK
@@ -106,7 +106,7 @@ erDiagram
         int warning_count
         datetime validated_at
     }
-    
+
     AGENT_DEFINITION {
         string id PK
         string project_id FK
@@ -115,20 +115,20 @@ erDiagram
         string version
         json instructions
     }
-    
+
     AGENT_TYPE {
         string id PK
         string name
         string description
     }
-    
+
     AGENT_CAPABILITY {
         string id PK
         string agent_id FK
         string capability_name
         string description
     }
-    
+
     AGENT_MEMORY {
         string id PK
         string agent_id FK
@@ -136,14 +136,14 @@ erDiagram
         json value
         datetime updated_at
     }
-    
+
     MODEL_REGISTRY {
         string id PK
         string name
         datetime last_updated
         int model_count
     }
-    
+
     MODEL_CONFIG {
         string id PK
         string registry_id FK
@@ -155,7 +155,7 @@ erDiagram
         float output_cost_per_1k
         boolean is_available
     }
-    
+
     PROVIDER {
         string id PK
         string name
@@ -163,14 +163,14 @@ erDiagram
         string auth_type
         boolean requires_api_key
     }
-    
+
     CAPABILITY_FLAG {
         string id PK
         string model_id FK
         string capability_name
         boolean enabled
     }
-    
+
     COST_RATE {
         string id PK
         string model_id FK
@@ -178,7 +178,7 @@ erDiagram
         float rate_value
         string currency
     }
-    
+
     REQUEST {
         string id PK
         string prompt
@@ -187,7 +187,7 @@ erDiagram
         datetime created_at
         datetime completed_at
     }
-    
+
     TASK_ANALYSIS {
         string id PK
         string request_id FK
@@ -195,14 +195,14 @@ erDiagram
         float confidence
         string analysis_method
     }
-    
+
     TASK_TYPE {
         string id PK
         string name
         string description
         json patterns
     }
-    
+
     MODEL_SELECTION {
         string id PK
         string request_id FK
@@ -210,7 +210,7 @@ erDiagram
         float score
         int rank
     }
-    
+
     SCORING_RESULT {
         string id PK
         string selection_id FK
@@ -220,7 +220,7 @@ erDiagram
         float cost_score
         float total_score
     }
-    
+
     RESPONSE {
         string id PK
         string request_id FK
@@ -230,7 +230,7 @@ erDiagram
         int output_tokens
         float latency_ms
     }
-    
+
     COST_RECORD {
         string id PK
         string request_id FK
@@ -240,14 +240,14 @@ erDiagram
         float total_cost
         datetime recorded_at
     }
-    
+
     CONSENSUS_GROUP {
         string id PK
         string request_id FK
         int num_models
         string strategy
     }
-    
+
     CONSENSUS_RESULT {
         string id PK
         string group_id FK
@@ -255,7 +255,7 @@ erDiagram
         text aggregated_response
         json individual_responses
     }
-    
+
     PROMPT_TEMPLATE {
         string id PK
         string name
@@ -263,7 +263,7 @@ erDiagram
         text template_content
         json variables
     }
-    
+
     GENERATED_PROMPT {
         string id PK
         string template_id FK
@@ -271,7 +271,7 @@ erDiagram
         json context
         datetime generated_at
     }
-    
+
     QUALITY_SCORE {
         string id PK
         string prompt_id FK
@@ -280,14 +280,14 @@ erDiagram
         float clarity_score
         float total_score
     }
-    
+
     CHECKPOINT {
         string id PK
         string project_id FK
         string description
         datetime created_at
     }
-    
+
     STATE_SNAPSHOT {
         string id PK
         string checkpoint_id FK
@@ -295,7 +295,7 @@ erDiagram
         string entity_id
         json state_data
     }
-    
+
     ROLLBACK_TRIGGER {
         string id PK
         string checkpoint_id FK
@@ -303,14 +303,14 @@ erDiagram
         string reason
         datetime triggered_at
     }
-    
+
     FEEDBACK {
         string id PK
         string request_id FK
         string user_id
         datetime submitted_at
     }
-    
+
     RATING {
         string id PK
         string feedback_id FK

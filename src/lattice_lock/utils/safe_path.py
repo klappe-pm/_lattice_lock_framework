@@ -5,8 +5,8 @@ This module provides utilities for secure file system path manipulation,
 preventing common vulnerabilities like path traversal.
 """
 
-import os
 from pathlib import Path
+
 
 def resolve_under_root(root_path: str, relative_path: str) -> str:
     """
@@ -30,13 +30,13 @@ def resolve_under_root(root_path: str, relative_path: str) -> str:
     try:
         requested = (root / relative_path).resolve()
     except Exception as e:
-         # Path resolution might fail if components are invalid
-         raise ValueError(f"Invalid path components: {e}")
+        # Path resolution might fail if components are invalid
+        raise ValueError(f"Invalid path components: {e}")
 
     # Check common path prefix
     # Need to be careful with symlinks, but resolve() handles them by default
     # by canonicalizing the path.
     if root not in requested.parents and root != requested:
         raise ValueError(f"Path traversal attempt: {relative_path} is outside {root_path}")
-    
+
     return str(requested)

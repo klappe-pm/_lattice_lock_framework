@@ -5,28 +5,35 @@ This module configures pytest to:
 1. Configure asyncio mode for async tests
 2. Provide common fixtures
 """
-import pytest
 import os
 
+import pytest
+
 # ...
+
 
 @pytest.fixture(scope="session")
 def auth_secrets():
     """Load test secrets from environment or implementation-safe defaults."""
     return {
-        "SECRET_KEY": os.getenv("LATTICE_TEST_SECRET_KEY", "dummy-test-secret-key-must-be-min-32-chars"),
+        "SECRET_KEY": os.getenv(
+            "LATTICE_TEST_SECRET_KEY", "dummy-test-secret-key-must-be-min-32-chars"
+        ),
         "PASSWORD": os.getenv("LATTICE_TEST_PASSWORD", "dummy_user_password"),
         "ADMIN_PASSWORD": os.getenv("LATTICE_TEST_ADMIN_PASSWORD", "dummy_admin_password"),
         "OPERATOR_PASSWORD": os.getenv("LATTICE_TEST_OPERATOR_PASSWORD", "dummy_operator_password"),
-        "CUSTOM_SECRET_KEY": os.getenv("LATTICE_TEST_CUSTOM_SECRET_KEY", "dummy-custom-secret-key-min-32-chars")
+        "CUSTOM_SECRET_KEY": os.getenv(
+            "LATTICE_TEST_CUSTOM_SECRET_KEY", "dummy-custom-secret-key-min-32-chars"
+        ),
     }
+
 
 # Legacy test files skip list - imports normalized as of 2025-12-14
 # Only skip files that genuinely can't be run
 LEGACY_TEST_FILES = [
     "test_tool_matcher.py",  # Requires lattice_lock_agents package which may not exist
-    "test_admin_api.py",     # Missing bcrypt dependency
-    "test_admin_auth.py",    # Missing bcrypt dependency
+    "test_admin_api.py",  # Missing bcrypt dependency
+    "test_admin_auth.py",  # Missing bcrypt dependency
 ]
 
 
