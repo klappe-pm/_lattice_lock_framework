@@ -20,11 +20,16 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     """
     result = ValidationResult()
 
-    try:
-        # Sanitize the input path
-        repo_path = resolve_under_root(repo_path)
-    except ValueError as e:
-        result.add_error(str(e))
+    # Resolve the repo path (don't apply under-root check since users can validate any directory)
+    repo_path = Path(repo_path).expanduser().resolve()
+    
+    if not repo_path.exists():
+        result.add_error(f"Repository path not found: {repo_path}")
+        result.valid = False
+        return result
+    
+    if not repo_path.is_dir():
+        result.add_error(f"Repository path is not a directory: {repo_path}")
         result.valid = False
         return result
 
@@ -62,11 +67,8 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
 def validate_directory_structure(repo_path: str) -> ValidationResult:
     """Validates the directory structure against requirements."""
     result = ValidationResult()
-    try:
-        path = resolve_under_root(repo_path)
-    except ValueError as e:
-        result.add_error(str(e))
-        return result
+    # Resolve the path (don't apply under-root check since users can validate any directory)
+    path = Path(repo_path).expanduser().resolve()
 
     if not path.exists():
         result.add_error(f"Repository path not found: {repo_path}")
