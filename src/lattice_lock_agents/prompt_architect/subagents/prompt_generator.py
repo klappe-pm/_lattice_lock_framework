@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 from pathlib import Path
-from jinja2 import Template
+from lattice_lock.utils.jinja import create_template
 
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
@@ -145,7 +145,7 @@ class PromptGenerator:
         }
 
         # Render template
-        template = Template(template_content, autoescape=True)
+        template = create_template(template_content)
         rendered_content = template.render(**variables)
 
         # Determine file path
@@ -314,7 +314,7 @@ class PromptGenerator:
 
         # Re-render template
         template_content = await self._load_template()
-        template = Template(template_content, autoescape=True)
+        template = create_template(template_content)
         rendered_content = template.render(**variables)
 
         # Create new prompt

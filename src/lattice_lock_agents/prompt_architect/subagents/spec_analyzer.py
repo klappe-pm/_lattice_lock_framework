@@ -110,7 +110,8 @@ Specification:
             if response.status_code == 200:
                 result = response.json()
                 return self._parse_llm_response(result.get("response", ""))
-        except Exception:
+        except Exception as e:
+            logger.error(f"LLM extraction failed: {e}")
             pass
 
         return None
@@ -133,12 +134,14 @@ Specification:
             try:
                 return json.loads(json_match.group(1))
             except json.JSONDecodeError:
+                logger.warning("Failed to parse JSON from code block")
                 pass
 
         # Try to parse the entire response as JSON
         try:
             return json.loads(response)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse response as JSON: {e}")
             pass
 
         return None
@@ -387,6 +390,7 @@ class SpecAnalyzer:
                         try:
                             comp_data["layer"] = ComponentLayer(comp_data["layer"])
                         except ValueError:
+                            logger.warning(f"Invalid layer '{comp_data['layer']}' for component '{name}'. Defaulting to APPLICATION.")
                             comp_data["layer"] = ComponentLayer.APPLICATION
                     base.components.append(Component(**comp_data))
                     existing_component_names.add(name.lower())
@@ -401,6 +405,7 @@ class SpecAnalyzer:
                         try:
                             req_data["requirement_type"] = RequirementType(req_data.pop("type"))
                         except ValueError:
+                            logger.warning(f"Invalid requirement type '{req_data.get('type')}' for requirement '{req_id}'.")
                             pass
                     base.requirements.append(Requirement(**req_data))
                     existing_req_ids.add(req_id.lower())
@@ -415,9 +420,8 @@ class SpecAnalyzer:
                         try:
                             con_data["constraint_type"] = ConstraintType(con_data.pop("type"))
                         except ValueError:
+                            logger.warning(f"Invalid constraint type '{con_data.get('type')}' for constraint '{con_id}'.")
                             pass
-                    base.constraints.append(Constraint(**con_data))
-                    existing_constraint_ids.add(con_id.lower())
 
         base.llm_assisted = True
         return base

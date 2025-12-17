@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
 from typing import List
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import FileSystemLoader
+from lattice_lock.utils.jinja import get_secure_environment
 
 from .parser import LatticeParser, EntityDefinition, EnsuresClause
 
@@ -17,9 +18,8 @@ class GauntletGenerator:
     def __init__(self, lattice_file: str, output_dir: str):
         self.parser = LatticeParser(lattice_file)
         self.output_dir = Path(output_dir)
-        self.env = Environment(
-            loader=FileSystemLoader(Path(__file__).parent / "templates"),
-            autoescape=True
+        self.env = get_secure_environment(
+            loader=FileSystemLoader(Path(__file__).parent / "templates")
         )
 
     def generate(self):
@@ -91,4 +91,4 @@ class GauntletGenerator:
             # In a real Gauntlet, this would check against a dataset fixture.
             return f"# Uniqueness check requires a collection context.\n        # assert is_unique(value, collection)"
 
-        return "pass # Unknown constraint"
+        raise ValueError(f"Unknown constraint type: {clause.constraint}")

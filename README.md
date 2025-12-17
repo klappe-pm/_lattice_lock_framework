@@ -15,7 +15,7 @@ Lattice-Lock combines three integrated layers:
 ### Using the Model Orchestrator
 
 ```python
-from src.lattice_lock_orchestrator import ModelOrchestrator
+from lattice_lock_orchestrator import ModelOrchestrator
 
 orchestrator = ModelOrchestrator()
 response = await orchestrator.route_request(
@@ -28,13 +28,13 @@ response = await orchestrator.route_request(
 
 ```bash
 # Route a request
-./scripts/orchestrator_cli.py route "Your prompt" --strategy balanced
+lattice-lock orchestrator route "Your prompt" --strategy balanced
 
 # Analyze a task
-./scripts/orchestrator_cli.py analyze "Your prompt"
+lattice-lock orchestrator analyze "Your prompt"
 
 # List available models
-./scripts/orchestrator_cli.py list --verbose
+lattice-lock orchestrator list --verbose
 ```
 
 ## Repository Structure

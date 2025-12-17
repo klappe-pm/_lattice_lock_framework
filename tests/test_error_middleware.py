@@ -438,11 +438,11 @@ class TestLoggingIntegration:
         from lattice_lock.errors.middleware import _redact_sensitive
 
         data = {
-            "api_key": os.getenv("TEST_SENSITIVE_API_KEY", "secret123"),
-            "password": os.getenv("TEST_SENSITIVE_PASSWORD", "mypassword"),
+            "api_key": os.getenv("TEST_SENSITIVE_API_KEY", "dummy_redaction_test_key"),
+            "password": os.getenv("TEST_SENSITIVE_PASSWORD", "dummy_redaction_test_password"),
             "username": "testuser",
             "nested": {
-                "token": os.getenv("TEST_SENSITIVE_TOKEN", "abc123"),
+                "token": os.getenv("TEST_SENSITIVE_TOKEN", "dummy_redaction_test_token"),
             },
         }
 
