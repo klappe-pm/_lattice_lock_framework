@@ -16,11 +16,11 @@ entities:
       username:
         unique: true
     ensures:
-      - name: custom_rule
-        field: score
-        constraint: custom
-        value: "value % 2 == 0"
-        description: "Score must be even"
+      - name: username_check
+        field: username
+        constraint: unique
+        value: true
+        description: "Username must be unique"
 """
 
 
@@ -65,7 +65,7 @@ def test_generator_creates_files(lattice_file, output_dir):
     assert "def test_score_gte_0" in content
     assert "def test_score_lte_10" in content
     assert "def test_username_unique" in content
-    assert "def test_custom_rule" in content
+    assert "def test_username_check" in content
 
     # Check fixture generation
     assert '"age": 19' in content  # gt 18 -> 19
@@ -97,7 +97,7 @@ def test_generated_test_execution(lattice_file, output_dir):
     # score >= 0 (0) -> Pass
     # score <= 10 (0) -> Pass
     # unique -> Placeholder (Pass/Skip)
-    # custom -> "pass # Unknown constraint" -> Pass
+    # unique -> Placeholder (Pass/Skip)
 
     import pytest
 

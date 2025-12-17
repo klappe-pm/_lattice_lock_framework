@@ -38,6 +38,6 @@ jobs:
         # warnings (non-blocking)
         ruff check src/ --exit-zero --output-format=github
 
-    - name: Test with pytest
+    - name: Test with pytest (via make)
       run: |
-        pytest tests/ -v --tb=short
+        make test
