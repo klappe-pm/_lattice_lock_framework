@@ -10,7 +10,7 @@ format:
 	ruff check . --fix
 
 test:
-	pytest tests/unit
+	pytest tests/ -m "not integration" --tb=short
 
 ci: lint test
 
