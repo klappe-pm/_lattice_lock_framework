@@ -5,12 +5,7 @@ import argparse
 from pathlib import Path
 from typing import List
 from .schema import ValidationResult
-try:
-    from lattice_lock.utils.safe_path import resolve_under_root
-except ImportError:
-    # Fallback/mock for standalone run if needed, or assume installed
-    def resolve_under_root(path, root=None):
-        return Path(path).resolve()
+from lattice_lock.utils.safe_path import resolve_under_root
 
 
 def validate_repository_structure(repo_path: str) -> ValidationResult:
