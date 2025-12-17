@@ -86,9 +86,7 @@ class Constraint(BaseModel):
     source_section: str | None = Field(
         default=None, description="Source section in the specification document"
     )
-    impact: str | None = Field(
-        default=None, description="Impact of this constraint on the project"
-    )
+    impact: str | None = Field(default=None, description="Impact of this constraint on the project")
     mitigation: str | None = Field(
         default=None, description="Mitigation strategy for this constraint"
     )

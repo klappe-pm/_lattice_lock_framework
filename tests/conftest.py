@@ -5,6 +5,7 @@ This module configures pytest to:
 1. Configure asyncio mode for async tests
 2. Provide common fixtures
 """
+
 import os
 
 import pytest

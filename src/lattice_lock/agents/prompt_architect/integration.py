@@ -369,12 +369,16 @@ class PromptArchitectIntegration:
             tool=ToolType(prompt_data.get("tool", "devin")),
             status=PromptStatus(prompt_data.get("status", "draft")),
             assigned_to=prompt_data.get("assigned_to"),
-            started_at=datetime.fromisoformat(prompt_data["started_at"])
-            if prompt_data.get("started_at")
-            else None,
-            completed_at=datetime.fromisoformat(prompt_data["completed_at"])
-            if prompt_data.get("completed_at")
-            else None,
+            started_at=(
+                datetime.fromisoformat(prompt_data["started_at"])
+                if prompt_data.get("started_at")
+                else None
+            ),
+            completed_at=(
+                datetime.fromisoformat(prompt_data["completed_at"])
+                if prompt_data.get("completed_at")
+                else None
+            ),
             output_summary=prompt_data.get("output_summary", ""),
             errors=prompt_data.get("errors", []),
         )

@@ -175,7 +175,8 @@ def main():
                 update_status(model, "load_warning", f"Return code: {result.returncode}")
         except Exception as e:
             print(
-                f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Failed to load {model}: {e}", flush=True
+                f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Failed to load {model}: {e}",
+                flush=True,
             )
             update_status(model, "load_failed", str(e))
 

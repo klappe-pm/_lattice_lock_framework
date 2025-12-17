@@ -8,7 +8,6 @@ Tests cover:
 - WebSocket connections for real-time updates
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 

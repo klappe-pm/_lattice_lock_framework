@@ -36,9 +36,10 @@ def mock_validate_path():
     When caching is enabled, the CLI uses _validate_with_cache which calls
     validate_file_with_audit directly, so we need to mock both.
     """
-    with patch("lattice_lock_cli.commands.sheriff.validate_path_with_audit") as mock_path, patch(
-        "lattice_lock_cli.commands.sheriff.validate_file_with_audit"
-    ) as mock_file:
+    with (
+        patch("lattice_lock_cli.commands.sheriff.validate_path_with_audit") as mock_path,
+        patch("lattice_lock_cli.commands.sheriff.validate_file_with_audit") as mock_file,
+    ):
         # Make both return the same value
         mock_path.return_value = ([], [])
         mock_file.return_value = ([], [])

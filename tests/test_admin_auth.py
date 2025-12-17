@@ -582,7 +582,7 @@ class TestRoleBasedAccess:
 
         @app.get("/operator-access")
         async def operator_access(
-            user: Annotated[TokenData, Depends(require_roles(Role.ADMIN, Role.OPERATOR))]
+            user: Annotated[TokenData, Depends(require_roles(Role.ADMIN, Role.OPERATOR))],
         ):
             return {"message": "operator access granted", "user": user.sub}
 
@@ -590,7 +590,7 @@ class TestRoleBasedAccess:
         async def viewer_access(
             user: Annotated[
                 TokenData, Depends(require_roles(Role.ADMIN, Role.OPERATOR, Role.VIEWER))
-            ]
+            ],
         ):
             return {"message": "viewer access granted", "user": user.sub}
 

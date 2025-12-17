@@ -36,12 +36,14 @@ class FunctionCallHandler:
             for param_name, param in sig.parameters.items():
                 param_info = {
                     "kind": str(param.kind),
-                    "default": str(param.default)
-                    if param.default != inspect.Parameter.empty
-                    else None,
-                    "annotation": str(param.annotation)
-                    if param.annotation != inspect.Parameter.empty
-                    else None,
+                    "default": (
+                        str(param.default) if param.default != inspect.Parameter.empty else None
+                    ),
+                    "annotation": (
+                        str(param.annotation)
+                        if param.annotation != inspect.Parameter.empty
+                        else None
+                    ),
                 }
                 parameters[param_name] = param_info
 

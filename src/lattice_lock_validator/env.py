@@ -3,9 +3,7 @@ import re
 from .schema import ValidationResult
 
 
-def validate_env_file(
-    file_path: str, required_vars: list[str] | None = None
-) -> ValidationResult:
+def validate_env_file(file_path: str, required_vars: list[str] | None = None) -> ValidationResult:
     """
     Validates an environment variable file (.env).
 

@@ -4,7 +4,6 @@ Tests for the Lattice Lock error classification system.
 Tests error types, classification, and remediation functionality.
 """
 
-
 from lattice_lock.errors import (
     AgentError,
     Category,

@@ -162,9 +162,7 @@ def compile_lattice(
     return result
 
 
-def _generate_pydantic_models(
-    schema_data: dict, output_dir: Path, module_name: str
-) -> Path | None:
+def _generate_pydantic_models(schema_data: dict, output_dir: Path, module_name: str) -> Path | None:
     """
     Generate Pydantic models from schema data.
 

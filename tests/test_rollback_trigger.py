@@ -117,9 +117,10 @@ class TestRollbackTrigger(unittest.TestCase):
 class TestRollbackCLI(unittest.TestCase):
     def test_rollback_command_latest(self):
         runner = CliRunner()
-        with patch("lattice_lock_cli.commands.rollback.RollbackTrigger") as MockTrigger, patch(
-            "lattice_lock_cli.commands.rollback.CheckpointManager"
-        ) as MockManager:
+        with (
+            patch("lattice_lock_cli.commands.rollback.RollbackTrigger") as MockTrigger,
+            patch("lattice_lock_cli.commands.rollback.CheckpointManager") as MockManager,
+        ):
             mock_trigger_instance = MockTrigger.return_value
             mock_trigger_instance.trigger_rollback.return_value = True
 
@@ -131,9 +132,10 @@ class TestRollbackCLI(unittest.TestCase):
 
     def test_rollback_command_checkpoint(self):
         runner = CliRunner()
-        with patch("lattice_lock_cli.commands.rollback.RollbackTrigger") as MockTrigger, patch(
-            "lattice_lock_cli.commands.rollback.CheckpointManager"
-        ) as MockManager:
+        with (
+            patch("lattice_lock_cli.commands.rollback.RollbackTrigger") as MockTrigger,
+            patch("lattice_lock_cli.commands.rollback.CheckpointManager") as MockManager,
+        ):
             mock_trigger_instance = MockTrigger.return_value
             mock_trigger_instance.trigger_rollback.return_value = True
 

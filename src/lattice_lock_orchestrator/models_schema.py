@@ -2,7 +2,6 @@
 Pydantic models for registry YAML validation.
 """
 
-
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .types import ModelProvider, ModelStatus, ProviderMaturity
