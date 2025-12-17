@@ -6,15 +6,16 @@ and convert them into a common format for processing.
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime
+from collections.abc import Iterator
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Iterator, Optional
-import json
+from typing import Any, Optional
 
 
 class SourceType(Enum):
     """Types of data sources."""
+
     DATABASE = "database"
     API = "api"
     FILE = "file"
@@ -23,6 +24,7 @@ class SourceType(Enum):
 
 class RecordStatus(Enum):
     """Status of a data record."""
+
     PENDING = "pending"
     EXTRACTED = "extracted"
     TRANSFORMED = "transformed"
@@ -33,6 +35,7 @@ class RecordStatus(Enum):
 @dataclass
 class DataSource:
     """Configuration for a data extraction source."""
+
     id: int
     name: str
     source_type: SourceType
@@ -51,6 +54,7 @@ class DataSource:
 @dataclass
 class DataRecord:
     """Individual data record extracted from a source."""
+
     id: int
     source_id: int
     record_key: str
@@ -123,7 +127,7 @@ class DatabaseExtractor(BaseExtractor):
                 source_id=self.source.id,
                 record_key=f"db_{data['id']}",
                 raw_data=data,
-                extracted_at=datetime.utcnow(),
+                extracted_at=datetime.now(timezone.utc),
                 status=RecordStatus.EXTRACTED,
             )
             self._next_id += 1
@@ -164,7 +168,7 @@ class APIExtractor(BaseExtractor):
                 source_id=self.source.id,
                 record_key=f"api_{item['data']['user_id']}",
                 raw_data=item["data"],
-                extracted_at=datetime.utcnow(),
+                extracted_at=datetime.now(timezone.utc),
                 status=RecordStatus.EXTRACTED,
             )
             self._next_id += 1
@@ -205,7 +209,7 @@ class FileExtractor(BaseExtractor):
                 source_id=self.source.id,
                 record_key=f"file_line_{item['line']}",
                 raw_data=item,
-                extracted_at=datetime.utcnow(),
+                extracted_at=datetime.now(timezone.utc),
                 status=RecordStatus.EXTRACTED,
             )
             self._next_id += 1

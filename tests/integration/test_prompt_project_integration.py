@@ -5,21 +5,21 @@ Tests the ProjectAgentClient and its integration with the Prompt Architect
 orchestration pipeline.
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-import tempfile
 import json
-
 import sys
+import tempfile
+from pathlib import Path
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from lattice_lock_agents.prompt_architect.integrations.project_agent import (
-    ProjectAgentClient,
-    ProjectScope,
-    ProjectPhase,
-    PendingTask,
     InteractionLog,
+    PendingTask,
+    ProjectAgentClient,
+    ProjectPhase,
+    ProjectScope,
 )
 
 
@@ -144,7 +144,8 @@ class TestInteractionLogging:
             memory_dir = Path(tmpdir) / "agent_memory" / "agents"
             memory_dir.mkdir(parents=True)
             memory_file = memory_dir / "agent_prompt_architect_memory.md"
-            memory_file.write_text("""# Agent Memory
+            memory_file.write_text(
+                """# Agent Memory
 
 ## Agent to Agent Interactions
 
@@ -153,7 +154,8 @@ class TestInteractionLogging:
 | 2024-01-01 | test_agent | Initial interaction |
 
 ## Other Section
-""")
+"""
+            )
 
             client = ProjectAgentClient(
                 repo_root=Path(tmpdir),
@@ -181,7 +183,8 @@ class TestProjectScopeDiscovery:
             spec_dir = Path(tmpdir) / "specifications"
             spec_dir.mkdir()
             spec_file = spec_dir / "lattice_lock_framework_specifications.md"
-            spec_file.write_text("""# Test Project
+            spec_file.write_text(
+                """# Test Project
 
 ## Overview
 
@@ -191,7 +194,8 @@ This is a test project for testing purposes.
 
 - Goal 1
 - Goal 2
-""")
+"""
+            )
 
             client = ProjectAgentClient(repo_root=Path(tmpdir))
             scope = client.get_project_scope()
@@ -209,14 +213,18 @@ class TestPhaseDiscovery:
             impl_dir = Path(tmpdir) / "implementation" / "project_prompts"
             impl_dir.mkdir(parents=True)
             state_file = impl_dir / "project_prompts_state.json"
-            state_file.write_text(json.dumps({
-                "phase_definitions": {
-                    "1": "Foundation",
-                    "2": "Core Features",
-                    "3": "Integration",
-                },
-                "prompts": [],
-            }))
+            state_file.write_text(
+                json.dumps(
+                    {
+                        "phase_definitions": {
+                            "1": "Foundation",
+                            "2": "Core Features",
+                            "3": "Integration",
+                        },
+                        "prompts": [],
+                    }
+                )
+            )
 
             client = ProjectAgentClient(repo_root=Path(tmpdir))
             phase = client.get_current_phase()
@@ -236,29 +244,33 @@ class TestPendingTaskDiscovery:
             impl_dir = Path(tmpdir) / "implementation" / "project_prompts"
             impl_dir.mkdir(parents=True)
             state_file = impl_dir / "project_prompts_state.json"
-            state_file.write_text(json.dumps({
-                "phase_definitions": {},
-                "prompts": [
+            state_file.write_text(
+                json.dumps(
                     {
-                        "id": "5.1.1",
-                        "title": "Test Task 1",
-                        "phase": "5",
-                        "epic": "5.1",
-                        "tool": "Devin AI",
-                        "done": False,
-                        "merged": False,
-                    },
-                    {
-                        "id": "5.1.2",
-                        "title": "Test Task 2",
-                        "phase": "5",
-                        "epic": "5.1",
-                        "tool": "Gemini",
-                        "done": True,
-                        "merged": False,
-                    },
-                ],
-            }))
+                        "phase_definitions": {},
+                        "prompts": [
+                            {
+                                "id": "5.1.1",
+                                "title": "Test Task 1",
+                                "phase": "5",
+                                "epic": "5.1",
+                                "tool": "Devin AI",
+                                "done": False,
+                                "merged": False,
+                            },
+                            {
+                                "id": "5.1.2",
+                                "title": "Test Task 2",
+                                "phase": "5",
+                                "epic": "5.1",
+                                "tool": "Gemini",
+                                "done": True,
+                                "merged": False,
+                            },
+                        ],
+                    }
+                )
+            )
 
             client = ProjectAgentClient(repo_root=Path(tmpdir))
             tasks = client.get_pending_tasks()
@@ -276,9 +288,7 @@ class TestOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_orchestrate_from_project(self):
         """Test orchestration using Project Agent as input source."""
-        from lattice_lock_agents.prompt_architect.orchestrator import (
-            PromptOrchestrator,
-        )
+        from lattice_lock_agents.prompt_architect.orchestrator import PromptOrchestrator
 
         orchestrator = PromptOrchestrator()
         result = await orchestrator.orchestrate_prompt_generation(
@@ -293,9 +303,7 @@ class TestOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_orchestrate_discovers_spec_from_project(self):
         """Test that orchestrator discovers spec from Project Agent."""
-        from lattice_lock_agents.prompt_architect.orchestrator import (
-            PromptOrchestrator,
-        )
+        from lattice_lock_agents.prompt_architect.orchestrator import PromptOrchestrator
 
         orchestrator = PromptOrchestrator()
 

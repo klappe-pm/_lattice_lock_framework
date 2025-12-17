@@ -79,7 +79,9 @@ def cmd_next(args) -> None:
     print("Next steps:")
     print("1. Read the prompt above and implement the task")
     print(f"2. When done: python scripts/prompt_tracker.py update --id {task_id} --done")
-    print(f"3. After PR merged: python scripts/prompt_tracker.py update --id {task_id} --merged --pr <url>")
+    print(
+        f"3. After PR merged: python scripts/prompt_tracker.py update --id {task_id} --merged --pr <url>"
+    )
     print("=" * 60 + "\n")
 
 
@@ -207,7 +209,7 @@ Examples:
   python scripts/devin_agent.py show 2.2.1     # Show task 2.2.1
   python scripts/devin_agent.py list           # List all tasks
   python scripts/devin_agent.py status         # Show status summary
-        """
+        """,
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")

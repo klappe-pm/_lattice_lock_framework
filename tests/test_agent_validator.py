@@ -1,7 +1,9 @@
-import pytest
 import os
 import tempfile
+
+import pytest
 from lattice_lock_validator.agents import validate_agent_manifest
+
 
 @pytest.fixture
 def valid_agent_content():
@@ -26,18 +28,21 @@ scope:
   cannot_access: ["secrets/"]
 """
 
+
 @pytest.fixture
 def temp_agent_file(valid_agent_content):
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(valid_agent_content)
         path = f.name
     yield path
     os.remove(path)
 
+
 def test_valid_agent(temp_agent_file):
     result = validate_agent_manifest(temp_agent_file)
     assert result.valid
     assert len(result.errors) == 0
+
 
 def test_missing_required_section():
     content = """
@@ -45,7 +50,7 @@ agent:
   identity:
     name: "foo"
 """
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(content)
         path = f.name
 
@@ -57,6 +62,7 @@ agent:
         assert "Missing required top-level section: responsibilities" in error_msgs
     finally:
         os.remove(path)
+
 
 def test_invalid_version_format():
     content = """
@@ -73,7 +79,7 @@ scope:
   can_access: []
   cannot_access: []
 """
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(content)
         path = f.name
 
@@ -84,6 +90,7 @@ scope:
         assert any("Invalid version format" in e.message for e in result.errors)
     finally:
         os.remove(path)
+
 
 def test_empty_required_field():
     content = """
@@ -100,16 +107,20 @@ scope:
   can_access: []
   cannot_access: []
 """
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(content)
         path = f.name
 
     try:
         result = validate_agent_manifest(path)
         assert not result.valid
-        assert any("Field 'agent.identity.name' must be a non-empty string" in e.message for e in result.errors)
+        assert any(
+            "Field 'agent.identity.name' must be a non-empty string" in e.message
+            for e in result.errors
+        )
     finally:
         os.remove(path)
+
 
 def test_invalid_types():
     content = """
@@ -119,7 +130,7 @@ directive: "not a dict"
 responsibilities: "not a list"
 scope: "not a dict"
 """
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(content)
         path = f.name
 
@@ -133,6 +144,7 @@ scope: "not a dict"
         assert "scope section must be a dictionary" in msgs
     finally:
         os.remove(path)
+
 
 def test_missing_nested_fields():
     content = """
@@ -152,7 +164,7 @@ scope:
   # missing can_access
   cannot_access: []
 """
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(content)
         path = f.name
 
@@ -166,6 +178,7 @@ scope:
         assert "Missing required field in scope: can_access" in msgs
     finally:
         os.remove(path)
+
 
 def test_malformed_responsibility_item():
     content = """
@@ -183,13 +196,15 @@ scope:
   can_access: []
   cannot_access: []
 """
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".yaml") as f:
         f.write(content)
         path = f.name
 
     try:
         result = validate_agent_manifest(path)
         assert not result.valid
-        assert any("Responsibility item #1 must be a dictionary" in e.message for e in result.errors)
+        assert any(
+            "Responsibility item #1 must be a dictionary" in e.message for e in result.errors
+        )
     finally:
         os.remove(path)

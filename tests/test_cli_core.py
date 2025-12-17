@@ -4,12 +4,10 @@ Tests for the Lattice Lock CLI core functionality.
 Tests the CLI entry point, version, help, and verbose flag.
 """
 
-import click
 import pytest
 from click.testing import CliRunner
-
-from lattice_lock_cli.__main__ import cli, main
 from lattice_lock_cli import __version__
+from lattice_lock_cli.__main__ import cli, main
 
 
 @pytest.fixture
@@ -75,10 +73,16 @@ class TestCLIContext:
     def test_context_via_verbose_init(self, runner: CliRunner, tmp_path) -> None:
         """Test that context works by using verbose with init."""
         # When verbose is passed, init should show more detail
-        result = runner.invoke(cli, [
-            "-v", "init", "test_ctx_project",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "-v",
+                "init",
+                "test_ctx_project",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
         assert result.exit_code == 0
         # Verbose mode shows "Created" messages
         assert "Created" in result.output

@@ -1,11 +1,12 @@
 """Convention checker for prompt file naming and placement."""
 
-import re
-import os
 import logging
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+import os
+import re
 from pathlib import Path
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +20,9 @@ class ConventionResult(BaseModel):
     placement_valid: bool = True
     format_valid: bool = True
     tool_assignment_valid: bool = True
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    extracted_info: Dict[str, Any] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    extracted_info: dict[str, Any] = Field(default_factory=dict)
 
     def add_error(self, error: str) -> None:
         """Add an error and mark as invalid."""
@@ -184,9 +185,7 @@ class ConventionChecker:
 
         # Check description is present
         if not description:
-            result.add_warning(
-                "Filename missing description after tool identifier"
-            )
+            result.add_warning("Filename missing description after tool identifier")
 
     def _check_placement(self, prompt_path: str, parent_dir: str, result: ConventionResult) -> None:
         """Check file is in correct phase directory."""
@@ -195,7 +194,7 @@ class ConventionChecker:
         if not match:
             result.placement_valid = False
             result.add_error(
-                f"Prompt not in a valid phase directory. Expected: phase{{N}}_{{name}}"
+                "Prompt not in a valid phase directory. Expected: phase{N}_{name}"
             )
             return
 
@@ -212,21 +211,21 @@ class ConventionChecker:
     def _check_markdown_format(self, prompt_path: str, result: ConventionResult) -> None:
         """Check markdown formatting conventions."""
         try:
-            with open(prompt_path, 'r', encoding='utf-8') as f:
+            with open(prompt_path, encoding="utf-8") as f:
                 content = f.read()
         except Exception as e:
             result.add_error(f"Failed to read file for format check: {e}")
             return
 
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Check for proper heading structure
-        if not lines or not lines[0].startswith('# '):
+        if not lines or not lines[0].startswith("# "):
             result.format_valid = False
             result.add_error("File must start with a level 1 heading (# )")
 
         # Check for required ## sections
-        section_headers = [line for line in lines if line.startswith('## ')]
+        section_headers = [line for line in lines if line.startswith("## ")]
         required_sections = ["Context", "Goal", "Steps", "Do NOT Touch", "Success Criteria"]
         found_sections = [h[3:].strip() for h in section_headers]
 
@@ -236,27 +235,25 @@ class ConventionChecker:
 
         # Check for trailing whitespace (style warning)
         for i, line in enumerate(lines, 1):
-            if line.endswith(' '):
+            if line.endswith(" "):
                 result.add_warning(f"Line {i} has trailing whitespace")
                 break  # Only report first occurrence
 
         # Check for consistent list formatting
-        has_numbered = any(re.match(r'^\d+\.', line) for line in lines)
-        has_bulleted = any(line.startswith('- ') for line in lines)
+        has_numbered = any(re.match(r"^\d+\.", line) for line in lines)
+        has_bulleted = any(line.startswith("- ") for line in lines)
 
         if has_numbered and has_bulleted:
             # Check if they're mixed within sections
             in_steps = False
             for line in lines:
-                if line.startswith('## Steps'):
+                if line.startswith("## Steps"):
                     in_steps = True
-                elif line.startswith('## ') and in_steps:
+                elif line.startswith("## ") and in_steps:
                     in_steps = False
                 elif in_steps:
-                    if line.startswith('- ') and not line.strip().startswith('-'):
-                        result.add_warning(
-                            "Steps section should use numbered lists for main steps"
-                        )
+                    if line.startswith("- ") and not line.strip().startswith("-"):
+                        result.add_warning("Steps section should use numbered lists for main steps")
                         break
 
     def _check_tool_assignment(self, prompt_path: str, result: ConventionResult) -> None:
@@ -267,17 +264,13 @@ class ConventionChecker:
 
         # Read file content to check Do NOT Touch section
         try:
-            with open(prompt_path, 'r', encoding='utf-8') as f:
+            with open(prompt_path, encoding="utf-8") as f:
                 content = f.read()
         except Exception:
             return
 
         # Extract Do NOT Touch section
-        do_not_touch_match = re.search(
-            r"## Do NOT Touch\s*\n(.*?)(?=\n## |\Z)",
-            content,
-            re.DOTALL
-        )
+        do_not_touch_match = re.search(r"## Do NOT Touch\s*\n(.*?)(?=\n## |\Z)", content, re.DOTALL)
 
         if not do_not_touch_match:
             return
@@ -292,10 +285,13 @@ class ConventionChecker:
             for pattern in patterns:
                 # The pattern should be mentioned in Do NOT Touch
                 # (This is a soft check - we just warn if major patterns are missing)
-                if pattern.endswith('/') and pattern not in do_not_touch_content:
+                if pattern.endswith("/") and pattern not in do_not_touch_content:
                     # Only warn for high-value directories
-                    if pattern in ["src/lattice_lock_cli/", "src/lattice_lock_validator/",
-                                   "developer_documentation/"]:
+                    if pattern in [
+                        "src/lattice_lock_cli/",
+                        "src/lattice_lock_validator/",
+                        "developer_documentation/",
+                    ]:
                         result.add_warning(
                             f"Consider adding '{pattern}' to Do NOT Touch section "
                             f"(owned by {self.VALID_TOOLS.get(other_tool, other_tool)})"
@@ -324,12 +320,7 @@ class ConventionChecker:
         return f"phase{phase}_{suffix}"
 
     def suggest_filename(
-        self,
-        phase: int,
-        epic: int,
-        task: int,
-        tool: str,
-        description: str
+        self, phase: int, epic: int, task: int, tool: str, description: str
     ) -> str:
         """
         Suggest a properly formatted filename.
@@ -346,8 +337,8 @@ class ConventionChecker:
         """
         # Clean description for filename
         clean_desc = description.lower()
-        clean_desc = re.sub(r'[^a-z0-9\s]', '', clean_desc)
-        clean_desc = re.sub(r'\s+', '_', clean_desc.strip())
+        clean_desc = re.sub(r"[^a-z0-9\s]", "", clean_desc)
+        clean_desc = re.sub(r"\s+", "_", clean_desc.strip())
         clean_desc = clean_desc[:50]  # Limit length
 
         return f"{phase}.{epic}.{task}_{tool}_{clean_desc}.md"

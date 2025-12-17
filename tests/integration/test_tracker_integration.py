@@ -8,13 +8,11 @@ Tests the interaction between:
 """
 
 import json
-import subprocess
-import sys
-import unittest
 import shutil
+import sys
 import tempfile
+import unittest
 from pathlib import Path
-from typing import Dict, Any
 
 # Ensure src is in path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -22,24 +20,29 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
 
+
 class TestTrackerIntegration(unittest.TestCase):
     def setUp(self):
         """Set up test environment."""
         self.test_dir = tempfile.mkdtemp()
         self.test_path = Path(self.test_dir)
-        
+
         # Setup repo root structure mock
         self.prompts_dir = self.test_path / "project_prompts"
         self.prompts_dir.mkdir(parents=True)
-        
+
         # Create phase directories
         (self.prompts_dir / "phase1_foundation").mkdir()
         (self.prompts_dir / "phase5_prompt_automation").mkdir()
-        
+
         # Create sample prompt files
-        (self.prompts_dir / "phase1_foundation" / "1.1.1_devin_test.md").write_text("# Test Prompt 1.1.1")
-        (self.prompts_dir / "phase5_prompt_automation" / "5.4.1_claude_app_test.md").write_text("# Test Prompt 5.4.1")
-        
+        (self.prompts_dir / "phase1_foundation" / "1.1.1_devin_test.md").write_text(
+            "# Test Prompt 1.1.1"
+        )
+        (self.prompts_dir / "phase5_prompt_automation" / "5.4.1_claude_app_test.md").write_text(
+            "# Test Prompt 5.4.1"
+        )
+
         # Create state file with sample data
         self.state = {
             "metadata": {
@@ -47,7 +50,7 @@ class TestTrackerIntegration(unittest.TestCase):
                 "version": "1.0.0",
                 "created": "2025-12-01",
                 "last_updated": "2025-12-01 00:00:00",
-                "total_prompts": 2
+                "total_prompts": 2,
             },
             "prompts": [
                 {
@@ -64,7 +67,7 @@ class TestTrackerIntegration(unittest.TestCase):
                     "start_time": None,
                     "end_time": None,
                     "duration_minutes": None,
-                    "pr_url": None
+                    "pr_url": None,
                 },
                 {
                     "id": "5.4.1",
@@ -80,8 +83,8 @@ class TestTrackerIntegration(unittest.TestCase):
                     "start_time": None,
                     "end_time": None,
                     "duration_minutes": None,
-                    "pr_url": None
-                }
+                    "pr_url": None,
+                },
             ],
             "tool_definitions": {
                 "devin": "Devin AI",
@@ -89,26 +92,23 @@ class TestTrackerIntegration(unittest.TestCase):
                 "codex": "Codex CLI",
                 "claude_cli": "Claude Code CLI",
                 "claude_app": "Claude Code App",
-                "claude_docs": "Claude Code Website"
+                "claude_docs": "Claude Code Website",
             },
-            "phase_definitions": {
-                "1": "Foundation",
-                "5": "Prompt Automation"
-            }
+            "phase_definitions": {"1": "Foundation", "5": "Prompt Automation"},
         }
-        
+
         self.state_file = self.prompts_dir / "project_prompts_state.json"
-        
-        # Create Dummy Tracker script for CLI tests if needed, 
+
+        # Create Dummy Tracker script for CLI tests if needed,
         # but here we mostly test Client logic which can use direct mode or mock CLI.
-        # Since we are testing TrackerClient logic primarily, we will focus on direct mode 
+        # Since we are testing TrackerClient logic primarily, we will focus on direct mode
         # or rely on the fact that TrackerClient defaults to direct mode unless use_cli=True.
         # The existing tests used TrackerClient(..., use_cli=False) implicitly or explicitly?
         # Looking at original code: TrackerClient(repo_root=temp_state_dir). Default use_cli=False.
-        
+
         # We need to write the state file
         self._write_state()
-        
+
         # Initialize client
         self.client = TrackerClient(repo_root=self.test_path, use_cli=False)
 
@@ -130,7 +130,7 @@ class TestTrackerIntegration(unittest.TestCase):
             prompt_id="1.1.3",
             title="New test prompt",
             tool="gemini",
-            file_path="phase1_foundation/1.1.3_gemini_new.md"
+            file_path="phase1_foundation/1.1.3_gemini_new.md",
         )
 
         self.assertEqual(result["status"], "added")
@@ -149,7 +149,7 @@ class TestTrackerIntegration(unittest.TestCase):
                 prompt_id="1.1.1",  # Already exists
                 title="Duplicate",
                 tool="devin",
-                file_path="phase1_foundation/duplicate.md"
+                file_path="phase1_foundation/duplicate.md",
             )
 
     def test_add_prompt_invalid_tool(self):
@@ -159,7 +159,7 @@ class TestTrackerIntegration(unittest.TestCase):
                 prompt_id="1.1.4",
                 title="Bad tool",
                 tool="invalid_tool",
-                file_path="phase1_foundation/bad.md"
+                file_path="phase1_foundation/bad.md",
             )
 
     def test_add_prompt_invalid_id_format(self):
@@ -169,7 +169,7 @@ class TestTrackerIntegration(unittest.TestCase):
                 prompt_id="invalid",
                 title="Bad ID",
                 tool="devin",
-                file_path="phase1_foundation/bad.md"
+                file_path="phase1_foundation/bad.md",
             )
 
     def test_get_prompt(self):
@@ -211,10 +211,7 @@ class TestTrackerIntegration(unittest.TestCase):
     def test_update_prompt_merged(self):
         """Test marking a prompt as merged."""
         result = self.client.update_prompt(
-            "1.1.1",
-            done=True,
-            merged=True,
-            pr_url="https://github.com/test/pr/1"
+            "1.1.1", done=True, merged=True, pr_url="https://github.com/test/pr/1"
         )
 
         self.assertTrue(result["merged"])
@@ -249,5 +246,6 @@ class TestTrackerIntegration(unittest.TestCase):
 
         # Mark one as done
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

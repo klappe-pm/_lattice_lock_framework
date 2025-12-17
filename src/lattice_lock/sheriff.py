@@ -23,11 +23,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+
 from lattice_lock.utils.safe_path import resolve_under_root
 
 
 class ViolationSeverity(Enum):
     """Severity levels for Sheriff violations."""
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
@@ -36,6 +38,7 @@ class ViolationSeverity(Enum):
 @dataclass
 class Violation:
     """Represents a single Sheriff violation."""
+
     rule: str
     message: str
     file: str
@@ -67,6 +70,7 @@ class Violation:
 @dataclass
 class SheriffResult:
     """Result of Sheriff analysis."""
+
     violations: list[Violation] = field(default_factory=list)
     files_checked: int = 0
     passed: bool = True
@@ -83,7 +87,9 @@ class SheriffResult:
             "passed": self.passed,
             "files_checked": self.files_checked,
             "error_count": sum(1 for v in self.violations if v.severity == ViolationSeverity.ERROR),
-            "warning_count": sum(1 for v in self.violations if v.severity == ViolationSeverity.WARNING),
+            "warning_count": sum(
+                1 for v in self.violations if v.severity == ViolationSeverity.WARNING
+            ),
             "violations": [v.to_dict() for v in self.violations],
         }
 
@@ -98,7 +104,7 @@ DEFAULT_CONFIG = {
     "forbidden_imports": [
         "requests",  # Use api_clients instead
         "psycopg2",  # Use SQLModel
-        "sqlite3",   # Use SQLModel
+        "sqlite3",  # Use SQLModel
     ],
     "path_hygiene_patterns": [
         'Path.home() / "Obsidian"',
@@ -131,14 +137,16 @@ class SheriffVisitor(ast.NodeVisitor):
         for alias in node.names:
             module_name = alias.name.split(".")[0]
             if module_name in self.config.get("forbidden_imports", []):
-                self.violations.append(Violation(
-                    rule="FORBIDDEN_IMPORT",
-                    message=f"Forbidden import '{alias.name}'",
-                    file=self.filename,
-                    line=node.lineno,
-                    severity=ViolationSeverity.ERROR,
-                    suggestion=f"Use approved alternatives instead of '{module_name}'",
-                ))
+                self.violations.append(
+                    Violation(
+                        rule="FORBIDDEN_IMPORT",
+                        message=f"Forbidden import '{alias.name}'",
+                        file=self.filename,
+                        line=node.lineno,
+                        severity=ViolationSeverity.ERROR,
+                        suggestion=f"Use approved alternatives instead of '{module_name}'",
+                    )
+                )
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
@@ -146,25 +154,29 @@ class SheriffVisitor(ast.NodeVisitor):
         if node.module:
             module_name = node.module.split(".")[0]
             if module_name in self.config.get("forbidden_imports", []):
-                self.violations.append(Violation(
-                    rule="FORBIDDEN_IMPORT",
-                    message=f"Forbidden import from '{node.module}'",
-                    file=self.filename,
-                    line=node.lineno,
-                    severity=ViolationSeverity.ERROR,
-                    suggestion=f"Use approved alternatives instead of '{module_name}'",
-                ))
+                self.violations.append(
+                    Violation(
+                        rule="FORBIDDEN_IMPORT",
+                        message=f"Forbidden import from '{node.module}'",
+                        file=self.filename,
+                        line=node.lineno,
+                        severity=ViolationSeverity.ERROR,
+                        suggestion=f"Use approved alternatives instead of '{module_name}'",
+                    )
+                )
 
             # Check for src. imports (legacy pattern)
             if node.module.startswith("src."):
-                self.violations.append(Violation(
-                    rule="LEGACY_IMPORT",
-                    message=f"Legacy import pattern 'from src.{node.module[4:]}' detected",
-                    file=self.filename,
-                    line=node.lineno,
-                    severity=ViolationSeverity.ERROR,
-                    suggestion=f"Use 'from {node.module[4:]}' instead",
-                ))
+                self.violations.append(
+                    Violation(
+                        rule="LEGACY_IMPORT",
+                        message=f"Legacy import pattern 'from src.{node.module[4:]}' detected",
+                        file=self.filename,
+                        line=node.lineno,
+                        severity=ViolationSeverity.ERROR,
+                        suggestion=f"Use 'from {node.module[4:]}' instead",
+                    )
+                )
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -181,28 +193,32 @@ class SheriffVisitor(ast.NodeVisitor):
         """Common checks for function definitions."""
         # Check for duplicate definitions
         if node.name in self.defined_names:
-            self.violations.append(Violation(
-                rule="DUPLICATE_DEFINITION",
-                message=f"Duplicate function definition '{node.name}'",
-                file=self.filename,
-                line=node.lineno,
-                severity=ViolationSeverity.WARNING,
-                suggestion=f"Previously defined at line {self.defined_names[node.name]}",
-            ))
+            self.violations.append(
+                Violation(
+                    rule="DUPLICATE_DEFINITION",
+                    message=f"Duplicate function definition '{node.name}'",
+                    file=self.filename,
+                    line=node.lineno,
+                    severity=ViolationSeverity.WARNING,
+                    suggestion=f"Previously defined at line {self.defined_names[node.name]}",
+                )
+            )
         else:
             self.defined_names[node.name] = node.lineno
 
         # Check for return type hint on public functions
         is_public = not node.name.startswith("_")
         if is_public and node.returns is None:
-            self.violations.append(Violation(
-                rule="MISSING_RETURN_TYPE",
-                message=f"Public function '{node.name}' missing return type hint",
-                file=self.filename,
-                line=node.lineno,
-                severity=ViolationSeverity.WARNING,
-                suggestion=f"Add return type hint: def {node.name}(...) -> ReturnType:",
-            ))
+            self.violations.append(
+                Violation(
+                    rule="MISSING_RETURN_TYPE",
+                    message=f"Public function '{node.name}' missing return type hint",
+                    file=self.filename,
+                    line=node.lineno,
+                    severity=ViolationSeverity.WARNING,
+                    suggestion=f"Add return type hint: def {node.name}(...) -> ReturnType:",
+                )
+            )
 
         # Check function size
         size_limits = self.config.get("size_limits", {})
@@ -212,35 +228,41 @@ class SheriffVisitor(ast.NodeVisitor):
             warn_lines = size_limits.get("warn_function_lines", 50)
 
             if func_lines > max_lines:
-                self.violations.append(Violation(
-                    rule="FUNCTION_TOO_LONG",
-                    message=f"Function '{node.name}' is {func_lines} lines (max: {max_lines})",
-                    file=self.filename,
-                    line=node.lineno,
-                    severity=ViolationSeverity.ERROR,
-                    suggestion="Consider breaking this function into smaller functions",
-                ))
+                self.violations.append(
+                    Violation(
+                        rule="FUNCTION_TOO_LONG",
+                        message=f"Function '{node.name}' is {func_lines} lines (max: {max_lines})",
+                        file=self.filename,
+                        line=node.lineno,
+                        severity=ViolationSeverity.ERROR,
+                        suggestion="Consider breaking this function into smaller functions",
+                    )
+                )
             elif func_lines > warn_lines:
-                self.violations.append(Violation(
-                    rule="FUNCTION_TOO_LONG",
-                    message=f"Function '{node.name}' is {func_lines} lines (warn: {warn_lines})",
-                    file=self.filename,
-                    line=node.lineno,
-                    severity=ViolationSeverity.WARNING,
-                    suggestion="Consider refactoring for better maintainability",
-                ))
+                self.violations.append(
+                    Violation(
+                        rule="FUNCTION_TOO_LONG",
+                        message=f"Function '{node.name}' is {func_lines} lines (warn: {warn_lines})",
+                        file=self.filename,
+                        line=node.lineno,
+                        severity=ViolationSeverity.WARNING,
+                        suggestion="Consider refactoring for better maintainability",
+                    )
+                )
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         """Check class definitions for duplicates."""
         if node.name in self.defined_names:
-            self.violations.append(Violation(
-                rule="DUPLICATE_DEFINITION",
-                message=f"Duplicate class definition '{node.name}'",
-                file=self.filename,
-                line=node.lineno,
-                severity=ViolationSeverity.WARNING,
-                suggestion=f"Previously defined at line {self.defined_names[node.name]}",
-            ))
+            self.violations.append(
+                Violation(
+                    rule="DUPLICATE_DEFINITION",
+                    message=f"Duplicate class definition '{node.name}'",
+                    file=self.filename,
+                    line=node.lineno,
+                    severity=ViolationSeverity.WARNING,
+                    suggestion=f"Previously defined at line {self.defined_names[node.name]}",
+                )
+            )
         else:
             self.defined_names[node.name] = node.lineno
         self.generic_visit(node)
@@ -250,14 +272,16 @@ class SheriffVisitor(ast.NodeVisitor):
         if isinstance(node.value, str):
             for pattern in self.config.get("path_hygiene_patterns", []):
                 if pattern in node.value:
-                    self.violations.append(Violation(
-                        rule="HARDCODED_PATH",
-                        message=f"Hardcoded path pattern detected: '{pattern}'",
-                        file=self.filename,
-                        line=node.lineno,
-                        severity=ViolationSeverity.ERROR,
-                        suggestion="Use configuration or environment variables for paths",
-                    ))
+                    self.violations.append(
+                        Violation(
+                            rule="HARDCODED_PATH",
+                            message=f"Hardcoded path pattern detected: '{pattern}'",
+                            file=self.filename,
+                            line=node.lineno,
+                            severity=ViolationSeverity.ERROR,
+                            suggestion="Use configuration or environment variables for paths",
+                        )
+                    )
         self.generic_visit(node)
 
     def check_source_patterns(self) -> None:
@@ -266,14 +290,16 @@ class SheriffVisitor(ast.NodeVisitor):
             # Check for Path.home() patterns
             for pattern in self.config.get("path_hygiene_patterns", []):
                 if pattern in line and "# lattice:ignore" not in line:
-                    self.violations.append(Violation(
-                        rule="HARDCODED_PATH",
-                        message=f"Hardcoded path pattern: '{pattern}'",
-                        file=self.filename,
-                        line=i,
-                        severity=ViolationSeverity.ERROR,
-                        suggestion="Use configuration or environment variables for paths",
-                    ))
+                    self.violations.append(
+                        Violation(
+                            rule="HARDCODED_PATH",
+                            message=f"Hardcoded path pattern: '{pattern}'",
+                            file=self.filename,
+                            line=i,
+                            severity=ViolationSeverity.ERROR,
+                            suggestion="Use configuration or environment variables for paths",
+                        )
+                    )
 
 
 def analyze_file(filepath: Path, config: dict) -> list[Violation]:
@@ -284,39 +310,45 @@ def analyze_file(filepath: Path, config: dict) -> list[Violation]:
         source = filepath.read_text(encoding="utf-8")
         source_lines = source.splitlines()
     except (OSError, UnicodeDecodeError) as e:
-        violations.append(Violation(
-            rule="FILE_READ_ERROR",
-            message=str(e),
-            file=str(filepath),
-            line=0,
-            severity=ViolationSeverity.ERROR,
-        ))
+        violations.append(
+            Violation(
+                rule="FILE_READ_ERROR",
+                message=str(e),
+                file=str(filepath),
+                line=0,
+                severity=ViolationSeverity.ERROR,
+            )
+        )
         return violations
 
     # Check file size
     size_limits = config.get("size_limits", {})
     max_file_lines = size_limits.get("max_file_lines", 500)
     if len(source_lines) > max_file_lines:
-        violations.append(Violation(
-            rule="FILE_TOO_LONG",
-            message=f"File has {len(source_lines)} lines (max: {max_file_lines})",
-            file=str(filepath),
-            line=1,
-            severity=ViolationSeverity.WARNING,
-            suggestion="Consider splitting into multiple modules",
-        ))
+        violations.append(
+            Violation(
+                rule="FILE_TOO_LONG",
+                message=f"File has {len(source_lines)} lines (max: {max_file_lines})",
+                file=str(filepath),
+                line=1,
+                severity=ViolationSeverity.WARNING,
+                suggestion="Consider splitting into multiple modules",
+            )
+        )
 
     # Parse and analyze AST
     try:
         tree = ast.parse(source, filename=str(filepath))
     except SyntaxError as e:
-        violations.append(Violation(
-            rule="SYNTAX_ERROR",
-            message=str(e),
-            file=str(filepath),
-            line=e.lineno or 0,
-            severity=ViolationSeverity.ERROR,
-        ))
+        violations.append(
+            Violation(
+                rule="SYNTAX_ERROR",
+                message=str(e),
+                file=str(filepath),
+                line=e.lineno or 0,
+                severity=ViolationSeverity.ERROR,
+            )
+        )
         return violations
 
     visitor = SheriffVisitor(str(filepath), source_lines, config)
@@ -350,13 +382,15 @@ def run_sheriff(
     target = Path(target_path)
 
     if not target.exists():
-        result.add_violation(Violation(
-            rule="PATH_NOT_FOUND",
-            message=f"Target path does not exist: {target_path}",
-            file=target_path,
-            line=0,
-            severity=ViolationSeverity.ERROR,
-        ))
+        result.add_violation(
+            Violation(
+                rule="PATH_NOT_FOUND",
+                message=f"Target path does not exist: {target_path}",
+                file=target_path,
+                line=0,
+                severity=ViolationSeverity.ERROR,
+            )
+        )
         return result
 
     # Collect Python files
@@ -367,8 +401,7 @@ def run_sheriff(
         # Exclude common directories
         exclude_dirs = {"__pycache__", ".git", ".venv", "venv", "build", "dist", ".pytest_cache"}
         python_files = [
-            f for f in python_files
-            if not any(excluded in f.parts for excluded in exclude_dirs)
+            f for f in python_files if not any(excluded in f.parts for excluded in exclude_dirs)
         ]
 
     # Analyze each file
@@ -425,6 +458,7 @@ Examples:
 
         if config_path.exists():
             import yaml
+
             with open(config_path) as f:
                 if config_path.suffix in (".yaml", ".yml"):
                     config = yaml.safe_load(f)
@@ -435,15 +469,15 @@ Examples:
     try:
         target_path = resolve_under_root(args.target)
     except ValueError as e:
-         print(f"Error: {e}")
-         sys.exit(1)
-         
+        print(f"Error: {e}")
+        sys.exit(1)
+
     if args.config:
-         try:
-             resolve_under_root(args.config) # Just validate
-         except ValueError as e:
-             print(f"Error: {e}")
-             sys.exit(1)
+        try:
+            resolve_under_root(args.config)  # Just validate
+        except ValueError as e:
+            print(f"Error: {e}")
+            sys.exit(1)
 
     result = run_sheriff(target_path, config)
 
@@ -459,8 +493,12 @@ Examples:
         status = "PASSED" if result.passed else "FAILED"
         print(f"Sheriff: {status}")
         print(f"Files checked: {result.files_checked}")
-        print(f"Errors: {sum(1 for v in result.violations if v.severity == ViolationSeverity.ERROR)}")
-        print(f"Warnings: {sum(1 for v in result.violations if v.severity == ViolationSeverity.WARNING)}")
+        print(
+            f"Errors: {sum(1 for v in result.violations if v.severity == ViolationSeverity.ERROR)}"
+        )
+        print(
+            f"Warnings: {sum(1 for v in result.violations if v.severity == ViolationSeverity.WARNING)}"
+        )
 
     sys.exit(0 if result.passed else 1)
 

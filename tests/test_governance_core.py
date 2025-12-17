@@ -1,12 +1,12 @@
-import sys
 import os
-import pytest
+import sys
 from pathlib import Path
 
 # Add src to path
 sys.path.append(os.path.abspath("src"))
 
 from lattice_lock.core.compiler import compile_lattice
+
 
 def test_compiler_pipeline():
     """Test the full compilation pipeline with the example file."""
@@ -32,6 +32,7 @@ def test_compiler_pipeline():
     # Basic validation of result
     assert result.errors == []
     print("Compilation successful!")
+
 
 if __name__ == "__main__":
     # Allow running as a script

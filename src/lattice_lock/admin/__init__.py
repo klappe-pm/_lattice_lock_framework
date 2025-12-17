@@ -22,40 +22,40 @@ API Endpoints:
     GET  /api/v1/projects/{id}/rollback/checkpoints - List rollback checkpoints
 """
 
+# Application exports
+from lattice_lock.admin.api import create_app, run_server
+
 # Authentication exports
 from lattice_lock.admin.auth import (
     AuthConfig,
     Role,
-    User,
     TokenData,
-    create_access_token,
-    create_refresh_token,
-    verify_token,
-    verify_api_key,
-    get_current_user,
-    require_roles,
-    require_permission,
-    require_admin,
-    require_operator,
-    require_viewer,
-    generate_api_key,
-    revoke_token,
-    is_token_revoked,
-    revoke_api_key,
-    list_api_keys,
-    rotate_api_key,
-    create_user,
-    get_user,
+    User,
+    api_key_header,
     authenticate_user,
     configure,
+    create_access_token,
+    create_refresh_token,
+    create_user,
+    generate_api_key,
     get_config,
+    get_current_user,
+    get_user,
+    is_token_revoked,
+    list_api_keys,
     oauth2_scheme,
-    api_key_header,
+    require_admin,
+    require_operator,
+    require_permission,
+    require_roles,
+    require_viewer,
+    revoke_api_key,
+    revoke_token,
+    rotate_api_key,
+    verify_api_key,
+    verify_token,
 )
 from lattice_lock.admin.auth_routes import router as auth_router
-
-# Application exports
-from lattice_lock.admin.api import create_app, run_server
 
 # Model exports
 from lattice_lock.admin.models import (
@@ -72,12 +72,12 @@ from lattice_lock.admin.models import (
 
 # Route exports
 from lattice_lock.admin.routes import (
+    API_VERSION,
     add_rollback_checkpoint,
     record_project_error,
     update_validation_status,
-    router as admin_router,
-    API_VERSION,
 )
+from lattice_lock.admin.routes import router as admin_router
 
 # Schema exports
 from lattice_lock.admin.schemas import (

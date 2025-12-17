@@ -1,8 +1,9 @@
+from typing import Any
+
 import pytest
-from decimal import Decimal
-from typing import Any, Dict
 
 # Generated Test Contract for User
+
 
 class TestUserContract:
     """
@@ -11,25 +12,18 @@ class TestUserContract:
     """
 
     @pytest.fixture
-    def instance(self) -> Dict[str, Any]:
+    def instance(self) -> dict[str, Any]:
         """
         Fixture to provide an instance of User.
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-
             "id": None,
-
             "username": None,
-
             "email": None,
-
             "age": 0,
-
             "active": None,
-
         }
-
 
     def test_username_unique(self, instance: Any):
         """
@@ -37,7 +31,11 @@ class TestUserContract:
         Constraint: unique: True
         """
         # Field value extraction
-        value = instance.get("username") if isinstance(instance, dict) else getattr(instance, "username", None)
+        value = (
+            instance.get("username")
+            if isinstance(instance, dict)
+            else getattr(instance, "username", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
@@ -53,7 +51,11 @@ class TestUserContract:
         Constraint: unique: True
         """
         # Field value extraction
-        value = instance.get("email") if isinstance(instance, dict) else getattr(instance, "email", None)
+        value = (
+            instance.get("email")
+            if isinstance(instance, dict)
+            else getattr(instance, "email", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
@@ -69,14 +71,16 @@ class TestUserContract:
         Constraint: gte: 0
         """
         # Field value extraction
-        value = instance.get("age") if isinstance(instance, dict) else getattr(instance, "age", None)
+        value = (
+            instance.get("age") if isinstance(instance, dict) else getattr(instance, "age", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'age' is missing in the instance.")
 
         # Assertion
-        assert value >= 0, f'Expected age >= 0, got {value}'
+        assert value >= 0, f"Expected age >= 0, got {value}"
 
     def test_age_lte_150(self, instance: Any):
         """
@@ -84,15 +88,16 @@ class TestUserContract:
         Constraint: lte: 150
         """
         # Field value extraction
-        value = instance.get("age") if isinstance(instance, dict) else getattr(instance, "age", None)
+        value = (
+            instance.get("age") if isinstance(instance, dict) else getattr(instance, "age", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'age' is missing in the instance.")
 
         # Assertion
-        assert value <= 150, f'Expected age <= 150, got {value}'
-
+        assert value <= 150, f"Expected age <= 150, got {value}"
 
     # Boundary Tests
 

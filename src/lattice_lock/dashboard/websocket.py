@@ -9,11 +9,10 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, Dict, List, Optional, Set
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ConnectionInfo:
     """Information about a WebSocket connection."""
+
     websocket: WebSocket
     connected_at: float
     last_activity: float
@@ -45,12 +45,12 @@ class WebSocketManager:
 
     def __init__(self):
         """Initialize the WebSocket manager."""
-        self._connections: Dict[int, ConnectionInfo] = {}
+        self._connections: dict[int, ConnectionInfo] = {}
         self._heartbeat_task: Optional[asyncio.Task] = None
         self._running = False
 
     @property
-    def active_connections(self) -> List[WebSocket]:
+    def active_connections(self) -> list[WebSocket]:
         """Get list of active WebSocket connections."""
         return [info.websocket for info in self._connections.values()]
 
@@ -221,7 +221,7 @@ class WebSocketManager:
     async def _send_to_connection(
         self,
         websocket: WebSocket,
-        message: Dict[str, Any],
+        message: dict[str, Any],
     ) -> bool:
         """
         Send a message to a specific connection.
@@ -240,7 +240,7 @@ class WebSocketManager:
             logger.error("Failed to send to WebSocket: %s", e)
             return False
 
-    async def broadcast(self, message: Dict[str, Any]) -> int:
+    async def broadcast(self, message: dict[str, Any]) -> int:
         """
         Broadcast a message to all connected clients.
 
@@ -258,7 +258,7 @@ class WebSocketManager:
             message["timestamp"] = time.time()
 
         sent_count = 0
-        dead_connections: List[int] = []
+        dead_connections: list[int] = []
 
         for conn_id, info in list(self._connections.items()):
             try:
@@ -284,7 +284,7 @@ class WebSocketManager:
     async def broadcast_event(
         self,
         event_type: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         project_id: Optional[str] = None,
     ) -> int:
         """
@@ -312,7 +312,7 @@ class WebSocketManager:
     async def send_to_client(
         self,
         client_id: str,
-        message: Dict[str, Any],
+        message: dict[str, Any],
     ) -> bool:
         """
         Send a message to a specific client by ID.
@@ -331,7 +331,7 @@ class WebSocketManager:
         logger.warning("Client not found: %s", client_id)
         return False
 
-    def get_connection_stats(self) -> Dict[str, Any]:
+    def get_connection_stats(self) -> dict[str, Any]:
         """
         Get statistics about current connections.
 

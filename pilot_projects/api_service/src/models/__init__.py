@@ -13,6 +13,7 @@ from typing import Optional
 
 class OrderStatus(Enum):
     """Order status workflow states."""
+
     PENDING = "pending"
     CONFIRMED = "confirmed"
     PROCESSING = "processing"
@@ -23,6 +24,7 @@ class OrderStatus(Enum):
 
 class PaymentStatus(Enum):
     """Payment transaction status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -32,6 +34,7 @@ class PaymentStatus(Enum):
 
 class PaymentMethod(Enum):
     """Supported payment methods."""
+
     CREDIT_CARD = "credit_card"
     DEBIT_CARD = "debit_card"
     PAYPAL = "paypal"
@@ -40,6 +43,7 @@ class PaymentMethod(Enum):
 
 class Currency(Enum):
     """Supported currencies."""
+
     USD = "USD"
     EUR = "EUR"
     GBP = "GBP"
@@ -49,6 +53,7 @@ class Currency(Enum):
 @dataclass
 class User:
     """User account model."""
+
     id: int
     email: str
     password_hash: str
@@ -69,6 +74,7 @@ class User:
 @dataclass
 class Product:
     """Product catalog model."""
+
     id: int
     sku: str
     name: str
@@ -92,6 +98,7 @@ class Product:
 @dataclass
 class Order:
     """Customer order model."""
+
     id: int
     user_id: int
     status: OrderStatus
@@ -110,6 +117,7 @@ class Order:
 @dataclass
 class OrderItem:
     """Order line item model."""
+
     id: int
     order_id: int
     product_id: int
@@ -127,6 +135,7 @@ class OrderItem:
 @dataclass
 class Payment:
     """Payment transaction model."""
+
     id: int
     order_id: int
     amount_cents: int

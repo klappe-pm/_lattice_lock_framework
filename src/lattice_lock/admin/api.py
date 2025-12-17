@@ -7,16 +7,15 @@ request logging, and OpenAPI documentation.
 
 import logging
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
-from lattice_lock.admin.routes import router, API_VERSION
-
+from lattice_lock.admin.routes import API_VERSION, router
 
 # Configure logging
 logger = logging.getLogger("lattice_lock.admin")

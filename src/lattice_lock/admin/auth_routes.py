@@ -14,24 +14,22 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, Field
-
 from lattice_lock.admin.auth import (
+    APIKeyInfo,
     Role,
     TokenData,
     TokenResponse,
-    APIKeyInfo,
+    generate_api_key,
     get_current_user,
-    require_roles,
+    list_api_keys,
     login_for_access_token,
     refresh_access_token,
-    generate_api_key,
+    require_roles,
     revoke_api_key,
-    list_api_keys,
-    rotate_api_key,
     revoke_token,
+    rotate_api_key,
 )
-
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 

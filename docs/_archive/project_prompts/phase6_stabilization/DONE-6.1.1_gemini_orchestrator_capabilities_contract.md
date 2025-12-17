@@ -1,0 +1,102 @@
+# Orchestrator Capabilities Contract Design
+
+**Task ID:** 6.1.1
+**Phase:** 6.1 (Breaking Issues / Orchestrator Contract Hardening)
+**Author:** Gemini Antimatter
+**Status:** Approved Design
+
+## 1. Overview
+This document defines the strict contract for `ModelCapabilities` to resolve runtime `AttributeError`s in the CLI and Orchestrator. It establishes a single source of truth for model features, scores, and task suitabilities.
+
+## 2. Capability Contract Definition
+
+The `ModelCapabilities` Pydantic model in `src/lattice_lock_orchestrator/types.py` MUST support the following fields.
+
+### 2.1 Core Fields
+| Field | Type | Required? | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `model_id` | `str` | Yes | - | Unique identifier (e.g., `gpt-4-turbo`). |
+| `provider` | `Provider` | Yes | - | Enum: `openai`, `anthropic`, `google`. |
+| `context_window` | `int` | Yes | - | Total context tokens. |
+| `max_output_tokens` | `int` | Yes | 4096 | Maximum generation limit. |
+| `cost_per_1k_input` | `float` | Yes | 0.0 | Cost in USD. |
+| `cost_per_1k_output` | `float` | Yes | 0.0 | Cost in USD. |
+
+### 2.2 Feature Flags (Booleans)
+Explicit boolean flags are preferred over implicity derivation for clarity and speed.
+
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `supports_vision` | `bool` | `False` | Can process images/screenshots. |
+| `supports_function_calling` | `bool` | `False` | Native tool use support. |
+| `supports_json_mode` | `bool` | `False` | Native JSON output mode. |
+
+### 2.3 Scoring & Specialization
+To support the CLI and Orchestrator logic:
+
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `coding_score` | `float` | 0.0 | 0-100 rating for code generation. |
+| `reasoning_score` | `float` | 0.0 | 0-100 rating for logic/math. |
+| `task_scores` | `Dict[TaskType, float]` | `{}` | Specific scores per task type. |
+
+**Derived Properties (Computed Fields):**
+*   `code_specialized`: Returns `True` if `coding_score > 80`.
+*   `supports_reasoning`: Returns `True` if `reasoning_score > 70`.
+
+## 3. TaskType Enum Updates
+
+The `TaskType` enum in `src/lattice_lock_orchestrator/types.py` needs to be aligned with the new `TaskAnalyzer`.
+
+**Updates:**
+1.  **Add `VISION`**:  Needed for tasks requiring image analysis.
+    *   *Semantics*: Tasks that contain image inputs or reference UI layouts.
+2.  **Add `SECURITY_AUDIT`**: Explicit type for security scans.
+3.  **Add `CREATIVE_WRITING`**: For non-technical content.
+
+**Final List:**
+*   `CODE_GENERATION`
+*   `DEBUGGING`
+*   `ARCHITECTURAL_DESIGN`
+*   `DOCUMENTATION`
+*   `TESTING`
+*   `DATA_ANALYSIS`
+*   `REASONING`
+*   `VISION` (New)
+*   `SECURITY_AUDIT` (New)
+*   `CREATIVE_WRITING` (New)
+*   `GENERAL` (Fallback)
+
+## 4. Migration Strategy
+
+### 4.1 Updating `types.py`
+The `ModelCapabilities` class should use `pydantic.Field` with default factories to ensure backward compatibility during the transition.
+
+```python
+class ModelCapabilities(BaseModel):
+    # ... existing fields ...
+    task_scores: Dict[TaskType, float] = Field(default_factory=dict)
+
+    @property
+    def code_specialized(self) -> bool:
+        return self.coding_score >= 80.0
+
+    @property
+    def supports_reasoning(self) -> bool:
+        return self.reasoning_score >= 70.0
+```
+
+### 4.2 Updating Registry
+The `ModelRegistry` loader must be updated to populate `task_scores`. If explicit scores aren't provided in `lattice.yaml` (or internal database), they should be initialized based on generic `coding_score`/`reasoning_score`.
+
+## 5. Implementation Tasks (Devin AI)
+
+1.  **Modify `src/lattice_lock_orchestrator/types.py`**:
+    *   Update `TaskType` Enum.
+    *   Update `ModelCapabilities` with new fields and `@property` methods.
+2.  **Modify `scripts/orchestrator_cli.py`**:
+    *   Remove any ad-hoc attribute access if it doesn't match the new spec.
+    *   Update `display_models` function to use new attributes.
+3.  **Tests**:
+    *   `tests/test_types.py`: Verify defaults and property logic.
+    *   `tests/test_registry.py`: Ensure models load without validation errors.

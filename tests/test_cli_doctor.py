@@ -4,18 +4,17 @@ Tests for the Lattice Lock CLI doctor command.
 Tests environment health checks.
 """
 
-import pytest
-import sys
-from unittest.mock import patch, MagicMock
-from click.testing import CliRunner
+from unittest.mock import MagicMock, patch
 
+import pytest
+from click.testing import CliRunner
 from lattice_lock_cli.__main__ import cli
 from lattice_lock_cli.commands.doctor import (
-    _check_python_version,
-    _check_required_dependencies,
+    CheckResult,
     _check_git,
     _check_ollama,
-    CheckResult,
+    _check_python_version,
+    _check_required_dependencies,
 )
 
 

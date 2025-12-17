@@ -1,11 +1,13 @@
 import os
-import yaml
 from dataclasses import dataclass, field
-from typing import List, Optional, Any
+from typing import Any
+
+import yaml
+
 
 @dataclass
 class SheriffConfig:
-    forbidden_imports: List[str] = field(default_factory=list)
+    forbidden_imports: list[str] = field(default_factory=list)
     enforce_type_hints: bool = True
     target_version: str = "current"
     custom_rules: dict[str, Any] = field(default_factory=dict)
@@ -16,7 +18,7 @@ class SheriffConfig:
             return cls()
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 data = yaml.safe_load(f) or {}
 
             config_data = data.get("config", {})
@@ -25,7 +27,7 @@ class SheriffConfig:
                 forbidden_imports=config_data.get("forbidden_imports", []),
                 enforce_type_hints=config_data.get("enforce_type_hints", True),
                 target_version=config_data.get("target_version", "current"),
-                custom_rules=config_data.get("custom_rules", {})
+                custom_rules=config_data.get("custom_rules", {}),
             )
         except Exception:
             # Fallback to defaults on error

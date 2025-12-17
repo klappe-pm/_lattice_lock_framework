@@ -6,29 +6,26 @@ Coordinates the generation of LLM prompts from project specifications.
 
 import json
 import logging
-import os
 import re
 import time
-from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
 from lattice_lock.agents.prompt_architect.models import (
-    ToolType,
-    PromptStatus,
-    TaskPriority,
+    EpicSpec,
     FileOwnership,
-    ToolCapability,
-    TaskAssignment,
-    PromptContext,
-    PromptTemplate,
-    PromptOutput,
     GenerationRequest,
     GenerationResult,
     PhaseSpec,
-    EpicSpec,
+    PromptContext,
+    PromptOutput,
+    PromptStatus,
+    TaskAssignment,
+    TaskPriority,
     TaskSpec,
+    ToolCapability,
+    ToolType,
 )
 
 logger = logging.getLogger(__name__)
@@ -424,7 +421,9 @@ class PromptGenerator:
         if context.do_not_touch:
             sections.append("## Do NOT Touch")
             sections.append("")
-            sections.append("The following files are owned by other tools and must not be modified:")
+            sections.append(
+                "The following files are owned by other tools and must not be modified:"
+            )
             sections.append("")
             for path in context.do_not_touch:
                 sections.append(f"- `{path}`")
@@ -515,7 +514,7 @@ class PromptArchitectOrchestrator:
     def save_state(self) -> None:
         """Save the current state to disk."""
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
-        self._state["updated_at"] = datetime.utcnow().isoformat()
+        self._state["updated_at"] = datetime.now(timezone.utc).isoformat()
         self.state_file.write_text(json.dumps(self._state, indent=2))
 
     def generate_prompts(self, request: GenerationRequest) -> GenerationResult:
@@ -548,9 +547,7 @@ class PromptArchitectOrchestrator:
                         continue
 
                     try:
-                        prompt = self._generate_task_prompt(
-                            phase, epic, task, request
-                        )
+                        prompt = self._generate_task_prompt(phase, epic, task, request)
                         if prompt:
                             result.add_prompt(prompt)
                             if not request.dry_run:

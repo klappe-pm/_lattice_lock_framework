@@ -1,15 +1,16 @@
 import logging
 import random
-from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
+
 
 class ConsensusEngine:
     """
     Executes multi-model consensus strategies.
     dictating agreement between models.
     """
-    def execute_voting(self, prompt: str, models: List[str]) -> str:
+
+    def execute_voting(self, prompt: str, models: list[str]) -> str:
         """
         Queries multiple models and returns the majority vote.
         Simple logic for prototype; relies on mock responses.

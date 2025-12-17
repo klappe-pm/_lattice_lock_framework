@@ -4,44 +4,41 @@ Integration Test Suite for Model Orchestrator
 Tests all components work together with real APIs
 """
 
-import os
-import sys
 import asyncio
 import json
-from pathlib import Path
+import os
+import sys
 from datetime import datetime
-import time
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent))
 
+from api_clients import get_api_client
 from model_orchestrator import ModelOrchestrator, TaskType
 from model_orchestrator_v2 import ModelOrchestratorV2
-from zen_mcp_bridge import ZenMCPBridge, ModelRouter
-from api_clients import get_api_client
+from zen_mcp_bridge import ZenMCPBridge
+
 
 class IntegrationTester:
     def __init__(self):
         self.results = {
             "timestamp": datetime.now().isoformat(),
             "tests": [],
-            "summary": {
-                "total": 0,
-                "passed": 0,
-                "failed": 0,
-                "skipped": 0
-            }
+            "summary": {"total": 0, "passed": 0, "failed": 0, "skipped": 0},
         }
 
     def record_test(self, name: str, status: str, details: str = "", error: str = None):
         """Record test result"""
-        self.results["tests"].append({
-            "name": name,
-            "status": status,
-            "details": details,
-            "error": error,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.results["tests"].append(
+            {
+                "name": name,
+                "status": status,
+                "details": details,
+                "error": error,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
         self.results["summary"]["total"] += 1
         if status == "passed":
@@ -64,20 +61,28 @@ class IntegrationTester:
             requirements = orchestrator.analyze_task(prompt)
 
             if requirements.task_type == TaskType.CODE_GENERATION:
-                self.record_test("Base Orchestrator - Task Analysis", "passed",
-                               f"Correctly identified as {requirements.task_type.value}")
+                self.record_test(
+                    "Base Orchestrator - Task Analysis",
+                    "passed",
+                    f"Correctly identified as {requirements.task_type.value}",
+                )
             else:
-                self.record_test("Base Orchestrator - Task Analysis", "failed",
-                               error=f"Wrong task type: {requirements.task_type.value}")
+                self.record_test(
+                    "Base Orchestrator - Task Analysis",
+                    "failed",
+                    error=f"Wrong task type: {requirements.task_type.value}",
+                )
 
             # Test model selection
             model_id, model = orchestrator.select_model(prompt)
             if model_id and model:
-                self.record_test("Base Orchestrator - Model Selection", "passed",
-                               f"Selected: {model_id}")
+                self.record_test(
+                    "Base Orchestrator - Model Selection", "passed", f"Selected: {model_id}"
+                )
             else:
-                self.record_test("Base Orchestrator - Model Selection", "failed",
-                               error="No model selected")
+                self.record_test(
+                    "Base Orchestrator - Model Selection", "failed", error="No model selected"
+                )
 
         except Exception as e:
             self.record_test("Base Orchestrator", "failed", error=str(e))
@@ -89,7 +94,7 @@ class IntegrationTester:
         # Test Grok/xAI
         if os.getenv("XAI_API_KEY"):
             try:
-                client = get_api_client('xai')
+                client = get_api_client("xai")
                 providers_tested.append("xai")
                 self.record_test("API Client - xAI/Grok", "passed")
             except Exception as e:
@@ -100,7 +105,7 @@ class IntegrationTester:
         # Test OpenAI
         if os.getenv("OPENAI_API_KEY"):
             try:
-                client = get_api_client('openai')
+                client = get_api_client("openai")
                 providers_tested.append("openai")
                 self.record_test("API Client - OpenAI", "passed")
             except Exception as e:
@@ -111,7 +116,7 @@ class IntegrationTester:
         # Test Google
         if os.getenv("GOOGLE_API_KEY"):
             try:
-                client = get_api_client('google')
+                client = get_api_client("google")
                 providers_tested.append("google")
                 self.record_test("API Client - Google", "passed")
             except Exception as e:
@@ -130,29 +135,36 @@ class IntegrationTester:
             available = orchestrator.get_available_models()
 
             if available:
-                self.record_test("Orchestrator V2 - Initialization", "passed",
-                               f"{sum(len(m) for m in available.values())} models available")
+                self.record_test(
+                    "Orchestrator V2 - Initialization",
+                    "passed",
+                    f"{sum(len(m) for m in available.values())} models available",
+                )
 
                 # Test actual API call if we have models
                 try:
                     response = await orchestrator.route_request(
-                        prompt="What is 1+1? Answer with just the number.",
-                        strategy="cost_optimize"
+                        prompt="What is 1+1? Answer with just the number.", strategy="cost_optimize"
                     )
 
                     if response and response.content:
-                        self.record_test("Orchestrator V2 - API Call", "passed",
-                                       f"Model: {response.model}, Response: {response.content[:50]}")
+                        self.record_test(
+                            "Orchestrator V2 - API Call",
+                            "passed",
+                            f"Model: {response.model}, Response: {response.content[:50]}",
+                        )
                     else:
-                        self.record_test("Orchestrator V2 - API Call", "failed",
-                                       error="Empty response")
+                        self.record_test(
+                            "Orchestrator V2 - API Call", "failed", error="Empty response"
+                        )
 
                 except Exception as e:
                     self.record_test("Orchestrator V2 - API Call", "failed", error=str(e))
 
             else:
-                self.record_test("Orchestrator V2 - Initialization", "skipped",
-                               "No API clients available")
+                self.record_test(
+                    "Orchestrator V2 - Initialization", "skipped", "No API clients available"
+                )
 
         except Exception as e:
             self.record_test("Orchestrator V2", "failed", error=str(e))
@@ -165,21 +177,25 @@ class IntegrationTester:
             # Test tool discovery
             tools = bridge.zen_tools
             if tools:
-                self.record_test("Zen Bridge - Tool Discovery", "passed",
-                               f"Found {len(tools)} Zen tools")
+                self.record_test(
+                    "Zen Bridge - Tool Discovery", "passed", f"Found {len(tools)} Zen tools"
+                )
             else:
-                self.record_test("Zen Bridge - Tool Discovery", "failed",
-                               error="No Zen tools found")
+                self.record_test(
+                    "Zen Bridge - Tool Discovery", "failed", error="No Zen tools found"
+                )
 
             # Test model extension
             extended = bridge.extend_zen_models()
             if extended:
                 total_models = sum(len(models) for models in extended.values())
-                self.record_test("Zen Bridge - Model Extension", "passed",
-                               f"Extended with {total_models} models")
+                self.record_test(
+                    "Zen Bridge - Model Extension", "passed", f"Extended with {total_models} models"
+                )
             else:
-                self.record_test("Zen Bridge - Model Extension", "failed",
-                               error="No models extended")
+                self.record_test(
+                    "Zen Bridge - Model Extension", "failed", error="No models extended"
+                )
 
         except Exception as e:
             self.record_test("Zen Bridge", "failed", error=str(e))
@@ -194,17 +210,17 @@ class IntegrationTester:
                 # We have multiple providers, test consensus
                 consensus = await orchestrator.consensus_call(
                     prompt="What is the capital of France? Answer in one word.",
-                    num_models=min(3, sum(len(m) for m in available.values()))
+                    num_models=min(3, sum(len(m) for m in available.values())),
                 )
 
                 if consensus and consensus.get("consensus"):
-                    self.record_test("Consensus", "passed",
-                                   f"Used {len(consensus['models_used'])} models")
+                    self.record_test(
+                        "Consensus", "passed", f"Used {len(consensus['models_used'])} models"
+                    )
                 else:
                     self.record_test("Consensus", "failed", error="No consensus reached")
             else:
-                self.record_test("Consensus", "skipped",
-                               "Need at least 2 providers for consensus")
+                self.record_test("Consensus", "skipped", "Need at least 2 providers for consensus")
 
         except Exception as e:
             self.record_test("Consensus", "failed", error=str(e))
@@ -223,16 +239,14 @@ class IntegrationTester:
                 # Test streaming
                 chunks = []
                 async for chunk in orchestrator.stream_response(
-                    model_id=first_model,
-                    prompt="Count from 1 to 5"
+                    model_id=first_model, prompt="Count from 1 to 5"
                 ):
                     chunks.append(chunk)
                     if len(chunks) > 10:  # Limit chunks for testing
                         break
 
                 if chunks:
-                    self.record_test("Streaming", "passed",
-                                   f"Received {len(chunks)} chunks")
+                    self.record_test("Streaming", "passed", f"Received {len(chunks)} chunks")
                 else:
                     self.record_test("Streaming", "failed", error="No chunks received")
             else:
@@ -254,8 +268,9 @@ class IntegrationTester:
             report = orchestrator.get_cost_report()
 
             if report["total_cost"] > 0:
-                self.record_test("Cost Tracking", "passed",
-                               f"Total cost: ${report['total_cost']:.4f}")
+                self.record_test(
+                    "Cost Tracking", "passed", f"Total cost: ${report['total_cost']:.4f}"
+                )
             else:
                 self.record_test("Cost Tracking", "failed", error="No cost calculated")
 
@@ -264,9 +279,9 @@ class IntegrationTester:
 
     async def run_all_tests(self):
         """Run all integration tests"""
-        print("="*60)
+        print("=" * 60)
         print("Model Orchestrator Integration Tests")
-        print("="*60)
+        print("=" * 60)
         print()
 
         # Run tests
@@ -280,9 +295,9 @@ class IntegrationTester:
 
         # Summary
         print()
-        print("="*60)
+        print("=" * 60)
         print("Test Summary")
-        print("="*60)
+        print("=" * 60)
 
         summary = self.results["summary"]
         print(f"Total Tests: {summary['total']}")
@@ -290,7 +305,7 @@ class IntegrationTester:
         print(f"❌ Failed: {summary['failed']}")
         print(f"⏭️  Skipped: {summary['skipped']}")
 
-        pass_rate = (summary['passed'] / summary['total'] * 100) if summary['total'] > 0 else 0
+        pass_rate = (summary["passed"] / summary["total"] * 100) if summary["total"] > 0 else 0
         print(f"\nPass Rate: {pass_rate:.1f}%")
 
         # Save results
@@ -300,7 +315,8 @@ class IntegrationTester:
         print(f"\nDetailed results saved to: {results_file}")
 
         # Return success if no failures
-        return summary['failed'] == 0
+        return summary["failed"] == 0
+
 
 async def main():
     """Main test runner"""
@@ -309,6 +325,7 @@ async def main():
 
     # Exit with appropriate code
     sys.exit(0 if success else 1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

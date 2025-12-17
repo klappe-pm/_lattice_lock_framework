@@ -1,12 +1,12 @@
 """CLI command for submitting feedback."""
 
-import click
 from pathlib import Path
-from rich.console import Console
-from rich.prompt import Prompt
 
+import click
 from lattice_lock.feedback.collector import FeedbackCollector
 from lattice_lock.feedback.schemas import FeedbackCategory, FeedbackPriority
+from rich.console import Console
+from rich.prompt import Prompt
 
 console = Console()
 
@@ -16,22 +16,21 @@ DEFAULT_FEEDBACK_PATH = Path.home() / ".lattice_lock" / "feedback.json"
 
 @click.command()
 @click.option(
-    '--category', '-c',
-    type=click.Choice(['bug', 'feature', 'quality', 'metric', 'other']),
-    default='other',
-    help='Category of feedback'
+    "--category",
+    "-c",
+    type=click.Choice(["bug", "feature", "quality", "metric", "other"]),
+    default="other",
+    help="Category of feedback",
 )
 @click.option(
-    '--priority', '-p',
-    type=click.Choice(['low', 'medium', 'high', 'critical']),
-    default='medium',
-    help='Priority level'
+    "--priority",
+    "-p",
+    type=click.Choice(["low", "medium", "high", "critical"]),
+    default="medium",
+    help="Priority level",
 )
 @click.option(
-    '--storage', '-s',
-    type=click.Path(),
-    default=None,
-    help='Custom storage path for feedback'
+    "--storage", "-s", type=click.Path(), default=None, help="Custom storage path for feedback"
 )
 def feedback(category: str, priority: str, storage: str):
     """Submit feedback about Lattice Lock."""
@@ -53,10 +52,7 @@ def feedback(category: str, priority: str, storage: str):
         priority_enum = FeedbackPriority(priority)
 
         feedback_id = collector.submit(
-            content=content,
-            category=category_enum,
-            priority=priority_enum,
-            source="cli"
+            content=content, category=category_enum, priority=priority_enum, source="cli"
         )
 
         console.print(f"\n[green]Thank you! Feedback saved (ID: {feedback_id})[/green]")

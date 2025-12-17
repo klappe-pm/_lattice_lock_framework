@@ -1,11 +1,13 @@
 """LLM-assisted quality scoring for prompts."""
 
-import re
-import os
 import json
 import logging
-from typing import Any, Optional, Dict
+import os
+import re
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
+
 from .utils import parse_sections
 
 logger = logging.getLogger(__name__)
@@ -48,7 +50,7 @@ class QualityScorer:
         threshold: float = DEFAULT_THRESHOLD,
         use_llm: bool = True,
         llm_client: Optional[Any] = None,
-        model: str = "codellama:34b"
+        model: str = "codellama:34b",
     ):
         """
         Initialize the quality scorer.
@@ -83,7 +85,7 @@ class QualityScorer:
             return result
 
         try:
-            with open(prompt_path, 'r', encoding='utf-8') as f:
+            with open(prompt_path, encoding="utf-8") as f:
                 content = f.read()
         except Exception as e:
             result.feedback.append(f"Failed to read file: {e}")
@@ -116,9 +118,9 @@ class QualityScorer:
 
         # Calculate weighted overall score
         result.overall_score = (
-            result.clarity_score * self.WEIGHTS["clarity"] +
-            result.actionability_score * self.WEIGHTS["actionability"] +
-            result.completeness_score * self.WEIGHTS["completeness"]
+            result.clarity_score * self.WEIGHTS["clarity"]
+            + result.actionability_score * self.WEIGHTS["actionability"]
+            + result.completeness_score * self.WEIGHTS["completeness"]
         )
 
         # LLM-assisted scoring if available
@@ -126,15 +128,22 @@ class QualityScorer:
             llm_scores = await self._get_llm_scores(content)
             if llm_scores:
                 # Blend heuristic and LLM scores (60% heuristic, 40% LLM)
-                result.clarity_score = 0.6 * result.clarity_score + 0.4 * llm_scores.get("clarity", result.clarity_score)
-                result.actionability_score = 0.6 * result.actionability_score + 0.4 * llm_scores.get("actionability", result.actionability_score)
-                result.completeness_score = 0.6 * result.completeness_score + 0.4 * llm_scores.get("completeness", result.completeness_score)
+                result.clarity_score = 0.6 * result.clarity_score + 0.4 * llm_scores.get(
+                    "clarity", result.clarity_score
+                )
+                result.actionability_score = (
+                    0.6 * result.actionability_score
+                    + 0.4 * llm_scores.get("actionability", result.actionability_score)
+                )
+                result.completeness_score = 0.6 * result.completeness_score + 0.4 * llm_scores.get(
+                    "completeness", result.completeness_score
+                )
 
                 # Recalculate overall
                 result.overall_score = (
-                    result.clarity_score * self.WEIGHTS["clarity"] +
-                    result.actionability_score * self.WEIGHTS["actionability"] +
-                    result.completeness_score * self.WEIGHTS["completeness"]
+                    result.clarity_score * self.WEIGHTS["clarity"]
+                    + result.actionability_score * self.WEIGHTS["actionability"]
+                    + result.completeness_score * self.WEIGHTS["completeness"]
                 )
 
                 # Add LLM feedback
@@ -152,9 +161,7 @@ class QualityScorer:
 
         return result
 
-
-
-    def _score_clarity(self, content: str, sections: Dict[str, str]) -> float:
+    def _score_clarity(self, content: str, sections: dict[str, str]) -> float:
         """Score prompt clarity (1-10)."""
         score = 5.0  # Start at neutral
 
@@ -164,13 +171,13 @@ class QualityScorer:
             title = title_match.group(1)
             if len(title) > 10 and len(title) < 100:
                 score += 1.0
-            if re.search(r'\b(implement|create|add|fix|update|build)\b', title, re.I):
+            if re.search(r"\b(implement|create|add|fix|update|build)\b", title, re.I):
                 score += 0.5
 
         # Check Goal section clarity
         goal = sections.get("Goal", "")
         if goal:
-            sentences = re.split(r'(?<=[.!?])\s+', goal.strip())
+            sentences = re.split(r"(?<=[.!?])\s+", goal.strip())
             if 1 <= len(sentences) <= 3:
                 score += 1.0  # Clear, focused goal
             if len(goal) > 20:
@@ -180,18 +187,18 @@ class QualityScorer:
         context = sections.get("Context", "")
         if context:
             # Has file references
-            if re.search(r'`[^`]+`', context):
+            if re.search(r"`[^`]+`", context):
                 score += 0.5
             # Reasonable length
             if 50 < len(context) < 500:
                 score += 0.5
             # Mentions "existing" or "current" (shows context awareness)
-            if re.search(r'\b(existing|current|has)\b', context, re.I):
+            if re.search(r"\b(existing|current|has)\b", context, re.I):
                 score += 0.5
 
         return min(max(score, 1.0), 10.0)
 
-    def _score_actionability(self, sections: Dict[str, str]) -> float:
+    def _score_actionability(self, sections: dict[str, str]) -> float:
         """Score step actionability (1-10)."""
         score = 3.0  # Start lower
 
@@ -211,7 +218,7 @@ class QualityScorer:
 
         # Check for action verbs in steps
         action_verbs = [
-            r'\b(create|implement|add|update|fix|write|test|verify|run|check|ensure|validate|build)\b'
+            r"\b(create|implement|add|update|fix|write|test|verify|run|check|ensure|validate|build)\b"
         ]
         action_count = 0
         for step in step_lines:
@@ -226,16 +233,16 @@ class QualityScorer:
             score += action_ratio * 3.0
 
         # Check for specificity (file paths, function names)
-        if re.search(r'`[^`]+`', steps):
+        if re.search(r"`[^`]+`", steps):
             score += 1.0
 
         # Check for sub-steps (indicates detail)
-        if re.search(r'^\s+-\s', steps, re.MULTILINE):
+        if re.search(r"^\s+-\s", steps, re.MULTILINE):
             score += 0.5
 
         return min(max(score, 1.0), 10.0)
 
-    def _score_completeness(self, sections: Dict[str, str]) -> float:
+    def _score_completeness(self, sections: dict[str, str]) -> float:
         """Score prompt completeness (1-10)."""
         score = 0.0
 
@@ -267,7 +274,7 @@ class QualityScorer:
 
         return min(max(score, 1.0), 10.0)
 
-    async def _get_llm_scores(self, content: str) -> Optional[Dict[str, Any]]:
+    async def _get_llm_scores(self, content: str) -> Optional[dict[str, Any]]:
         """Get LLM-assisted scores for the prompt."""
         if not self.llm_client:
             return None
@@ -290,15 +297,13 @@ Return ONLY the JSON object, no other text.
 
         try:
             response = await self.llm_client.chat_completion(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3
+                model=self.model, messages=[{"role": "user", "content": prompt}], temperature=0.3
             )
 
             # Parse JSON from response
-            response_text = response.content if hasattr(response, 'content') else str(response)
+            response_text = response.content if hasattr(response, "content") else str(response)
             # Try to extract JSON from response
-            json_match = re.search(r'\{[^{}]*\}', response_text, re.DOTALL)
+            json_match = re.search(r"\{[^{}]*\}", response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
             return json.loads(response_text)
@@ -307,27 +312,23 @@ Return ONLY the JSON object, no other text.
             logger.warning(f"LLM scoring failed: {e}")
             return None
 
-    def _generate_feedback(self, result: QualityScore, sections: Dict[str, str]) -> None:
+    def _generate_feedback(self, result: QualityScore, sections: dict[str, str]) -> None:
         """Generate actionable feedback based on scores."""
         if result.clarity_score < 6:
             result.feedback.append(
                 "Low clarity score: Consider making the goal more specific and adding file references."
             )
-            result.suggestions.append(
-                "Add backtick-quoted file paths in Context section"
-            )
+            result.suggestions.append("Add backtick-quoted file paths in Context section")
 
         if result.actionability_score < 6:
-            result.feedback.append(
-                "Low actionability score: Steps may not be specific enough."
-            )
+            result.feedback.append("Low actionability score: Steps may not be specific enough.")
             if "Steps" in sections:
                 steps = sections["Steps"]
                 if len(re.findall(r"^\d+\.", steps, re.MULTILINE)) < 4:
                     result.suggestions.append(
                         "Add more detailed steps (aim for 4-8 numbered steps)"
                     )
-                if not re.search(r'`[^`]+`', steps):
+                if not re.search(r"`[^`]+`", steps):
                     result.suggestions.append(
                         "Include specific file paths or function names in steps"
                     )
@@ -338,12 +339,8 @@ Return ONLY the JSON object, no other text.
                 if section not in sections:
                     missing.append(section)
             if missing:
-                result.feedback.append(
-                    f"Missing sections: {', '.join(missing)}"
-                )
-                result.suggestions.append(
-                    f"Add the following sections: {', '.join(missing)}"
-                )
+                result.feedback.append(f"Missing sections: {', '.join(missing)}")
+                result.suggestions.append(f"Add the following sections: {', '.join(missing)}")
 
         # Add overall assessment
         if result.overall_score >= 8:

@@ -11,12 +11,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
-from lattice_lock_agents.prompt_architect.agent import (
-    PromptArchitectAgent,
-    GenerationResult,
-)
+from lattice_lock_agents.prompt_architect.agent import GenerationResult, PromptArchitectAgent
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import Task
 
 logger = logging.getLogger(__name__)
@@ -25,13 +22,14 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OrchestrationConfig:
     """Configuration for the orchestration pipeline."""
+
     spec_path: Optional[str] = None
     roadmap_path: Optional[str] = None
     output_dir: Optional[str] = None
     dry_run: bool = False
     from_project: bool = False
-    phases: Optional[List[str]] = None
-    tools: Optional[List[str]] = None
+    phases: Optional[list[str]] = None
+    tools: Optional[list[str]] = None
     max_retries: int = 3
     retry_delay: float = 1.0
 
@@ -39,6 +37,7 @@ class OrchestrationConfig:
 @dataclass
 class PipelineStage:
     """Represents a stage in the orchestration pipeline."""
+
     name: str
     status: str = "pending"  # pending, running, completed, failed, skipped
     start_time: Optional[datetime] = None
@@ -51,12 +50,13 @@ class PipelineStage:
 @dataclass
 class OrchestrationState:
     """State of the orchestration pipeline."""
-    stages: Dict[str, PipelineStage] = field(default_factory=dict)
+
+    stages: dict[str, PipelineStage] = field(default_factory=dict)
     spec_analysis: Any = None
     roadmap_structure: Any = None
-    tool_assignments: List[Any] = field(default_factory=list)
-    generated_prompts: List[Any] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    tool_assignments: list[Any] = field(default_factory=list)
+    generated_prompts: list[Any] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
 
@@ -110,8 +110,8 @@ class PromptOrchestrator:
         output_dir: Optional[str] = None,
         dry_run: bool = False,
         from_project: bool = False,
-        phases: Optional[List[str]] = None,
-        tools: Optional[List[str]] = None,
+        phases: Optional[list[str]] = None,
+        tools: Optional[list[str]] = None,
     ) -> GenerationResult:
         """
         Orchestrate the full prompt generation pipeline.
@@ -194,7 +194,9 @@ class PromptOrchestrator:
                     self.state.spec_analysis = self.agent.invoke_spec_analyzer(spec_path)
                     stage.result = self.state.spec_analysis
                     stage.status = "completed"
-                    logger.info(f"Spec analysis completed: {len(self.state.spec_analysis.requirements)} requirements found")
+                    logger.info(
+                        f"Spec analysis completed: {len(self.state.spec_analysis.requirements)} requirements found"
+                    )
                     break
                 except Exception as e:
                     stage.retries += 1
@@ -246,7 +248,9 @@ class PromptOrchestrator:
                     stage.retries += 1
                     if attempt == config.max_retries - 1:
                         raise
-                    logger.warning(f"Roadmap parsing attempt {attempt + 1} failed: {e}, retrying...")
+                    logger.warning(
+                        f"Roadmap parsing attempt {attempt + 1} failed: {e}, retrying..."
+                    )
                     await asyncio.sleep(config.retry_delay)
 
         except Exception as e:
@@ -279,7 +283,9 @@ class PromptOrchestrator:
                     self.state.tool_assignments = self.agent.invoke_tool_matcher(tasks)
                     stage.result = self.state.tool_assignments
                     stage.status = "completed"
-                    logger.info(f"Tool matching completed: {len(self.state.tool_assignments)} assignments")
+                    logger.info(
+                        f"Tool matching completed: {len(self.state.tool_assignments)} assignments"
+                    )
                     break
                 except Exception as e:
                     stage.retries += 1
@@ -342,7 +348,7 @@ class PromptOrchestrator:
 
         stage.end_time = datetime.now()
 
-    def _build_task_list(self, config: OrchestrationConfig) -> List[Task]:
+    def _build_task_list(self, config: OrchestrationConfig) -> list[Task]:
         """Build a list of tasks from the roadmap structure."""
         tasks = []
 
@@ -356,17 +362,19 @@ class PromptOrchestrator:
 
             for epic in phase.epics:
                 for task in epic.tasks:
-                    tasks.append(Task(
-                        id=task.id,
-                        description=task.description,
-                        files=task.files if hasattr(task, 'files') else [],
-                    ))
+                    tasks.append(
+                        Task(
+                            id=task.id,
+                            description=task.description,
+                            files=task.files if hasattr(task, "files") else [],
+                        )
+                    )
 
         return tasks
 
-    def _build_context_data(self, assignment: Any) -> Dict[str, Any]:
+    def _build_context_data(self, assignment: Any) -> dict[str, Any]:
         """Build context data for prompt generation."""
-        context_data: Dict[str, Any] = {
+        context_data: dict[str, Any] = {
             "task_id": assignment.task_id,
             "tool": assignment.tool,
             "files_owned": assignment.files_owned,
@@ -412,7 +420,10 @@ class PromptOrchestrator:
         # For now, try to find a default roadmap file
         default_paths = [
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
-            self.repo_root / "developer_documentation" / "development" / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root
+            / "developer_documentation"
+            / "development"
+            / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "ROADMAP.md",
         ]
 
@@ -427,13 +438,13 @@ class PromptOrchestrator:
     def _build_result(self) -> GenerationResult:
         """Build the final generation result."""
         # Calculate tool distribution
-        tool_distribution: Dict[str, int] = {}
+        tool_distribution: dict[str, int] = {}
         for assignment in self.state.tool_assignments:
             tool = assignment.tool
             tool_distribution[tool] = tool_distribution.get(tool, 0) + 1
 
         # Determine phases covered
-        phases_covered: List[str] = []
+        phases_covered: list[str] = []
         if self.state.roadmap_structure:
             phases_covered = [p.id for p in self.state.roadmap_structure.phases]
 
@@ -474,7 +485,7 @@ class PromptOrchestrator:
         """Get the status of a specific pipeline stage."""
         return self.state.stages.get(stage_name)
 
-    def get_all_stages(self) -> Dict[str, PipelineStage]:
+    def get_all_stages(self) -> dict[str, PipelineStage]:
         """Get all pipeline stages."""
         return self.state.stages
 
@@ -485,8 +496,8 @@ async def orchestrate_prompt_generation(
     output_dir: Optional[str] = None,
     dry_run: bool = False,
     from_project: bool = False,
-    phases: Optional[List[str]] = None,
-    tools: Optional[List[str]] = None,
+    phases: Optional[list[str]] = None,
+    tools: Optional[list[str]] = None,
     repo_root: Optional[Path] = None,
 ) -> GenerationResult:
     """

@@ -14,22 +14,16 @@ import hashlib
 import logging
 import os
 import secrets
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Annotated, Any
+from typing import Annotated
 
-from fastapi import Depends, HTTPException, Security, status
-from fastapi.security import (
-    APIKeyHeader,
-    OAuth2PasswordBearer,
-    OAuth2PasswordRequestForm,
-)
 import bcrypt
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import APIKeyHeader, OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
-
 
 logger = logging.getLogger("lattice_lock.admin.auth")
 
@@ -79,10 +73,9 @@ class AuthConfig:
         password_min_length: Minimum password length
     """
 
-    secret_key: str = field(default_factory=lambda: os.environ.get(
-        "LATTICE_LOCK_SECRET_KEY",
-        secrets.token_urlsafe(32)
-    ))
+    secret_key: str = field(
+        default_factory=lambda: os.environ.get("LATTICE_LOCK_SECRET_KEY", secrets.token_urlsafe(32))
+    )
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -507,10 +500,7 @@ def revoke_api_key(key_id: str) -> bool:
     Returns:
         True if key was revoked, False if not found
     """
-    keys_to_remove = [
-        key_hash for key_hash, (_, _, kid) in _api_keys.items()
-        if kid == key_id
-    ]
+    keys_to_remove = [key_hash for key_hash, (_, _, kid) in _api_keys.items() if kid == key_id]
 
     if not keys_to_remove:
         return False
@@ -534,16 +524,9 @@ def list_api_keys(username: str) -> list[APIKeyInfo]:
     Returns:
         List of API key metadata (not the actual keys)
     """
-    key_ids = [
-        key_id for key_hash, (user, _, key_id) in _api_keys.items()
-        if user == username
-    ]
+    key_ids = [key_id for key_hash, (user, _, key_id) in _api_keys.items() if user == username]
 
-    return [
-        _api_key_metadata[key_id]
-        for key_id in key_ids
-        if key_id in _api_key_metadata
-    ]
+    return [_api_key_metadata[key_id] for key_id in key_ids if key_id in _api_key_metadata]
 
 
 def rotate_api_key(key_id: str, name: str = "") -> tuple[str, str] | None:
@@ -635,6 +618,7 @@ def require_roles(*allowed_roles: Role):
         async def trigger_rollback():
             ...
     """
+
     async def role_checker(
         current_user: Annotated[TokenData, Depends(get_current_user)],
     ) -> TokenData:
@@ -657,6 +641,7 @@ def require_permission(permission: str):
     Returns:
         FastAPI dependency function
     """
+
     async def permission_checker(
         current_user: Annotated[TokenData, Depends(get_current_user)],
     ) -> TokenData:
@@ -704,9 +689,7 @@ def create_user(
         raise ValueError(f"User {username} already exists")
 
     if len(password) < config.password_min_length:
-        raise ValueError(
-            f"Password must be at least {config.password_min_length} characters"
-        )
+        raise ValueError(f"Password must be at least {config.password_min_length} characters")
 
     user = User(
         username=username,

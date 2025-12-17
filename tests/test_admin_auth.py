@@ -48,21 +48,14 @@ from lattice_lock.admin.auth import (
 )
 from lattice_lock.admin.auth_routes import router as auth_router
 
-# Test Secrets
-TEST_SECRET_KEY = os.getenv("LATTICE_TEST_SECRET_KEY", "test-secret-key-that-is-at-least-32-chars")
-TEST_PASSWORD = os.getenv("LATTICE_TEST_PASSWORD", "password123")
-ADMIN_PASSWORD = os.getenv("LATTICE_TEST_ADMIN_PASSWORD", "adminpass123")
-OPERATOR_PASSWORD = os.getenv("LATTICE_TEST_OPERATOR_PASSWORD", "operatorpass123")
-CUSTOM_SECRET_KEY = os.getenv("LATTICE_TEST_CUSTOM_SECRET_KEY", "custom-secret-key-that-is-at-least-32-chars")
-
 @pytest.fixture(autouse=True)
-def reset_auth_state():
+def reset_auth_state(auth_secrets):
     """Reset authentication state before each test."""
     clear_revoked_tokens()
     clear_api_keys()
     clear_users()
     configure(AuthConfig(
-        secret_key=TEST_SECRET_KEY,
+        secret_key=auth_secrets["SECRET_KEY"],
         access_token_expire_minutes=30,
         refresh_token_expire_days=7,
     ))
@@ -73,21 +66,21 @@ def reset_auth_state():
 
 
 @pytest.fixture
-def test_user() -> User:
+def test_user(auth_secrets) -> User:
     """Create a test user."""
-    return create_user("testuser", TEST_PASSWORD, Role.VIEWER)
+    return create_user("testuser", auth_secrets["PASSWORD"], Role.VIEWER)
 
 
 @pytest.fixture
-def admin_user() -> User:
+def admin_user(auth_secrets) -> User:
     """Create an admin test user."""
-    return create_user("adminuser", ADMIN_PASSWORD, Role.ADMIN)
+    return create_user("adminuser", auth_secrets["ADMIN_PASSWORD"], Role.ADMIN)
 
 
 @pytest.fixture
-def operator_user() -> User:
+def operator_user(auth_secrets) -> User:
     """Create an operator test user."""
-    return create_user("operatoruser", OPERATOR_PASSWORD, Role.OPERATOR)
+    return create_user("operatoruser", auth_secrets["OPERATOR_PASSWORD"], Role.OPERATOR)
 
 
 @pytest.fixture
@@ -116,10 +109,10 @@ class TestAuthConfig:
         assert config.api_key_prefix == "llk_"
         assert config.password_min_length == 8
 
-    def test_custom_config(self):
+    def test_custom_config(self, auth_secrets):
         """Test custom configuration."""
         custom_config = AuthConfig(
-            secret_key=CUSTOM_SECRET_KEY,
+            secret_key=auth_secrets["CUSTOM_SECRET_KEY"],
             access_token_expire_minutes=60,
             refresh_token_expire_days=14,
             api_key_prefix="custom_",
@@ -135,11 +128,11 @@ class TestAuthConfig:
         with pytest.raises(ValueError, match="at least 32 characters"):
             AuthConfig(secret_key="short")
 
-    def test_invalid_token_expiry_raises(self):
+    def test_invalid_token_expiry_raises(self, auth_secrets):
         """Test that invalid token expiry raises ValueError."""
         with pytest.raises(ValueError, match="at least 1 minute"):
             AuthConfig(
-                secret_key=TEST_SECRET_KEY,
+                secret_key=auth_secrets["SECRET_KEY"],
                 access_token_expire_minutes=0,
             )
 
@@ -147,23 +140,23 @@ class TestAuthConfig:
 class TestPasswordHashing:
     """Tests for password hashing."""
 
-    def test_hash_password(self):
+    def test_hash_password(self, auth_secrets):
         """Test password hashing."""
-        password = TEST_PASSWORD
+        password = auth_secrets["PASSWORD"]
         hashed = hash_password(password)
         assert hashed != password
         # Accept either argon2 or bcrypt hash prefixes
         assert hashed.startswith("$argon2") or hashed.startswith("$2b$")
 
-    def test_verify_password_correct(self):
+    def test_verify_password_correct(self, auth_secrets):
         """Test correct password verification."""
-        password = TEST_PASSWORD
+        password = auth_secrets["PASSWORD"]
         hashed = hash_password(password)
         assert verify_password(password, hashed) is True
 
-    def test_verify_password_incorrect(self):
+    def test_verify_password_incorrect(self, auth_secrets):
         """Test incorrect password verification."""
-        password = TEST_PASSWORD
+        password = auth_secrets["PASSWORD"]
         hashed = hash_password(password)
         assert verify_password("wrongpassword", hashed) is False
 
@@ -417,11 +410,11 @@ class TestRoles:
 class TestAuthRoutes:
     """Tests for authentication routes."""
 
-    def test_login_success(self, client: TestClient, test_user: User):
+    def test_login_success(self, client: TestClient, test_user: User, auth_secrets):
         """Test successful login."""
         response = client.post(
             "/api/v1/auth/token",
-            data={"username": test_user.username, "password": TEST_PASSWORD},
+            data={"username": test_user.username, "password": auth_secrets["PASSWORD"]},
         )
         assert response.status_code == 200
         data = response.json()
@@ -437,20 +430,20 @@ class TestAuthRoutes:
         )
         assert response.status_code == 401
 
-    def test_login_nonexistent_user(self, client: TestClient):
+    def test_login_nonexistent_user(self, client: TestClient, auth_secrets):
         """Test login with nonexistent user."""
         response = client.post(
             "/api/v1/auth/token",
-            data={"username": "nonexistent", "password": TEST_PASSWORD},
+            data={"username": "nonexistent", "password": auth_secrets["PASSWORD"]},
         )
         assert response.status_code == 401
 
-    def test_refresh_token(self, client: TestClient, test_user: User):
+    def test_refresh_token(self, client: TestClient, test_user: User, auth_secrets):
         """Test token refresh."""
         # First login to get tokens
         login_response = client.post(
             "/api/v1/auth/token",
-            data={"username": test_user.username, "password": TEST_PASSWORD},
+            data={"username": test_user.username, "password": auth_secrets["PASSWORD"]},
         )
         refresh_token = login_response.json()["refresh_token"]
 
@@ -463,11 +456,11 @@ class TestAuthRoutes:
         data = response.json()
         assert "access_token" in data
 
-    def test_get_me_with_token(self, client: TestClient, test_user: User):
+    def test_get_me_with_token(self, client: TestClient, test_user: User, auth_secrets):
         """Test getting current user info with token."""
         login_response = client.post(
             "/api/v1/auth/token",
-            data={"username": test_user.username, "password": TEST_PASSWORD},
+            data={"username": test_user.username, "password": auth_secrets["PASSWORD"]},
         )
         access_token = login_response.json()["access_token"]
 

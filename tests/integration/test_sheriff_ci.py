@@ -4,25 +4,23 @@ Tests output formats, GitHub annotations, JUnit XML, and caching behavior.
 """
 
 import json
-import os
 import tempfile
-import defusedxml.ElementTree as ET
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
+import defusedxml.ElementTree as ET
 import pytest
 from click.testing import CliRunner
-
 from lattice_lock_cli.commands.sheriff import sheriff_command
-from lattice_lock_sheriff.rules import Violation
+from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
 from lattice_lock_sheriff.formatters import (
-    TextFormatter,
-    JSONFormatter,
     GitHubFormatter,
+    JSONFormatter,
     JUnitFormatter,
+    TextFormatter,
     get_formatter,
 )
-from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
+from lattice_lock_sheriff.rules import Violation
 
 
 @pytest.fixture
@@ -37,8 +35,9 @@ def mock_validate_path():
     When caching is enabled, the CLI uses _validate_with_cache which calls
     validate_file_with_audit directly, so we need to mock both.
     """
-    with patch("lattice_lock_cli.commands.sheriff.validate_path_with_audit") as mock_path, \
-         patch("lattice_lock_cli.commands.sheriff.validate_file_with_audit") as mock_file:
+    with patch("lattice_lock_cli.commands.sheriff.validate_path_with_audit") as mock_path, patch(
+        "lattice_lock_cli.commands.sheriff.validate_file_with_audit"
+    ) as mock_file:
         # Make both return the same value
         mock_path.return_value = ([], [])
         mock_file.return_value = ([], [])
@@ -49,6 +48,7 @@ def mock_validate_path():
 def mock_config_from_yaml():
     with patch("lattice_lock_sheriff.config.SheriffConfig.from_yaml") as mock:
         from lattice_lock_sheriff.config import SheriffConfig
+
         mock.return_value = SheriffConfig()  # Return a default config
         yield mock
 
@@ -61,19 +61,19 @@ def sample_violations():
             rule_id="ForbiddenImport",
             message="Forbidden import: os",
             line_number=10,
-            filename="src/module.py"
+            filename="src/module.py",
         ),
         Violation(
             rule_id="SHERIFF_002",  # Use SHERIFF_002 for warning test compatibility
             message="Missing type hints for function 'process'",
             line_number=25,
-            filename="src/module.py"
+            filename="src/module.py",
         ),
         Violation(
             rule_id="ForbiddenImport",
             message="Forbidden import: subprocess",
             line_number=5,
-            filename="src/utils.py"
+            filename="src/utils.py",
         ),
     ]
 
@@ -81,6 +81,7 @@ def sample_violations():
 # =============================================================================
 # Output Format Tests
 # =============================================================================
+
 
 class TestTextFormatter:
     """Tests for text output formatter."""
@@ -168,10 +169,7 @@ class TestGitHubFormatter:
         """Test exact GitHub annotation format."""
         formatter = GitHubFormatter()
         violation = Violation(
-            rule_id="TestRule",
-            message="Test message",
-            line_number=42,
-            filename="test.py"
+            rule_id="TestRule", message="Test message", line_number=42, filename="test.py"
         )
         result = formatter.format([violation], Path("test.py"))
         # Should follow format: ::error file={file},line={line},title={rule_id}::{message}
@@ -283,6 +281,7 @@ class TestFormatterFactory:
 # CLI Format Option Tests
 # =============================================================================
 
+
 class TestCLIFormatOptions:
     """Tests for Sheriff CLI format options."""
 
@@ -298,10 +297,7 @@ class TestCLIFormatOptions:
 
     def test_format_github_option(self, runner, mock_validate_path, mock_config_from_yaml):
         violation = Violation(
-            rule_id="TestRule",
-            message="Test violation",
-            line_number=10,
-            filename="test.py"
+            rule_id="TestRule", message="Test violation", line_number=10, filename="test.py"
         )
         mock_validate_path.return_value = ([violation], [])
         with runner.isolated_filesystem():
@@ -334,6 +330,7 @@ class TestCLIFormatOptions:
 # =============================================================================
 # Caching Tests
 # =============================================================================
+
 
 class TestSheriffCache:
     """Tests for Sheriff caching behavior."""
@@ -470,10 +467,7 @@ class TestCLICacheOptions:
         """Test that caching is enabled by default."""
         # Create a violation so the cache has something to save
         violation = Violation(
-            rule_id="TestRule",
-            message="Test violation",
-            line_number=1,
-            filename="test.py"
+            rule_id="TestRule", message="Test violation", line_number=1, filename="test.py"
         )
         mock_validate_path.return_value = ([violation], [])
         with runner.isolated_filesystem():
@@ -499,8 +493,7 @@ class TestCLICacheOptions:
         with runner.isolated_filesystem():
             Path("test.py").touch()
             result = runner.invoke(
-                sheriff_command,
-                ["test.py", "--cache-dir", "custom_cache", "--no-cache"]
+                sheriff_command, ["test.py", "--cache-dir", "custom_cache", "--no-cache"]
             )
 
         # Just verify the option is accepted
@@ -522,32 +515,24 @@ class TestCLICacheOptions:
 # Error Handling Tests
 # =============================================================================
 
+
 class TestErrorHandling:
     """Tests for error handling in different output formats."""
 
     def test_error_json_format(self, runner):
-        result = runner.invoke(
-            sheriff_command,
-            ["nonexistent.py", "--format", "json"]
-        )
+        result = runner.invoke(sheriff_command, ["nonexistent.py", "--format", "json"])
         assert result.exit_code == 1
         data = json.loads(result.output)
         assert "error" in data
         assert data["success"] is False
 
     def test_error_github_format(self, runner):
-        result = runner.invoke(
-            sheriff_command,
-            ["nonexistent.py", "--format", "github"]
-        )
+        result = runner.invoke(sheriff_command, ["nonexistent.py", "--format", "github"])
         assert result.exit_code == 1
         assert "::error::" in result.output
 
     def test_error_junit_format(self, runner):
-        result = runner.invoke(
-            sheriff_command,
-            ["nonexistent.py", "--format", "junit"]
-        )
+        result = runner.invoke(sheriff_command, ["nonexistent.py", "--format", "junit"])
         assert result.exit_code == 1
         # Should be valid XML with error
         root = ET.fromstring(result.output)

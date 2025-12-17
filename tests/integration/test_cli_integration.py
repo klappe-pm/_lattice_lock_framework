@@ -4,12 +4,11 @@ Integration tests for the Lattice Lock CLI.
 Tests the full workflow: init -> validate -> doctor.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 from click.testing import CliRunner
-
 from lattice_lock_cli.__main__ import cli
-
 
 pytestmark = pytest.mark.integration
 
@@ -22,23 +21,33 @@ class TestFullWorkflow:
     ) -> None:
         """Test full workflow: init a project, validate it, run doctor."""
         # Step 1: Initialize a new project
-        init_result = cli_runner.invoke(cli, [
-            "init", "workflow_test",
-            "--template", "service",
-            "--output-dir", str(temp_project_dir),
-        ])
+        init_result = cli_runner.invoke(
+            cli,
+            [
+                "init",
+                "workflow_test",
+                "--template",
+                "service",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
         assert init_result.exit_code == 0, f"Init failed: {init_result.output}"
         # CLI output may vary - check for common success indicators
-        assert ("Created" in init_result.output or
-                "successfully" in init_result.output)
+        assert "Created" in init_result.output or "successfully" in init_result.output
 
         project_dir = temp_project_dir / "workflow_test"
         assert project_dir.exists()
 
         # Step 2: Validate the scaffolded project
-        validate_result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir),
-        ])
+        validate_result = cli_runner.invoke(
+            cli,
+            [
+                "validate",
+                "--path",
+                str(project_dir),
+            ],
+        )
         # Validation should at least run without crashing
         assert "Validating project at:" in validate_result.output
 
@@ -51,11 +60,17 @@ class TestFullWorkflow:
         self, cli_runner: CliRunner, temp_project_dir: Path
     ) -> None:
         """Test that init creates all expected files and directories."""
-        result = cli_runner.invoke(cli, [
-            "init", "complete_project",
-            "--template", "service",
-            "--output-dir", str(temp_project_dir),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "init",
+                "complete_project",
+                "--template",
+                "service",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         project_dir = temp_project_dir / "complete_project"
@@ -88,16 +103,20 @@ class TestFullWorkflow:
         for expected_dir in expected_dirs:
             assert expected_dir.is_dir(), f"Missing directory: {expected_dir}"
 
-    def test_init_verbose_output(
-        self, cli_runner: CliRunner, temp_project_dir: Path
-    ) -> None:
+    def test_init_verbose_output(self, cli_runner: CliRunner, temp_project_dir: Path) -> None:
         """Test that verbose mode shows detailed output."""
-        result = cli_runner.invoke(cli, [
-            "-v",
-            "init", "verbose_project",
-            "--template", "service",
-            "--output-dir", str(temp_project_dir),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "-v",
+                "init",
+                "verbose_project",
+                "--template",
+                "service",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Created directory:" in result.output or "Created file:" in result.output
@@ -106,11 +125,17 @@ class TestFullWorkflow:
         self, cli_runner: CliRunner, temp_project_dir: Path
     ) -> None:
         """Test init with agent template creates agent.yaml."""
-        result = cli_runner.invoke(cli, [
-            "init", "agent_workflow_test",
-            "--template", "agent",
-            "--output-dir", str(temp_project_dir),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "init",
+                "agent_workflow_test",
+                "--template",
+                "agent",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         project_dir = temp_project_dir / "agent_workflow_test"
@@ -127,11 +152,17 @@ class TestFullWorkflow:
         self, cli_runner: CliRunner, temp_project_dir: Path
     ) -> None:
         """Test init with library template creates library package."""
-        result = cli_runner.invoke(cli, [
-            "init", "lib_workflow_test",
-            "--template", "library",
-            "--output-dir", str(temp_project_dir),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "init",
+                "lib_workflow_test",
+                "--template",
+                "library",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
 
         assert result.exit_code == 0
         project_dir = temp_project_dir / "lib_workflow_test"
@@ -151,9 +182,14 @@ class TestValidateOnScaffoldedProject:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test that validate passes on a freshly scaffolded service project."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "validate",
+                "--path",
+                str(scaffolded_project),
+            ],
+        )
 
         # Should show validation output
         assert "Validating project at:" in result.output
@@ -168,9 +204,9 @@ class TestValidateOnScaffoldedProject:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test schema validation on freshly scaffolded project."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project), "--schema-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(scaffolded_project), "--schema-only"]
+        )
 
         assert "Schema Validation:" in result.output
         # lattice.yaml should be found
@@ -180,9 +216,9 @@ class TestValidateOnScaffoldedProject:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test structure validation on freshly scaffolded project."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project), "--structure-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(scaffolded_project), "--structure-only"]
+        )
 
         assert "Structure Validation:" in result.output
 
@@ -190,9 +226,9 @@ class TestValidateOnScaffoldedProject:
         self, scaffolded_agent_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test agent validation on freshly scaffolded agent project."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_agent_project), "--agents-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(scaffolded_agent_project), "--agents-only"]
+        )
 
         assert "Agent Manifest Validation:" in result.output
         # Agent file should be found since we used agent template
@@ -252,10 +288,15 @@ class TestCLIErrorHandling:
         self, cli_runner: CliRunner, temp_project_dir: Path
     ) -> None:
         """Test that init rejects invalid project names."""
-        result = cli_runner.invoke(cli, [
-            "init", "Invalid-Name",
-            "--output-dir", str(temp_project_dir),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "init",
+                "Invalid-Name",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
 
         assert result.exit_code != 0
         assert "Invalid project name" in result.output
@@ -268,19 +309,24 @@ class TestCLIErrorHandling:
         existing = temp_project_dir / "existing_project"
         existing.mkdir()
 
-        result = cli_runner.invoke(cli, [
-            "init", "existing_project",
-            "--output-dir", str(temp_project_dir),
-        ])
+        result = cli_runner.invoke(
+            cli,
+            [
+                "init",
+                "existing_project",
+                "--output-dir",
+                str(temp_project_dir),
+            ],
+        )
 
         assert result.exit_code != 0
         assert "already exists" in result.output
 
     def test_validate_handles_nonexistent_path(self, cli_runner: CliRunner) -> None:
         """Test that validate handles nonexistent paths."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", "/nonexistent/path/that/does/not/exist"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", "/nonexistent/path/that/does/not/exist"]
+        )
 
         # Click should reject invalid path
         assert result.exit_code != 0
@@ -292,9 +338,7 @@ class TestCLIErrorHandling:
         empty_dir = temp_project_dir / "empty"
         empty_dir.mkdir()
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(empty_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(empty_dir), "--schema-only"])
 
         # Should warn about missing files, not crash
         assert "No lattice.yaml found" in result.output

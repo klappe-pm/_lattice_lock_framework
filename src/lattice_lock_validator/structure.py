@@ -5,12 +5,7 @@ import argparse
 from pathlib import Path
 from typing import List
 from .schema import ValidationResult
-try:
-    from lattice_lock.utils.safe_path import resolve_under_root
-except ImportError:
-    # Fallback/mock for standalone run if needed, or assume installed
-    def resolve_under_root(path, root=None):
-        return Path(path).resolve()
+from lattice_lock.utils.safe_path import resolve_under_root
 
 
 def validate_repository_structure(repo_path: str) -> ValidationResult:
@@ -25,13 +20,16 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     """
     result = ValidationResult()
 
-    try:
-        # Sanitize the input path
-        # We don't enforce resolve_under_root against CWD here because the user might want to validate
-        # a repo located elsewhere. The repo_path itself becomes the root of trust.
-        repo_path = Path(repo_path).resolve()
-    except Exception as e:
-        result.add_error(str(e))
+    # Resolve the repo path (don't apply under-root check since users can validate any directory)
+    repo_path = Path(repo_path).expanduser().resolve()
+    
+    if not repo_path.exists():
+        result.add_error(f"Repository path not found: {repo_path}")
+        result.valid = False
+        return result
+    
+    if not repo_path.is_dir():
+        result.add_error(f"Repository path is not a directory: {repo_path}")
         result.valid = False
         return result
 
@@ -69,11 +67,8 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
 def validate_directory_structure(repo_path: str) -> ValidationResult:
     """Validates the directory structure against requirements."""
     result = ValidationResult()
-    try:
-        path = Path(repo_path).resolve()
-    except Exception as e:
-        result.add_error(str(e))
-        return result
+    # Resolve the path (don't apply under-root check since users can validate any directory)
+    path = Path(repo_path).expanduser().resolve()
 
     if not path.exists():
         result.add_error(f"Repository path not found: {repo_path}")

@@ -4,10 +4,10 @@ Specification Analyzer - Analyzes specification documents and extracts structure
 Supports markdown, YAML, and JSON specification formats with optional LLM enhancement.
 """
 
-import os
-import yaml
 from pathlib import Path
 from typing import Any, Optional
+
+import yaml
 
 from .models import (
     Component,
@@ -18,14 +18,12 @@ from .models import (
     Requirement,
     RequirementType,
     SpecificationAnalysis,
-    SpecificationMetadata,
 )
 from .parsers.spec_parser import (
     JSONSpecParser,
     MarkdownSpecParser,
     YAMLSpecParser,
     detect_parser,
-    get_parser_for_file,
 )
 
 
@@ -64,6 +62,7 @@ class LLMClient:
 
         try:
             import requests
+
             response = requests.get(f"{self.ollama_base_url}/api/tags", timeout=5)
             self._available = response.status_code == 200
         except Exception:
@@ -110,7 +109,8 @@ Specification:
             if response.status_code == 200:
                 result = response.json()
                 return self._parse_llm_response(result.get("response", ""))
-        except Exception:
+        except Exception as e:
+            logger.error(f"LLM extraction failed: {e}")
             pass
 
         return None
@@ -128,17 +128,19 @@ Specification:
         import re
 
         # Try to extract JSON from markdown code blocks
-        json_match = re.search(r'```(?:json)?\s*\n?(.+?)\n?```', response, re.DOTALL)
+        json_match = re.search(r"```(?:json)?\s*\n?(.+?)\n?```", response, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(1))
             except json.JSONDecodeError:
+                logger.warning("Failed to parse JSON from code block")
                 pass
 
         # Try to parse the entire response as JSON
         try:
             return json.loads(response)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse response as JSON: {e}")
             pass
 
         return None
@@ -167,11 +169,11 @@ class SpecAnalyzer:
         self.llm_client: Optional[LLMClient] = LLMClient() if use_llm else None
 
         self.parsers = {
-            '.md': MarkdownSpecParser(),
-            '.markdown': MarkdownSpecParser(),
-            '.yaml': YAMLSpecParser(),
-            '.yml': YAMLSpecParser(),
-            '.json': JSONSpecParser(),
+            ".md": MarkdownSpecParser(),
+            ".markdown": MarkdownSpecParser(),
+            ".yaml": YAMLSpecParser(),
+            ".yml": YAMLSpecParser(),
+            ".json": JSONSpecParser(),
         }
 
     def _load_config(self, config_path: Optional[str]) -> dict[str, Any]:
@@ -198,7 +200,7 @@ class SpecAnalyzer:
 
         if config_path and Path(config_path).exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     loaded_config = yaml.safe_load(f)
                     if loaded_config:
                         default_config.update(loaded_config)
@@ -230,14 +232,14 @@ class SpecAnalyzer:
         if not parser:
             raise ValueError(f"Unsupported file format: {suffix}")
 
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             content = f.read()
 
         result = parser.parse(content, str(path))
 
         # Update metadata
         result.metadata.source_file = str(path)
-        result.metadata.file_format = suffix.lstrip('.')
+        result.metadata.file_format = suffix.lstrip(".")
 
         # Optionally enhance with LLM
         if self.use_llm and self._should_use_llm(result):
@@ -387,6 +389,7 @@ class SpecAnalyzer:
                         try:
                             comp_data["layer"] = ComponentLayer(comp_data["layer"])
                         except ValueError:
+                            logger.warning(f"Invalid layer '{comp_data['layer']}' for component '{name}'. Defaulting to APPLICATION.")
                             comp_data["layer"] = ComponentLayer.APPLICATION
                     base.components.append(Component(**comp_data))
                     existing_component_names.add(name.lower())
@@ -401,6 +404,7 @@ class SpecAnalyzer:
                         try:
                             req_data["requirement_type"] = RequirementType(req_data.pop("type"))
                         except ValueError:
+                            logger.warning(f"Invalid requirement type '{req_data.get('type')}' for requirement '{req_id}'.")
                             pass
                     base.requirements.append(Requirement(**req_data))
                     existing_req_ids.add(req_id.lower())
@@ -415,9 +419,8 @@ class SpecAnalyzer:
                         try:
                             con_data["constraint_type"] = ConstraintType(con_data.pop("type"))
                         except ValueError:
+                            logger.warning(f"Invalid constraint type '{con_data.get('type')}' for constraint '{con_id}'.")
                             pass
-                    base.constraints.append(Constraint(**con_data))
-                    existing_constraint_ids.add(con_id.lower())
 
         base.llm_assisted = True
         return base

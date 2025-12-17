@@ -8,21 +8,18 @@ Tests cover:
 - WebSocket connections for real-time updates
 """
 
+
 import pytest
-import time
-from unittest.mock import patch, AsyncMock
-
 from fastapi.testclient import TestClient
-
-from lattice_lock.dashboard.metrics import MetricsCollector, MetricsSnapshot
-from lattice_lock.dashboard.aggregator import DataAggregator, DashboardSummary, ProjectInfo
-from lattice_lock.dashboard.backend import create_app, get_aggregator, get_ws_manager
+from lattice_lock.dashboard.aggregator import DataAggregator
+from lattice_lock.dashboard.backend import create_app
+from lattice_lock.dashboard.metrics import MetricsCollector
 from lattice_lock.dashboard.websocket import WebSocketManager
-
 
 # ============================================================================
 # Metrics Tests
 # ============================================================================
+
 
 class TestMetricsCollector:
     """Tests for the MetricsCollector class."""
@@ -128,6 +125,7 @@ class TestMetricsCollector:
 # ============================================================================
 # Aggregator Tests
 # ============================================================================
+
 
 class TestDataAggregator:
     """Tests for the DataAggregator class."""
@@ -267,6 +265,7 @@ class TestDataAggregator:
 # Backend Integration Tests
 # ============================================================================
 
+
 class TestDashboardBackend:
     """Tests for the FastAPI dashboard backend."""
 
@@ -359,8 +358,7 @@ class TestDashboardBackend:
     def test_update_project_status(self, client):
         """Test updating a project's status."""
         response = client.post(
-            "/dashboard/projects/proj1",
-            json={"status": "healthy", "details": {"version": "1.0"}}
+            "/dashboard/projects/proj1", json={"status": "healthy", "details": {"version": "1.0"}}
         )
         assert response.status_code == 200
 
@@ -405,6 +403,7 @@ class TestDashboardBackend:
 # ============================================================================
 # WebSocket Tests
 # ============================================================================
+
 
 class TestWebSocketManager:
     """Tests for the WebSocketManager class."""
@@ -483,6 +482,7 @@ class TestWebSocketEndpoint:
 # ============================================================================
 # OpenAPI Documentation Tests
 # ============================================================================
+
 
 class TestOpenAPIDocumentation:
     """Tests for OpenAPI documentation availability."""

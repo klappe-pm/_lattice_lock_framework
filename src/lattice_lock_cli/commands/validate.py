@@ -7,16 +7,14 @@ Runs validators on a Lattice Lock project.
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
-
 from lattice_lock_validator import (
-    validate_lattice_schema,
-    validate_env_file,
-    validate_agent_manifest,
-    validate_repository_structure,
     ValidationResult,
+    validate_agent_manifest,
+    validate_env_file,
+    validate_lattice_schema,
+    validate_repository_structure,
 )
 
 
@@ -56,15 +54,15 @@ def _auto_fix_file(file_path: Path, verbose: bool = False) -> int:
         original = content
 
         # Fix trailing whitespace
-        lines = content.split('\n')
+        lines = content.split("\n")
         new_lines = [line.rstrip() for line in lines]
         if lines != new_lines:
             fixes += sum(1 for i in range(len(lines)) if lines[i] != new_lines[i])
-            content = '\n'.join(new_lines)
+            content = "\n".join(new_lines)
 
         # Fix missing newline at EOF
-        if content and not content.endswith('\n'):
-            content += '\n'
+        if content and not content.endswith("\n"):
+            content += "\n"
             fixes += 1
 
         if content != original:
@@ -82,7 +80,7 @@ def _apply_fixes(path: Path, verbose: bool = False) -> int:
     total_fixes = 0
 
     # Common file extensions to fix
-    fix_extensions = {'.py', '.yaml', '.yml', '.md', '.txt', '.json', '.toml'}
+    fix_extensions = {".py", ".yaml", ".yml", ".md", ".txt", ".json", ".toml"}
 
     if path.is_file():
         if path.suffix in fix_extensions:
@@ -90,7 +88,9 @@ def _apply_fixes(path: Path, verbose: bool = False) -> int:
     elif path.is_dir():
         for root, dirs, files in os.walk(path):
             # Skip common non-source directories
-            dirs[:] = [d for d in dirs if d not in {'.git', '__pycache__', 'venv', 'node_modules', '.venv'}]
+            dirs[:] = [
+                d for d in dirs if d not in {".git", "__pycache__", "venv", "node_modules", ".venv"}
+            ]
 
             for filename in files:
                 file_path = Path(root) / filename
@@ -239,8 +239,18 @@ def validate_command(
         click.echo(click.style("✓ All validations passed!", fg="green", bold=True))
         sys.exit(0)
     elif all_valid:
-        click.echo(click.style(f"⚠ Validation passed with {total_warnings} warning(s)", fg="yellow", bold=True))
+        click.echo(
+            click.style(
+                f"⚠ Validation passed with {total_warnings} warning(s)", fg="yellow", bold=True
+            )
+        )
         sys.exit(0)
     else:
-        click.echo(click.style(f"✗ Validation failed: {total_errors} error(s), {total_warnings} warning(s)", fg="red", bold=True))
+        click.echo(
+            click.style(
+                f"✗ Validation failed: {total_errors} error(s), {total_warnings} warning(s)",
+                fg="red",
+                bold=True,
+            )
+        )
         sys.exit(1)

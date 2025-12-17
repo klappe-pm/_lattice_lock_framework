@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-import subprocess
 import json
-import re
-import sys
 import shutil
+import subprocess
+import sys
 
 # Try to import psutil for RAM monitoring, handle if missing
 try:
     import psutil
+
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
+
 
 class LocalModelAutomation:
     def __init__(self):
@@ -20,7 +21,7 @@ class LocalModelAutomation:
             "coding": ["code", "coder", "magicoder", "php", "python", "sql"],
             "reasoning": ["deepseek-r1", "o1", "reason", "math"],
             "vision": ["vision", "llava", "bakllava"],
-            "general": [] # Fallback
+            "general": [],  # Fallback
         }
 
     def check_ollama_installed(self):
@@ -41,7 +42,7 @@ class LocalModelAutomation:
                 print(f"Error running ollama list: {result.stderr}")
                 return []
 
-            lines = result.stdout.strip().split('\n')
+            lines = result.stdout.strip().split("\n")
             if len(lines) < 2:
                 return []
 
@@ -52,7 +53,7 @@ class LocalModelAutomation:
                 parts = line.split()
                 if len(parts) >= 3:
                     name = parts[0]
-                    size_str = parts[2] # e.g., "4.7GB"
+                    size_str = parts[2]  # e.g., "4.7GB"
 
                     # Convert size to GB float
                     size_gb = 0.0
@@ -61,11 +62,13 @@ class LocalModelAutomation:
                     elif "MB" in size_str:
                         size_gb = float(size_str.replace("MB", "")) / 1024
 
-                    parsed_models.append({
-                        "name": name,
-                        "size_gb": size_gb,
-                        "capabilities": self._categorize_model(name)
-                    })
+                    parsed_models.append(
+                        {
+                            "name": name,
+                            "size_gb": size_gb,
+                            "capabilities": self._categorize_model(name),
+                        }
+                    )
 
             self.models = parsed_models
             return parsed_models
@@ -122,13 +125,14 @@ class LocalModelAutomation:
             "system_info": {
                 "total_ram_gb": round(total_ram, 2) if total_ram else "Unknown",
                 "available_ram_gb": round(available_ram, 2) if available_ram else "Unknown",
-                "psutil_installed": PSUTIL_AVAILABLE
+                "psutil_installed": PSUTIL_AVAILABLE,
             },
             "model_count": len(self.models),
-            "models": self.models
+            "models": self.models,
         }
 
         return registry
+
 
 def main():
     automation = LocalModelAutomation()
@@ -142,13 +146,17 @@ def main():
         avail_ram = registry["system_info"]["available_ram_gb"]
 
         if isinstance(avail_ram, (int, float)):
-            safe_limit = avail_ram - 2.0 # Leave 2GB buffer
-            print(f"Available RAM for models: {avail_ram:.2f} GB (Safe limit: {safe_limit:.2f} GB)", file=sys.stderr)
+            safe_limit = avail_ram - 2.0  # Leave 2GB buffer
+            print(
+                f"Available RAM for models: {avail_ram:.2f} GB (Safe limit: {safe_limit:.2f} GB)",
+                file=sys.stderr,
+            )
 
             fits = [m["name"] for m in registry["models"] if m["size_gb"] <= safe_limit]
             print(f"Models that fit in memory: {', '.join(fits)}", file=sys.stderr)
         else:
             print("Install 'psutil' to enable RAM-based recommendations.", file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()

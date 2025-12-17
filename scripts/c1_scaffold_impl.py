@@ -1,7 +1,7 @@
-import os
-import sys
-import yaml
 from pathlib import Path
+
+import yaml
+
 
 def init_project(target_dir: str = "."):
     """
@@ -12,23 +12,13 @@ def init_project(target_dir: str = "."):
     print(f"Initializing Lattice Lock Project in {root.resolve()}...")
 
     # 1. Directory Structure
-    dirs = [
-        "src",
-        "tests/unit",
-        "tests/integration",
-        ".lattice",
-        "docs"
-    ]
+    dirs = ["src", "tests/unit", "tests/integration", ".lattice", "docs"]
     for d in dirs:
         (root / d).mkdir(parents=True, exist_ok=True)
         print(f"  [+] Created {d}/")
 
     # 2. Default Config
-    config = {
-        "version": "2.1",
-        "project": {"name": root.name},
-        "governance": {"strict": True}
-    }
+    config = {"version": "2.1", "project": {"name": root.name}, "governance": {"strict": True}}
     with open(root / "lattice.yaml", "w") as f:
         yaml.dump(config, f)
     print("  [+] Created lattice.yaml")
@@ -39,6 +29,7 @@ def init_project(target_dir: str = "."):
     print("  [+] Created .gitignore")
 
     print("\nProject Initialized Successfully.")
+
 
 if __name__ == "__main__":
     init_project()

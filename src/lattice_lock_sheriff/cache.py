@@ -1,22 +1,25 @@
-import json
 import hashlib
+import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 
 from .config import SheriffConfig
+
 
 class SheriffCache:
     def __init__(self, cache_dir: Path = Path(".sheriff_cache"), config_hash: str = ""):
         self.cache_dir = cache_dir
         self.config_hash = config_hash
         self.cache_file = self.cache_dir / f"sheriff_cache_{config_hash}.json"
-        self._cache: Dict[Path, Dict[str, Any]] = {}  # {file_path: {file_hash: str, violations: List[dict]}}
+        self._cache: dict[
+            Path, dict[str, Any]
+        ] = {}  # {file_path: {file_hash: str, violations: List[dict]}}
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_file_hash(self, file_path: Path) -> str:
         """Generates a SHA256 hash of the file's content."""
         if not file_path.is_file():
-            return "" # Or raise an error
+            return ""  # Or raise an error
         hasher = hashlib.sha256()
         with open(file_path, "rb") as f:
             while chunk := f.read(8192):
@@ -27,10 +30,10 @@ class SheriffCache:
         """Loads the cache from disk."""
         if self.cache_file.exists():
             try:
-                with open(self.cache_file, "r", encoding="utf-8") as f:
+                with open(self.cache_file, encoding="utf-8") as f:
                     data = json.load(f)
                     self._cache = {Path(k): v for k, v in data.items()}
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 # Log error and start with empty cache
                 print(f"Warning: Failed to load sheriff cache from {self.cache_file}: {e}")
                 self._cache = {}
@@ -44,7 +47,7 @@ class SheriffCache:
             serializable_cache = {str(k): v for k, v in self._cache.items()}
             with open(self.cache_file, "w", encoding="utf-8") as f:
                 json.dump(serializable_cache, f, indent=2)
-        except IOError as e:
+        except OSError as e:
             print(f"Error: Failed to save sheriff cache to {self.cache_file}: {e}")
 
     def clear(self) -> None:
@@ -53,10 +56,10 @@ class SheriffCache:
         if self.cache_file.exists():
             try:
                 self.cache_file.unlink()
-            except IOError as e:
+            except OSError as e:
                 print(f"Error: Failed to delete cache file {self.cache_file}: {e}")
 
-    def get_cached_violations(self, file_path: Path) -> Optional[List[Dict[str, Any]]]:
+    def get_cached_violations(self, file_path: Path) -> Optional[list[dict[str, Any]]]:
         """
         Retrieves cached violations for a file if its hash matches.
         Returns a list of dictionaries, not Violation objects.
@@ -67,25 +70,23 @@ class SheriffCache:
             return cached_data.get("violations")
         return None
 
-    def set_violations(self, file_path: Path, violations_data: List[Dict[str, Any]]) -> None:
+    def set_violations(self, file_path: Path, violations_data: list[dict[str, Any]]) -> None:
         """
         Caches violations for a file.
         Expects violations_data as a list of dictionaries (Violation.__dict__).
         """
         file_hash = self._get_file_hash(file_path)
-        self._cache[file_path] = {
-            "file_hash": file_hash,
-            "violations": violations_data
-        }
+        self._cache[file_path] = {"file_hash": file_hash, "violations": violations_data}
+
 
 def get_config_hash(config: SheriffConfig) -> str:
     """Generates a SHA256 hash of the SheriffConfig object."""
     # Convert config to a consistent dictionary representation, then hash
     config_dict = {
-        "forbidden_imports": sorted(config.forbidden_imports), # Ensure consistent order
+        "forbidden_imports": sorted(config.forbidden_imports),  # Ensure consistent order
         "enforce_type_hints": config.enforce_type_hints,
         "target_version": config.target_version,
-        "custom_rules": config.custom_rules # Assuming custom_rules is JSON-serializable
+        "custom_rules": config.custom_rules,  # Assuming custom_rules is JSON-serializable
     }
     config_json = json.dumps(config_dict, sort_keys=True)
     return hashlib.sha256(config_json.encode("utf-8")).hexdigest()

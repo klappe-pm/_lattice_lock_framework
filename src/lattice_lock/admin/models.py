@@ -168,9 +168,7 @@ class Project:
             else:
                 self.status = ProjectStatus.HEALTHY
         else:
-            critical_errors = [
-                e for e in unresolved_errors if e.severity in ("critical", "high")
-            ]
+            critical_errors = [e for e in unresolved_errors if e.severity in ("critical", "high")]
             if critical_errors:
                 self.status = ProjectStatus.ERROR
             else:

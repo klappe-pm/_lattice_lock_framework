@@ -4,16 +4,16 @@ Unified API Clients for all model providers
 Handles real API calls with error handling and retry logic
 """
 
-import os
 import json
-import time
-import asyncio
-from typing import Dict, List, Optional, Any, Union, AsyncIterator
-from enum import Enum
-import aiohttp
-import requests
-from tenacity import retry, stop_after_attempt, wait_exponential
 import logging
+import os
+import time
+from collections.abc import AsyncIterator
+from enum import Enum
+from typing import Optional, Union
+
+import aiohttp
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .types import APIResponse, FunctionCall
 
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ProviderStatus(Enum):
     """Provider maturity/availability status."""
+
     PRODUCTION = "production"  # Fully supported, tested, recommended
     BETA = "beta"  # Working but may have issues
     EXPERIMENTAL = "experimental"  # Use at own risk, may not work
@@ -33,8 +34,8 @@ class ProviderAvailability:
 
     _instance = None
     _checked = False
-    _status: Dict[str, ProviderStatus] = {}
-    _messages: Dict[str, str] = {}
+    _status: dict[str, ProviderStatus] = {}
+    _messages: dict[str, str] = {}
 
     # Required environment variables per provider
     REQUIRED_CREDENTIALS = {
@@ -67,7 +68,7 @@ class ProviderAvailability:
         return cls._instance
 
     @classmethod
-    def check_all_providers(cls) -> Dict[str, ProviderStatus]:
+    def check_all_providers(cls) -> dict[str, ProviderStatus]:
         """Check availability of all providers. Returns status dict."""
         instance = cls.get_instance()
         if instance._checked:
@@ -81,7 +82,9 @@ class ProviderAvailability:
                 instance._messages[provider] = f"Missing credentials: {', '.join(missing)}"
                 logger.warning(f"Provider '{provider}' unavailable: {instance._messages[provider]}")
             else:
-                instance._status[provider] = cls.PROVIDER_MATURITY.get(provider, ProviderStatus.EXPERIMENTAL)
+                instance._status[provider] = cls.PROVIDER_MATURITY.get(
+                    provider, ProviderStatus.EXPERIMENTAL
+                )
                 instance._messages[provider] = f"Status: {instance._status[provider].value}"
 
         instance._checked = True
@@ -107,7 +110,7 @@ class ProviderAvailability:
         return instance._messages.get(provider, "Unknown provider")
 
     @classmethod
-    def get_available_providers(cls) -> List[str]:
+    def get_available_providers(cls) -> list[str]:
         """Get list of available providers."""
         status = cls.check_all_providers()
         return [p for p, s in status.items() if s != ProviderStatus.UNAVAILABLE]
@@ -119,6 +122,7 @@ class ProviderAvailability:
         cls._checked = False
         cls._status = {}
         cls._messages = {}
+
 
 class BaseAPIClient:
     """Base class for all API clients"""
@@ -137,11 +141,7 @@ class BaseAPIClient:
             await self.session.close()
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-    async def _make_request(self,
-                           method: str,
-                           endpoint: str,
-                           headers: Dict,
-                           payload: Dict) -> Dict:
+    async def _make_request(self, method: str, endpoint: str, headers: dict, payload: dict) -> dict:
         """Make API request with retry logic"""
         if not self.session:
             self.session = aiohttp.ClientSession()
@@ -182,37 +182,37 @@ class BaseAPIClient:
             logger.error(f"Health check failed: {e}")
             return False
 
+
 class GrokAPIClient(BaseAPIClient):
     """xAI Grok API client with all models support"""
 
     def __init__(self, api_key: Optional[str] = None):
-        api_key = api_key or os.getenv('XAI_API_KEY')
+        api_key = api_key or os.getenv("XAI_API_KEY")
         if not api_key:
             raise ValueError("XAI_API_KEY not found")
         super().__init__(api_key, "https://api.x.ai/v1")
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             stream: bool = False,
-                             functions: Optional[List[Dict]] = None,
-                             tool_choice: Optional[Union[str, Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        functions: Optional[list[dict]] = None,
+        tool_choice: Optional[Union[str, dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Send chat completion request to Grok"""
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
         payload = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             "stream": stream,
-            **kwargs
+            **kwargs,
         }
 
         if max_tokens:
@@ -230,13 +230,13 @@ class GrokAPIClient(BaseAPIClient):
         response_content = None
         function_call = None
 
-        if data['choices'][0]['message'].get('content'):
-            response_content = data['choices'][0]['message']['content']
-        elif data['choices'][0]['message'].get('tool_calls'):
-            tool_call = data['choices'][0]['message']['tool_calls'][0]
+        if data["choices"][0]["message"].get("content"):
+            response_content = data["choices"][0]["message"]["content"]
+        elif data["choices"][0]["message"].get("tool_calls"):
+            tool_call = data["choices"][0]["message"]["tool_calls"][0]
             function_call = FunctionCall(
-                name=tool_call['function']['name'],
-                arguments=json.loads(tool_call['function']['arguments'])
+                name=tool_call["function"]["name"],
+                arguments=json.loads(tool_call["function"]["arguments"]),
             )
 
         return APIResponse(
@@ -244,67 +244,60 @@ class GrokAPIClient(BaseAPIClient):
             model=model,
             provider="xai",
             usage={
-                'input_tokens': data['usage']['prompt_tokens'],
-                'output_tokens': data['usage']['completion_tokens']
+                "input_tokens": data["usage"]["prompt_tokens"],
+                "output_tokens": data["usage"]["completion_tokens"],
             },
             latency_ms=latency_ms,
             raw_response=data,
-            function_call=function_call
+            function_call=function_call,
         )
 
-    async def _stream_completion(self, headers: Dict, payload: Dict) -> AsyncIterator[str]:
+    async def _stream_completion(self, headers: dict, payload: dict) -> AsyncIterator[str]:
         """Stream completion responses"""
-        payload['stream'] = True
+        payload["stream"] = True
 
         async with self.session.post(
-            f"{self.base_url}/chat/completions",
-            headers=headers,
-            json=payload
+            f"{self.base_url}/chat/completions", headers=headers, json=payload
         ) as response:
             async for line in response.content:
                 if line:
-                    line = line.decode('utf-8').strip()
+                    line = line.decode("utf-8").strip()
                     if line.startswith("data: ") and line != "data: [DONE]":
                         try:
                             chunk = json.loads(line[6:])
-                            if 'choices' in chunk and chunk['choices']:
-                                delta = chunk['choices'][0].get('delta', {})
-                                if 'content' in delta:
-                                    yield delta['content']
+                            if "choices" in chunk and chunk["choices"]:
+                                delta = chunk["choices"][0].get("delta", {})
+                                if "content" in delta:
+                                    yield delta["content"]
                         except json.JSONDecodeError:
                             continue
+
 
 class OpenAIAPIClient(BaseAPIClient):
     """OpenAI API client"""
 
     def __init__(self, api_key: Optional[str] = None):
-        api_key = api_key or os.getenv('OPENAI_API_KEY')
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found")
         super().__init__(api_key, "https://api.openai.com/v1")
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             stream: bool = False,
-                             functions: Optional[List[Dict]] = None,
-                             tool_choice: Optional[Union[str, Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        functions: Optional[list[dict]] = None,
+        tool_choice: Optional[Union[str, dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Send chat completion request to OpenAI"""
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
-        payload = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            **kwargs
-        }
+        payload = {"model": model, "messages": messages, "temperature": temperature, **kwargs}
 
         if max_tokens:
             payload["max_tokens"] = max_tokens
@@ -318,13 +311,13 @@ class OpenAIAPIClient(BaseAPIClient):
         response_content = None
         function_call = None
 
-        if data['choices'][0]['message'].get('content'):
-            response_content = data['choices'][0]['message']['content']
-        elif data['choices'][0]['message'].get('tool_calls'):
-            tool_call = data['choices'][0]['message']['tool_calls'][0]
+        if data["choices"][0]["message"].get("content"):
+            response_content = data["choices"][0]["message"]["content"]
+        elif data["choices"][0]["message"].get("tool_calls"):
+            tool_call = data["choices"][0]["message"]["tool_calls"][0]
             function_call = FunctionCall(
-                name=tool_call['function']['name'],
-                arguments=json.loads(tool_call['function']['arguments'])
+                name=tool_call["function"]["name"],
+                arguments=json.loads(tool_call["function"]["arguments"]),
             )
 
         return APIResponse(
@@ -332,30 +325,33 @@ class OpenAIAPIClient(BaseAPIClient):
             model=model,
             provider="openai",
             usage={
-                'input_tokens': data['usage']['prompt_tokens'],
-                'output_tokens': data['usage']['completion_tokens']
+                "input_tokens": data["usage"]["prompt_tokens"],
+                "output_tokens": data["usage"]["completion_tokens"],
             },
             latency_ms=latency_ms,
             raw_response=data,
-            function_call=function_call
+            function_call=function_call,
         )
+
 
 class GoogleAPIClient(BaseAPIClient):
     """Google Gemini API client"""
 
     def __init__(self, api_key: Optional[str] = None):
-        api_key = api_key or os.getenv('GOOGLE_API_KEY')
+        api_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found")
         super().__init__(api_key, "https://generativelanguage.googleapis.com/v1beta")
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             functions: Optional[List[Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        functions: Optional[list[dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Send chat completion request to Google Gemini"""
 
         headers = {
@@ -365,17 +361,19 @@ class GoogleAPIClient(BaseAPIClient):
         # Convert messages to Gemini format
         contents = []
         for msg in messages:
-            contents.append({
-                "parts": [{"text": msg["content"]}],
-                "role": "user" if msg["role"] == "user" else "model"
-            })
+            contents.append(
+                {
+                    "parts": [{"text": msg["content"]}],
+                    "role": "user" if msg["role"] == "user" else "model",
+                }
+            )
 
         payload = {
             "contents": contents,
             "generationConfig": {
                 "temperature": temperature,
                 "candidateCount": 1,
-            }
+            },
         }
 
         if max_tokens:
@@ -390,14 +388,13 @@ class GoogleAPIClient(BaseAPIClient):
         response_content = None
         function_call = None
 
-        if data['candidates'][0]['content'].get('parts'):
-            for part in data['candidates'][0]['content']['parts']:
-                if part.get('text'):
-                    response_content = part['text']
-                elif part.get('functionCall'):
+        if data["candidates"][0]["content"].get("parts"):
+            for part in data["candidates"][0]["content"]["parts"]:
+                if part.get("text"):
+                    response_content = part["text"]
+                elif part.get("functionCall"):
                     function_call = FunctionCall(
-                        name=part['functionCall']['name'],
-                        arguments=part['functionCall']['args']
+                        name=part["functionCall"]["name"], arguments=part["functionCall"]["args"]
                     )
 
         return APIResponse(
@@ -405,26 +402,27 @@ class GoogleAPIClient(BaseAPIClient):
             model=model,
             provider="google",
             usage={
-                'input_tokens': data['usageMetadata']['promptTokenCount'],
-                'output_tokens': data['usageMetadata']['candidatesTokenCount']
+                "input_tokens": data["usageMetadata"]["promptTokenCount"],
+                "output_tokens": data["usageMetadata"]["candidatesTokenCount"],
             },
             latency_ms=latency_ms,
             raw_response=data,
-            function_call=function_call
+            function_call=function_call,
         )
+
 
 class AnthropicAPIClient(BaseAPIClient):
     """Anthropic Claude API client (via DIAL or direct)"""
 
     def __init__(self, api_key: Optional[str] = None, use_dial: bool = False, **kwargs):
         if use_dial:
-            api_key = api_key or os.getenv('DIAL_API_KEY')
+            api_key = api_key or os.getenv("DIAL_API_KEY")
             if not api_key:
                 raise ValueError("DIAL_API_KEY not found")
             # Assuming DIAL endpoint - adjust as needed
             super().__init__(api_key, "https://dial.api.endpoint/v1")
         else:
-            api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
+            api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
                 raise ValueError("ANTHROPIC_API_KEY not found")
             super().__init__(api_key, "https://api.anthropic.com/v1")
@@ -432,13 +430,15 @@ class AnthropicAPIClient(BaseAPIClient):
         self.use_dial = use_dial
         self.anthropic_version = kwargs.get("api_version", "2023-06-01")
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             functions: Optional[List[Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        functions: Optional[list[dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Send chat completion request to Anthropic/DIAL"""
 
         response_content = None
@@ -448,30 +448,27 @@ class AnthropicAPIClient(BaseAPIClient):
             # DIAL format (OpenAI-compatible)
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
-            payload = {
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                **kwargs
-            }
+            payload = {"model": model, "messages": messages, "temperature": temperature, **kwargs}
 
             if max_tokens:
                 payload["max_tokens"] = max_tokens
             if functions:
                 payload["tools"] = [{"type": "function", "function": f} for f in functions]
 
-            data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
+            data, latency_ms = await self._make_request(
+                "POST", "chat/completions", headers, payload
+            )
 
-            if data['choices'][0]['message'].get('content'):
-                response_content = data['choices'][0]['message']['content']
-            elif data['choices'][0]['message'].get('tool_calls'):
-                tool_call = data['choices'][0]['message']['tool_calls'][0]
+            if data["choices"][0]["message"].get("content"):
+                response_content = data["choices"][0]["message"]["content"]
+            elif data["choices"][0]["message"].get("tool_calls"):
+                tool_call = data["choices"][0]["message"]["tool_calls"][0]
                 function_call = FunctionCall(
-                    name=tool_call['function']['name'],
-                    arguments=json.loads(tool_call['function']['arguments'])
+                    name=tool_call["function"]["name"],
+                    arguments=json.loads(tool_call["function"]["arguments"]),
                 )
 
             return APIResponse(
@@ -479,19 +476,19 @@ class AnthropicAPIClient(BaseAPIClient):
                 model=model,
                 provider="dial",
                 usage={
-                    'input_tokens': data['usage']['prompt_tokens'],
-                    'output_tokens': data['usage']['completion_tokens']
+                    "input_tokens": data["usage"]["prompt_tokens"],
+                    "output_tokens": data["usage"]["completion_tokens"],
                 },
                 latency_ms=latency_ms,
                 raw_response=data,
-                function_call=function_call
+                function_call=function_call,
             )
         else:
             # Direct Anthropic API
             headers = {
                 "x-api-key": self.api_key,
                 "anthropic-version": self.anthropic_version,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             # Convert to Anthropic format
@@ -502,17 +499,14 @@ class AnthropicAPIClient(BaseAPIClient):
                 if msg["role"] == "system":
                     system_msg = msg["content"]
                 else:
-                    claude_messages.append({
-                        "role": msg["role"],
-                        "content": msg["content"]
-                    })
+                    claude_messages.append({"role": msg["role"], "content": msg["content"]})
 
             payload = {
                 "model": model,
                 "messages": claude_messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens or 4096,
-                **kwargs
+                **kwargs,
             }
 
             if system_msg:
@@ -522,59 +516,52 @@ class AnthropicAPIClient(BaseAPIClient):
 
             data, latency_ms = await self._make_request("POST", "messages", headers, payload)
 
-            if data['content'][0].get('text'):
-                response_content = data['content'][0]['text']
-            elif data['content'][0].get('type') == 'tool_use':
-                tool_use = data['content'][0]
-                function_call = FunctionCall(
-                    name=tool_use['name'],
-                    arguments=tool_use['input']
-                )
+            if data["content"][0].get("text"):
+                response_content = data["content"][0]["text"]
+            elif data["content"][0].get("type") == "tool_use":
+                tool_use = data["content"][0]
+                function_call = FunctionCall(name=tool_use["name"], arguments=tool_use["input"])
 
             return APIResponse(
                 content=response_content,
                 model=model,
                 provider="anthropic",
                 usage={
-                    'input_tokens': data['usage']['input_tokens'],
-                    'output_tokens': data['usage']['output_tokens']
+                    "input_tokens": data["usage"]["input_tokens"],
+                    "output_tokens": data["usage"]["output_tokens"],
                 },
                 latency_ms=latency_ms,
                 raw_response=data,
-                function_call=function_call
+                function_call=function_call,
             )
+
 
 class AzureOpenAIClient(BaseAPIClient):
     """Azure OpenAI Service API client"""
 
     def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None, **kwargs):
-        api_key = api_key or os.getenv('AZURE_OPENAI_API_KEY')
-        endpoint = endpoint or os.getenv('AZURE_OPENAI_ENDPOINT')
+        api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
+        endpoint = endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
         if not api_key or not endpoint:
             raise ValueError("AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT required")
         self.api_version = kwargs.get("api_version", "2024-02-15-preview")
         super().__init__(api_key, endpoint)
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             functions: Optional[List[Dict]] = None,
-                             tool_choice: Optional[Union[str, Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        functions: Optional[list[dict]] = None,
+        tool_choice: Optional[Union[str, dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Send chat completion request to Azure OpenAI"""
 
-        headers = {
-            "api-key": self.api_key,
-            "Content-Type": "application/json"
-        }
+        headers = {"api-key": self.api_key, "Content-Type": "application/json"}
 
-        payload = {
-            "messages": messages,
-            "temperature": temperature,
-            **kwargs
-        }
+        payload = {"messages": messages, "temperature": temperature, **kwargs}
 
         if max_tokens:
             payload["max_tokens"] = max_tokens
@@ -590,13 +577,13 @@ class AzureOpenAIClient(BaseAPIClient):
         response_content = None
         function_call = None
 
-        if data['choices'][0]['message'].get('content'):
-            response_content = data['choices'][0]['message']['content']
-        elif data['choices'][0]['message'].get('tool_calls'):
-            tool_call = data['choices'][0]['message']['tool_calls'][0]
+        if data["choices"][0]["message"].get("content"):
+            response_content = data["choices"][0]["message"]["content"]
+        elif data["choices"][0]["message"].get("tool_calls"):
+            tool_call = data["choices"][0]["message"]["tool_calls"][0]
             function_call = FunctionCall(
-                name=tool_call['function']['name'],
-                arguments=json.loads(tool_call['function']['arguments'])
+                name=tool_call["function"]["name"],
+                arguments=json.loads(tool_call["function"]["arguments"]),
             )
 
         return APIResponse(
@@ -604,13 +591,14 @@ class AzureOpenAIClient(BaseAPIClient):
             model=model,
             provider="azure",
             usage={
-                'input_tokens': data['usage']['prompt_tokens'],
-                'output_tokens': data['usage']['completion_tokens']
+                "input_tokens": data["usage"]["prompt_tokens"],
+                "output_tokens": data["usage"]["completion_tokens"],
             },
             latency_ms=latency_ms,
             raw_response=data,
-            function_call=function_call
+            function_call=function_call,
         )
+
 
 class BedrockAPIClient(BaseAPIClient):
     """
@@ -635,15 +623,18 @@ class BedrockAPIClient(BaseAPIClient):
 
         # Import and initialize the actual Bedrock client
         from .providers.bedrock import BedrockClient
+
         self._bedrock_client = BedrockClient(region_name=region)
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             functions: Optional[List[Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        functions: Optional[list[dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """
         Send chat completion request to Amazon Bedrock.
 
@@ -665,10 +656,10 @@ class BedrockAPIClient(BaseAPIClient):
                 content=None,
                 model=model,
                 provider="bedrock",
-                usage={'input_tokens': 0, 'output_tokens': 0},
+                usage={"input_tokens": 0, "output_tokens": 0},
                 latency_ms=0,
                 raw_response={"error": error_msg},
-                error=error_msg
+                error=error_msg,
             )
 
         # Delegate to the actual Bedrock client (sync call)
@@ -677,7 +668,7 @@ class BedrockAPIClient(BaseAPIClient):
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens or 4096,
-                anthropic_version=self.anthropic_version
+                anthropic_version=self.anthropic_version,
             )
             return response
         except Exception as e:
@@ -686,37 +677,35 @@ class BedrockAPIClient(BaseAPIClient):
                 content=None,
                 model=model,
                 provider="bedrock",
-                usage={'input_tokens': 0, 'output_tokens': 0},
+                usage={"input_tokens": 0, "output_tokens": 0},
                 latency_ms=0,
-                error=str(e)
+                error=str(e),
             )
+
 
 class LocalModelClient(BaseAPIClient):
     """Local model client (Ollama/vLLM compatible)"""
 
     def __init__(self, base_url: Optional[str] = None):
-        base_url = base_url or os.getenv('CUSTOM_API_URL', 'http://localhost:11434/v1')
+        base_url = base_url or os.getenv("CUSTOM_API_URL", "http://localhost:11434/v1")
         # No API key needed for local models
         super().__init__("", base_url)
 
-    async def chat_completion(self,
-                             model: str,
-                             messages: List[Dict[str, str]],
-                             temperature: float = 0.7,
-                             max_tokens: Optional[int] = None,
-                             functions: Optional[List[Dict]] = None,
-                             tool_choice: Optional[Union[str, Dict]] = None,
-                             **kwargs) -> APIResponse:
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        functions: Optional[list[dict]] = None,
+        tool_choice: Optional[Union[str, dict]] = None,
+        **kwargs,
+    ) -> APIResponse:
         """Send chat completion request to local model"""
 
         headers = {"Content-Type": "application/json"}
 
-        payload = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            **kwargs
-        }
+        payload = {"model": model, "messages": messages, "temperature": temperature, **kwargs}
 
         if max_tokens:
             payload["max_tokens"] = max_tokens
@@ -726,18 +715,20 @@ class LocalModelClient(BaseAPIClient):
             payload["tool_choice"] = tool_choice
 
         try:
-            data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
+            data, latency_ms = await self._make_request(
+                "POST", "chat/completions", headers, payload
+            )
 
             response_content = None
             function_call = None
 
-            if data['choices'][0]['message'].get('content'):
-                response_content = data['choices'][0]['message']['content']
-            elif data['choices'][0]['message'].get('tool_calls'):
-                tool_call = data['choices'][0]['message']['tool_calls'][0]
+            if data["choices"][0]["message"].get("content"):
+                response_content = data["choices"][0]["message"]["content"]
+            elif data["choices"][0]["message"].get("tool_calls"):
+                tool_call = data["choices"][0]["message"]["tool_calls"][0]
                 function_call = FunctionCall(
-                    name=tool_call['function']['name'],
-                    arguments=json.loads(tool_call['function']['arguments'])
+                    name=tool_call["function"]["name"],
+                    arguments=json.loads(tool_call["function"]["arguments"]),
                 )
 
             return APIResponse(
@@ -745,17 +736,17 @@ class LocalModelClient(BaseAPIClient):
                 model=model,
                 provider="local",
                 usage={
-                    'input_tokens': data.get('usage', {}).get('prompt_tokens', 0),
-                    'output_tokens': data.get('usage', {}).get('completion_tokens', 0)
+                    "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+                    "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
                 },
                 latency_ms=latency_ms,
                 raw_response=data,
-                function_call=function_call
+                function_call=function_call,
             )
         except Exception as e:
             # Fallback for Ollama format IF no functions are being used
             if functions:
-                raise e # Re-raise if functions were provided, as fallback doesn't support them
+                raise e  # Re-raise if functions were provided, as fallback doesn't support them
 
             try:
                 ollama_payload = {
@@ -764,20 +755,23 @@ class LocalModelClient(BaseAPIClient):
                     "temperature": temperature,
                 }
 
-                async with self.session.post(f"{self.base_url}/api/generate", json=ollama_payload) as response:
+                async with self.session.post(
+                    f"{self.base_url}/api/generate", json=ollama_payload
+                ) as response:
                     data = await response.json()
 
                 return APIResponse(
-                    content=data['response'],
+                    content=data["response"],
                     model=model,
                     provider="local",
-                    usage={'input_tokens': 0, 'output_tokens': 0},
+                    usage={"input_tokens": 0, "output_tokens": 0},
                     latency_ms=0,
-                    raw_response=data
+                    raw_response=data,
                 )
             except (aiohttp.ClientError, KeyError, json.JSONDecodeError):
                 # Ollama fallback failed, re-raise original exception
                 raise e
+
 
 class ProviderUnavailableError(Exception):
     """Raised when a provider is unavailable due to missing credentials."""
@@ -811,26 +805,28 @@ def get_api_client(provider: str, check_availability: bool = True, **kwargs) -> 
 
     # Map provider aliases
     provider_aliases = {
-        'grok': 'xai',
-        'gemini': 'google',
-        'claude': 'anthropic',
-        'ollama': 'local',
+        "grok": "xai",
+        "gemini": "google",
+        "claude": "anthropic",
+        "ollama": "local",
     }
     provider_lower = provider_aliases.get(provider_lower, provider_lower)
 
     clients = {
-        'xai': GrokAPIClient,
-        'openai': OpenAIAPIClient,
-        'google': GoogleAPIClient,
-        'anthropic': AnthropicAPIClient,
-        'dial': lambda **kw: AnthropicAPIClient(use_dial=True, **kw),
-        'azure': AzureOpenAIClient,
-        'bedrock': BedrockAPIClient,
-        'local': LocalModelClient,
+        "xai": GrokAPIClient,
+        "openai": OpenAIAPIClient,
+        "google": GoogleAPIClient,
+        "anthropic": AnthropicAPIClient,
+        "dial": lambda **kw: AnthropicAPIClient(use_dial=True, **kw),
+        "azure": AzureOpenAIClient,
+        "bedrock": BedrockAPIClient,
+        "local": LocalModelClient,
     }
 
     if provider_lower not in clients:
-        raise ValueError(f"Unknown provider: {provider}. Available providers: {list(clients.keys())}")
+        raise ValueError(
+            f"Unknown provider: {provider}. Available providers: {list(clients.keys())}"
+        )
 
     # Check availability if requested
     if check_availability:

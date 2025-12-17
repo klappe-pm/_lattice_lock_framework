@@ -11,14 +11,9 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from lattice_lock.agents.prompt_architect.models import GenerationRequest, GenerationResult
+from lattice_lock.agents.prompt_architect.orchestrator import PromptArchitectOrchestrator
 from lattice_lock.utils.safe_path import resolve_under_root
-from lattice_lock.agents.prompt_architect.orchestrator import (
-    PromptArchitectOrchestrator,
-)
-from lattice_lock.agents.prompt_architect.models import (
-    GenerationRequest,
-    GenerationResult,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +41,8 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose output",
     )
@@ -249,10 +245,12 @@ def validate_prompts(prompt_dir: Path) -> dict:
         if missing_sections:
             results["invalid_count"] += 1
             results["valid"] = False
-            results["errors"].append({
-                "file": str(prompt_file),
-                "missing_sections": missing_sections,
-            })
+            results["errors"].append(
+                {
+                    "file": str(prompt_file),
+                    "missing_sections": missing_sections,
+                }
+            )
         else:
             results["valid_count"] += 1
 
@@ -261,24 +259,27 @@ def validate_prompts(prompt_dir: Path) -> dict:
 
 def format_result_json(result: GenerationResult) -> str:
     """Format generation result as JSON."""
-    return json.dumps({
-        "success": result.success,
-        "prompts_generated": result.prompts_generated,
-        "prompts_updated": result.prompts_updated,
-        "prompts_skipped": result.prompts_skipped,
-        "errors": result.errors,
-        "warnings": result.warnings,
-        "execution_time_seconds": result.execution_time_seconds,
-        "prompts": [
-            {
-                "prompt_id": p.prompt_id,
-                "task_id": p.task_id,
-                "tool": p.tool.value,
-                "file_path": p.file_path,
-            }
-            for p in result.generated_prompts
-        ],
-    }, indent=2)
+    return json.dumps(
+        {
+            "success": result.success,
+            "prompts_generated": result.prompts_generated,
+            "prompts_updated": result.prompts_updated,
+            "prompts_skipped": result.prompts_skipped,
+            "errors": result.errors,
+            "warnings": result.warnings,
+            "execution_time_seconds": result.execution_time_seconds,
+            "prompts": [
+                {
+                    "prompt_id": p.prompt_id,
+                    "task_id": p.task_id,
+                    "tool": p.tool.value,
+                    "file_path": p.file_path,
+                }
+                for p in result.generated_prompts
+            ],
+        },
+        indent=2,
+    )
 
 
 def print_result(result: GenerationResult, dry_run: bool = False) -> None:

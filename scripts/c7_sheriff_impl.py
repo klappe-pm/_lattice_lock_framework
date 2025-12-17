@@ -1,9 +1,8 @@
-
 # IMPLEMENTATION SKELETON (Agent C7)
 # Task 2.4: Sheriff CLI Wrapper Implementation
 
 import sys
-from pathlib import Path
+
 
 def run_sheriff(target_dir: str = "."):
     """
@@ -22,6 +21,7 @@ def run_sheriff(target_dir: str = "."):
         sys.exit(1)
     else:
         print("[PASS] No architecture violations found.")
+
 
 if __name__ == "__main__":
     run_sheriff()

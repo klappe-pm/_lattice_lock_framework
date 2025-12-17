@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -19,31 +19,34 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProjectScope:
     """Represents the scope of a project."""
+
     name: str
     description: str
-    goals: List[str] = field(default_factory=list)
-    constraints: List[str] = field(default_factory=list)
-    stakeholders: List[str] = field(default_factory=list)
+    goals: list[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    stakeholders: list[str] = field(default_factory=list)
     timeline: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class ProjectPhase:
     """Represents a phase in the project."""
+
     id: str
     name: str
     description: str
     status: str = "pending"  # pending, in_progress, completed
     start_date: Optional[str] = None
     end_date: Optional[str] = None
-    deliverables: List[str] = field(default_factory=list)
-    dependencies: List[str] = field(default_factory=list)
+    deliverables: list[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
 
 
 @dataclass
 class PendingTask:
     """Represents a pending task from the project."""
+
     id: str
     title: str
     description: str
@@ -51,14 +54,15 @@ class PendingTask:
     epic: str
     tool: Optional[str] = None
     priority: str = "medium"
-    files: List[str] = field(default_factory=list)
-    dependencies: List[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     status: str = "pending"
 
 
 @dataclass
 class InteractionLog:
     """Log entry for agent-to-agent interactions."""
+
     timestamp: datetime
     source_agent: str
     target_agent: str
@@ -66,7 +70,7 @@ class InteractionLog:
     summary: str
     tokens_used: int = 0
     duration_seconds: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ProjectAgentClient:
@@ -105,24 +109,22 @@ class ProjectAgentClient:
         self.agent_definitions_path = Path(
             agent_definitions_path or repo_root / "agent_definitions"
         )
-        self.agent_memory_path = Path(
-            agent_memory_path or repo_root / "agent_memory"
-        )
+        self.agent_memory_path = Path(agent_memory_path or repo_root / "agent_memory")
 
         # Load Project Agent definition
         self.project_agent_def = self._load_project_agent_definition()
 
         # Interaction log
-        self._interaction_log: List[InteractionLog] = []
+        self._interaction_log: list[InteractionLog] = []
 
-    def _load_project_agent_definition(self) -> Dict[str, Any]:
+    def _load_project_agent_definition(self) -> dict[str, Any]:
         """Load the Project Agent YAML definition."""
         def_path = self.agent_definitions_path / "project_agent" / "project_agent.yaml"
         if not def_path.exists():
             logger.warning(f"Project Agent definition not found at {def_path}")
             return {}
 
-        with open(def_path, "r") as f:
+        with open(def_path) as f:
             return yaml.safe_load(f) or {}
 
     def get_project_scope(self) -> ProjectScope:
@@ -147,9 +149,9 @@ class ProjectAgentClient:
             metadata=scope_data.get("metadata", {}),
         )
 
-    def _discover_project_scope(self) -> Dict[str, Any]:
+    def _discover_project_scope(self) -> dict[str, Any]:
         """Discover project scope from available sources."""
-        scope_data: Dict[str, Any] = {}
+        scope_data: dict[str, Any] = {}
 
         # Try to read from project memory
         project_memory_path = self.agent_memory_path / "projects"
@@ -191,7 +193,9 @@ class ProjectAgentClient:
         if not scope_data.get("name"):
             scope_data["name"] = "Lattice Lock Framework"
         if not scope_data.get("description"):
-            scope_data["description"] = "Governance-first framework for AI-assisted software development"
+            scope_data[
+                "description"
+            ] = "Governance-first framework for AI-assisted software development"
 
         return scope_data
 
@@ -234,13 +238,16 @@ class ProjectAgentClient:
 
         return phases[0] if phases else None
 
-    def _discover_phases(self) -> List[ProjectPhase]:
+    def _discover_phases(self) -> list[ProjectPhase]:
         """Discover project phases from available sources."""
-        phases: List[ProjectPhase] = []
+        phases: list[ProjectPhase] = []
 
         # Try to read from work breakdown structure
         wbs_paths = [
-            self.repo_root / "developer_documentation" / "development" / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root
+            / "developer_documentation"
+            / "development"
+            / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
         ]
 
@@ -253,25 +260,30 @@ class ProjectAgentClient:
 
         # Try to read from prompt tracker state
         if not phases:
-            state_path = self.repo_root / "implementation" / "project_prompts" / "project_prompts_state.json"
+            state_path = (
+                self.repo_root / "implementation" / "project_prompts" / "project_prompts_state.json"
+            )
             if state_path.exists():
                 import json
-                with open(state_path, "r") as f:
+
+                with open(state_path) as f:
                     state = json.load(f)
                 phase_defs = state.get("phase_definitions", {})
                 for phase_id, phase_name in phase_defs.items():
-                    phases.append(ProjectPhase(
-                        id=phase_id,
-                        name=phase_name,
-                        description=f"Phase {phase_id}: {phase_name}",
-                        status="pending",
-                    ))
+                    phases.append(
+                        ProjectPhase(
+                            id=phase_id,
+                            name=phase_name,
+                            description=f"Phase {phase_id}: {phase_name}",
+                            status="pending",
+                        )
+                    )
 
         return phases
 
-    def _parse_phases_from_wbs(self, content: str) -> List[ProjectPhase]:
+    def _parse_phases_from_wbs(self, content: str) -> list[ProjectPhase]:
         """Parse phases from Work Breakdown Structure content."""
-        phases: List[ProjectPhase] = []
+        phases: list[ProjectPhase] = []
         lines = content.split("\n")
 
         current_phase = None
@@ -306,7 +318,7 @@ class ProjectAgentClient:
         self,
         phase: Optional[str] = None,
         tool: Optional[str] = None,
-    ) -> List[PendingTask]:
+    ) -> list[PendingTask]:
         """
         Get pending tasks from the project.
 
@@ -318,17 +330,19 @@ class ProjectAgentClient:
             List of PendingTask objects.
         """
         self._log_interaction(
-            "get_pending_tasks",
-            f"Querying pending tasks (phase={phase}, tool={tool})"
+            "get_pending_tasks", f"Querying pending tasks (phase={phase}, tool={tool})"
         )
 
-        tasks: List[PendingTask] = []
+        tasks: list[PendingTask] = []
 
         # Read from prompt tracker state
-        state_path = self.repo_root / "implementation" / "project_prompts" / "project_prompts_state.json"
+        state_path = (
+            self.repo_root / "implementation" / "project_prompts" / "project_prompts_state.json"
+        )
         if state_path.exists():
             import json
-            with open(state_path, "r") as f:
+
+            with open(state_path) as f:
                 state = json.load(f)
 
             for prompt in state.get("prompts", []):
@@ -342,16 +356,18 @@ class ProjectAgentClient:
                 if tool and prompt.get("tool") != tool:
                     continue
 
-                tasks.append(PendingTask(
-                    id=prompt.get("id", ""),
-                    title=prompt.get("title", ""),
-                    description=prompt.get("title", ""),  # Use title as description
-                    phase=prompt.get("phase", ""),
-                    epic=prompt.get("epic", ""),
-                    tool=prompt.get("tool"),
-                    priority="medium",
-                    status="pending" if not prompt.get("picked_up") else "in_progress",
-                ))
+                tasks.append(
+                    PendingTask(
+                        id=prompt.get("id", ""),
+                        title=prompt.get("title", ""),
+                        description=prompt.get("title", ""),  # Use title as description
+                        phase=prompt.get("phase", ""),
+                        epic=prompt.get("epic", ""),
+                        tool=prompt.get("tool"),
+                        priority="medium",
+                        status="pending" if not prompt.get("picked_up") else "in_progress",
+                    )
+                )
 
         return tasks
 
@@ -387,7 +403,10 @@ class ProjectAgentClient:
         self._log_interaction("get_roadmap_path", "Discovering roadmap path")
 
         roadmap_paths = [
-            self.repo_root / "developer_documentation" / "development" / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root
+            / "developer_documentation"
+            / "development"
+            / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
             self.repo_root / "ROADMAP.md",
         ]
@@ -419,7 +438,7 @@ class ProjectAgentClient:
         self._interaction_log.append(log_entry)
         logger.debug(f"Interaction logged: {interaction_type} - {summary}")
 
-    def get_interaction_log(self) -> List[InteractionLog]:
+    def get_interaction_log(self) -> list[InteractionLog]:
         """Get the interaction log."""
         return self._interaction_log.copy()
 
@@ -452,9 +471,7 @@ class ProjectAgentClient:
         new_rows = []
         for log in self._interaction_log:
             date_str = log.timestamp.strftime("%Y-%m-%d")
-            new_rows.append(
-                f"| {date_str} | {log.target_agent} | {log.summary} |"
-            )
+            new_rows.append(f"| {date_str} | {log.target_agent} | {log.summary} |")
 
         if new_rows:
             # Append to the interaction table

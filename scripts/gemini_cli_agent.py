@@ -105,13 +105,11 @@ Workflow:
 WARNING:
   Some commands may be destructive (delete-stack, etc.).
   Always review before executing!
-        """
+        """,
     )
 
     parser.add_argument(
-        "task_id",
-        nargs="?",
-        help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
+        "task_id", nargs="?", help="Task ID (e.g., 2.2.1) or 'list' to show all tasks"
     )
 
     args = parser.parse_args()

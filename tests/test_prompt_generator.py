@@ -1,13 +1,15 @@
-import unittest
 import os
-import json
 import shutil
 import tempfile
-from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import datetime
+import unittest
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from lattice_lock_agents.prompt_architect.subagents.prompt_generator import PromptGenerator, GeneratedPrompt
+from lattice_lock_agents.prompt_architect.subagents.prompt_generator import (
+    GeneratedPrompt,
+    PromptGenerator,
+)
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
+
 
 class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
@@ -17,11 +19,16 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
 
         # Mock config
         self.config_path = os.path.join(self.test_dir, "config.yaml")
-        with open(self.config_path, 'w') as f:
-            f.write("agent:\n  model_selection:\n    default_provider: local\n    default_model: test-model")
+        with open(self.config_path, "w") as f:
+            f.write(
+                "agent:\n  model_selection:\n    default_provider: local\n    default_model: test-model"
+            )
 
         # Mock template
-        self.template_dir = os.path.join(os.path.dirname(__file__), "../src/lattice_lock_agents/prompt_architect/subagents/templates")
+        self.template_dir = os.path.join(
+            os.path.dirname(__file__),
+            "../src/lattice_lock_agents/prompt_architect/subagents/templates",
+        )
         # We'll patch the template path in the instance
 
     def tearDown(self):
@@ -53,7 +60,7 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
             tool="Codex",
             confidence=0.9,
             files_owned=["src/test.py"],
-            reasoning="Test reasoning"
+            reasoning="Test reasoning",
         )
 
         context_data = {
@@ -62,7 +69,7 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
             "epic_name": "Test Epic",
             "phase_name": "Test Phase",
             "context": "Test Context",
-            "goal": "Test Goal"
+            "goal": "Test Goal",
         }
 
         # Generate
@@ -77,7 +84,7 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
 
         # Verify file creation
         self.assertTrue(os.path.exists(prompt.file_path))
-        with open(prompt.file_path, 'r') as f:
+        with open(prompt.file_path) as f:
             content = f.read()
             self.assertIn("# Prompt 1.2.3 - Test Task", content)
 
@@ -93,17 +100,14 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
 
         generator = PromptGenerator(config_path=self.config_path)
 
-        assignment = ToolAssignment(
-            task_id="1.1.1",
-            tool="TestTool",
-            confidence=1.0
-        )
+        assignment = ToolAssignment(task_id="1.1.1", tool="TestTool", confidence=1.0)
         context = {"task_title": "Task", "task_description": "Desc"}
 
         steps = await generator._generate_steps(assignment, context)
 
         self.assertIn("1. Step A", steps)
         mock_client.chat_completion.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

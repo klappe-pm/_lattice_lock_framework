@@ -7,14 +7,13 @@ coordinates subagents, and manages the prompt generation workflow.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 import yaml
 
-from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 from lattice_lock_agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
+from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 from lattice_lock_agents.prompt_architect.subagents.tool_matcher import ToolMatcher
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
 
@@ -27,6 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AgentConfig:
     """Configuration loaded from the agent YAML definition."""
+
     name: str
     version: str
     description: str
@@ -41,15 +41,16 @@ class AgentConfig:
 @dataclass
 class GenerationResult:
     """Result of a prompt generation run."""
+
     status: str  # success, failure, partial
     prompts_generated: int = 0
     prompts_updated: int = 0
-    phases_covered: List[str] = field(default_factory=list)
-    tool_distribution: Dict[str, int] = field(default_factory=dict)
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
+    phases_covered: list[str] = field(default_factory=list)
+    tool_distribution: dict[str, int] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "status": self.status,
@@ -72,7 +73,9 @@ class PromptArchitectAgent:
     """
 
     DEFAULT_DEFINITION_PATH = "agent_definitions/prompt_architect_agent/prompt_architect_agent.yaml"
-    DEFAULT_TOOL_PROFILES_PATH = "agent_definitions/prompt_architect_agent/subagents/tool_matcher.yaml"
+    DEFAULT_TOOL_PROFILES_PATH = (
+        "agent_definitions/prompt_architect_agent/subagents/tool_matcher.yaml"
+    )
 
     def __init__(
         self,
@@ -106,7 +109,7 @@ class PromptArchitectAgent:
         self.config = self._parse_config()
 
         # Initialize state tracking
-        self._state: Dict[str, Any] = {
+        self._state: dict[str, Any] = {
             "current_phase": None,
             "prompts_generated": 0,
             "prompts_updated": 0,
@@ -124,13 +127,13 @@ class PromptArchitectAgent:
 
         logger.info(f"PromptArchitectAgent initialized: {self.config.name} v{self.config.version}")
 
-    def _load_definition(self) -> Dict[str, Any]:
+    def _load_definition(self) -> dict[str, Any]:
         """Load the YAML definition file."""
         if not self.definition_path.exists():
             logger.warning(f"Definition file not found at {self.definition_path}, using defaults")
             return {}
 
-        with open(self.definition_path, "r") as f:
+        with open(self.definition_path) as f:
             return yaml.safe_load(f) or {}
 
     def _parse_config(self) -> AgentConfig:
@@ -179,7 +182,8 @@ class PromptArchitectAgent:
         """Get or create the PromptGenerator subagent."""
         if self._prompt_generator is None:
             config_path = str(
-                self.repo_root / "agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"
+                self.repo_root
+                / "agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"
             )
             from lattice_lock_agents.prompt_architect.subagents.prompt_generator import PromptGenerator
             self._prompt_generator = PromptGenerator(config_path=config_path)
@@ -192,7 +196,7 @@ class PromptArchitectAgent:
             self._tracker_client = TrackerClient(repo_root=self.repo_root)
         return self._tracker_client
 
-    def get_definition(self) -> Dict[str, Any]:
+    def get_definition(self) -> dict[str, Any]:
         """Get the full agent definition."""
         return self.definition
 
@@ -200,7 +204,7 @@ class PromptArchitectAgent:
         """Get the parsed agent configuration."""
         return self.config
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get the current agent state."""
         return self._state.copy()
 
@@ -215,12 +219,12 @@ class PromptArchitectAgent:
             "end_time": None,
         }
 
-    def get_subagents(self) -> List[Dict[str, Any]]:
+    def get_subagents(self) -> list[dict[str, Any]]:
         """Get the list of configured subagents from the definition."""
         delegation = self.definition.get("delegation", {})
         return delegation.get("allowed_subagents", [])
 
-    def get_model_strategy(self, task_type: str) -> Dict[str, Any]:
+    def get_model_strategy(self, task_type: str) -> dict[str, Any]:
         """
         Get the model selection strategy for a specific task type.
 
@@ -232,13 +236,16 @@ class PromptArchitectAgent:
         """
         model_selection = self.definition.get("model_selection", {})
         strategies = model_selection.get("strategies", {})
-        return strategies.get(task_type, {
-            "primary": self.config.default_model,
-            "fallback": "claude-sonnet-4.5",
-            "selection_criteria": "balanced",
-        })
+        return strategies.get(
+            task_type,
+            {
+                "primary": self.config.default_model,
+                "fallback": "claude-sonnet-4.5",
+                "selection_criteria": "balanced",
+            },
+        )
 
-    def get_guardrails(self) -> List[str]:
+    def get_guardrails(self) -> list[str]:
         """Get the list of guardrails from the definition."""
         return self.definition.get("guardrails", [])
 
@@ -298,7 +305,7 @@ class PromptArchitectAgent:
         self._state["current_phase"] = "roadmap_parsing"
         return self.roadmap_parser.parse(roadmap_path)
 
-    def invoke_tool_matcher(self, tasks: List[Any]) -> List[Any]:
+    def invoke_tool_matcher(self, tasks: list[Any]) -> list[Any]:
         """
         Invoke the tool_matcher subagent.
 
@@ -315,7 +322,7 @@ class PromptArchitectAgent:
     async def invoke_prompt_generator(
         self,
         assignment: Any,
-        context_data: Dict[str, Any],
+        context_data: dict[str, Any],
     ) -> Any:
         """
         Invoke the prompt_generator subagent.
@@ -331,7 +338,7 @@ class PromptArchitectAgent:
         self._state["current_phase"] = "prompt_generation"
         return await self.prompt_generator.generate(assignment, context_data)
 
-    def update_tracker_state(self, prompt_id: str, **kwargs: Any) -> Dict[str, Any]:
+    def update_tracker_state(self, prompt_id: str, **kwargs: Any) -> dict[str, Any]:
         """
         Update the tracker state for a prompt.
 

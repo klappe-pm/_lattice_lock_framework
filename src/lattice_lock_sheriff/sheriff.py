@@ -7,18 +7,16 @@ for import discipline, type hints, and other code quality standards.
 import ast
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional
 
-from .config import SheriffConfig
 from .ast_visitor import SheriffVisitor
+from .config import SheriffConfig
 from .rules import Violation
 
 
 def validate_file_with_audit(
-    file_path: Path,
-    config: SheriffConfig,
-    ignore_patterns: Optional[List[str]] = None
-) -> Tuple[List[Violation], List[Violation]]:
+    file_path: Path, config: SheriffConfig, ignore_patterns: Optional[list[str]] = None
+) -> tuple[list[Violation], list[Violation]]:
     """Validate a single Python file and return violations with audit info.
 
     Args:
@@ -32,11 +30,11 @@ def validate_file_with_audit(
     if ignore_patterns is None:
         ignore_patterns = []
 
-    if not file_path.suffix == ".py":
+    if file_path.suffix != ".py":
         return [], []
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         # Parse AST
@@ -55,7 +53,7 @@ def validate_file_with_audit(
                 rule_id="SyntaxError",
                 message=f"Syntax error: {e.msg}",
                 line_number=e.lineno if e.lineno else 0,
-                filename=str(file_path)
+                filename=str(file_path),
             )
         ], []
     except Exception as e:
@@ -64,15 +62,16 @@ def validate_file_with_audit(
                 rule_id="ParseError",
                 message=f"Error parsing file: {e}",
                 line_number=0,
-                filename=str(file_path)
+                filename=str(file_path),
             )
         ], []
+
 
 def validate_path_with_audit(
     path: Path,
     config: SheriffConfig,
-    ignore_patterns: Optional[List[str]] = None,
-) -> Tuple[List[Violation], List[Violation]]:
+    ignore_patterns: Optional[list[str]] = None,
+) -> tuple[list[Violation], list[Violation]]:
     """Validate a file or directory and return violations with audit info.
 
     Args:
@@ -86,8 +85,8 @@ def validate_path_with_audit(
     if ignore_patterns is None:
         ignore_patterns = []
 
-    violations: List[Violation] = []
-    ignored_violations: List[Violation] = []
+    violations: list[Violation] = []
+    ignored_violations: list[Violation] = []
 
     # Check if path is ignored
     for pattern in ignore_patterns:
@@ -111,7 +110,7 @@ def validate_path_with_audit(
             # Apply directory-level ignore patterns
             ignored_by_dir_pattern = False
             for pattern in ignore_patterns:
-                relative_dir = current_dir.relative_to(path) if current_dir != path else Path('.')
+                relative_dir = current_dir.relative_to(path) if current_dir != path else Path(".")
                 if relative_dir.match(pattern):
                     ignored_by_dir_pattern = True
                     break
@@ -137,7 +136,7 @@ def validate_path_with_audit(
     return violations, ignored_violations
 
 
-def validate_file(file_path: Path, config: SheriffConfig) -> List[Violation]:
+def validate_file(file_path: Path, config: SheriffConfig) -> list[Violation]:
     """Validate a single Python file.
 
     Args:
@@ -154,8 +153,8 @@ def validate_file(file_path: Path, config: SheriffConfig) -> List[Violation]:
 def validate_path(
     path: Path,
     config: SheriffConfig,
-    ignore_patterns: Optional[List[str]] = None,
-) -> List[Violation]:
+    ignore_patterns: Optional[list[str]] = None,
+) -> list[Violation]:
     """Validate a file or directory.
 
     Args:

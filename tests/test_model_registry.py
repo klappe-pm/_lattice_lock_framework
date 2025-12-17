@@ -7,20 +7,13 @@ This module validates that:
 4. Fallback to defaults works when YAML is missing
 """
 
-import pytest
-import tempfile
-import os
 from pathlib import Path
 
 from lattice_lock_orchestrator.registry import (
     ModelRegistry,
     RegistryValidationResult,
-    REQUIRED_MODEL_FIELDS,
-    VALID_MATURITY_VALUES,
-    VALID_STATUS_VALUES,
 )
 from lattice_lock_orchestrator.types import ModelProvider
-
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -92,14 +85,18 @@ class TestModelRegistryValidation:
         registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
         assert registry.validation_result is not None, "Should have validation result"
-        assert registry.validation_result.valid, f"Registry should be valid. Errors: {registry.validation_result.errors}"
+        assert (
+            registry.validation_result.valid
+        ), f"Registry should be valid. Errors: {registry.validation_result.errors}"
 
     def test_validation_counts_models(self):
         """Test that validation counts models correctly."""
         registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
         assert registry.validation_result.model_count > 0, "Should count models"
-        assert registry.validation_result.model_count == len(registry.models), "Model count should match loaded models"
+        assert registry.validation_result.model_count == len(
+            registry.models
+        ), "Model count should match loaded models"
 
     def test_validation_counts_providers(self):
         """Test that validation counts providers correctly."""
@@ -118,18 +115,12 @@ class TestModelRegistryValidation:
     def test_validates_missing_required_fields(self):
         """Test that validation catches missing required fields."""
         registry = ModelRegistry(registry_path=None)
-        result = registry.validate_registry({
-            "version": "1.0",
-            "providers": {
-                "openai": {
-                    "models": {
-                        "test-model": {
-                            "api_name": "test"
-                        }
-                    }
-                }
+        result = registry.validate_registry(
+            {
+                "version": "1.0",
+                "providers": {"openai": {"models": {"test-model": {"api_name": "test"}}}},
             }
-        })
+        )
 
         assert not result.valid
         assert len(result.errors) > 0
@@ -137,25 +128,27 @@ class TestModelRegistryValidation:
     def test_validates_invalid_maturity(self):
         """Test that validation catches invalid maturity values."""
         registry = ModelRegistry(registry_path=None)
-        result = registry.validate_registry({
-            "version": "1.0",
-            "providers": {
-                "openai": {
-                    "models": {
-                        "test-model": {
-                            "api_name": "test",
-                            "context_window": 8000,
-                            "input_cost": 1.0,
-                            "output_cost": 2.0,
-                            "reasoning_score": 80.0,
-                            "coding_score": 80.0,
-                            "speed_rating": 7.0,
-                            "maturity": "INVALID_MATURITY"
+        result = registry.validate_registry(
+            {
+                "version": "1.0",
+                "providers": {
+                    "openai": {
+                        "models": {
+                            "test-model": {
+                                "api_name": "test",
+                                "context_window": 8000,
+                                "input_cost": 1.0,
+                                "output_cost": 2.0,
+                                "reasoning_score": 80.0,
+                                "coding_score": 80.0,
+                                "speed_rating": 7.0,
+                                "maturity": "INVALID_MATURITY",
+                            }
                         }
                     }
-                }
+                },
             }
-        })
+        )
 
         assert not result.valid
         assert any("maturity" in e.lower() for e in result.errors)
@@ -163,24 +156,26 @@ class TestModelRegistryValidation:
     def test_validates_negative_cost(self):
         """Test that validation catches negative costs."""
         registry = ModelRegistry(registry_path=None)
-        result = registry.validate_registry({
-            "version": "1.0",
-            "providers": {
-                "openai": {
-                    "models": {
-                        "test-model": {
-                            "api_name": "test",
-                            "context_window": 8000,
-                            "input_cost": -1.0,
-                            "output_cost": 2.0,
-                            "reasoning_score": 80.0,
-                            "coding_score": 80.0,
-                            "speed_rating": 7.0
+        result = registry.validate_registry(
+            {
+                "version": "1.0",
+                "providers": {
+                    "openai": {
+                        "models": {
+                            "test-model": {
+                                "api_name": "test",
+                                "context_window": 8000,
+                                "input_cost": -1.0,
+                                "output_cost": 2.0,
+                                "reasoning_score": 80.0,
+                                "coding_score": 80.0,
+                                "speed_rating": 7.0,
+                            }
                         }
                     }
-                }
+                },
             }
-        })
+        )
 
         assert not result.valid
         # Pydantic error says "greater than or equal to 0" instead of "negative"
@@ -189,24 +184,26 @@ class TestModelRegistryValidation:
     def test_warns_on_unknown_provider(self):
         """Test that validation warns on unknown providers."""
         registry = ModelRegistry(registry_path=None)
-        result = registry.validate_registry({
-            "version": "1.0",
-            "providers": {
-                "unknown_provider": {
-                    "models": {
-                        "test-model": {
-                            "api_name": "test",
-                            "context_window": 8000,
-                            "input_cost": 1.0,
-                            "output_cost": 2.0,
-                            "reasoning_score": 80.0,
-                            "coding_score": 80.0,
-                            "speed_rating": 7.0
+        result = registry.validate_registry(
+            {
+                "version": "1.0",
+                "providers": {
+                    "unknown_provider": {
+                        "models": {
+                            "test-model": {
+                                "api_name": "test",
+                                "context_window": 8000,
+                                "input_cost": 1.0,
+                                "output_cost": 2.0,
+                                "reasoning_score": 80.0,
+                                "coding_score": 80.0,
+                                "speed_rating": 7.0,
+                            }
                         }
                     }
-                }
+                },
             }
-        })
+        )
 
         assert any("unknown" in w.lower() for w in result.warnings)
 
@@ -268,8 +265,12 @@ class TestModelCapabilitiesFromYAML:
         registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
         for model_id, model in registry.models.items():
-            assert isinstance(model.supports_function_calling, bool), f"Model {model_id} supports_function_calling should be bool"
-            assert isinstance(model.supports_vision, bool), f"Model {model_id} supports_vision should be bool"
+            assert isinstance(
+                model.supports_function_calling, bool
+            ), f"Model {model_id} supports_function_calling should be bool"
+            assert isinstance(
+                model.supports_vision, bool
+            ), f"Model {model_id} supports_vision should be bool"
 
 
 class TestRegistryModelCount:
@@ -279,7 +280,9 @@ class TestRegistryModelCount:
         """Test that registry has a reasonable number of models."""
         registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "models" / "registry.yaml"))
 
-        assert len(registry.models) >= 40, f"Expected at least 40 models, got {len(registry.models)}"
+        assert (
+            len(registry.models) >= 40
+        ), f"Expected at least 40 models, got {len(registry.models)}"
 
     def test_registry_has_models_from_major_providers(self):
         """Test that registry has models from major providers."""

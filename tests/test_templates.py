@@ -6,12 +6,11 @@ Tests template loading, rendering, and output validation.
 
 import pytest
 import yaml
-
 from lattice_lock_cli.templates import (
-    get_template,
-    render_template,
-    get_templates_for_type,
     TEMPLATES_DIR,
+    get_template,
+    get_templates_for_type,
+    render_template,
 )
 
 
@@ -197,7 +196,9 @@ class TestTemplatesForType:
         assert "base/lattice.yaml.j2" in templates
         assert "base/readme.md.j2" in templates
         # Should not have any type-specific templates
-        assert len([t for t in templates if "agent/" in t or "service/" in t or "library/" in t]) == 0
+        assert (
+            len([t for t in templates if "agent/" in t or "service/" in t or "library/" in t]) == 0
+        )
 
 
 class TestTemplateOutput:
