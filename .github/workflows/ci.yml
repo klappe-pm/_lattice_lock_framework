@@ -46,7 +46,9 @@ jobs:
           pip install .[dev]
           
       - name: Unit Tests
-        run: pytest tests/ -m "not integration" --tb=short
+        run: |
+          # Use make test to ensure environment consistency (env vars, flags)
+          make test
 
       # Semantic tests run only on limited scope or authorized PRs
       # - name: Semantic Tests (Gauntlet)

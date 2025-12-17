@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import List
 from jinja2 import Environment, FileSystemLoader
+from lattice_lock.utils.jinja import get_secure_environment
 
 from .parser import LatticeParser, EntityDefinition, EnsuresClause
 
@@ -17,9 +18,9 @@ class GauntletGenerator:
     def __init__(self, lattice_file: str, output_dir: str):
         self.parser = LatticeParser(lattice_file)
         self.output_dir = Path(output_dir)
-        self.env = Environment(
+        self.env = get_secure_environment(
             loader=FileSystemLoader(Path(__file__).parent / "templates"),
-            autoescape=True
+            autoescape=False  # Code generation requires raw output (no HTML escaping)
         )
 
     def generate(self):

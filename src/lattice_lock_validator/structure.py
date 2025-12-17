@@ -27,8 +27,10 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
 
     try:
         # Sanitize the input path
-        repo_path = resolve_under_root(repo_path)
-    except ValueError as e:
+        # We don't enforce resolve_under_root against CWD here because the user might want to validate
+        # a repo located elsewhere. The repo_path itself becomes the root of trust.
+        repo_path = Path(repo_path).resolve()
+    except Exception as e:
         result.add_error(str(e))
         result.valid = False
         return result
@@ -68,8 +70,8 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
     """Validates the directory structure against requirements."""
     result = ValidationResult()
     try:
-        path = resolve_under_root(repo_path)
-    except ValueError as e:
+        path = Path(repo_path).resolve()
+    except Exception as e:
         result.add_error(str(e))
         return result
 

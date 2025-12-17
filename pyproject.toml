@@ -48,6 +48,7 @@ dependencies = [
     "python-multipart>=0.0.6",
     "defusedxml>=0.7.1",
     "aiofiles>=23.0.0",
+    "bcrypt>=4.0.1",
 ]
 
 [project.optional-dependencies]
