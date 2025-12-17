@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from lattice_lock_orchestrator.scorer import ModelScorer, TaskAnalyzer
 from lattice_lock_orchestrator.types import (
     ModelCapabilities,

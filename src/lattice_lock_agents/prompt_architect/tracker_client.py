@@ -11,7 +11,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -27,11 +27,11 @@ class PromptEntry:
     picked_up: bool = False
     done: bool = False
     merged: bool = False
-    model_used: Optional[str] = None
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
-    duration_minutes: Optional[int] = None
-    pr_url: Optional[str] = None
+    model_used: str | None = None
+    start_time: str | None = None
+    end_time: str | None = None
+    duration_minutes: int | None = None
+    pr_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -65,7 +65,7 @@ class TrackerClient:
 
     VALID_TOOLS = ["devin", "gemini", "codex", "claude_cli", "claude_app", "claude_docs"]
 
-    def __init__(self, repo_root: Optional[Path] = None, use_cli: bool = False):
+    def __init__(self, repo_root: Path | None = None, use_cli: bool = False):
         """
         Initialize the TrackerClient.
 
@@ -122,8 +122,8 @@ class TrackerClient:
         title: str,
         tool: str,
         file_path: str,
-        phase: Optional[str] = None,
-        epic: Optional[str] = None,
+        phase: str | None = None,
+        epic: str | None = None,
     ) -> dict[str, Any]:
         """
         Add a newly generated prompt to the tracker state.
@@ -196,10 +196,10 @@ class TrackerClient:
     def update_prompt(
         self,
         prompt_id: str,
-        done: Optional[bool] = None,
-        merged: Optional[bool] = None,
-        pr_url: Optional[str] = None,
-        model: Optional[str] = None,
+        done: bool | None = None,
+        merged: bool | None = None,
+        pr_url: str | None = None,
+        model: str | None = None,
     ) -> dict[str, Any]:
         """
         Update a prompt's status.
@@ -263,7 +263,7 @@ class TrackerClient:
             "merged": prompt["merged"],
         }
 
-    def get_prompt(self, prompt_id: str) -> Optional[dict[str, Any]]:
+    def get_prompt(self, prompt_id: str) -> dict[str, Any] | None:
         """
         Get a prompt by ID.
 
@@ -279,7 +279,7 @@ class TrackerClient:
                 return p
         return None
 
-    def get_next_prompt(self, tool: str) -> Optional[dict[str, Any]]:
+    def get_next_prompt(self, tool: str) -> dict[str, Any] | None:
         """
         Get the next available prompt for a tool.
 
@@ -299,7 +299,7 @@ class TrackerClient:
         return None
 
     def list_prompts(
-        self, tool: Optional[str] = None, phase: Optional[str] = None, status: Optional[str] = None
+        self, tool: str | None = None, phase: str | None = None, status: str | None = None
     ) -> list[dict[str, Any]]:
         """
         List prompts with optional filters.

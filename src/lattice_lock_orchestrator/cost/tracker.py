@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from ..registry import ModelRegistry
 from ..types import APIResponse
@@ -15,7 +15,7 @@ class CostTracker:
     Tracks capabilities usage and estimates costs.
     """
 
-    def __init__(self, registry: ModelRegistry, db_path: Optional[str] = None):
+    def __init__(self, registry: ModelRegistry, db_path: str | None = None):
         self.registry = registry
         self.storage = CostStorage(db_path)
         self.current_session_id = datetime.now().strftime("sess_%Y%m%d_%H%M%S")
@@ -25,7 +25,7 @@ class CostTracker:
         response: APIResponse,
         task_type: str = "general",
         trace_id: str = "unknown",
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ):
         """
         Record a transaction and save to storage.

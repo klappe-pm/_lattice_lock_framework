@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Optional
+from typing import Any
 
 
 class TaskType(Enum):
@@ -93,7 +93,7 @@ class TaskRequirements:
 
     task_type: TaskType
     min_context: int = 4000
-    max_cost: Optional[float] = None  # Max blended cost per 1M tokens
+    max_cost: float | None = None  # Max blended cost per 1M tokens
     min_reasoning: float = 0.0
     min_coding: float = 0.0
     priority: str = "balanced"  # "speed", "cost", "quality", "balanced"
@@ -127,7 +127,7 @@ class APIResponse:
     provider: str
     usage: dict[str, int]  # input_tokens, output_tokens
     latency_ms: int
-    raw_response: Optional[dict] = None
-    error: Optional[str] = None
-    function_call: Optional[FunctionCall] = None
-    function_call_result: Optional[Any] = None
+    raw_response: dict | None = None
+    error: str | None = None
+    function_call: FunctionCall | None = None
+    function_call_result: Any | None = None

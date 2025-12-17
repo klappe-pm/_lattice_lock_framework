@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -10,8 +10,8 @@ class ValidationError:
     """Represents a validation error."""
 
     message: str
-    line_number: Optional[int] = None
-    field_path: Optional[str] = None
+    line_number: int | None = None
+    field_path: str | None = None
 
 
 @dataclass
@@ -19,8 +19,8 @@ class ValidationWarning:
     """Represents a validation warning."""
 
     message: str
-    line_number: Optional[int] = None
-    field_path: Optional[str] = None
+    line_number: int | None = None
+    field_path: str | None = None
 
 
 @dataclass
@@ -39,14 +39,14 @@ class ValidationResult:
     warnings: list[ValidationWarning] = field(default_factory=list)
 
     def add_error(
-        self, message: str, line_number: Optional[int] = None, field_path: Optional[str] = None
+        self, message: str, line_number: int | None = None, field_path: str | None = None
     ):
         """Adds an error to the result."""
         self.valid = False
         self.errors.append(ValidationError(message, line_number, field_path))
 
     def add_warning(
-        self, message: str, line_number: Optional[int] = None, field_path: Optional[str] = None
+        self, message: str, line_number: int | None = None, field_path: str | None = None
     ):
         """Adds a warning to the result."""
         self.warnings.append(ValidationWarning(message, line_number, field_path))

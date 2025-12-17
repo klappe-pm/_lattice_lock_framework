@@ -11,9 +11,9 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
+
 from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
 from lattice_lock_sheriff.config import SheriffConfig
 from lattice_lock_sheriff.formatters import OutputFormatter, get_formatter
@@ -143,7 +143,7 @@ def sheriff_command(
         sys.exit(1)
 
     # Initialize cache
-    cache: Optional[SheriffCache] = None
+    cache: SheriffCache | None = None
     if use_cache:
         config_hash = get_config_hash(sheriff_config)
         cache = SheriffCache(cache_dir=cache_dir, config_hash=config_hash)
@@ -213,7 +213,7 @@ def sheriff_command(
 
 
 def _validate_with_cache(
-    path: Path, config: SheriffConfig, ignore_patterns: list[str], cache: Optional[SheriffCache]
+    path: Path, config: SheriffConfig, ignore_patterns: list[str], cache: SheriffCache | None
 ) -> tuple[list[Violation], list[Violation]]:
     """Validate files with caching support.
 

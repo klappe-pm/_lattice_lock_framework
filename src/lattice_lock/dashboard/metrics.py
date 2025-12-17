@@ -9,7 +9,6 @@ import statistics
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -73,8 +72,8 @@ class MetricsCollector:
         self,
         success: bool,
         duration: float,
-        error_type: Optional[str] = None,
-        project_id: Optional[str] = None,
+        error_type: str | None = None,
+        project_id: str | None = None,
     ) -> None:
         """
         Record a validation result.
@@ -152,7 +151,7 @@ class MetricsCollector:
 
         return float(recent_count)
 
-    def get_project_health_trend(self, project_id: str) -> Optional[ProjectHealthTrend]:
+    def get_project_health_trend(self, project_id: str) -> ProjectHealthTrend | None:
         """
         Get health trend data for a project.
 

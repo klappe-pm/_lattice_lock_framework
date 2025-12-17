@@ -3,10 +3,11 @@
 from pathlib import Path
 
 import click
-from lattice_lock.feedback.collector import FeedbackCollector
-from lattice_lock.feedback.schemas import FeedbackCategory, FeedbackPriority
 from rich.console import Console
 from rich.prompt import Prompt
+
+from lattice_lock.feedback.collector import FeedbackCollector
+from lattice_lock.feedback.schemas import FeedbackCategory, FeedbackPriority
 
 console = Console()
 

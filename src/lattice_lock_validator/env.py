@@ -1,11 +1,10 @@
 import re
-from typing import Optional
 
 from .schema import ValidationResult
 
 
 def validate_env_file(
-    file_path: str, required_vars: Optional[list[str]] = None
+    file_path: str, required_vars: list[str] | None = None
 ) -> ValidationResult:
     """
     Validates an environment variable file (.env).

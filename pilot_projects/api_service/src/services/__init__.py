@@ -49,11 +49,11 @@ class UserService:
         self._next_id += 1
         return user
 
-    def get_user(self, user_id: int) -> Optional[User]:
+    def get_user(self, user_id: int) -> User | None:
         """Get a user by ID."""
         return self._users.get(user_id)
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_email(self, email: str) -> User | None:
         """Get a user by email address."""
         for user in self._users.values():
             if user.email == email:
@@ -102,11 +102,11 @@ class ProductService:
         self._next_id += 1
         return product
 
-    def get_product(self, product_id: int) -> Optional[Product]:
+    def get_product(self, product_id: int) -> Product | None:
         """Get a product by ID."""
         return self._products.get(product_id)
 
-    def get_product_by_sku(self, sku: str) -> Optional[Product]:
+    def get_product_by_sku(self, sku: str) -> Product | None:
         """Get a product by SKU."""
         for product in self._products.values():
             if product.sku == sku:
@@ -168,7 +168,7 @@ class OrderService:
         order_id: int,
         product_id: int,
         quantity: int,
-    ) -> Optional[OrderItem]:
+    ) -> OrderItem | None:
         """Add an item to an order."""
         order = self._orders.get(order_id)
         product = self._product_service.get_product(product_id)
@@ -228,7 +228,7 @@ class OrderService:
         order.updated_at = datetime.now(timezone.utc)
         return True
 
-    def get_order(self, order_id: int) -> Optional[Order]:
+    def get_order(self, order_id: int) -> Order | None:
         """Get an order by ID."""
         return self._orders.get(order_id)
 
@@ -287,7 +287,7 @@ class PaymentService:
         payment.status = PaymentStatus.REFUNDED
         return True
 
-    def get_payment(self, payment_id: int) -> Optional[Payment]:
+    def get_payment(self, payment_id: int) -> Payment | None:
         """Get a payment by ID."""
         return self._payments.get(payment_id)
 

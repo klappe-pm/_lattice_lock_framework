@@ -125,9 +125,7 @@ class PromptValidator:
         self._validate_sections(content, result)
 
         # Check for overall validity
-        if result.errors:
-            result.is_valid = False
-        elif self.strict_mode and result.warnings:
+        if result.errors or self.strict_mode and result.warnings:
             result.is_valid = False
 
         return result
@@ -149,9 +147,7 @@ class PromptValidator:
         self._validate_metadata(content, result)
         self._validate_sections(content, result)
 
-        if result.errors:
-            result.is_valid = False
-        elif self.strict_mode and result.warnings:
+        if result.errors or self.strict_mode and result.warnings:
             result.is_valid = False
 
         return result

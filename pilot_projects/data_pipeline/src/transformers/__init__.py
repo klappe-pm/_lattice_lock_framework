@@ -42,8 +42,8 @@ class TransformationRule:
     transform_config: dict[str, Any]
     priority: int = 0
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     def __post_init__(self) -> None:
         if self.priority < 0:
@@ -58,10 +58,10 @@ class TransformedRecord:
     source_record_id: int
     transformed_data: dict[str, Any]
     applied_rules: list[str]
-    transformed_at: Optional[datetime] = None
+    transformed_at: datetime | None = None
     validation_status: ValidationStatus = ValidationStatus.PENDING
     validation_errors: list[str] = field(default_factory=list)
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 class BaseTransformer(ABC):
@@ -202,7 +202,7 @@ class TransformationPipeline:
         self,
         source_record_id: int,
         data: dict[str, Any],
-    ) -> Optional[TransformedRecord]:
+    ) -> TransformedRecord | None:
         """Process data through all transformers."""
         result = data
         applied_rules: list[str] = []

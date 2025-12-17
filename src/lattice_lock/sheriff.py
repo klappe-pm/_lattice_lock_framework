@@ -22,7 +22,6 @@ import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from lattice_lock.utils.safe_path import resolve_under_root
 
@@ -45,7 +44,7 @@ class Violation:
     line: int
     column: int = 0
     severity: ViolationSeverity = ViolationSeverity.ERROR
-    suggestion: Optional[str] = None
+    suggestion: str | None = None
 
     def to_dict(self) -> dict:
         """Convert violation to dictionary for JSON output."""
@@ -361,7 +360,7 @@ def analyze_file(filepath: Path, config: dict) -> list[Violation]:
 
 def run_sheriff(
     target_path: str,
-    config: Optional[dict] = None,
+    config: dict | None = None,
     json_output: bool = False,
 ) -> SheriffResult:
     """

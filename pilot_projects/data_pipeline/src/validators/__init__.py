@@ -41,8 +41,8 @@ class ValidationRule:
     rule_config: dict[str, Any]
     severity: Severity = Severity.ERROR
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 @dataclass

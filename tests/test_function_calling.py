@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from lattice_lock_orchestrator.core import ModelOrchestrator
 from lattice_lock_orchestrator.types import (
     APIResponse,

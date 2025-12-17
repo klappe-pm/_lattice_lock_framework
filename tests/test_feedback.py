@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+
 from lattice_lock.feedback import FeedbackCategory, FeedbackCollector, FeedbackPriority
 
 

@@ -6,7 +6,7 @@ Supports markdown, YAML, and JSON specification formats with optional LLM enhanc
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -46,7 +46,7 @@ class LLMClient:
         self.primary_model = primary_model
         self.fallback_model = fallback_model
         self.ollama_base_url = ollama_base_url
-        self._available: Optional[bool] = None
+        self._available: bool | None = None
 
     def is_available(self) -> bool:
         """Check if the LLM service is available.
@@ -67,7 +67,7 @@ class LLMClient:
 
         return self._available
 
-    def extract_structured_data(self, content: str) -> Optional[dict[str, Any]]:
+    def extract_structured_data(self, content: str) -> dict[str, Any] | None:
         """Extract structured data from content using LLM.
 
         Args:
@@ -112,7 +112,7 @@ Specification:
 
         return None
 
-    def _parse_llm_response(self, response: str) -> Optional[dict[str, Any]]:
+    def _parse_llm_response(self, response: str) -> dict[str, Any] | None:
         """Parse LLM response to extract JSON data.
 
         Args:
@@ -151,7 +151,7 @@ class SpecAnalyzer:
 
     def __init__(
         self,
-        config_path: Optional[str] = None,
+        config_path: str | None = None,
         use_llm: bool = False,
     ):
         """Initialize the SpecAnalyzer.
@@ -163,7 +163,7 @@ class SpecAnalyzer:
         self.use_llm = use_llm
         self.config_path = config_path
         self.config = self._load_config(config_path)
-        self.llm_client: Optional[LLMClient] = LLMClient() if use_llm else None
+        self.llm_client: LLMClient | None = LLMClient() if use_llm else None
 
         self.parsers = {
             ".md": MarkdownSpecParser(),
@@ -173,7 +173,7 @@ class SpecAnalyzer:
             ".json": JSONSpecParser(),
         }
 
-    def _load_config(self, config_path: Optional[str]) -> dict[str, Any]:
+    def _load_config(self, config_path: str | None) -> dict[str, Any]:
         """Load configuration from file.
 
         Args:

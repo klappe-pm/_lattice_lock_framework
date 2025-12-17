@@ -8,7 +8,6 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from .state import RollbackState
 
@@ -42,7 +41,7 @@ class CheckpointStorage:
 
         return checkpoint_id
 
-    def load_state(self, checkpoint_id: str) -> Optional[RollbackState]:
+    def load_state(self, checkpoint_id: str) -> RollbackState | None:
         """
         Load a RollbackState by checkpoint ID.
         """

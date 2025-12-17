@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -25,7 +25,7 @@ class ProjectScope:
     goals: list[str] = field(default_factory=list)
     constraints: list[str] = field(default_factory=list)
     stakeholders: list[str] = field(default_factory=list)
-    timeline: Optional[str] = None
+    timeline: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -37,8 +37,8 @@ class ProjectPhase:
     name: str
     description: str
     status: str = "pending"  # pending, in_progress, completed
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
+    start_date: str | None = None
+    end_date: str | None = None
     deliverables: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
 
@@ -52,7 +52,7 @@ class PendingTask:
     description: str
     phase: str
     epic: str
-    tool: Optional[str] = None
+    tool: str | None = None
     priority: str = "medium"
     files: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
@@ -83,9 +83,9 @@ class ProjectAgentClient:
 
     def __init__(
         self,
-        repo_root: Optional[Path] = None,
-        agent_definitions_path: Optional[str] = None,
-        agent_memory_path: Optional[str] = None,
+        repo_root: Path | None = None,
+        agent_definitions_path: str | None = None,
+        agent_memory_path: str | None = None,
     ):
         """
         Initialize the ProjectAgentClient.
@@ -217,7 +217,7 @@ class ProjectAgentClient:
 
         return "\n".join(section_lines).strip()
 
-    def get_current_phase(self) -> Optional[ProjectPhase]:
+    def get_current_phase(self) -> ProjectPhase | None:
         """
         Get the current active phase of the project.
 
@@ -316,8 +316,8 @@ class ProjectAgentClient:
 
     def get_pending_tasks(
         self,
-        phase: Optional[str] = None,
-        tool: Optional[str] = None,
+        phase: str | None = None,
+        tool: str | None = None,
     ) -> list[PendingTask]:
         """
         Get pending tasks from the project.
@@ -371,7 +371,7 @@ class ProjectAgentClient:
 
         return tasks
 
-    def get_specification_path(self) -> Optional[str]:
+    def get_specification_path(self) -> str | None:
         """
         Get the path to the project specification file.
 
@@ -393,7 +393,7 @@ class ProjectAgentClient:
 
         return None
 
-    def get_roadmap_path(self) -> Optional[str]:
+    def get_roadmap_path(self) -> str | None:
         """
         Get the path to the project roadmap/WBS file.
 
@@ -442,7 +442,7 @@ class ProjectAgentClient:
         """Get the interaction log."""
         return self._interaction_log.copy()
 
-    def export_interactions_to_memory(self, memory_file_path: Optional[Path] = None) -> None:
+    def export_interactions_to_memory(self, memory_file_path: Path | None = None) -> None:
         """
         Export interactions to the agent memory file.
 

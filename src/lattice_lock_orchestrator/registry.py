@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -46,14 +45,14 @@ class RegistryValidationResult:
 class ModelRegistry:
     """Centralized model registry with all model definitions"""
 
-    def __init__(self, registry_path: Optional[str] = "models/registry.yaml"):
+    def __init__(self, registry_path: str | None = "models/registry.yaml"):
         self.models: dict[str, ModelCapabilities] = {}
         self.registry_path = registry_path
-        self._validation_result: Optional[RegistryValidationResult] = None
+        self._validation_result: RegistryValidationResult | None = None
         self._load_all_models()
 
     @property
-    def validation_result(self) -> Optional[RegistryValidationResult]:
+    def validation_result(self) -> RegistryValidationResult | None:
         """Get the validation result from the last load operation."""
         return self._validation_result
 
@@ -423,7 +422,7 @@ class ModelRegistry:
             }
         )
 
-    def get_model(self, model_id: str) -> Optional[ModelCapabilities]:
+    def get_model(self, model_id: str) -> ModelCapabilities | None:
         """Get model by ID"""
         return self.models.get(model_id)
 

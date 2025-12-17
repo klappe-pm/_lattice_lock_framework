@@ -4,7 +4,7 @@ High-level checkpoint management.
 
 import hashlib
 import time
-from typing import Any, Optional
+from typing import Any
 
 from .state import RollbackState
 from .storage import CheckpointStorage
@@ -52,7 +52,7 @@ class CheckpointManager:
         """
         return self.storage.list_states()
 
-    def get_checkpoint(self, checkpoint_id: str) -> Optional[RollbackState]:
+    def get_checkpoint(self, checkpoint_id: str) -> RollbackState | None:
         """
         Retrieve a specific checkpoint by ID.
         """

@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from lattice_lock_agents.prompt_architect.agent import GenerationResult, PromptArchitectAgent
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import Task
@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 class OrchestrationConfig:
     """Configuration for the orchestration pipeline."""
 
-    spec_path: Optional[str] = None
-    roadmap_path: Optional[str] = None
-    output_dir: Optional[str] = None
+    spec_path: str | None = None
+    roadmap_path: str | None = None
+    output_dir: str | None = None
     dry_run: bool = False
     from_project: bool = False
-    phases: Optional[list[str]] = None
-    tools: Optional[list[str]] = None
+    phases: list[str] | None = None
+    tools: list[str] | None = None
     max_retries: int = 3
     retry_delay: float = 1.0
 
@@ -40,10 +40,10 @@ class PipelineStage:
 
     name: str
     status: str = "pending"  # pending, running, completed, failed, skipped
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     retries: int = 0
 
 
@@ -57,8 +57,8 @@ class OrchestrationState:
     tool_assignments: list[Any] = field(default_factory=list)
     generated_prompts: list[Any] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     def __post_init__(self) -> None:
         """Initialize pipeline stages."""
@@ -84,8 +84,8 @@ class PromptOrchestrator:
 
     def __init__(
         self,
-        agent: Optional[PromptArchitectAgent] = None,
-        repo_root: Optional[Path] = None,
+        agent: PromptArchitectAgent | None = None,
+        repo_root: Path | None = None,
     ):
         """
         Initialize the orchestrator.
@@ -105,13 +105,13 @@ class PromptOrchestrator:
 
     async def orchestrate_prompt_generation(
         self,
-        spec_path: Optional[str] = None,
-        roadmap_path: Optional[str] = None,
-        output_dir: Optional[str] = None,
+        spec_path: str | None = None,
+        roadmap_path: str | None = None,
+        output_dir: str | None = None,
         dry_run: bool = False,
         from_project: bool = False,
-        phases: Optional[list[str]] = None,
-        tools: Optional[list[str]] = None,
+        phases: list[str] | None = None,
+        tools: list[str] | None = None,
     ) -> GenerationResult:
         """
         Orchestrate the full prompt generation pipeline.
@@ -396,7 +396,7 @@ class PromptOrchestrator:
 
         return context_data
 
-    async def _discover_spec_from_project(self) -> Optional[str]:
+    async def _discover_spec_from_project(self) -> str | None:
         """Discover specification path from Project Agent."""
         # This will be implemented in 5.1.2 with ProjectAgentClient
         # For now, try to find a default spec file
@@ -414,7 +414,7 @@ class PromptOrchestrator:
         logger.warning("Could not discover spec file from project")
         return None
 
-    async def _discover_roadmap_from_project(self) -> Optional[str]:
+    async def _discover_roadmap_from_project(self) -> str | None:
         """Discover roadmap path from Project Agent."""
         # This will be implemented in 5.1.2 with ProjectAgentClient
         # For now, try to find a default roadmap file
@@ -481,7 +481,7 @@ class PromptOrchestrator:
             },
         )
 
-    def get_stage_status(self, stage_name: str) -> Optional[PipelineStage]:
+    def get_stage_status(self, stage_name: str) -> PipelineStage | None:
         """Get the status of a specific pipeline stage."""
         return self.state.stages.get(stage_name)
 
@@ -491,14 +491,14 @@ class PromptOrchestrator:
 
 
 async def orchestrate_prompt_generation(
-    spec_path: Optional[str] = None,
-    roadmap_path: Optional[str] = None,
-    output_dir: Optional[str] = None,
+    spec_path: str | None = None,
+    roadmap_path: str | None = None,
+    output_dir: str | None = None,
     dry_run: bool = False,
     from_project: bool = False,
-    phases: Optional[list[str]] = None,
-    tools: Optional[list[str]] = None,
-    repo_root: Optional[Path] = None,
+    phases: list[str] | None = None,
+    tools: list[str] | None = None,
+    repo_root: Path | None = None,
 ) -> GenerationResult:
     """
     Convenience function to orchestrate prompt generation.

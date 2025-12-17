@@ -11,6 +11,7 @@ from unittest.mock import patch
 import defusedxml.ElementTree as ET
 import pytest
 from click.testing import CliRunner
+
 from lattice_lock_cli.commands.sheriff import sheriff_command
 from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
 from lattice_lock_sheriff.formatters import (

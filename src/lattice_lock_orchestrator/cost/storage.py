@@ -3,7 +3,6 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 from .models import UsageRecord
 
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 class CostStorage:
     """SQLite-based storage for usage records."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         if db_path:
             self.db_path = Path(db_path)
         else:

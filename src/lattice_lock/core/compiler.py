@@ -1,9 +1,10 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
+
 from lattice_lock_validator.schema import validate_lattice_schema
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class CompilationResult:
 
 
 def compile_lattice(
-    source_path: str, output_dir: str, test_dir: str, options: Optional[dict[str, Any]] = None
+    source_path: str, output_dir: str, test_dir: str, options: dict[str, Any] | None = None
 ) -> CompilationResult:
     """
     Orchestrates the full compilation pipeline.
@@ -33,8 +34,8 @@ def compile_lattice(
     """
     options = options or {}
     generated_files = []
-    errors = []
-    warnings = []
+    _errors = []  # Reserved for future use
+    _warnings = []  # Reserved for future use
 
     source_file = Path(source_path)
     if not source_file.exists():
@@ -56,7 +57,7 @@ def compile_lattice(
     # Load data for generation steps
     try:
         with open(source_path) as f:
-            data = yaml.safe_load(f)
+            _data = yaml.safe_load(f)  # Reserved for future type/test generation
     except Exception as e:
         return CompilationResult(False, [], [f"Failed to parse YAML: {e}"], [])
 

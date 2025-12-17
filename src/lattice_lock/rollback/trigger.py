@@ -1,7 +1,7 @@
 import logging
 import subprocess
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any
 
 from .state import RollbackState
 
@@ -37,7 +37,7 @@ class RollbackTrigger:
         self._notification_hooks.append(hook)
 
     def trigger_rollback(
-        self, reason: str, checkpoint_id: Optional[str] = None, mode: str = "restore_checkpoint"
+        self, reason: str, checkpoint_id: str | None = None, mode: str = "restore_checkpoint"
     ) -> bool:
         """
         Initiate a rollback.

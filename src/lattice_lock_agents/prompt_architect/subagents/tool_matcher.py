@@ -1,4 +1,8 @@
+import logging
+
 from .tool_profiles import Task, ToolAssignment, load_tool_profiles
+
+logger = logging.getLogger(__name__)
 
 
 class ToolMatcher:
@@ -45,7 +49,7 @@ class ToolMatcher:
         for task in tasks:
             best_tool = None
             max_score = -1.0
-            conflict_files = []
+            _conflict_files = []  # Reserved for conflict tracking
 
             # First pass: Check for hard ownership constraints
             forced_owner = None

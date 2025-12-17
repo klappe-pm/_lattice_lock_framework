@@ -121,7 +121,7 @@ class RoadmapParser:
         # This requires a topological sort or relaxation
 
         # 1. Topological Sort
-        in_degree = {u: 0 for u in epics}
+        in_degree = dict.fromkeys(epics, 0)
         for u in graph:
             for v in graph[u]:
                 if v in in_degree:
@@ -150,9 +150,9 @@ class RoadmapParser:
 
         # 2. Longest Path Calculation
         # dist[v] = max(dist[u] + duration[u]) for all u -> v
-        dist = {u: 0 for u in epics}
+        dist = dict.fromkeys(epics, 0)
         # Predecessors for path reconstruction
-        predecessors = {u: None for u in epics}
+        predecessors = dict.fromkeys(epics)
 
         # Default duration 1
         duration = 1
@@ -193,7 +193,7 @@ class RoadmapParser:
             for epic in phase.epics:
                 epics[epic.id] = epic
 
-        in_degree = {u: 0 for u in epics}
+        in_degree = dict.fromkeys(epics, 0)
         for u in graph:
             for v in graph[u]:
                 if v in in_degree:

@@ -42,9 +42,9 @@ class DataSource:
     connection_config: dict[str, Any]
     schema_definition: dict[str, Any]
     is_active: bool = True
-    last_sync_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    last_sync_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     def __post_init__(self) -> None:
         if len(self.name) < 1:
@@ -59,10 +59,10 @@ class DataRecord:
     source_id: int
     record_key: str
     raw_data: dict[str, Any]
-    extracted_at: Optional[datetime] = None
+    extracted_at: datetime | None = None
     status: RecordStatus = RecordStatus.PENDING
     error_message: str = ""
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 class BaseExtractor(ABC):

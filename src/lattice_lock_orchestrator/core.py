@@ -1,7 +1,6 @@
 import json
 import logging
 from collections.abc import Callable
-from typing import Optional
 
 from .api_clients import ProviderAvailability, ProviderUnavailableError, get_api_client
 from .cost.tracker import CostTracker
@@ -20,7 +19,7 @@ class ModelOrchestrator:
     Routes requests to the best model based on task requirements, cost, and performance.
     """
 
-    def __init__(self, guide_path: Optional[str] = None):
+    def __init__(self, guide_path: str | None = None):
         self.registry = ModelRegistry()
         self.analyzer = TaskAnalyzer()
         self.scorer = ModelScorer()
@@ -36,8 +35,8 @@ class ModelOrchestrator:
     async def route_request(
         self,
         prompt: str,
-        model_id: Optional[str] = None,
-        task_type: Optional[TaskType] = None,
+        model_id: str | None = None,
+        task_type: TaskType | None = None,
         **kwargs,
     ) -> APIResponse:
         """
@@ -82,7 +81,7 @@ class ModelOrchestrator:
                 requirements, prompt, failed_model=selected_model_id, **kwargs
             )
 
-    def _select_best_model(self, requirements: TaskRequirements) -> Optional[str]:
+    def _select_best_model(self, requirements: TaskRequirements) -> str | None:
         """Select the best model based on requirements and guide"""
 
         # 1. Check Guide Recommendations first

@@ -7,7 +7,7 @@ Defines the structures for prompt templates, contexts, and generation results.
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class ToolType(Enum):
@@ -153,8 +153,8 @@ class PromptOutput:
     content: str
     file_path: str
     status: PromptStatus = PromptStatus.DRAFT
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -169,8 +169,8 @@ class GenerationRequest:
     """Request to generate prompts."""
 
     project_name: str
-    phase: Optional[str] = None
-    epic: Optional[str] = None
+    phase: str | None = None
+    epic: str | None = None
     task_ids: list[str] = field(default_factory=list)
     force_regenerate: bool = False
     dry_run: bool = False
@@ -214,8 +214,8 @@ class PhaseSpec:
     name: str
     description: str
     epics: list["EpicSpec"]
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
 
 
 @dataclass
@@ -241,7 +241,7 @@ class TaskSpec:
     file_paths: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
     estimated_hours: float = 0.0
-    assigned_tool: Optional[ToolType] = None
+    assigned_tool: ToolType | None = None
 
 
 __all__ = [

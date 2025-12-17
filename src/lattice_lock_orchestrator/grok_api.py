@@ -9,15 +9,16 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import requests
 import yaml
+
 from lattice_lock.utils.safe_path import resolve_under_root
 
 
 class GrokAPI:
-    def __init__(self, api_key: Optional[str] = None, config_path: Optional[str] = None):
+    def __init__(self, api_key: str | None = None, config_path: str | None = None):
         """Initialize Grok API client with configuration"""
         self.api_key = api_key or os.getenv("XAI_API_KEY")
         if not self.api_key:
@@ -42,7 +43,7 @@ class GrokAPI:
         with open(self.config_path) as f:
             return yaml.safe_load(f)
 
-    def list_models(self, category: Optional[str] = None) -> list[dict]:
+    def list_models(self, category: str | None = None) -> list[dict]:
         """List available models, optionally filtered by category"""
         models = []
 
@@ -53,7 +54,7 @@ class GrokAPI:
 
         return models
 
-    def get_model_info(self, model_id: str) -> Optional[dict]:
+    def get_model_info(self, model_id: str) -> dict | None:
         """Get detailed information about a specific model"""
         # Check aliases first
         if model_id in self.config["aliases"]:
@@ -83,7 +84,7 @@ class GrokAPI:
         return response.json()
 
     def vision_completion(
-        self, model_id: str, messages: list[dict], image_path: Optional[str] = None, **kwargs
+        self, model_id: str, messages: list[dict], image_path: str | None = None, **kwargs
     ) -> dict:
         """Send vision completion request with image input"""
         if image_path:

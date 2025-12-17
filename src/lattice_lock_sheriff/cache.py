@@ -1,7 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .config import SheriffConfig
 
@@ -59,7 +59,7 @@ class SheriffCache:
             except OSError as e:
                 print(f"Error: Failed to delete cache file {self.cache_file}: {e}")
 
-    def get_cached_violations(self, file_path: Path) -> Optional[list[dict[str, Any]]]:
+    def get_cached_violations(self, file_path: Path) -> list[dict[str, Any]] | None:
         """
         Retrieves cached violations for a file if its hash matches.
         Returns a list of dictionaries, not Violation objects.

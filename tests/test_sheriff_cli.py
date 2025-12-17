@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
+
 from lattice_lock_cli.commands.sheriff import sheriff_command
 from lattice_lock_sheriff.config import SheriffConfig
 from lattice_lock_sheriff.rules import Violation

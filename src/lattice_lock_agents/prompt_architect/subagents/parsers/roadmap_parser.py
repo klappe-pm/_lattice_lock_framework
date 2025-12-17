@@ -1,6 +1,5 @@
 import re
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -8,26 +7,26 @@ from pydantic import BaseModel, Field
 class Task(BaseModel):
     id: str
     name: str
-    description: Optional[str] = None
-    epic_id: Optional[str] = None
+    description: str | None = None
+    epic_id: str | None = None
     dependencies: list[str] = Field(default_factory=list)
-    estimated_hours: Optional[float] = None
-    owner: Optional[str] = None
-    status: Optional[str] = None
+    estimated_hours: float | None = None
+    owner: str | None = None
+    status: str | None = None
 
 
 class Epic(BaseModel):
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     tasks: list[Task] = Field(default_factory=list)
-    owner: Optional[str] = None
+    owner: str | None = None
 
 
 class Phase(BaseModel):
     number: int
     name: str
-    duration: Optional[str] = None
+    duration: str | None = None
     exit_criteria: list[str] = Field(default_factory=list)
     epics: list[Epic] = Field(default_factory=list)
 
@@ -47,14 +46,15 @@ class WorkBreakdownParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
         structure = RoadmapStructure()
         lines = content.split("\n")
-        current_phase: Optional[Phase] = None
+        current_phase: Phase | None = None
         current_section = None
 
         # Regex patterns
         phase_pattern = re.compile(r"### Phase (\d+): (.+) \((.+)\)")
         epic_row_pattern = re.compile(r"\|\s*(\d+\.\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|")
-        dependency_header_pattern = re.compile(r"### Phase \d+ Dependencies")
-        dependency_item_pattern = re.compile(
+        # Reserved for future dependency parsing enhancements
+        _dependency_header_pattern = re.compile(r"### Phase \d+ Dependencies")
+        _dependency_item_pattern = re.compile(
             r"Epic (\d+\.\d+) .*depends on.*"
         )  # Simplified, needs robust parsing
 
@@ -148,7 +148,7 @@ class WorkBreakdownParser(BaseRoadmapParser):
             return
 
         lines = dep_section.split("\n")
-        current_phase_deps = None
+        _current_phase_deps = None  # Reserved for phase-level dependency tracking
 
         for line in lines:
             line = line.strip()

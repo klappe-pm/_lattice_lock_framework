@@ -5,7 +5,7 @@ import hashlib
 import pickle
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 CACHE_DIR = Path(".lattice/cache")
 
@@ -19,7 +19,7 @@ class CacheLayer:
         hashed = hashlib.sha256(key.encode()).hexdigest()
         return CACHE_DIR / f"{hashed}.cache"
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         path = self._get_path(key)
         if not path.exists():
             return None
