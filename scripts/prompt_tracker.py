@@ -27,6 +27,14 @@ PROMPTS_DIR = REPO_ROOT / "project_prompts"
 STATE_FILE = PROMPTS_DIR / "project_prompts_state.json"
 TRACKER_FILE = PROMPTS_DIR / "project_prompts_tracker.md"
 
+# Add src to sys.path to allow importing lattice_lock
+sys.path.append(str(REPO_ROOT / "src"))
+try:
+    from lattice_lock.utils.safe_path import resolve_under_root
+except ImportError:
+    print("Error: Could not import lattice_lock.utils.safe_path. Ensure you are running from the project root or src is in PYTHONPATH.", file=sys.stderr)
+    sys.exit(1)
+
 
 def load_state() -> dict:
     """Load the JSON state file."""
@@ -498,14 +506,22 @@ def cmd_validate_state(args) -> None:
     valid = []
 
     for p in prompts:
-        file_path = PROMPTS_DIR / p["file"]
-        if file_path.exists():
-            valid.append(p["id"])
-        else:
-            issues.append({
+        try:
+            file_path = resolve_under_root(str(PROMPTS_DIR), p["file"])
+            path_obj = Path(file_path)
+            if path_obj.exists():
+                valid.append(p["id"])
+            else:
+                issues.append({
+                    "id": p["id"],
+                    "file": p["file"],
+                    "issue": "file_not_found"
+                })
+        except ValueError:
+             issues.append({
                 "id": p["id"],
                 "file": p["file"],
-                "issue": "file_not_found"
+                "issue": "invalid_path_traversal"
             })
 
     # Check for orphan files (files not in state)

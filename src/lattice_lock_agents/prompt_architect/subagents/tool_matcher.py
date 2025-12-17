@@ -58,7 +58,7 @@ class ToolMatcher:
                         # Strategy: Split or assign to primary owner (simplification: assign to first owner found)
                         # In a real scenario, we might split the task.
                         # For now, we'll note the conflict but stick to the first owner.
-                        pass
+                        logger.warning(f"Conflict detected for task {task.id}: File '{file}' owned by '{owner}' conflicts with forced owner '{forced_owner}'. Ignoring.")
                     else:
                         forced_owner = owner
 

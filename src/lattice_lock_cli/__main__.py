@@ -60,6 +60,7 @@ cli.add_command(feedback, name="feedback")
 
 # Alias commands for better UX
 cli.add_command(gauntlet_command, name="test")
+cli.add_command(gauntlet_command, name="gauntlet")  # Alias for backward compatibility
 cli.add_command(sheriff_command, name="sheriff") # Keep sheriff available directly or via validate? Design says 'validate' runs sheriff.
 
 # Register Groups

@@ -381,7 +381,9 @@ jobs:
         run: lattice-lock sheriff src/
 
       - name: Run Gauntlet (Semantic Tests)
-        run: lattice-lock gauntlet
+        run: |
+          bash
+          lattice-lock test
 
       - name: Orchestrator Smoke Test
         run: lattice-lock test-orchestrator

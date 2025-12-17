@@ -3,10 +3,7 @@ import os
 import time
 from typing import Dict, List, Any, Optional
 from pathlib import Path
-try:
-    from lattice_lock.utils.safe_path import resolve_under_root
-except ImportError:
-     def resolve_under_root(p, root=None): return Path(p).resolve()
+from lattice_lock.utils.safe_path import resolve_under_root
 
 import pytest
 
