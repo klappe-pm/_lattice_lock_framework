@@ -8,14 +8,17 @@ coordinates subagents, and manages the prompt generation workflow.
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import yaml
-from lattice_lock_agents.prompt_architect.subagents.prompt_generator import PromptGenerator
+
 from lattice_lock_agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
 from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 from lattice_lock_agents.prompt_architect.subagents.tool_matcher import ToolMatcher
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
+
+if TYPE_CHECKING:
+    from lattice_lock_agents.prompt_architect.subagents.prompt_generator import PromptGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -175,13 +178,14 @@ class PromptArchitectAgent:
         return self._tool_matcher
 
     @property
-    def prompt_generator(self) -> PromptGenerator:
+    def prompt_generator(self) -> "PromptGenerator":
         """Get or create the PromptGenerator subagent."""
         if self._prompt_generator is None:
             config_path = str(
                 self.repo_root
                 / "agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"
             )
+            from lattice_lock_agents.prompt_architect.subagents.prompt_generator import PromptGenerator
             self._prompt_generator = PromptGenerator(config_path=config_path)
         return self._prompt_generator
 
