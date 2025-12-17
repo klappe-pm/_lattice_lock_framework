@@ -4,20 +4,21 @@ Tests for ModelCapabilities and related types.
 Task 6.1.2 - Ensures CLI and orchestrator work correctly with model capabilities.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from lattice_lock_orchestrator.registry import ModelRegistry
 from lattice_lock_orchestrator.types import (
     ModelCapabilities,
     ModelProvider,
-    TaskType,
     TaskRequirements,
+    TaskType,
 )
-from lattice_lock_orchestrator.registry import ModelRegistry
 
 
 class TestTaskType:
@@ -191,7 +192,9 @@ class TestModelRegistry:
             assert hasattr(model, "code_specialized"), f"{model_id} missing code_specialized"
             assert hasattr(model, "task_scores"), f"{model_id} missing task_scores"
             assert hasattr(model, "supports_vision"), f"{model_id} missing supports_vision"
-            assert hasattr(model, "supports_function_calling"), f"{model_id} missing supports_function_calling"
+            assert hasattr(
+                model, "supports_function_calling"
+            ), f"{model_id} missing supports_function_calling"
 
     def test_all_models_have_valid_task_scores(self, registry):
         """All registered models should have valid task_scores."""

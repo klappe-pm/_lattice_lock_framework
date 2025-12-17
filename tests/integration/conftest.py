@@ -4,8 +4,9 @@ Fixtures for integration tests.
 Provides shared fixtures for CLI integration testing.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 from click.testing import CliRunner
 
 
@@ -146,11 +147,17 @@ def scaffolded_project(cli_runner: CliRunner, temp_project_dir: Path) -> Path:
     """
     from lattice_lock_cli.__main__ import cli
 
-    result = cli_runner.invoke(cli, [
-        "init", "integration_test_project",
-        "--template", "service",
-        "--output-dir", str(temp_project_dir),
-    ])
+    result = cli_runner.invoke(
+        cli,
+        [
+            "init",
+            "integration_test_project",
+            "--template",
+            "service",
+            "--output-dir",
+            str(temp_project_dir),
+        ],
+    )
 
     assert result.exit_code == 0, f"Failed to scaffold project: {result.output}"
 
@@ -170,11 +177,17 @@ def scaffolded_agent_project(cli_runner: CliRunner, temp_project_dir: Path) -> P
     """
     from lattice_lock_cli.__main__ import cli
 
-    result = cli_runner.invoke(cli, [
-        "init", "agent_test_project",
-        "--template", "agent",
-        "--output-dir", str(temp_project_dir),
-    ])
+    result = cli_runner.invoke(
+        cli,
+        [
+            "init",
+            "agent_test_project",
+            "--template",
+            "agent",
+            "--output-dir",
+            str(temp_project_dir),
+        ],
+    )
 
     assert result.exit_code == 0, f"Failed to scaffold agent project: {result.output}"
 

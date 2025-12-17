@@ -8,11 +8,11 @@ Usage:
 """
 
 from lattice_lock_orchestrator.types import (
-    TaskType,
-    TaskRequirements,
-    ModelProvider,
-    ModelCapabilities,
     APIResponse,
+    ModelCapabilities,
+    ModelProvider,
+    TaskRequirements,
+    TaskType,
 )
 
 __all__ = [

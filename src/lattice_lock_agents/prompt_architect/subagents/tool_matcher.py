@@ -1,11 +1,11 @@
-from typing import List, Dict, Set
-import os
-from .tool_profiles import ToolProfile, Task, ToolAssignment, load_tool_profiles
+
+from .tool_profiles import Task, ToolAssignment, load_tool_profiles
+
 
 class ToolMatcher:
     def __init__(self, config_path: str):
         self.profiles = load_tool_profiles(config_path)
-        self.file_ownership_map: Dict[str, str] = {} # file_path -> tool_id
+        self.file_ownership_map: dict[str, str] = {}  # file_path -> tool_id
         self._build_ownership_map()
 
     def _build_ownership_map(self):
@@ -14,7 +14,7 @@ class ToolMatcher:
             for pattern in profile.preferred_files:
                 self.file_ownership_map[pattern] = tool_id
 
-    def get_do_not_touch_list(self, tool_id: str) -> List[str]:
+    def get_do_not_touch_list(self, tool_id: str) -> list[str]:
         """Generates a list of files that the given tool should NOT touch."""
         do_not_touch = []
         for owner_id, profile in self.profiles.items():
@@ -29,18 +29,18 @@ class ToolMatcher:
         best_match_len = 0
 
         for pattern, owner_id in self.file_ownership_map.items():
-            if pattern.endswith('/'):
+            if pattern.endswith("/"):
                 if file_path.startswith(pattern):
                     if len(pattern) > best_match_len:
                         best_match_len = len(pattern)
                         best_match_owner = owner_id
-            elif file_path == pattern or file_path.endswith(pattern): # Simple suffix match for now
-                 # Exact or suffix match takes precedence over directory
-                 return owner_id
+            elif file_path == pattern or file_path.endswith(pattern):  # Simple suffix match for now
+                # Exact or suffix match takes precedence over directory
+                return owner_id
 
         return best_match_owner
 
-    def match(self, tasks: List[Task]) -> List[ToolAssignment]:
+    def match(self, tasks: list[Task]) -> list[ToolAssignment]:
         assignments = []
 
         for task in tasks:
@@ -64,7 +64,7 @@ class ToolMatcher:
 
             if forced_owner:
                 best_tool = forced_owner
-                max_score = 1.0 # Forced assignment
+                max_score = 1.0  # Forced assignment
                 reason = f"Owned files detected for {forced_owner}"
             else:
                 # Second pass: Capability matching if no hard ownership
@@ -76,20 +76,26 @@ class ToolMatcher:
                 reason = f"Best capability match ({max_score:.2f})"
 
             if best_tool:
-                assignments.append(ToolAssignment(
-                    task_id=task.id,
-                    tool=best_tool,
-                    confidence=max_score,
-                    files_owned=[f for f in task.files if self._resolve_ownership(f) == best_tool],
-                    reasoning=reason
-                ))
+                assignments.append(
+                    ToolAssignment(
+                        task_id=task.id,
+                        tool=best_tool,
+                        confidence=max_score,
+                        files_owned=[
+                            f for f in task.files if self._resolve_ownership(f) == best_tool
+                        ],
+                        reasoning=reason,
+                    )
+                )
             else:
                 # Fallback or unassigned
-                assignments.append(ToolAssignment(
-                    task_id=task.id,
-                    tool="unassigned",
-                    confidence=0.0,
-                    reasoning="No suitable tool found"
-                ))
+                assignments.append(
+                    ToolAssignment(
+                        task_id=task.id,
+                        tool="unassigned",
+                        confidence=0.0,
+                        reasoning="No suitable tool found",
+                    )
+                )
 
         return assignments

@@ -1,6 +1,4 @@
-import pytest
 import subprocess
-import os
 import sys
 
 # This test requires pre-commit to be installed and the repo to be a git repo.
@@ -9,13 +7,16 @@ import sys
 # However, the prompt asks for "Test hook runs on commit", "Test hook blocks invalid commits".
 # We can simulate the hook execution by running the python module directly as the hook would.
 
+
 def test_structure_hook_execution():
     # Run python -m src.lattice_lock_validator.structure
     # We need to run it on the current repo (which might have violations, so expect failure or success depending on state)
     # But for a unit test, we should probably run it on a temp repo.
     pass
 
+
 # Actually, let's test the CLI entry point of structure.py which is what the hook uses.
+
 
 def test_cli_entry_point_naming_only(tmp_path):
     # Create a bad file
@@ -28,12 +29,19 @@ def test_cli_entry_point_naming_only(tmp_path):
     # We import the module and run the main logic, or subprocess it.
     # Subprocess is safer to test CLI args.
 
-    cmd = [sys.executable, "-m", "src.lattice_lock_validator.structure", "--naming-only", str(tmp_path)]
+    cmd = [
+        sys.executable,
+        "-m",
+        "src.lattice_lock_validator.structure",
+        "--naming-only",
+        str(tmp_path),
+    ]
     result = subprocess.run(cmd, capture_output=True, text=True)
 
     assert result.returncode == 1
     assert "Validation FAILED" in result.stdout
     assert "does not follow snake_case" in result.stdout
+
 
 def test_cli_entry_point_full_check(tmp_path):
     # Create valid structure
@@ -48,6 +56,7 @@ def test_cli_entry_point_full_check(tmp_path):
 
     assert result.returncode == 0
     assert "Validation PASSED" in result.stdout
+
 
 def test_cli_entry_point_missing_dir(tmp_path):
     # Missing agent_definitions

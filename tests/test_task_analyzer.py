@@ -11,13 +11,17 @@ This module validates:
 
 Target: >80% accuracy on golden test set
 """
-import pytest
 import json
 from pathlib import Path
 
-from lattice_lock_orchestrator.scorer import TaskAnalyzer, TaskAnalysis, ModelScorer
-from lattice_lock_orchestrator.types import TaskType, TaskRequirements, ModelCapabilities, ModelProvider
-
+import pytest
+from lattice_lock_orchestrator.scorer import ModelScorer, TaskAnalyzer
+from lattice_lock_orchestrator.types import (
+    ModelCapabilities,
+    ModelProvider,
+    TaskRequirements,
+    TaskType,
+)
 
 PROJECT_ROOT = Path(__file__).parent.parent
 GOLDEN_FILE = PROJECT_ROOT / "tests" / "fixtures" / "task_analyzer_golden.json"
@@ -114,7 +118,10 @@ class TestMultiLabelClassification:
         analysis = analyzer.analyze_full(prompt)
         assert analysis.primary_type == TaskType.TESTING
         # Tests require code generation
-        assert TaskType.CODE_GENERATION in analysis.secondary_types or analysis.scores[TaskType.CODE_GENERATION] > 0.1
+        assert (
+            TaskType.CODE_GENERATION in analysis.secondary_types
+            or analysis.scores[TaskType.CODE_GENERATION] > 0.1
+        )
 
     def test_debugging_with_code_generation(self, analyzer):
         """Bug fixes often require code generation - both should score high."""
@@ -131,7 +138,11 @@ def calculate_total(items):
         # Either can be primary since the prompt has both "fix" and code blocks
         assert analysis.primary_type in (TaskType.DEBUGGING, TaskType.CODE_GENERATION)
         # The other should be in secondary or have high score
-        other_type = TaskType.CODE_GENERATION if analysis.primary_type == TaskType.DEBUGGING else TaskType.DEBUGGING
+        other_type = (
+            TaskType.CODE_GENERATION
+            if analysis.primary_type == TaskType.DEBUGGING
+            else TaskType.DEBUGGING
+        )
         assert other_type in analysis.secondary_types or analysis.scores[other_type] > 0.3
 
     def test_max_three_secondary_types(self, analyzer):
@@ -342,7 +353,9 @@ class TestGoldenTestSet:
 
         if total_secondary > 0:
             detection_rate = detected / total_secondary
-            assert detection_rate >= 0.50, f"Secondary type detection rate {detection_rate:.2%} below 50%"
+            assert (
+                detection_rate >= 0.50
+            ), f"Secondary type detection rate {detection_rate:.2%} below 50%"
 
     def test_complexity_estimation(self, analyzer, golden_tests):
         """Test complexity estimation against golden set."""
@@ -500,7 +513,11 @@ class TestEdgeCases:
         prompt = "Write tests for this debugging helper function"
         analysis = analyzer.analyze_full(prompt)
         # Should pick one as primary
-        assert analysis.primary_type in (TaskType.TESTING, TaskType.CODE_GENERATION, TaskType.DEBUGGING)
+        assert analysis.primary_type in (
+            TaskType.TESTING,
+            TaskType.CODE_GENERATION,
+            TaskType.DEBUGGING,
+        )
 
     def test_unicode_prompt(self, analyzer):
         """Unicode characters should be handled."""

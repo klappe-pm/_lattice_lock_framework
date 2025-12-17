@@ -1,8 +1,8 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent D_6_3_8)
 # Task 6.3.8: Task Analyzer v2 Implementation
 
 import re
+
 
 class TaskAnalyzer:
     def __init__(self):
@@ -10,7 +10,7 @@ class TaskAnalyzer:
         self.patterns = {
             "CODE_GENERATION": [r"def .+\(", r"class .+\:", r"import .+"].copy(),
             "TESTING": [r"test", r"pytest", r"assert", r"mock"].copy(),
-            "DEBUGGING": [r"fix", r"error", r"exception", r"traceback"].copy()
+            "DEBUGGING": [r"fix", r"error", r"exception", r"traceback"].copy(),
         }
 
     def analyze(self, user_prompt: str):
@@ -27,8 +27,9 @@ class TaskAnalyzer:
         print("  [LLM] Heuristics failed. Calling Router Model...")
         return "GENERAL"
 
+
 if __name__ == "__main__":
     analyzer = TaskAnalyzer()
-    analyzer.analyze("def hello_world(): pass") # Should be CODE
-    analyzer.analyze("Why is my code crashing with ValueError?") # Should be DEBUG
-    analyzer.analyze("Tell me a joke") # Should be GENERAL
+    analyzer.analyze("def hello_world(): pass")  # Should be CODE
+    analyzer.analyze("Why is my code crashing with ValueError?")  # Should be DEBUG
+    analyzer.analyze("Tell me a joke")  # Should be GENERAL

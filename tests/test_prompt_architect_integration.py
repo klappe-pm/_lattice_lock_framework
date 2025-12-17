@@ -4,27 +4,22 @@ Tests for the Prompt Architect Agent integration with Project Agent.
 Tests the integration layer, callbacks, and Project Agent interface.
 """
 
-import json
 import tempfile
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
-
-from lattice_lock.agents.prompt_architect.models import (
-    ToolType,
-    PromptStatus,
-    PromptOutput,
-    GenerationResult,
-)
-
 from lattice_lock.agents.prompt_architect.integration import (
-    ProjectContext,
-    PromptExecutionStatus,
     IntegrationConfig,
-    PromptArchitectIntegration,
     ProjectAgentInterface,
+    ProjectContext,
+    PromptArchitectIntegration,
+    PromptExecutionStatus,
+)
+from lattice_lock.agents.prompt_architect.models import (
+    GenerationResult,
+    PromptStatus,
+    ToolType,
 )
 
 
@@ -75,7 +70,7 @@ class TestPromptExecutionStatus:
 
     def test_status_with_times(self) -> None:
         """Test status with start and completion times."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         status = PromptExecutionStatus(
             prompt_id="prompt_001",
             task_id="task_1",
@@ -200,7 +195,10 @@ class TestPromptArchitectIntegration:
 
             integration.load_state()
             assert integration._state["prompts"]["prompt_001"]["status"] == "completed"
-            assert integration._state["prompts"]["prompt_001"]["output_summary"] == "Task completed successfully"
+            assert (
+                integration._state["prompts"]["prompt_001"]["output_summary"]
+                == "Task completed successfully"
+            )
 
     def test_mark_prompt_failed(self) -> None:
         """Test marking a prompt as failed."""
@@ -248,7 +246,10 @@ class TestPromptArchitectIntegration:
 
             integration.load_state()
             assert integration._state["prompts"]["prompt_001"]["status"] == "blocked"
-            assert integration._state["prompts"]["prompt_001"]["blocked_reason"] == "Waiting for dependency"
+            assert (
+                integration._state["prompts"]["prompt_001"]["blocked_reason"]
+                == "Waiting for dependency"
+            )
 
     def test_get_prompt_status(self) -> None:
         """Test getting prompt status."""
@@ -514,9 +515,7 @@ class TestProjectAgentInterface:
         result = interface.fail_task("prompt_001", "Error occurred")
 
         assert result is True
-        mock_integration.mark_prompt_failed.assert_called_once_with(
-            "prompt_001", "Error occurred"
-        )
+        mock_integration.mark_prompt_failed.assert_called_once_with("prompt_001", "Error occurred")
 
     def test_get_progress(self) -> None:
         """Test getting progress for a phase."""

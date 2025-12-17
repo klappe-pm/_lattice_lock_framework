@@ -5,14 +5,15 @@ Validates extractor functionality and constraint enforcement.
 """
 
 import pytest
+
 from src.extractors import (
-    SourceType,
-    RecordStatus,
-    DataSource,
-    DataRecord,
-    DatabaseExtractor,
     APIExtractor,
+    DatabaseExtractor,
+    DataRecord,
+    DataSource,
     FileExtractor,
+    RecordStatus,
+    SourceType,
     get_extractor,
 )
 

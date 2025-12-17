@@ -8,7 +8,7 @@ import json
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 import yaml
 
@@ -64,7 +64,7 @@ class JSONSpecParser(SpecParser):
     def can_parse(self, content: str) -> bool:
         """Check if content is valid JSON."""
         content_stripped = content.strip()
-        if not (content_stripped.startswith('{') or content_stripped.startswith('[')):
+        if not (content_stripped.startswith("{") or content_stripped.startswith("[")):
             return False
         try:
             json.loads(content)
@@ -271,10 +271,10 @@ class MarkdownSpecParser(SpecParser):
     def can_parse(self, content: str) -> bool:
         """Check if content appears to be markdown."""
         # Check for markdown indicators
-        has_header = bool(re.search(r'^#+ ', content, re.MULTILINE))
-        has_list = bool(re.search(r'^[\-\*] ', content, re.MULTILINE))
+        has_header = bool(re.search(r"^#+ ", content, re.MULTILINE))
+        has_list = bool(re.search(r"^[\-\*] ", content, re.MULTILINE))
         # Not JSON
-        not_json = not content.strip().startswith('{') and not content.strip().startswith('[')
+        not_json = not content.strip().startswith("{") and not content.strip().startswith("[")
         return (has_header or has_list) and not_json
 
     def parse(
@@ -289,46 +289,46 @@ class MarkdownSpecParser(SpecParser):
         )
 
         # Extract title from first H1
-        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+        title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
         if title_match:
             metadata.title = title_match.group(1).strip()
 
         # Extract version
-        version_match = re.search(r'\*\*Version[:\s]*\*\*\s*(\S+)', content, re.IGNORECASE)
+        version_match = re.search(r"\*\*Version[:\s]*\*\*\s*(\S+)", content, re.IGNORECASE)
         if version_match:
             metadata.version = version_match.group(1).strip()
 
         # Extract author
-        author_match = re.search(r'\*\*Author[:\s]*\*\*\s*(.+?)(?:\n|$)', content, re.IGNORECASE)
+        author_match = re.search(r"\*\*Author[:\s]*\*\*\s*(.+?)(?:\n|$)", content, re.IGNORECASE)
         if author_match:
             metadata.author = author_match.group(1).strip()
 
         # Extract phases
         phases = []
         phase_pattern = re.compile(
-            r'^##\s+(?:Phase\s+\d+[:\s]*)?(.+)$',
+            r"^##\s+(?:Phase\s+\d+[:\s]*)?(.+)$",
             re.MULTILINE | re.IGNORECASE,
         )
         for match in phase_pattern.finditer(content):
             phase_name = match.group(1).strip()
             # Filter out non-phase sections
-            if phase_name.lower() not in ['requirements', 'constraints', 'components', 'overview']:
+            if phase_name.lower() not in ["requirements", "constraints", "components", "overview"]:
                 phases.append(Phase(name=phase_name))
 
         # Extract components from bullet lists under "Components" section
         components = []
         comp_section = re.search(
-            r'^##\s+Components?\s*\n((?:[\-\*]\s+.+\n?)+)',
+            r"^##\s+Components?\s*\n((?:[\-\*]\s+.+\n?)+)",
             content,
             re.MULTILINE | re.IGNORECASE,
         )
         if comp_section:
-            for line in comp_section.group(1).split('\n'):
-                comp_match = re.match(r'^[\-\*]\s+(.+)$', line.strip())
+            for line in comp_section.group(1).split("\n"):
+                comp_match = re.match(r"^[\-\*]\s+(.+)$", line.strip())
                 if comp_match:
                     comp_name = comp_match.group(1).strip()
                     # Remove markdown formatting
-                    comp_name = re.sub(r'[\*_`]', '', comp_name)
+                    comp_name = re.sub(r"[\*_`]", "", comp_name)
                     components.append(Component(name=comp_name))
 
         # Extract requirements from bullet lists
@@ -337,13 +337,13 @@ class MarkdownSpecParser(SpecParser):
 
         # Look for Requirements section
         req_section = re.search(
-            r'^##\s+Requirements?\s*\n((?:[\-\*]\s+.+\n?)+)',
+            r"^##\s+Requirements?\s*\n((?:[\-\*]\s+.+\n?)+)",
             content,
             re.MULTILINE | re.IGNORECASE,
         )
         if req_section:
-            for line in req_section.group(1).split('\n'):
-                req_match = re.match(r'^[\-\*]\s+(.+)$', line.strip())
+            for line in req_section.group(1).split("\n"):
+                req_match = re.match(r"^[\-\*]\s+(.+)$", line.strip())
                 if req_match:
                     requirements.append(
                         Requirement(
@@ -355,7 +355,7 @@ class MarkdownSpecParser(SpecParser):
 
         # Also extract "must" and "should" statements
         must_should_pattern = re.compile(
-            r'^[\-\*]\s+(.+?(?:must|should).+?)$',
+            r"^[\-\*]\s+(.+?(?:must|should).+?)$",
             re.MULTILINE | re.IGNORECASE,
         )
         existing_descs = {r.description.lower() for r in requirements}
@@ -377,13 +377,13 @@ class MarkdownSpecParser(SpecParser):
 
         # Look for Constraints section
         con_section = re.search(
-            r'^##\s+(?:Technical\s+)?Constraints?\s*\n((?:[\-\*]\s+.+\n?)+)',
+            r"^##\s+(?:Technical\s+)?Constraints?\s*\n((?:[\-\*]\s+.+\n?)+)",
             content,
             re.MULTILINE | re.IGNORECASE,
         )
         if con_section:
-            for line in con_section.group(1).split('\n'):
-                con_match = re.match(r'^[\-\*]\s+(.+)$', line.strip())
+            for line in con_section.group(1).split("\n"):
+                con_match = re.match(r"^[\-\*]\s+(.+)$", line.strip())
                 if con_match:
                     constraints.append(
                         Constraint(
@@ -418,11 +418,11 @@ def get_parser_for_file(file_path: str) -> SpecParser:
     suffix = path.suffix.lower()
 
     parsers = {
-        '.md': MarkdownSpecParser(),
-        '.markdown': MarkdownSpecParser(),
-        '.yaml': YAMLSpecParser(),
-        '.yml': YAMLSpecParser(),
-        '.json': JSONSpecParser(),
+        ".md": MarkdownSpecParser(),
+        ".markdown": MarkdownSpecParser(),
+        ".yaml": YAMLSpecParser(),
+        ".yml": YAMLSpecParser(),
+        ".json": JSONSpecParser(),
     }
 
     parser = parsers.get(suffix)
@@ -444,7 +444,7 @@ def detect_parser(content: str) -> SpecParser:
     content_stripped = content.strip()
 
     # Try JSON first (most specific)
-    if content_stripped.startswith('{') or content_stripped.startswith('['):
+    if content_stripped.startswith("{") or content_stripped.startswith("["):
         try:
             json.loads(content)
             return JSONSpecParser()
@@ -452,7 +452,7 @@ def detect_parser(content: str) -> SpecParser:
             pass
 
     # Try YAML (if it has YAML-specific patterns)
-    if ':' in content_stripped.split('\n')[0]:
+    if ":" in content_stripped.split("\n")[0]:
         try:
             yaml.safe_load(content)
             return YAMLSpecParser()

@@ -5,19 +5,19 @@ Services implement business rules and coordinate between
 models and external systems.
 """
 
+from datetime import datetime, timezone
 from typing import Optional
-from datetime import datetime
 
 from src.models import (
-    User,
-    Product,
+    Currency,
     Order,
     OrderItem,
-    Payment,
     OrderStatus,
-    PaymentStatus,
+    Payment,
     PaymentMethod,
-    Currency,
+    PaymentStatus,
+    Product,
+    User,
 )
 
 
@@ -42,8 +42,8 @@ class UserService:
             password_hash=password_hash,
             first_name=first_name,
             last_name=last_name,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         self._users[user.id] = user
         self._next_id += 1
@@ -65,7 +65,7 @@ class UserService:
         user = self._users.get(user_id)
         if user:
             user.is_verified = True
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(timezone.utc)
             return True
         return False
 
@@ -95,8 +95,8 @@ class ProductService:
             price_cents=price_cents,
             quantity_in_stock=quantity_in_stock,
             category=category,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         self._products[product.id] = product
         self._next_id += 1
@@ -120,7 +120,7 @@ class ProductService:
             new_quantity = product.quantity_in_stock + quantity_change
             if new_quantity >= 0:
                 product.quantity_in_stock = new_quantity
-                product.updated_at = datetime.utcnow()
+                product.updated_at = datetime.now(timezone.utc)
                 return True
         return False
 
@@ -155,8 +155,8 @@ class OrderService:
             shipping_address=shipping_address,
             billing_address=billing_address,
             notes=notes,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         self._orders[order.id] = order
         self._order_items[order.id] = []
@@ -188,13 +188,13 @@ class OrderService:
             product_id=product_id,
             quantity=quantity,
             unit_price_cents=product.price_cents,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         self._order_items[order_id].append(item)
         self._next_item_id += 1
 
         order.total_cents += item.quantity * item.unit_price_cents
-        order.updated_at = datetime.utcnow()
+        order.updated_at = datetime.now(timezone.utc)
 
         return item
 
@@ -210,7 +210,7 @@ class OrderService:
                 return False
 
         order.status = OrderStatus.CONFIRMED
-        order.updated_at = datetime.utcnow()
+        order.updated_at = datetime.now(timezone.utc)
         return True
 
     def cancel_order(self, order_id: int) -> bool:
@@ -225,7 +225,7 @@ class OrderService:
                 self._product_service.update_stock(item.product_id, item.quantity)
 
         order.status = OrderStatus.CANCELLED
-        order.updated_at = datetime.utcnow()
+        order.updated_at = datetime.now(timezone.utc)
         return True
 
     def get_order(self, order_id: int) -> Optional[Order]:
@@ -261,7 +261,7 @@ class PaymentService:
             status=PaymentStatus.PENDING,
             payment_method=payment_method,
             transaction_id=transaction_id,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         self._payments[payment.id] = payment
         self._next_id += 1
@@ -275,7 +275,7 @@ class PaymentService:
 
         payment.status = PaymentStatus.PROCESSING
         payment.status = PaymentStatus.COMPLETED
-        payment.processed_at = datetime.utcnow()
+        payment.processed_at = datetime.now(timezone.utc)
         return True
 
     def refund_payment(self, payment_id: int) -> bool:

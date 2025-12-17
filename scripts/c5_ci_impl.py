@@ -1,4 +1,3 @@
-
 # IMPLEMENTATION SKELETON (Agent C5)
 # Task 2.1: GitHub Actions Implementation based on 6.4.3 Design
 
@@ -33,6 +32,7 @@ jobs:
         pytest tests/unit
 """
 
+
 def generate_workflow():
     dest = Path(".github/workflows")
     dest.mkdir(parents=True, exist_ok=True)
@@ -41,6 +41,7 @@ def generate_workflow():
         f.write(WORKFLOW_CONTENT)
 
     print("[C5] Generated .github/workflows/ci.yml")
+
 
 if __name__ == "__main__":
     generate_workflow()

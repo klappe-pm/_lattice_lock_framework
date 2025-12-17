@@ -4,9 +4,9 @@ Tests for API service business logic.
 Validates service layer operations and business rules.
 """
 
-import pytest
-from src.models import OrderStatus, PaymentStatus, PaymentMethod, Currency
-from src.services import UserService, ProductService, OrderService, PaymentService
+
+from src.models import Currency, OrderStatus, PaymentMethod, PaymentStatus
+from src.services import OrderService, PaymentService, ProductService, UserService
 
 
 class TestUserService:

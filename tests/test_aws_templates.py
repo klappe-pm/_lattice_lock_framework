@@ -4,13 +4,13 @@ Tests for AWS CodePipeline and CodeBuild templates.
 Tests template loading, rendering, and CloudFormation validity.
 """
 
+from pathlib import Path
+
 import pytest
 import yaml
-from pathlib import Path
 from click.testing import CliRunner
-
 from lattice_lock_cli.__main__ import cli
-from lattice_lock_cli.templates import get_template, render_template, TEMPLATES_DIR
+from lattice_lock_cli.templates import TEMPLATES_DIR, get_template, render_template
 
 
 def get_cfn_loader():
@@ -18,9 +18,23 @@ def get_cfn_loader():
     loader = yaml.SafeLoader
 
     cfn_tags = [
-        "!Sub", "!Ref", "!GetAtt", "!Join", "!Select", "!Split",
-        "!If", "!Not", "!Equals", "!And", "!Or", "!Condition",
-        "!Base64", "!Cidr", "!FindInMap", "!GetAZs", "!ImportValue",
+        "!Sub",
+        "!Ref",
+        "!GetAtt",
+        "!Join",
+        "!Select",
+        "!Split",
+        "!If",
+        "!Not",
+        "!Equals",
+        "!And",
+        "!Or",
+        "!Condition",
+        "!Base64",
+        "!Cidr",
+        "!FindInMap",
+        "!GetAZs",
+        "!ImportValue",
         "!Transform",
     ]
 
@@ -366,13 +380,21 @@ class TestInitCommandWithAWSCI:
         """Create a CLI test runner."""
         return CliRunner()
 
-    def test_init_with_aws_ci_creates_aws_directory(self, runner: CliRunner, tmp_path: Path) -> None:
+    def test_init_with_aws_ci_creates_aws_directory(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
         """Test that --ci aws creates ci/aws directory."""
-        result = runner.invoke(cli, [
-            "init", "my_aws_project",
-            "--ci", "aws",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_aws_project",
+                "--ci",
+                "aws",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
 
         assert result.exit_code == 0
         aws_dir = tmp_path / "my_aws_project" / "ci" / "aws"
@@ -381,11 +403,17 @@ class TestInitCommandWithAWSCI:
 
     def test_init_with_aws_ci_creates_buildspec(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test that --ci aws creates buildspec.yml."""
-        result = runner.invoke(cli, [
-            "init", "my_aws_project",
-            "--ci", "aws",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_aws_project",
+                "--ci",
+                "aws",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
 
         assert result.exit_code == 0
         buildspec = tmp_path / "my_aws_project" / "ci" / "aws" / "buildspec.yml"
@@ -397,11 +425,17 @@ class TestInitCommandWithAWSCI:
 
     def test_init_with_aws_ci_creates_pipeline(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test that --ci aws creates pipeline.yml."""
-        result = runner.invoke(cli, [
-            "init", "my_aws_project",
-            "--ci", "aws",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_aws_project",
+                "--ci",
+                "aws",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
 
         assert result.exit_code == 0
         pipeline = tmp_path / "my_aws_project" / "ci" / "aws" / "pipeline.yml"
@@ -411,13 +445,21 @@ class TestInitCommandWithAWSCI:
         parsed = cfn_safe_load(content)
         assert "AWSTemplateFormatVersion" in parsed
 
-    def test_init_with_aws_ci_creates_codebuild_project(self, runner: CliRunner, tmp_path: Path) -> None:
+    def test_init_with_aws_ci_creates_codebuild_project(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
         """Test that --ci aws creates codebuild-project.yml."""
-        result = runner.invoke(cli, [
-            "init", "my_aws_project",
-            "--ci", "aws",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_aws_project",
+                "--ci",
+                "aws",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
 
         assert result.exit_code == 0
         codebuild = tmp_path / "my_aws_project" / "ci" / "aws" / "codebuild-project.yml"
@@ -429,13 +471,20 @@ class TestInitCommandWithAWSCI:
 
     def test_init_default_ci_is_github(self, runner: CliRunner, tmp_path: Path) -> None:
         """Test that default CI provider is github (no aws directory)."""
-        result = runner.invoke(cli, [
-            "init", "my_default_project",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_default_project",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
 
         assert result.exit_code == 0
-        github_workflow = tmp_path / "my_default_project" / ".github" / "workflows" / "lattice-lock.yml"
+        github_workflow = (
+            tmp_path / "my_default_project" / ".github" / "workflows" / "lattice-lock.yml"
+        )
         assert github_workflow.exists()
 
         aws_dir = tmp_path / "my_default_project" / "ci" / "aws"
@@ -450,13 +499,21 @@ class TestInitCommandWithAWSCI:
         assert "github" in result.output
         assert "aws" in result.output
 
-    def test_init_with_aws_ci_still_creates_github_workflow(self, runner: CliRunner, tmp_path: Path) -> None:
+    def test_init_with_aws_ci_still_creates_github_workflow(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
         """Test that --ci aws still creates github workflow."""
-        result = runner.invoke(cli, [
-            "init", "my_aws_project",
-            "--ci", "aws",
-            "--output-dir", str(tmp_path),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "init",
+                "my_aws_project",
+                "--ci",
+                "aws",
+                "--output-dir",
+                str(tmp_path),
+            ],
+        )
 
         assert result.exit_code == 0
         github_workflow = tmp_path / "my_aws_project" / ".github" / "workflows" / "lattice-lock.yml"

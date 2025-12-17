@@ -7,22 +7,17 @@ metrics visualization, and real-time updates via WebSocket.
 
 import asyncio
 import logging
-import random
-import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from dataclasses import asdict
-from typing import Any, AsyncIterator, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import FastAPI, WebSocket, APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from .aggregator import DataAggregator, DashboardSummary
-from .metrics import MetricsSnapshot
-from .websocket import WebSocketManager
+from .aggregator import DataAggregator
 from .mock_data import mock_data_updater
-
+from .websocket import WebSocketManager
 
 # Configure logging
 logger = logging.getLogger("lattice_lock.dashboard")
@@ -34,7 +29,8 @@ API_VERSION = "1.0.0"
 # Shared state management moved to app.state
 # Use dependency injection to access these
 
-from fastapi import Request, Depends
+from fastapi import Depends, Request
+
 
 def get_aggregator(request: Request) -> DataAggregator:
     """Get the shared DataAggregator instance from app state."""
@@ -46,10 +42,10 @@ def get_ws_manager(request: Request) -> WebSocketManager:
     return request.app.state.ws_manager
 
 
-
 # Pydantic models for API responses
 class SummaryResponse(BaseModel):
     """Dashboard summary response."""
+
     total_projects: int = Field(description="Total number of registered projects")
     healthy_projects: int = Field(description="Number of healthy projects")
     at_risk_projects: int = Field(description="Number of at-risk projects")
@@ -62,6 +58,7 @@ class SummaryResponse(BaseModel):
 
 class ProjectResponse(BaseModel):
     """Project information response."""
+
     id: str = Field(description="Project identifier")
     name: str = Field(description="Project name")
     status: str = Field(description="Current project status")
@@ -70,15 +67,16 @@ class ProjectResponse(BaseModel):
     error_count: int = Field(description="Total error count")
     warning_count: int = Field(description="Total warning count")
     validation_count: int = Field(description="Total validation count")
-    details: Dict[str, Any] = Field(default_factory=dict, description="Additional details")
+    details: dict[str, Any] = Field(default_factory=dict, description="Additional details")
 
 
 class MetricsResponse(BaseModel):
     """Metrics data response."""
+
     total_validations: int = Field(description="Total validation count")
     success_rate: float = Field(description="Validation success rate (%)")
     avg_response_time: float = Field(description="Average response time (seconds)")
-    error_counts: Dict[str, int] = Field(description="Error counts by type")
+    error_counts: dict[str, int] = Field(description="Error counts by type")
     health_score: int = Field(description="Overall health score (0-100)")
     timestamp: float = Field(description="Metrics timestamp")
     response_time_p50: float = Field(description="50th percentile response time")
@@ -90,15 +88,17 @@ class MetricsResponse(BaseModel):
 
 class ProjectUpdateRequest(BaseModel):
     """Request to update a project's status."""
+
     status: str = Field(description="New status value")
-    details: Optional[Dict[str, Any]] = Field(default=None, description="Additional details")
+    details: Optional[dict[str, Any]] = Field(default=None, description="Additional details")
     duration: float = Field(default=0.1, description="Operation duration for metrics")
 
 
 class ConnectionStatsResponse(BaseModel):
     """WebSocket connection statistics response."""
+
     total_connections: int = Field(description="Number of active WebSocket connections")
-    connections: List[Dict[str, Any]] = Field(description="Details of each connection")
+    connections: list[dict[str, Any]] = Field(description="Details of each connection")
 
 
 # Create the API router
@@ -111,9 +111,7 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
     summary="Get Dashboard Summary",
     description="Get an overall summary of all projects and system health.",
 )
-async def get_summary(
-    aggregator: DataAggregator = Depends(get_aggregator)
-) -> SummaryResponse:
+async def get_summary(aggregator: DataAggregator = Depends(get_aggregator)) -> SummaryResponse:
     """
     Get dashboard summary.
 
@@ -137,13 +135,13 @@ async def get_summary(
 
 @router.get(
     "/projects",
-    response_model=List[ProjectResponse],
+    response_model=list[ProjectResponse],
     summary="List All Projects",
     description="Get a list of all registered projects with their current status.",
 )
 async def get_projects(
-    aggregator: DataAggregator = Depends(get_aggregator)
-) -> List[ProjectResponse]:
+    aggregator: DataAggregator = Depends(get_aggregator),
+) -> list[ProjectResponse]:
     """
     Get all projects.
 
@@ -179,8 +177,7 @@ async def get_projects(
     },
 )
 async def get_project(
-    project_id: str,
-    aggregator: DataAggregator = Depends(get_aggregator)
+    project_id: str, aggregator: DataAggregator = Depends(get_aggregator)
 ) -> ProjectResponse:
     """
     Get a specific project.
@@ -227,8 +224,7 @@ async def update_project(
     all connected WebSocket clients.
     """
 
-
-    aggregator = request.app.state.aggregator # Alternative access pattern
+    aggregator = request.app.state.aggregator  # Alternative access pattern
     ws_manager = request.app.state.ws_manager
 
     project = aggregator.update_project_status(
@@ -268,9 +264,7 @@ async def update_project(
     summary="Get Metrics Data",
     description="Get current validation metrics and statistics.",
 )
-async def get_metrics(
-    aggregator: DataAggregator = Depends(get_aggregator)
-) -> MetricsResponse:
+async def get_metrics(aggregator: DataAggregator = Depends(get_aggregator)) -> MetricsResponse:
     """
     Get metrics data.
 
@@ -302,7 +296,7 @@ async def get_metrics(
     description="Get statistics about active WebSocket connections.",
 )
 async def get_connection_stats(
-    ws_manager: WebSocketManager = Depends(get_ws_manager)
+    ws_manager: WebSocketManager = Depends(get_ws_manager),
 ) -> ConnectionStatsResponse:
     """
     Get WebSocket connection statistics.
@@ -355,9 +349,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Start background mock updater (for demo purposes)
     # In production, remove this or make it configurable
     if hasattr(app.state, "enable_mock_updates") and app.state.enable_mock_updates:
-         _background_task = asyncio.create_task(
-             mock_data_updater(app.state.aggregator, app.state.ws_manager)
-         )
+        _background_task = asyncio.create_task(
+            mock_data_updater(app.state.aggregator, app.state.ws_manager)
+        )
 
     yield
 
@@ -377,7 +371,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app(
-    cors_origins: Optional[List[str]] = None,
+    cors_origins: Optional[list[str]] = None,
     debug: bool = False,
     enable_mock_updates: bool = True,
 ) -> FastAPI:
@@ -429,7 +423,7 @@ ws.onmessage = (event) => {
     # Use explicit origins if provided, otherwise default to typical local development
     if cors_origins is None:
         cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-    
+
     # Store config in app state for lifespan access
     app.state.enable_mock_updates = enable_mock_updates
 
@@ -446,7 +440,7 @@ ws.onmessage = (event) => {
 
     # Root endpoint
     @app.get("/", include_in_schema=False)
-    async def root() -> Dict[str, str]:
+    async def root() -> dict[str, str]:
         """Root endpoint."""
         return {
             "name": "Lattice Lock Dashboard API",
@@ -466,7 +460,7 @@ def run_server(
     host: str = "127.0.0.1",
     port: int = 8080,
     reload: bool = False,
-    cors_origins: Optional[List[str]] = None,
+    cors_origins: Optional[list[str]] = None,
     debug: bool = False,
 ) -> None:
     """

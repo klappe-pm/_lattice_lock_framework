@@ -10,21 +10,20 @@ This module tests:
 """
 
 import os
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch
 
+import pytest
 from lattice_lock_orchestrator.api_clients import (
-    ProviderStatus,
+    AnthropicAPIClient,
+    BedrockAPIClient,
+    GoogleAPIClient,
+    GrokAPIClient,
+    LocalModelClient,
+    OpenAIAPIClient,
     ProviderAvailability,
+    ProviderStatus,
     ProviderUnavailableError,
     get_api_client,
-    BedrockAPIClient,
-    GrokAPIClient,
-    OpenAIAPIClient,
-    GoogleAPIClient,
-    AnthropicAPIClient,
-    AzureOpenAIClient,
-    LocalModelClient,
 )
 from lattice_lock_orchestrator.types import APIResponse
 
@@ -57,13 +56,31 @@ class TestProviderAvailability:
 
     def test_required_credentials_defined(self):
         """Test that required credentials are defined for all providers."""
-        expected_providers = ["openai", "anthropic", "google", "xai", "azure", "bedrock", "dial", "local"]
+        expected_providers = [
+            "openai",
+            "anthropic",
+            "google",
+            "xai",
+            "azure",
+            "bedrock",
+            "dial",
+            "local",
+        ]
         for provider in expected_providers:
             assert provider in ProviderAvailability.REQUIRED_CREDENTIALS
 
     def test_provider_maturity_defined(self):
         """Test that maturity levels are defined for all providers."""
-        expected_providers = ["openai", "anthropic", "google", "xai", "azure", "bedrock", "dial", "local"]
+        expected_providers = [
+            "openai",
+            "anthropic",
+            "google",
+            "xai",
+            "azure",
+            "bedrock",
+            "dial",
+            "local",
+        ]
         for provider in expected_providers:
             assert provider in ProviderAvailability.PROVIDER_MATURITY
 
@@ -262,10 +279,7 @@ class TestBedrockAPIClient:
         messages = [{"role": "user", "content": "Hello"}]
 
         # This should NOT raise NotImplementedError
-        response = await client.chat_completion(
-            model="anthropic.claude-v2",
-            messages=messages
-        )
+        response = await client.chat_completion(model="anthropic.claude-v2", messages=messages)
 
         # Should return an APIResponse with error field set
         assert isinstance(response, APIResponse)
@@ -278,10 +292,7 @@ class TestBedrockAPIClient:
         client = BedrockAPIClient()
         messages = [{"role": "user", "content": "Hello"}]
 
-        response = await client.chat_completion(
-            model="anthropic.claude-v2",
-            messages=messages
-        )
+        response = await client.chat_completion(model="anthropic.claude-v2", messages=messages)
 
         assert response.content is None
         assert response.provider == "bedrock"
@@ -296,9 +307,7 @@ class TestBedrockAPIClient:
         functions = [{"name": "test_func", "parameters": {}}]
 
         response = await client.chat_completion(
-            model="anthropic.claude-v2",
-            messages=messages,
-            functions=functions
+            model="anthropic.claude-v2", messages=messages, functions=functions
         )
 
         assert "function calling" in response.error.lower()

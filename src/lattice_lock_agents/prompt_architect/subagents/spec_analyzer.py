@@ -4,10 +4,10 @@ Specification Analyzer - Analyzes specification documents and extracts structure
 Supports markdown, YAML, and JSON specification formats with optional LLM enhancement.
 """
 
-import os
-import yaml
 from pathlib import Path
 from typing import Any, Optional
+
+import yaml
 
 from .models import (
     Component,
@@ -18,14 +18,12 @@ from .models import (
     Requirement,
     RequirementType,
     SpecificationAnalysis,
-    SpecificationMetadata,
 )
 from .parsers.spec_parser import (
     JSONSpecParser,
     MarkdownSpecParser,
     YAMLSpecParser,
     detect_parser,
-    get_parser_for_file,
 )
 
 
@@ -64,6 +62,7 @@ class LLMClient:
 
         try:
             import requests
+
             response = requests.get(f"{self.ollama_base_url}/api/tags", timeout=5)
             self._available = response.status_code == 200
         except Exception:
@@ -129,7 +128,7 @@ Specification:
         import re
 
         # Try to extract JSON from markdown code blocks
-        json_match = re.search(r'```(?:json)?\s*\n?(.+?)\n?```', response, re.DOTALL)
+        json_match = re.search(r"```(?:json)?\s*\n?(.+?)\n?```", response, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(1))
@@ -170,11 +169,11 @@ class SpecAnalyzer:
         self.llm_client: Optional[LLMClient] = LLMClient() if use_llm else None
 
         self.parsers = {
-            '.md': MarkdownSpecParser(),
-            '.markdown': MarkdownSpecParser(),
-            '.yaml': YAMLSpecParser(),
-            '.yml': YAMLSpecParser(),
-            '.json': JSONSpecParser(),
+            ".md": MarkdownSpecParser(),
+            ".markdown": MarkdownSpecParser(),
+            ".yaml": YAMLSpecParser(),
+            ".yml": YAMLSpecParser(),
+            ".json": JSONSpecParser(),
         }
 
     def _load_config(self, config_path: Optional[str]) -> dict[str, Any]:
@@ -201,7 +200,7 @@ class SpecAnalyzer:
 
         if config_path and Path(config_path).exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     loaded_config = yaml.safe_load(f)
                     if loaded_config:
                         default_config.update(loaded_config)
@@ -233,14 +232,14 @@ class SpecAnalyzer:
         if not parser:
             raise ValueError(f"Unsupported file format: {suffix}")
 
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             content = f.read()
 
         result = parser.parse(content, str(path))
 
         # Update metadata
         result.metadata.source_file = str(path)
-        result.metadata.file_format = suffix.lstrip('.')
+        result.metadata.file_format = suffix.lstrip(".")
 
         # Optionally enhance with LLM
         if self.use_llm and self._should_use_llm(result):

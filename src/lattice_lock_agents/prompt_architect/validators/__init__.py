@@ -1,8 +1,8 @@
 """Validators for the Prompt Architect system."""
 
-from .prompt_validator import PromptValidator, ValidationResult, SectionValidation
 from .convention_checker import ConventionChecker, ConventionResult
-from .quality_scorer import QualityScorer, QualityScore
+from .prompt_validator import PromptValidator, SectionValidation, ValidationResult
+from .quality_scorer import QualityScore, QualityScorer
 
 __all__ = [
     "PromptValidator",

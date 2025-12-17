@@ -5,10 +5,10 @@ Collects and aggregates validation status from all projects,
 calculates health scores, and caches results for performance.
 """
 
-from typing import Dict, List, Optional, Any
-import time
 import threading
-from dataclasses import dataclass, field, asdict
+import time
+from dataclasses import asdict, dataclass, field
+from typing import Any, Optional
 
 from .metrics import MetricsCollector, MetricsSnapshot, ProjectHealthTrend
 
@@ -16,6 +16,7 @@ from .metrics import MetricsCollector, MetricsSnapshot, ProjectHealthTrend
 @dataclass
 class ProjectInfo:
     """Information about a registered project."""
+
     id: str
     name: str
     status: str  # "healthy", "valid", "warning", "error", "unknown"
@@ -24,9 +25,9 @@ class ProjectInfo:
     error_count: int = 0
     warning_count: int = 0
     validation_count: int = 0
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return asdict(self)
 
@@ -34,6 +35,7 @@ class ProjectInfo:
 @dataclass
 class DashboardSummary:
     """Summary statistics for the dashboard."""
+
     total_projects: int
     healthy_projects: int
     at_risk_projects: int
@@ -43,7 +45,7 @@ class DashboardSummary:
     overall_success_rate: float
     last_update: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return asdict(self)
 
@@ -58,7 +60,7 @@ class Cache:
         Args:
             ttl_seconds: Time-to-live for cached data in seconds
         """
-        self._cache: Dict[str, tuple] = {}  # key -> (value, timestamp)
+        self._cache: dict[str, tuple] = {}  # key -> (value, timestamp)
         self._ttl = ttl_seconds
         self._lock = threading.Lock()
 
@@ -112,7 +114,7 @@ class DataAggregator:
             cache_ttl: Cache time-to-live in seconds
         """
         self.metrics = MetricsCollector()
-        self.projects: Dict[str, ProjectInfo] = {}
+        self.projects: dict[str, ProjectInfo] = {}
         self._last_update = 0.0
         self._cache = Cache(ttl_seconds=cache_ttl)
         self._lock = threading.Lock()
@@ -122,7 +124,7 @@ class DataAggregator:
         project_id: str,
         name: Optional[str] = None,
         status: str = "unknown",
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
     ) -> ProjectInfo:
         """
         Register a new project or update existing one.
@@ -162,7 +164,7 @@ class DataAggregator:
         self,
         project_id: str,
         status: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         duration: float = 0.1,
     ) -> Optional[ProjectInfo]:
         """
@@ -267,14 +269,8 @@ class DataAggregator:
 
         with self._lock:
             total = len(self.projects)
-            healthy = sum(
-                1 for p in self.projects.values()
-                if p.status in self.HEALTHY_STATUSES
-            )
-            error = sum(
-                1 for p in self.projects.values()
-                if p.status in self.ERROR_STATUSES
-            )
+            healthy = sum(1 for p in self.projects.values() if p.status in self.HEALTHY_STATUSES)
+            error = sum(1 for p in self.projects.values() if p.status in self.ERROR_STATUSES)
             at_risk = total - healthy - error
 
             avg_health = 0.0
@@ -297,7 +293,7 @@ class DataAggregator:
             self._cache.set(cache_key, summary)
             return summary
 
-    def get_all_projects(self) -> List[Dict[str, Any]]:
+    def get_all_projects(self) -> list[dict[str, Any]]:
         """
         Get all projects as a list of dictionaries.
 
@@ -326,7 +322,7 @@ class DataAggregator:
         """Get health trend data for a specific project."""
         return self.metrics.get_project_health_trend(project_id)
 
-    def get_error_summary(self) -> Dict[str, int]:
+    def get_error_summary(self) -> dict[str, int]:
         """
         Get summary of errors by type.
 

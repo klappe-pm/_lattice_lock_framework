@@ -1,4 +1,3 @@
-
 # IMPLEMENTATION SKELETON (Agent C2)
 # Task 4.1: Developer Documentation Site
 
@@ -22,8 +21,8 @@ nav:
 """
 
 # 2. Directory Scaffolding Script
-import os
 from pathlib import Path
+
 
 def build_docs_site(target_dir="docs"):
     root = Path(target_dir)
@@ -38,6 +37,7 @@ def build_docs_site(target_dir="docs"):
         f.write("# Lattice Lock Framework\n\nGovernance-first AI Framework.")
 
     print(f"[C2] Documentation site scaffolded in {target_dir}/")
+
 
 if __name__ == "__main__":
     build_docs_site()

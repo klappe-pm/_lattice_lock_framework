@@ -6,10 +6,10 @@ and external systems.
 """
 
 from lattice_lock_agents.prompt_architect.integrations.project_agent import (
-    ProjectAgentClient,
-    ProjectScope,
-    ProjectPhase,
     PendingTask,
+    ProjectAgentClient,
+    ProjectPhase,
+    ProjectScope,
 )
 
 # Registry of available integration clients
@@ -35,9 +35,7 @@ def get_integration_client(integration_name: str, **kwargs):
     client_class = INTEGRATION_REGISTRY.get(integration_name)
     if client_class is None:
         available = ", ".join(INTEGRATION_REGISTRY.keys())
-        raise ValueError(
-            f"Unknown integration: {integration_name}. Available: {available}"
-        )
+        raise ValueError(f"Unknown integration: {integration_name}. Available: {available}")
     return client_class(**kwargs)
 
 

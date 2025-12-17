@@ -21,7 +21,7 @@ from typing import Optional
 
 # Claude Code prompts - for IDE-based code generation
 CLAUDE_CODE_PROMPTS = {
-    "2.2.1": '''You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
+    "2.2.1": """You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
 
 Task ID: 2.2.1 - Design and draft AWS CodePipeline templates
 
@@ -58,9 +58,8 @@ Constraints:
 Output:
 - Code blocks for each file with clear filenames and paths
 - Brief explanation of pipeline stages
-- List of required IAM permissions''',
-
-    "2.3.1": '''You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
+- List of required IAM permissions""",
+    "2.3.1": """You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
 
 Task ID: 2.3.1 - Design and draft GCP Cloud Build templates
 
@@ -92,8 +91,7 @@ Constraints:
 Output:
 - Code blocks for each file with clear filenames and paths
 - Brief explanation of build steps
-- List of required IAM permissions''',
-
+- List of required IAM permissions""",
     "3.1.1": '''You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
 
 Task ID: 3.1.1 - Implement Error Classification System
@@ -155,7 +153,6 @@ Constraints:
 Output:
 - Complete code for all files
 - Example usage snippets''',
-
     "3.1.2": '''You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
 
 Task ID: 3.1.2 - Implement Error Handling Middleware
@@ -213,8 +210,7 @@ Constraints:
 Output:
 - Complete code for middleware
 - Integration example with orchestrator''',
-
-    "4.3.1": '''You are Claude Code running inside an IDE.
+    "4.3.1": """You are Claude Code running inside an IDE.
 
 Task ID: 4.3.1 - Pilot Project 1 Scaffolding (API Service)
 
@@ -238,9 +234,8 @@ Generate:
 Output:
 - Directory structure
 - Key file contents
-- Setup instructions''',
-
-    "4.3.2": '''You are Claude Code running inside an IDE.
+- Setup instructions""",
+    "4.3.2": """You are Claude Code running inside an IDE.
 
 Task ID: 4.3.2 - Pilot Project 2 Scaffolding (CLI Tool)
 
@@ -264,9 +259,8 @@ Generate:
 Output:
 - Directory structure
 - Key file contents
-- Setup instructions''',
-
-    "5.1.1": '''You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
+- Setup instructions""",
+    "5.1.1": """You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
 
 Task ID: 5.1.1 - Prompt Architect Agent Core Implementation
 
@@ -298,9 +292,8 @@ Goals:
 
 Output:
 - Complete agent definition files
-- Memory file template''',
-
-    "5.1.2": '''You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
+- Memory file template""",
+    "5.1.2": """You are Claude Code running inside an IDE with the `lattice-lock-framework` repo open.
 
 Task ID: 5.1.2 - Prompt Architect Agent Integration
 
@@ -316,12 +309,12 @@ Goals:
 
 Output:
 - Integration code snippets
-- Test file skeleton''',
+- Test file skeleton""",
 }
 
 # Gemini Antimatter prompts - for design docs and specifications
 GEMINI_ANTIMATTER_PROMPTS = {
-    "2.2.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+    "2.2.1": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 2.2.1 - Design Document for AWS CodePipeline Integration
 
@@ -364,9 +357,8 @@ Write a design document in markdown with these sections:
 Context:
 - Framework has 63 AI models from 8 providers
 - Uses pytest for testing, rich for CLI output
-- Existing templates in `src/lattice_lock_cli/templates/`''',
-
-    "2.3.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+- Existing templates in `src/lattice_lock_cli/templates/`""",
+    "2.3.1": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 2.3.1 - Design Document for GCP Cloud Build Integration
 
@@ -405,9 +397,8 @@ Write a design document in markdown with these sections:
    - Artifact Registry integration?
 
 7. **Implementation Tasks**
-   List concrete tasks for Devin AI and Claude Code to implement.''',
-
-    "3.1.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   List concrete tasks for Devin AI and Claude Code to implement.""",
+    "3.1.1": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 3.1.1 - Design Document for Error Classification System
 
@@ -443,9 +434,8 @@ Write a design document in markdown with these sections:
    - Code, Name, Severity, Category, Recoverability, Remediation
 
 7. **Implementation Tasks**
-   List concrete tasks for Devin AI to implement.''',
-
-    "3.1.2": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   List concrete tasks for Devin AI to implement.""",
+    "3.1.2": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 3.1.2 - Design Document for Error Handling Middleware
 
@@ -476,9 +466,8 @@ Write a design document covering:
    - Graceful degradation
 
 6. **Implementation Tasks**
-   List concrete tasks for Devin AI.''',
-
-    "4.3.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   List concrete tasks for Devin AI.""",
+    "4.3.1": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 4.3.1 - Pilot Project 1 Design Document (API Service)
 
@@ -511,9 +500,8 @@ Write a design document for the first pilot project:
    - CI/CD works on first try
 
 6. **Onboarding Checklist**
-   Step-by-step guide for new users''',
-
-    "4.3.2": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   Step-by-step guide for new users""",
+    "4.3.2": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 4.3.2 - Pilot Project 2 Design Document (CLI Tool)
 
@@ -548,9 +536,8 @@ Write a design document for the second pilot project:
 6. **Feedback Collection**
    - What to measure
    - How to collect
-   - Analysis approach''',
-
-    "5.1.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   - Analysis approach""",
+    "5.1.1": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 5.1.1 - Prompt Architect Agent Specification
 
@@ -589,9 +576,8 @@ Write a comprehensive specification:
 7. **Success Criteria**
    - Generated prompts pass validation
    - 90%+ accuracy on spec interpretation
-   - <30 second generation time''',
-
-    "5.1.2": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   - <30 second generation time""",
+    "5.1.2": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 5.1.2 - Prompt Architect Integration Specification
 
@@ -620,9 +606,8 @@ Write a specification for integrating the Prompt Architect Agent:
 5. **Error Handling**
    - Invalid specifications
    - Missing templates
-   - Tracker conflicts''',
-
-    "6.1.1": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+   - Tracker conflicts""",
+    "6.1.1": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 6.1.1 - Orchestrator Capabilities Contract Design
 
@@ -661,9 +646,8 @@ Write a design document in markdown with these sections:
 Context:
 - Current `ModelCapabilities` is missing fields used by CLI (`supports_reasoning`, `code_specialized`, `task_scores`)
 - `TaskType` enum is missing `VISION`
-- This causes `AttributeError` at runtime''',
-
-    "6.1.3": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+- This causes `AttributeError` at runtime""",
+    "6.1.3": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 6.1.3 - Provider Client and Fallback Strategy Design
 
@@ -706,9 +690,8 @@ Write a design document covering:
 Context:
 - `BedrockClient` currently raises `NotImplementedError`, causing runtime failures
 - Mixed maturity levels across providers (OpenAI fully supported, others partial)
-- Need robust fallback when providers are missing credentials''',
-
-    "6.3.3": '''You are helping maintain architectural documentation for the lattice-lock-framework.
+- Need robust fallback when providers are missing credentials""",
+    "6.3.3": """You are helping maintain architectural documentation for the lattice-lock-framework.
 
 Task ID: 6.3.3 - Cost & Telemetry Strategy Design
 
@@ -745,12 +728,12 @@ Write a design document covering:
 Context:
 - `show_cost_report()` in CLI returns "not yet implemented in v3.1"
 - Model costs are defined but not tracked
-- No storage for usage data''',
+- No storage for usage data""",
 }
 
 # Gemini CLI prompts - for terminal commands and scripts
 GEMINI_CLI_PROMPTS = {
-    "2.2.1": '''You are assisting from a terminal context.
+    "2.2.1": """You are assisting from a terminal context.
 
 Task ID: 2.2.1 - AWS CodePipeline Bootstrap Commands
 
@@ -800,9 +783,8 @@ aws cloudformation delete-stack --stack-name lattice-pipeline
 aws cloudformation delete-stack --stack-name lattice-codebuild
 
 Note: Replace all placeholders (ACCOUNT_ID, REGION, etc.) with actual values.
-Do not commit any real secrets or credentials.''',
-
-    "2.3.1": '''You are assisting from a terminal context.
+Do not commit any real secrets or credentials.""",
+    "2.3.1": """You are assisting from a terminal context.
 
 Task ID: 2.3.1 - GCP Cloud Build Bootstrap Commands
 
@@ -837,8 +819,7 @@ gcloud builds submit --config=cloudbuild.yaml .
 # View build logs
 gcloud builds log $(gcloud builds list --limit=1 --format='value(id)')
 
-Note: Replace placeholders with actual values.''',
-
+Note: Replace placeholders with actual values.""",
     "3.1.1": '''You are assisting from a terminal context.
 
 Task ID: 3.1.1 - Error Classification Testing Commands
@@ -874,7 +855,6 @@ from lattice_lock.errors import SchemaValidationError
 e = SchemaValidationError('Test', error_code='LL-VAL-001')
 print(json.dumps(e.to_dict(), indent=2))
 "''',
-
     "3.1.2": '''You are assisting from a terminal context.
 
 Task ID: 3.1.2 - Error Middleware Testing Commands
@@ -920,8 +900,7 @@ from lattice_lock.errors.middleware import ErrorMiddleware
 middleware = ErrorMiddleware()
 # Test error logging
 "''',
-
-    "4.3.1": '''You are assisting from a terminal context.
+    "4.3.1": """You are assisting from a terminal context.
 
 Task ID: 4.3.1 - Pilot Project 1 Setup Commands
 
@@ -951,9 +930,8 @@ uvicorn main:app --reload
 git add .
 git commit -m "Initial scaffold"
 git push origin main
-# Check GitHub Actions''',
-
-    "4.3.2": '''You are assisting from a terminal context.
+# Check GitHub Actions""",
+    "4.3.2": """You are assisting from a terminal context.
 
 Task ID: 4.3.2 - Pilot Project 2 Setup Commands
 
@@ -983,8 +961,7 @@ python -m pilot_cli_tool command1 --option value
 6. Verify CI:
 git add .
 git commit -m "Initial scaffold"
-git push origin main''',
-
+git push origin main""",
     "5.1.1": '''You are assisting from a terminal context.
 
 Task ID: 5.1.1 - Prompt Architect Agent Setup Commands
@@ -1013,7 +990,6 @@ import yaml
 with open('agent_definitions/prompt_architect_agent/agent_prompt_architect.md') as f:
     print('Agent definition loaded successfully')
 "''',
-
     "5.1.2": '''You are assisting from a terminal context.
 
 Task ID: 5.1.2 - Prompt Architect Integration Commands

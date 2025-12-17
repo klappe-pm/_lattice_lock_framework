@@ -1,4 +1,3 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent C_4_2)
 # Task 4.2: Tutorial Content Generator
 
@@ -20,6 +19,7 @@ Edit `lattice.yaml` to define your rules.
 `lattice-lock validate` ensures your code complies with the rules.
 """
 
+
 def generate_tutorial():
     print("[DOCS] Generating tutorial content...")
     dest = Path("docs/guides")
@@ -29,6 +29,7 @@ def generate_tutorial():
         f.write(TUTORIAL_CONTENT)
 
     print(f"[DOCS] Created {dest}/quickstart.md")
+
 
 if __name__ == "__main__":
     generate_tutorial()

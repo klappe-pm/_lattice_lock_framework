@@ -9,11 +9,8 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-
 from lattice_lock.admin.models import (
-    Project,
     ProjectError,
-    ProjectStatus,
     RollbackInfo,
     ValidationStatus,
     get_project_store,
@@ -33,7 +30,6 @@ from lattice_lock.admin.schemas import (
     RollbackResponse,
     ValidationStatusResponse,
 )
-
 
 # API version
 API_VERSION = "1.0.0"
@@ -506,13 +502,9 @@ def update_validation_status(
     }
 
     if schema_status:
-        project.validation.schema_status = status_map.get(
-            schema_status, ValidationStatus.NOT_RUN
-        )
+        project.validation.schema_status = status_map.get(schema_status, ValidationStatus.NOT_RUN)
     if sheriff_status:
-        project.validation.sheriff_status = status_map.get(
-            sheriff_status, ValidationStatus.NOT_RUN
-        )
+        project.validation.sheriff_status = status_map.get(sheriff_status, ValidationStatus.NOT_RUN)
     if gauntlet_status:
         project.validation.gauntlet_status = status_map.get(
             gauntlet_status, ValidationStatus.NOT_RUN

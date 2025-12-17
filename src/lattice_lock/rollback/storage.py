@@ -2,15 +2,16 @@
 File-based storage for rollback checkpoints.
 """
 
-import os
+import glob
 import gzip
 import json
-import glob
-from typing import List, Optional
-from pathlib import Path
+import os
 import uuid
+from pathlib import Path
+from typing import Optional
 
 from .state import RollbackState
+
 
 class CheckpointStorage:
     """
@@ -36,7 +37,7 @@ class CheckpointStorage:
         filepath = self.storage_dir / filename
 
         json_str = state.to_json()
-        with gzip.open(filepath, 'wt', encoding='utf-8') as f:
+        with gzip.open(filepath, "wt", encoding="utf-8") as f:
             f.write(json_str)
 
         return checkpoint_id
@@ -54,13 +55,13 @@ class CheckpointStorage:
 
         filepath = files[0]
         try:
-            with gzip.open(filepath, 'rt', encoding='utf-8') as f:
+            with gzip.open(filepath, "rt", encoding="utf-8") as f:
                 json_str = f.read()
             return RollbackState.from_json(json_str)
         except (OSError, json.JSONDecodeError):
             return None
 
-    def list_states(self) -> List[str]:
+    def list_states(self) -> list[str]:
         """
         List all available checkpoint IDs, sorted by timestamp (newest first).
         """
@@ -76,9 +77,9 @@ class CheckpointStorage:
             filename = os.path.basename(filepath)
             try:
                 # Extract UUID part
-                parts = filename.split('_')
+                parts = filename.split("_")
                 if len(parts) >= 2:
-                    uuid_part = parts[1].replace('.json.gz', '')
+                    uuid_part = parts[1].replace(".json.gz", "")
                     checkpoint_ids.append(uuid_part)
             except IndexError:
                 continue

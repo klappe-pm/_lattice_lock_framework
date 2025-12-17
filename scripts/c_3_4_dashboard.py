@@ -1,4 +1,3 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent C_3_4)
 # Task 3.4: Status Dashboard Frontend
 
@@ -40,12 +39,14 @@ DASHBOARD_HTML = """
 </html>
 """
 
+
 def generate_dashboard():
     print("[DASHBOARD] Generating static assets...")
     Path("dashboard").mkdir(exist_ok=True)
     with open("dashboard/index.html", "w") as f:
         f.write(DASHBOARD_HTML)
     print("[DASHBOARD] Created dashboard/index.html")
+
 
 if __name__ == "__main__":
     generate_dashboard()

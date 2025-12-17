@@ -12,15 +12,10 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar
 
-from lattice_lock.errors.types import LatticeError
 from lattice_lock.errors.classification import (
-    Severity,
-    Recoverability,
     ErrorContext,
     classify_error,
 )
-from lattice_lock.errors.remediation import format_remediation
-
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -42,12 +37,14 @@ class ErrorMetrics:
     error_counts: dict[str, int] = field(default_factory=dict)
     error_rates: dict[str, float] = field(default_factory=dict)
     last_errors: dict[str, list[float]] = field(default_factory=dict)
-    alert_thresholds: dict[str, int] = field(default_factory=lambda: {
-        "critical": 1,
-        "high": 5,
-        "medium": 10,
-        "low": 50,
-    })
+    alert_thresholds: dict[str, int] = field(
+        default_factory=lambda: {
+            "critical": 1,
+            "high": 5,
+            "medium": 10,
+            "low": 50,
+        }
+    )
 
     def record_error(self, context: ErrorContext) -> None:
         """Record an error occurrence for metrics."""
@@ -61,9 +58,7 @@ class ErrorMetrics:
         self.last_errors[error_type].append(current_time)
 
         cutoff = current_time - 60
-        self.last_errors[error_type] = [
-            t for t in self.last_errors[error_type] if t > cutoff
-        ]
+        self.last_errors[error_type] = [t for t in self.last_errors[error_type] if t > cutoff]
         self.error_rates[error_type] = len(self.last_errors[error_type])
 
     def should_alert(self, context: ErrorContext) -> bool:
@@ -119,7 +114,7 @@ class RetryConfig:
         import random
 
         if self.exponential_backoff:
-            delay = self.base_delay * (2 ** attempt)
+            delay = self.base_delay * (2**attempt)
         else:
             delay = self.base_delay
 
@@ -167,8 +162,15 @@ def _redact_sensitive(data: dict[str, Any]) -> dict[str, Any]:
         Dictionary with sensitive values redacted
     """
     sensitive_keys = {
-        "password", "secret", "token", "api_key", "apikey",
-        "authorization", "auth", "credential", "private_key",
+        "password",
+        "secret",
+        "token",
+        "api_key",
+        "apikey",
+        "authorization",
+        "auth",
+        "credential",
+        "private_key",
     }
 
     result = {}
@@ -243,9 +245,7 @@ def error_boundary(
                     if on_error:
                         on_error(context)
 
-                    is_recoverable = any(
-                        isinstance(e, err_type) for err_type in recoverable_errors
-                    )
+                    is_recoverable = any(isinstance(e, err_type) for err_type in recoverable_errors)
                     can_retry = (
                         is_recoverable
                         and context.recoverability.should_retry
@@ -264,9 +264,7 @@ def error_boundary(
                         break
 
             if fallback is not None:
-                logger.warning(
-                    f"Using fallback for {func.__name__} after {attempt} attempts"
-                )
+                logger.warning(f"Using fallback for {func.__name__} after {attempt} attempts")
                 return fallback(*args, **kwargs)
 
             if last_error is not None:
@@ -400,9 +398,7 @@ def with_graceful_degradation(
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                if error_types is None or any(
-                    isinstance(e, t) for t in error_types
-                ):
+                if error_types is None or any(isinstance(e, t) for t in error_types):
                     context = classify_error(e)
                     _global_metrics.record_error(context)
                     logger.warning(

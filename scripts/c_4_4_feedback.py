@@ -1,12 +1,12 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent C_4_4)
 # Task 4.4: User Feedback Integration
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 FEEDBACK_FILE = ".lattice/feedback.jsonl"
+
 
 def submit_feedback(rating: int, comment: str, project: str):
     """
@@ -14,10 +14,10 @@ def submit_feedback(rating: int, comment: str, project: str):
     For now, logs to a local JSONL file.
     """
     entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "project": project,
         "rating": rating,
-        "comment": comment
+        "comment": comment,
     }
 
     Path(FEEDBACK_FILE).parent.mkdir(exist_ok=True)
@@ -26,6 +26,7 @@ def submit_feedback(rating: int, comment: str, project: str):
         f.write(json.dumps(entry) + "\n")
 
     print(f"[FEEDBACK] Recorded: {rating}/5 - '{comment}'")
+
 
 if __name__ == "__main__":
     submit_feedback(5, "Works great!", "alpha-service")

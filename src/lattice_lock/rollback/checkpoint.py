@@ -2,13 +2,13 @@
 High-level checkpoint management.
 """
 
-import time
 import hashlib
-from typing import List, Dict, Any, Optional
-from pathlib import Path
+import time
+from typing import Any, Optional
 
 from .state import RollbackState
 from .storage import CheckpointStorage
+
 
 class CheckpointManager:
     """
@@ -18,11 +18,13 @@ class CheckpointManager:
     def __init__(self, storage: CheckpointStorage = None):
         self.storage = storage or CheckpointStorage()
 
-    def create_checkpoint(self,
-                          files: Dict[str, str],
-                          config: Dict[str, Any],
-                          schema_version: str,
-                          description: str = "") -> str:
+    def create_checkpoint(
+        self,
+        files: dict[str, str],
+        config: dict[str, Any],
+        schema_version: str,
+        description: str = "",
+    ) -> str:
         """
         Create a new checkpoint with the given state.
 
@@ -40,11 +42,11 @@ class CheckpointManager:
             files=files,
             config=config,
             schema_version=schema_version,
-            description=description
+            description=description,
         )
         return self.storage.save_state(state)
 
-    def list_checkpoints(self) -> List[str]:
+    def list_checkpoints(self) -> list[str]:
         """
         List all available checkpoint IDs.
         """

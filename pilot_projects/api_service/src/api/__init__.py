@@ -5,26 +5,18 @@ Provides CRUD operations for all entities with proper
 error handling using Lattice Lock error types.
 """
 
-from dataclasses import asdict
 from typing import Any
 
 from src.models import (
-    User,
-    Product,
+    Currency,
     Order,
     OrderItem,
     Payment,
-    OrderStatus,
-    PaymentStatus,
     PaymentMethod,
-    Currency,
+    Product,
+    User,
 )
-from src.services import (
-    UserService,
-    ProductService,
-    OrderService,
-    PaymentService,
-)
+from src.services import OrderService, PaymentService, ProductService, UserService
 
 
 class APIError(Exception):
@@ -110,7 +102,14 @@ class ProductAPI:
 
     def create(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create a new product."""
-        required_fields = ["sku", "name", "description", "price_cents", "quantity_in_stock", "category"]
+        required_fields = [
+            "sku",
+            "name",
+            "description",
+            "price_cents",
+            "quantity_in_stock",
+            "category",
+        ]
         for field in required_fields:
             if field not in data:
                 raise ValidationError(f"Missing required field: {field}")
@@ -143,7 +142,9 @@ class ProductAPI:
     def update_stock(self, product_id: int, quantity_change: int) -> dict[str, Any]:
         """Update product stock."""
         if not self._service.update_stock(product_id, quantity_change):
-            raise ValidationError("Cannot update stock (product not found or insufficient quantity)")
+            raise ValidationError(
+                "Cannot update stock (product not found or insufficient quantity)"
+            )
         product = self._service.get_product(product_id)
         return self._serialize_product(product)
 
@@ -204,7 +205,9 @@ class OrderAPI:
             quantity=data["quantity"],
         )
         if not item:
-            raise ValidationError("Cannot add item (order not found, product not found, or insufficient stock)")
+            raise ValidationError(
+                "Cannot add item (order not found, product not found, or insufficient stock)"
+            )
         return self._serialize_order_item(item)
 
     def confirm(self, order_id: int) -> dict[str, Any]:
@@ -257,7 +260,13 @@ class PaymentAPI:
 
     def create(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create a new payment."""
-        required_fields = ["order_id", "amount_cents", "currency", "payment_method", "transaction_id"]
+        required_fields = [
+            "order_id",
+            "amount_cents",
+            "currency",
+            "payment_method",
+            "transaction_id",
+        ]
         for field in required_fields:
             if field not in data:
                 raise ValidationError(f"Missing required field: {field}")

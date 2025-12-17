@@ -1,43 +1,86 @@
-import re
-import logging
 import hashlib
-from typing import Optional, Dict
-from functools import lru_cache
+import logging
+import re
+from collections import OrderedDict
+from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _hash_prompt(prompt: str) -> str:
+    """Create a SHA-256 hash of the prompt for cache key."""
+    return hashlib.sha256(prompt.encode()).hexdigest()
+
 
 class TaskAnalyzer:
     """
     Analyzes prompts to determine task type and requirements.
     Uses a hybrid approach: Regex Heuristics -> LLM Router (Fallback).
     """
-    def __init__(self, orchestrator=None):
-        self.orchestrator = orchestrator # Dependency injection for LLM calls
+
+    DEFAULT_CACHE_SIZE = 1000
+
+    def __init__(self, orchestrator=None, cache_size: int = DEFAULT_CACHE_SIZE):
+        self.orchestrator = orchestrator  # Dependency injection for LLM calls
+        self._cache: OrderedDict[str, str] = OrderedDict()
+        self._cache_size = cache_size
         self.patterns = {
-            "CODE_GENERATION": [r"def .+\(", r"class .+\:", r"import .+", r"implement", r"function"].copy(),
+            "CODE_GENERATION": [
+                r"def .+\(",
+                r"class .+\:",
+                r"import .+",
+                r"implement",
+                r"function",
+            ].copy(),
             "TESTING": [r"test", r"pytest", r"assert", r"mock", r"coverage"].copy(),
-            "DEBUGGING": [r"fix", r"error", r"exception", r"traceback", r"debug", r"fail", r"broken"].copy(),
-            "ARCHITECTURAL_DESIGN": [r"design", r"architecture", r"document", r"plan", r"diagram"].copy(),
-            "DOCUMENTATION": [r"docstring", r"readme", r"comment"].copy()
+            "DEBUGGING": [
+                r"fix",
+                r"error",
+                r"exception",
+                r"traceback",
+                r"debug",
+                r"fail",
+                r"broken",
+            ].copy(),
+            "ARCHITECTURAL_DESIGN": [
+                r"design",
+                r"architecture",
+                r"document",
+                r"plan",
+                r"diagram",
+            ].copy(),
+            "DOCUMENTATION": [r"docstring", r"readme", r"comment"].copy(),
         }
 
-    @lru_cache(maxsize=1000)
     def analyze(self, user_prompt: str) -> str:
         """
         Determines the TaskType from the prompt string.
-        Results are cached to improve performance.
+        Results are cached using a manual LRU cache to avoid memory leaks.
         """
-        prompt_hash = hashlib.sha256(user_prompt.encode()).hexdigest() # Verify hash stability if needed
+        prompt_hash = _hash_prompt(user_prompt)
         logger.debug(f"Analyzing prompt (hash={prompt_hash[:8]})")
+
+        # Check cache first
+        if prompt_hash in self._cache:
+            self._cache.move_to_end(prompt_hash)
+            return self._cache[prompt_hash]
 
         # 1. Fast Heuristics (Stage 1)
         heuristic_result = self._run_heuristics(user_prompt)
         if heuristic_result:
-            return heuristic_result
+            result = heuristic_result
+        else:
+            # 2. Semantic Router (Stage 2 - LLM)
+            logger.info("Heuristics uncertain (>0.8 not met). engaging Semantic Router.")
+            result = self._run_semantic_router(user_prompt)
 
-        # 2. Semantic Router (Stage 2 - LLM)
-        logger.info("Heuristics uncertain (>0.8 not met). engaging Semantic Router.")
-        return self._run_semantic_router(user_prompt)
+        # Store in cache with LRU eviction
+        self._cache[prompt_hash] = result
+        self._cache.move_to_end(prompt_hash)
+        while len(self._cache) > self._cache_size:
+            self._cache.popitem(last=False)
+
+        return result
 
     def _run_heuristics(self, prompt: str) -> Optional[str]:
         """Run regex-based heuristics."""
@@ -59,14 +102,13 @@ class TaskAnalyzer:
         if not self.orchestrator:
             logger.warning("No orchestrator available for Semantic Router. Defaulting to GENERAL.")
             return "GENERAL"
-        
+
         try:
-             # Placeholder for actual LLM call via orchestrator
-             # in production: response = self.orchestrator.complete(prompt=ROUTER_PROMPT.format(prompt))
-             # parsing response...
-             logger.info("Mocking Semantic Router response (not implemented fully).")
-             return "GENERAL" 
+            # Placeholder for actual LLM call via orchestrator
+            # in production: response = self.orchestrator.complete(prompt=ROUTER_PROMPT.format(prompt))
+            # parsing response...
+            logger.info("Mocking Semantic Router response (not implemented fully).")
+            return "GENERAL"
         except Exception as e:
             logger.error(f"Semantic Router failed: {e}")
             return "GENERAL"
-

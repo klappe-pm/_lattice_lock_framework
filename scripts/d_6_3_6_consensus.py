@@ -1,9 +1,8 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent D_6_3_6)
 # Task 6.3.6: Consensus Strategy Implementation
 
-import time
 import random
+
 
 class ConsensusEngine:
     def execute_voting(self, prompt: str, models: list) -> str:
@@ -28,9 +27,7 @@ class ConsensusEngine:
         print(f"[CONSENSUS] Result: {winner} (Confidence: {confidence:.2f})")
         return winner
 
+
 if __name__ == "__main__":
     engine = ConsensusEngine()
-    engine.execute_voting(
-        "Is eval() safe here?",
-        ["gpt-4o", "claude-3-opus", "gemini-1.5-pro"]
-    )
+    engine.execute_voting("Is eval() safe here?", ["gpt-4o", "claude-3-opus", "gemini-1.5-pro"])

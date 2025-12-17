@@ -1,10 +1,8 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent D_6_4_4)
 # Task 6.4.4: Dependency Hardening (CI Locking)
 
-import subprocess
-import sys
 from pathlib import Path
+
 
 def lock_dependencies():
     """
@@ -27,6 +25,7 @@ def lock_dependencies():
         f.write("pydantic==2.8.2 --hash=sha256:...\n")
 
     print("[HARDENING] requirements.lock generated with pinned hashes.")
+
 
 if __name__ == "__main__":
     lock_dependencies()

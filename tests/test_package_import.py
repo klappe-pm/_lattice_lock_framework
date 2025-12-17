@@ -151,13 +151,13 @@ class TestOrchestratorPackageExports:
     def test_orchestrator_exports(self):
         """Core exports should be available from lattice_lock_orchestrator."""
         from lattice_lock_orchestrator import (
-            ModelOrchestrator,
-            TaskType,
-            ModelProvider,
             APIResponse,
+            ModelOrchestrator,
+            ModelProvider,
             ModelRegistry,
             ModelScorer,
             TaskAnalyzer,
+            TaskType,
         )
 
         assert ModelOrchestrator is not None

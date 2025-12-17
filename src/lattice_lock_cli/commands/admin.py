@@ -108,8 +108,7 @@ def admin_command(
         )
     except ImportError as e:
         click.echo(
-            click.style("Error: ", fg="red") +
-            "FastAPI and uvicorn are required for the Admin API."
+            click.style("Error: ", fg="red") + "FastAPI and uvicorn are required for the Admin API."
         )
         click.echo("Install them with: pip install fastapi uvicorn")
         click.echo()

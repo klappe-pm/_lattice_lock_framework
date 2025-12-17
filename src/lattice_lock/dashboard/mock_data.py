@@ -1,9 +1,9 @@
 import asyncio
 import random
-from typing import Any, Dict, List, Optional
 
 from .aggregator import DataAggregator
 from .websocket import WebSocketManager
+
 
 async def mock_data_updater(aggregator: DataAggregator, ws_manager: WebSocketManager) -> None:
     """

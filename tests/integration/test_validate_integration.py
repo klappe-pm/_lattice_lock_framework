@@ -4,12 +4,11 @@ Integration tests for the validate command.
 Tests validation error catching, --fix functionality, and exit codes.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 from click.testing import CliRunner
-
 from lattice_lock_cli.__main__ import cli
-
 
 pytestmark = pytest.mark.integration
 
@@ -28,9 +27,7 @@ class TestValidateCatchesSchemaErrors:
         lattice_yaml = project_dir / "lattice.yaml"
         lattice_yaml.write_text("invalid: yaml: : syntax\n  broken indentation")
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--schema-only"])
 
         assert result.exit_code == 1
         assert "Schema Validation:" in result.output
@@ -47,9 +44,7 @@ class TestValidateCatchesSchemaErrors:
         lattice_yaml = project_dir / "lattice.yaml"
         lattice_yaml.write_text("# Empty file\n")
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--schema-only"])
 
         # Should report issues
         assert "Schema Validation:" in result.output
@@ -63,14 +58,14 @@ class TestValidateCatchesSchemaErrors:
 
         # Create YAML with invalid entity structure
         lattice_yaml = project_dir / "lattice.yaml"
-        lattice_yaml.write_text("""version: v1.0.0
+        lattice_yaml.write_text(
+            """version: v1.0.0
 generated_module: test
 entities: not-a-dict
-""")
+"""
+        )
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--schema-only"])
 
         assert result.exit_code == 1
 
@@ -88,9 +83,7 @@ class TestValidateCatchesEnvErrors:
         env_file = project_dir / ".env"
         env_file.write_text(invalid_env_file)
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--env-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--env-only"])
 
         # Should run env validation
         assert "Environment Validation:" in result.output
@@ -105,9 +98,7 @@ class TestValidateCatchesEnvErrors:
         env_file = project_dir / ".env"
         env_file.write_text(sample_env_file)
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--env-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--env-only"])
 
         assert "Environment Validation:" in result.output
         # Should find the env file
@@ -117,16 +108,14 @@ class TestValidateCatchesEnvErrors:
 class TestValidateCatchesStructureErrors:
     """Tests for structure validation error detection."""
 
-    def test_structure_validation_runs(
-        self, cli_runner: CliRunner, temp_project_dir: Path
-    ) -> None:
+    def test_structure_validation_runs(self, cli_runner: CliRunner, temp_project_dir: Path) -> None:
         """Test that structure validation runs on a directory."""
         project_dir = temp_project_dir / "structure_test"
         project_dir.mkdir()
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--structure-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(project_dir), "--structure-only"]
+        )
 
         assert "Structure Validation:" in result.output
 
@@ -134,9 +123,9 @@ class TestValidateCatchesStructureErrors:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test structure validation on a complete scaffolded project."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project), "--structure-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(scaffolded_project), "--structure-only"]
+        )
 
         assert "Structure Validation:" in result.output
 
@@ -155,9 +144,7 @@ class TestValidateFixFlag:
         test_file = project_dir / "test.py"
         test_file.write_text("line with trailing spaces    \nnormal line\n")
 
-        result = cli_runner.invoke(cli, [
-            "-v", "validate", "--path", str(project_dir), "--fix"
-        ])
+        result = cli_runner.invoke(cli, ["-v", "validate", "--path", str(project_dir), "--fix"])
 
         assert "Applying auto-fixes" in result.output
 
@@ -177,9 +164,7 @@ class TestValidateFixFlag:
         test_file = project_dir / "test.py"
         test_file.write_text("content without newline")
 
-        result = cli_runner.invoke(cli, [
-            "-v", "validate", "--path", str(project_dir), "--fix"
-        ])
+        result = cli_runner.invoke(cli, ["-v", "validate", "--path", str(project_dir), "--fix"])
 
         assert "Applying auto-fixes" in result.output
 
@@ -204,9 +189,7 @@ class TestValidateFixFlag:
         for filename, content in files.items():
             (project_dir / filename).write_text(content)
 
-        result = cli_runner.invoke(cli, [
-            "-v", "validate", "--path", str(project_dir), "--fix"
-        ])
+        result = cli_runner.invoke(cli, ["-v", "validate", "--path", str(project_dir), "--fix"])
 
         assert "Applying auto-fixes" in result.output
 
@@ -226,9 +209,7 @@ class TestValidateFixFlag:
         test_file = project_dir / "test.py"
         test_file.write_text("clean content\n")
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--fix"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--fix"])
 
         assert "No fixable issues found" in result.output
 
@@ -251,9 +232,7 @@ class TestValidateFixFlag:
         # Create normal file that should be fixed
         (project_dir / "test.py").write_text("content  \n")
 
-        result = cli_runner.invoke(cli, [
-            "-v", "validate", "--path", str(project_dir), "--fix"
-        ])
+        result = cli_runner.invoke(cli, ["-v", "validate", "--path", str(project_dir), "--fix"])
 
         # Only the normal file should be fixed
         assert (git_dir / "config").read_text() == "git content  "
@@ -272,9 +251,7 @@ class TestValidateExitCodes:
 
         (project_dir / "lattice.yaml").write_text(sample_lattice_yaml)
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--schema-only"])
 
         assert result.exit_code == 0
 
@@ -288,9 +265,7 @@ class TestValidateExitCodes:
         # Create invalid lattice.yaml
         (project_dir / "lattice.yaml").write_text("invalid: yaml: syntax:")
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--schema-only"])
 
         assert result.exit_code == 1
 
@@ -298,9 +273,7 @@ class TestValidateExitCodes:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test that exit codes are consistent when running all validators."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project)
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(scaffolded_project)])
 
         # Exit code should be 0 or 1
         assert result.exit_code in [0, 1]
@@ -313,9 +286,7 @@ class TestValidateAllValidators:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test that all validators run when no filter flags are provided."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project)
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(scaffolded_project)])
 
         # All validation sections should appear
         assert "Schema Validation:" in result.output
@@ -327,9 +298,7 @@ class TestValidateAllValidators:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test that validation summary shows error and warning counts."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_project)
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(scaffolded_project)])
 
         # Should show summary separator
         assert "=" * 50 in result.output
@@ -338,9 +307,7 @@ class TestValidateAllValidators:
         self, scaffolded_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test that verbose mode provides more detailed output."""
-        result = cli_runner.invoke(cli, [
-            "-v", "validate", "--path", str(scaffolded_project)
-        ])
+        result = cli_runner.invoke(cli, ["-v", "validate", "--path", str(scaffolded_project)])
 
         # Verbose output should include path info
         assert "Validating project at:" in result.output
@@ -353,9 +320,9 @@ class TestValidateAgentManifests:
         self, scaffolded_agent_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test validation of agent.yaml in agent projects."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_agent_project), "--agents-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(scaffolded_agent_project), "--agents-only"]
+        )
 
         assert "Agent Manifest Validation:" in result.output
         # Should find agent.yaml
@@ -371,9 +338,7 @@ class TestValidateAgentManifests:
         # Create custom agent definition
         (project_dir / "agent.yaml").write_text(sample_agent_yaml)
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--agents-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--agents-only"])
 
         assert "Agent Manifest Validation:" in result.output
         assert "passed" in result.output
@@ -388,9 +353,7 @@ class TestValidateAgentManifests:
         # Create invalid agent definition
         (project_dir / "agent.yaml").write_text("invalid: agent: manifest:")
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--agents-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--agents-only"])
 
         assert "Agent Manifest Validation:" in result.output
 
@@ -406,9 +369,7 @@ class TestValidateFilters:
         project_dir.mkdir()
         (project_dir / "lattice.yaml").write_text(sample_lattice_yaml)
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--schema-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--schema-only"])
 
         assert "Schema Validation:" in result.output
         # These should not appear when using --schema-only
@@ -423,9 +384,7 @@ class TestValidateFilters:
         project_dir.mkdir()
         (project_dir / ".env").write_text(sample_env_file)
 
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(project_dir), "--env-only"
-        ])
+        result = cli_runner.invoke(cli, ["validate", "--path", str(project_dir), "--env-only"])
 
         assert "Environment Validation:" in result.output
         assert "Schema Validation:" not in result.output
@@ -434,9 +393,9 @@ class TestValidateFilters:
         self, cli_runner: CliRunner, temp_project_dir: Path
     ) -> None:
         """Test that --structure-only excludes other validators."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(temp_project_dir), "--structure-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(temp_project_dir), "--structure-only"]
+        )
 
         assert "Structure Validation:" in result.output
         assert "Schema Validation:" not in result.output
@@ -446,9 +405,9 @@ class TestValidateFilters:
         self, scaffolded_agent_project: Path, cli_runner: CliRunner
     ) -> None:
         """Test that --agents-only excludes other validators."""
-        result = cli_runner.invoke(cli, [
-            "validate", "--path", str(scaffolded_agent_project), "--agents-only"
-        ])
+        result = cli_runner.invoke(
+            cli, ["validate", "--path", str(scaffolded_agent_project), "--agents-only"]
+        )
 
         assert "Agent Manifest Validation:" in result.output
         assert "Schema Validation:" not in result.output

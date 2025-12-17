@@ -1,7 +1,10 @@
 import logging
-from typing import Optional, List, Callable, Any
 import subprocess
+from collections.abc import Callable
+from typing import Any, Optional
+
 from .state import RollbackState
+
 # Assuming CheckpointManager will be available or we mock it.
 # For now, I will import it inside methods or use a protocol if I want to be strict,
 # but for simplicity I'll assume it exists or I'll create it.
@@ -9,16 +12,17 @@ from .state import RollbackState
 
 logger = logging.getLogger(__name__)
 
+
 class RollbackTrigger:
     """
     Manages automatic and manual rollback triggers.
     """
 
-    def __init__(self, checkpoint_manager: Any): # Using Any to avoid import error for now
+    def __init__(self, checkpoint_manager: Any):  # Using Any to avoid import error for now
         self.checkpoint_manager = checkpoint_manager
-        self._pre_rollback_hooks: List[Callable[[], None]] = []
-        self._post_rollback_hooks: List[Callable[[bool], None]] = []
-        self._notification_hooks: List[Callable[[str], None]] = []
+        self._pre_rollback_hooks: list[Callable[[], None]] = []
+        self._post_rollback_hooks: list[Callable[[bool], None]] = []
+        self._notification_hooks: list[Callable[[str], None]] = []
 
     def register_pre_rollback_hook(self, hook: Callable[[], None]):
         """Register a hook to run before rollback."""
@@ -32,7 +36,9 @@ class RollbackTrigger:
         """Register a hook for notifications."""
         self._notification_hooks.append(hook)
 
-    def trigger_rollback(self, reason: str, checkpoint_id: Optional[str] = None, mode: str = "restore_checkpoint") -> bool:
+    def trigger_rollback(
+        self, reason: str, checkpoint_id: Optional[str] = None, mode: str = "restore_checkpoint"
+    ) -> bool:
         """
         Initiate a rollback.
 
@@ -65,15 +71,15 @@ class RollbackTrigger:
                         checkpoints.sort(reverse=True)
                         latest_id = checkpoints[0]
                         state = self.checkpoint_manager.get_checkpoint(latest_id)
-                
+
                 if state:
                     success = self._restore_state(state)
                 else:
                     logger.error("No checkpoint found to restore.")
                     success = False
             else:
-                 logger.error(f"Unknown rollback mode: {mode}")
-                 success = False
+                logger.error(f"Unknown rollback mode: {mode}")
+                success = False
 
             if success:
                 logger.info("Rollback executed successfully.")
@@ -122,29 +128,29 @@ class RollbackTrigger:
         try:
             logger.info("Attempting Git Revert...")
             # git revert HEAD -m "Auto-rollback" --no-edit usually requires -m parent-number if it's a merge
-            # But for simple commits, -m is not needed/allowed? 
+            # But for simple commits, -m is not needed/allowed?
             # Design says: git revert HEAD -m "Auto-rollback due to failure"
             # Note: -m in git revert usually specifies parent number (1 or 2) for merge commits.
-            # The message is usually -n (no commit) or editing the message. 
+            # The message is usually -n (no commit) or editing the message.
             # To supply a message, we might need other flags or just accept default.
             # However, prompt specifically wrote: git revert HEAD -m "Auto-rollback..."
             # This syntax looks like the user MIGHT mean git commit message? Or maybe they confused it with merge strategy?
             # Standard git revert: git revert --no-edit HEAD
             # If it's a merge commit, we need -m 1.
-            # To be safe and compliant with "Mechanism" description literally, I will try to follow it, 
-            # but '-m' usually takes an integer. 
-            # I will assume standard `git revert --no-edit HEAD` is safer for now, 
+            # To be safe and compliant with "Mechanism" description literally, I will try to follow it,
+            # but '-m' usually takes an integer.
+            # I will assume standard `git revert --no-edit HEAD` is safer for now,
             # or maybe the user meant commit message? No, commit message is usually editor.
             # I'll stick to a basic working command.
-            
+
             subprocess.run(["git", "revert", "--no-edit", "HEAD"], check=True, capture_output=True)
-            
+
             # git push
             # subprocess.run(["git", "push"], check=True, capture_output=True) # Commented out to avoid accidental push during Verification task
             # In real implementation, we should probably push.
             # But without a remote setup in this environment, it might fail.
             # I'll leave it out or wrap in try/except but logging it.
-            
+
             logger.info("Git Revert successful.")
             return True
         except subprocess.CalledProcessError as e:
@@ -156,10 +162,12 @@ class RollbackTrigger:
         if not validation_result:
             self.trigger_rollback(f"Validation failed: {context}", mode="git_revert")
 
-    def check_sheriff_violation(self, violations: List[str]):
+    def check_sheriff_violation(self, violations: list[str]):
         """Trigger rollback if Sheriff finds violations."""
         if violations:
-            self.trigger_rollback(f"Sheriff violations found: {', '.join(violations)}", mode="git_revert")
+            self.trigger_rollback(
+                f"Sheriff violations found: {', '.join(violations)}", mode="git_revert"
+            )
 
     def check_gauntlet_failure(self, failure_details: str):
         """Trigger rollback if Gauntlet tests fail."""

@@ -8,7 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
-from importlib.metadata import distributions, version
+from importlib.metadata import version
 from typing import NamedTuple
 
 import click
@@ -16,6 +16,7 @@ import click
 
 class CheckResult(NamedTuple):
     """Result of a health check."""
+
     name: str
     passed: bool
     message: str
@@ -62,34 +63,42 @@ def _check_required_dependencies() -> list[CheckResult]:
     for dep_name, description in required_deps:
         try:
             dep_version = version(dep_name)
-            results.append(CheckResult(
-                name=f"Dependency: {dep_name}",
-                passed=True,
-                message=f"{description} v{dep_version}",
-            ))
+            results.append(
+                CheckResult(
+                    name=f"Dependency: {dep_name}",
+                    passed=True,
+                    message=f"{description} v{dep_version}",
+                )
+            )
         except Exception:
-            results.append(CheckResult(
-                name=f"Dependency: {dep_name}",
-                passed=False,
-                message=f"{description} - NOT INSTALLED",
-            ))
+            results.append(
+                CheckResult(
+                    name=f"Dependency: {dep_name}",
+                    passed=False,
+                    message=f"{description} - NOT INSTALLED",
+                )
+            )
 
     for dep_name, description in optional_deps:
         try:
             dep_version = version(dep_name)
-            results.append(CheckResult(
-                name=f"Dependency: {dep_name}",
-                passed=True,
-                message=f"{description} v{dep_version}",
-                optional=True,
-            ))
+            results.append(
+                CheckResult(
+                    name=f"Dependency: {dep_name}",
+                    passed=True,
+                    message=f"{description} v{dep_version}",
+                    optional=True,
+                )
+            )
         except Exception:
-            results.append(CheckResult(
-                name=f"Dependency: {dep_name}",
-                passed=False,
-                message=f"{description} - not installed (optional)",
-                optional=True,
-            ))
+            results.append(
+                CheckResult(
+                    name=f"Dependency: {dep_name}",
+                    passed=False,
+                    message=f"{description} - not installed (optional)",
+                    optional=True,
+                )
+            )
 
     return results
 
@@ -115,19 +124,23 @@ def _check_environment_variables() -> list[CheckResult]:
                 display_value = value[:4] + "****" + value[-4:] if len(value) > 8 else "****"
             else:
                 display_value = value[:30] + "..." if len(value) > 30 else value
-            results.append(CheckResult(
-                name=f"Env: {env_var}",
-                passed=True,
-                message=f"{description} = {display_value}",
-                optional=optional,
-            ))
+            results.append(
+                CheckResult(
+                    name=f"Env: {env_var}",
+                    passed=True,
+                    message=f"{description} = {display_value}",
+                    optional=optional,
+                )
+            )
         else:
-            results.append(CheckResult(
-                name=f"Env: {env_var}",
-                passed=False,
-                message=f"{description} - not set",
-                optional=optional,
-            ))
+            results.append(
+                CheckResult(
+                    name=f"Env: {env_var}",
+                    passed=False,
+                    message=f"{description} - not set",
+                    optional=optional,
+                )
+            )
 
     return results
 
@@ -153,7 +166,9 @@ def _check_ollama() -> CheckResult:
             timeout=5,
         )
         if result.returncode == 0:
-            models = [line.split()[0] for line in result.stdout.strip().split('\n')[1:] if line.strip()]
+            models = [
+                line.split()[0] for line in result.stdout.strip().split("\n")[1:] if line.strip()
+            ]
             model_count = len(models)
             return CheckResult(
                 name="Ollama",
@@ -305,5 +320,9 @@ def doctor_command(ctx: click.Context) -> None:
         click.echo(click.style("✓ Environment is healthy!", fg="green", bold=True))
         sys.exit(0)
     else:
-        click.echo(click.style("✗ Some required checks failed. Please fix the issues above.", fg="red", bold=True))
+        click.echo(
+            click.style(
+                "✗ Some required checks failed. Please fix the issues above.", fg="red", bold=True
+            )
+        )
         sys.exit(1)

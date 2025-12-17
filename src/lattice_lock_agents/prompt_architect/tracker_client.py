@@ -11,12 +11,13 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 @dataclass
 class PromptEntry:
     """Represents a prompt entry in the tracker state."""
+
     id: str
     phase: str
     epic: str
@@ -32,7 +33,7 @@ class PromptEntry:
     duration_minutes: Optional[int] = None
     pr_url: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.id,
@@ -48,7 +49,7 @@ class PromptEntry:
             "start_time": self.start_time,
             "end_time": self.end_time,
             "duration_minutes": self.duration_minutes,
-            "pr_url": self.pr_url
+            "pr_url": self.pr_url,
         }
 
 
@@ -88,14 +89,14 @@ class TrackerClient:
         self.tracker_script = repo_root / "scripts" / "prompt_tracker.py"
         self.use_cli = use_cli
 
-    def _load_state(self) -> Dict[str, Any]:
+    def _load_state(self) -> dict[str, Any]:
         """Load the JSON state file."""
         if not self.state_file.exists():
             raise FileNotFoundError(f"State file not found at {self.state_file}")
-        with open(self.state_file, "r") as f:
+        with open(self.state_file) as f:
             return json.load(f)
 
-    def _save_state(self, state: Dict[str, Any]) -> None:
+    def _save_state(self, state: dict[str, Any]) -> None:
         """Save the JSON state file and regenerate markdown."""
         state["metadata"]["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(self.state_file, "w") as f:
@@ -103,15 +104,10 @@ class TrackerClient:
         # Regenerate markdown tracker
         self.regenerate()
 
-    def _run_cli(self, command: List[str]) -> Dict[str, Any]:
+    def _run_cli(self, command: list[str]) -> dict[str, Any]:
         """Run a tracker CLI command and return the parsed JSON output."""
         full_cmd = [sys.executable, str(self.tracker_script)] + command
-        result = subprocess.run(
-            full_cmd,
-            capture_output=True,
-            text=True,
-            cwd=str(self.repo_root)
-        )
+        result = subprocess.run(full_cmd, capture_output=True, text=True, cwd=str(self.repo_root))
         if result.returncode != 0:
             error_output = result.stderr or result.stdout
             raise RuntimeError(f"Tracker command failed: {error_output}")
@@ -127,8 +123,8 @@ class TrackerClient:
         tool: str,
         file_path: str,
         phase: Optional[str] = None,
-        epic: Optional[str] = None
-    ) -> Dict[str, Any]:
+        epic: Optional[str] = None,
+    ) -> dict[str, Any]:
         """
         Add a newly generated prompt to the tracker state.
 
@@ -150,13 +146,19 @@ class TrackerClient:
             raise ValueError(f"Invalid tool '{tool}'. Must be one of: {self.VALID_TOOLS}")
 
         if self.use_cli:
-            return self._run_cli([
-                "add-prompt",
-                "--id", prompt_id,
-                "--title", title,
-                "--tool", tool,
-                "--file", file_path
-            ])
+            return self._run_cli(
+                [
+                    "add-prompt",
+                    "--id",
+                    prompt_id,
+                    "--title",
+                    title,
+                    "--tool",
+                    tool,
+                    "--file",
+                    file_path,
+                ]
+            )
 
         # Direct mode
         state = self._load_state()
@@ -178,12 +180,7 @@ class TrackerClient:
             epic = f"{parts[0]}.{parts[1]}"
 
         new_prompt = PromptEntry(
-            id=prompt_id,
-            phase=phase,
-            epic=epic,
-            title=title,
-            tool=tool,
-            file=file_path
+            id=prompt_id, phase=phase, epic=epic, title=title, tool=tool, file=file_path
         )
 
         # Insert in sorted order
@@ -194,13 +191,7 @@ class TrackerClient:
 
         self._save_state(state)
 
-        return {
-            "status": "added",
-            "id": prompt_id,
-            "title": title,
-            "tool": tool,
-            "file": file_path
-        }
+        return {"status": "added", "id": prompt_id, "title": title, "tool": tool, "file": file_path}
 
     def update_prompt(
         self,
@@ -208,8 +199,8 @@ class TrackerClient:
         done: Optional[bool] = None,
         merged: Optional[bool] = None,
         pr_url: Optional[str] = None,
-        model: Optional[str] = None
-    ) -> Dict[str, Any]:
+        model: Optional[str] = None,
+    ) -> dict[str, Any]:
         """
         Update a prompt's status.
 
@@ -269,10 +260,10 @@ class TrackerClient:
             "status": "updated",
             "id": prompt_id,
             "done": prompt["done"],
-            "merged": prompt["merged"]
+            "merged": prompt["merged"],
         }
 
-    def get_prompt(self, prompt_id: str) -> Optional[Dict[str, Any]]:
+    def get_prompt(self, prompt_id: str) -> Optional[dict[str, Any]]:
         """
         Get a prompt by ID.
 
@@ -288,7 +279,7 @@ class TrackerClient:
                 return p
         return None
 
-    def get_next_prompt(self, tool: str) -> Optional[Dict[str, Any]]:
+    def get_next_prompt(self, tool: str) -> Optional[dict[str, Any]]:
         """
         Get the next available prompt for a tool.
 
@@ -308,11 +299,8 @@ class TrackerClient:
         return None
 
     def list_prompts(
-        self,
-        tool: Optional[str] = None,
-        phase: Optional[str] = None,
-        status: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, tool: Optional[str] = None, phase: Optional[str] = None, status: Optional[str] = None
+    ) -> list[dict[str, Any]]:
         """
         List prompts with optional filters.
 
@@ -353,7 +341,7 @@ class TrackerClient:
             state = self._load_state()
             self._generate_markdown(state)
 
-    def _generate_markdown(self, state: Dict[str, Any]) -> None:
+    def _generate_markdown(self, state: dict[str, Any]) -> None:
         """Generate the markdown tracker from JSON state."""
         tracker_file = self.prompts_dir / "project_prompts_tracker.md"
         prompts = state["prompts"]
@@ -367,7 +355,7 @@ class TrackerClient:
         pending = sum(1 for p in prompts if not p["picked_up"])
 
         # Group by phase
-        phases: Dict[str, List[Dict[str, Any]]] = {}
+        phases: dict[str, list[dict[str, Any]]] = {}
         for p in prompts:
             phase = p["phase"]
             if phase not in phases:
@@ -400,8 +388,12 @@ class TrackerClient:
 
             lines.append(f"## Phase {phase_num}: {phase_name}")
             lines.append("")
-            lines.append("| ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |")
-            lines.append("|:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|")
+            lines.append(
+                "| ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |"
+            )
+            lines.append(
+                "|:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|"
+            )
 
             for p in phase_prompts:
                 tool_name = tool_defs.get(p["tool"], p["tool"])
@@ -414,60 +406,64 @@ class TrackerClient:
                 duration = str(p["duration_minutes"]) if p["duration_minutes"] is not None else "-"
                 pr = f"[PR]({p['pr_url']})" if p["pr_url"] else "-"
 
-                lines.append(f"| {p['id']} | {p['title']} | {tool_name} | {picked} | {done} | {merged} | {model} | {start} | {end} | {duration} | {pr} |")
+                lines.append(
+                    f"| {p['id']} | {p['title']} | {tool_name} | {picked} | {done} | {merged} | {model} | {start} | {end} | {duration} | {pr} |"
+                )
 
             lines.append("")
             lines.append("---")
             lines.append("")
 
         # Add usage instructions
-        lines.extend([
-            "## Usage",
-            "",
-            "### Pick Up Next Prompt",
-            "",
-            "When you receive `cont next`, run:",
-            "",
-            "```bash",
-            'python scripts/prompt_tracker.py next --tool <your-tool> --model "<model-name>"',
-            "```",
-            "",
-            "Tool identifiers: `devin`, `gemini`, `codex`, `claude_cli`, `claude_app`, `claude_docs`",
-            "",
-            "### Mark Prompt as Done/Merged",
-            "",
-            "```bash",
-            'python scripts/prompt_tracker.py update --id 1.1.1 --done --merged --pr "https://github.com/..."',
-            "```",
-            "",
-            "### Reset a Prompt",
-            "",
-            "```bash",
-            "python scripts/prompt_tracker.py reset --id 1.1.1",
-            "```",
-            "",
-            "### View Status",
-            "",
-            "```bash",
-            "python scripts/prompt_tracker.py status",
-            "```",
-            "",
-            "---",
-            "",
-            "## Status Legend",
-            "",
-            "- **Picked Up**: An agent has started working on this prompt",
-            "- **Done**: The implementation is complete",
-            "- **Merged**: The PR has been merged to the remote repository (DELIVERED)",
-            "",
-            "A prompt is considered **DELIVERED** only when Merged = Yes",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Usage",
+                "",
+                "### Pick Up Next Prompt",
+                "",
+                "When you receive `cont next`, run:",
+                "",
+                "```bash",
+                'python scripts/prompt_tracker.py next --tool <your-tool> --model "<model-name>"',
+                "```",
+                "",
+                "Tool identifiers: `devin`, `gemini`, `codex`, `claude_cli`, `claude_app`, `claude_docs`",
+                "",
+                "### Mark Prompt as Done/Merged",
+                "",
+                "```bash",
+                'python scripts/prompt_tracker.py update --id 1.1.1 --done --merged --pr "https://github.com/..."',
+                "```",
+                "",
+                "### Reset a Prompt",
+                "",
+                "```bash",
+                "python scripts/prompt_tracker.py reset --id 1.1.1",
+                "```",
+                "",
+                "### View Status",
+                "",
+                "```bash",
+                "python scripts/prompt_tracker.py status",
+                "```",
+                "",
+                "---",
+                "",
+                "## Status Legend",
+                "",
+                "- **Picked Up**: An agent has started working on this prompt",
+                "- **Done**: The implementation is complete",
+                "- **Merged**: The PR has been merged to the remote repository (DELIVERED)",
+                "",
+                "A prompt is considered **DELIVERED** only when Merged = Yes",
+                "",
+            ]
+        )
 
         with open(tracker_file, "w") as f:
             f.write("\n".join(lines))
 
-    def validate_state(self, check_orphans: bool = False) -> Dict[str, Any]:
+    def validate_state(self, check_orphans: bool = False) -> dict[str, Any]:
         """
         Validate that state matches actual prompt files.
 
@@ -495,11 +491,7 @@ class TrackerClient:
             if file_path.exists():
                 valid.append(p["id"])
             else:
-                issues.append({
-                    "id": p["id"],
-                    "file": p["file"],
-                    "issue": "file_not_found"
-                })
+                issues.append({"id": p["id"], "file": p["file"], "issue": "file_not_found"})
 
         # Check for orphan files
         if check_orphans:
@@ -509,10 +501,7 @@ class TrackerClient:
                     for prompt_file in phase_dir.glob("*.md"):
                         relative_path = f"{phase_dir.name}/{prompt_file.name}"
                         if relative_path not in tracked_files:
-                            issues.append({
-                                "file": relative_path,
-                                "issue": "orphan_file"
-                            })
+                            issues.append({"file": relative_path, "issue": "orphan_file"})
 
         is_valid = len(issues) == 0
 
@@ -520,7 +509,7 @@ class TrackerClient:
             "status": "valid" if is_valid else "invalid",
             "total_prompts": len(prompts),
             "valid_count": len(valid),
-            "issue_count": len(issues)
+            "issue_count": len(issues),
         }
 
         if issues:
@@ -528,7 +517,7 @@ class TrackerClient:
 
         return result
 
-    def batch_add(self, prompts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def batch_add(self, prompts: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Add multiple prompts at once.
 
@@ -564,7 +553,7 @@ class TrackerClient:
                     prompt_id=prompt_id,
                     title=entry.get("title", "Untitled"),
                     tool=entry.get("tool", "unknown"),
-                    file_path=entry.get("file", "")
+                    file_path=entry.get("file", ""),
                 )
                 added.append(prompt_id)
                 existing_ids.add(prompt_id)
@@ -576,5 +565,5 @@ class TrackerClient:
             "added": added,
             "added_count": len(added),
             "skipped": skipped,
-            "skipped_count": len(skipped)
+            "skipped_count": len(skipped),
         }

@@ -6,10 +6,9 @@ Prevents Ollama from unloading models to conserve memory
 """
 
 import subprocess
-import time
 import threading
+import time
 from datetime import datetime
-from typing import List
 
 # Models to keep loaded (32GB+ tier configuration)
 TIER1_MODELS = [
@@ -101,7 +100,7 @@ def get_ram_usage():
 
         return total_used, total_free
 
-    except Exception as e:
+    except Exception:
         return 0, 0
 
 

@@ -14,18 +14,18 @@ Usage:
 
 from pathlib import Path
 
+from lattice_lock.compile import CompilationResult, compile_lattice
+from lattice_lock.sheriff import SheriffResult, Violation, ViolationSeverity, run_sheriff
 from lattice_lock_orchestrator import (
-    ModelOrchestrator,
-    TaskType,
-    ModelProvider,
     APIResponse,
+    ModelOrchestrator,
+    ModelProvider,
     ModelRegistry,
     ModelScorer,
     TaskAnalyzer,
+    TaskType,
 )
-from lattice_lock_orchestrator.types import TaskRequirements, ModelCapabilities
-from lattice_lock.compile import compile_lattice, CompilationResult
-from lattice_lock.sheriff import run_sheriff, SheriffResult, Violation, ViolationSeverity
+from lattice_lock_orchestrator.types import ModelCapabilities, TaskRequirements
 
 
 def _get_version() -> str:

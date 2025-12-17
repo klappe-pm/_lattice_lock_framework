@@ -7,9 +7,9 @@ Intelligent model routing across 63 AI models from 8 providers.
 from pathlib import Path
 
 from .core import ModelOrchestrator
-from .types import TaskType, ModelProvider, APIResponse
 from .registry import ModelRegistry
 from .scorer import ModelScorer, TaskAnalyzer
+from .types import APIResponse, ModelProvider, TaskType
 
 
 def _get_version() -> str:

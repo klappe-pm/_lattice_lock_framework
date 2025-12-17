@@ -1,12 +1,11 @@
-
 # IMPLEMENTATION PROTOTYPE (Agent D_6_3_4)
 # Task 6.3.4: Cost Tracking Implementation
 
 import sqlite3
-import datetime
 from pathlib import Path
 
 DB_PATH = ".lattice/cost.db"
+
 
 class CostTracker:
     def __init__(self):
@@ -15,7 +14,8 @@ class CostTracker:
     def _init_db(self):
         Path(DB_PATH).parent.mkdir(exist_ok=True)
         conn = sqlite3.connect(DB_PATH)
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS usage_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -23,7 +23,8 @@ class CostTracker:
                 provider TEXT,
                 cost REAL
             )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
         print(f"[COST] Database initialized at {DB_PATH}")
@@ -32,7 +33,7 @@ class CostTracker:
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
             "INSERT INTO usage_logs (model, provider, cost) VALUES (?, ?, ?)",
-            (model, provider, cost)
+            (model, provider, cost),
         )
         conn.commit()
         conn.close()
@@ -45,6 +46,7 @@ class CostTracker:
         total = row[0] if row and row[0] else 0.0
         print(f"\n[REPORT] Total Project Spend: ${total:.4f}")
         conn.close()
+
 
 if __name__ == "__main__":
     tracker = CostTracker()

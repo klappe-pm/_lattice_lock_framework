@@ -4,28 +4,26 @@ Tests for the Lattice Lock error classification system.
 Tests error types, classification, and remediation functionality.
 """
 
-import pytest
 
 from lattice_lock.errors import (
-    LatticeError,
-    SchemaValidationError,
-    SheriffViolationError,
-    GauntletFailureError,
-    LatticeRuntimeError,
-    ConfigurationError,
-    NetworkError,
     AgentError,
-    Severity,
     Category,
+    ConfigurationError,
+    GauntletFailureError,
+    LatticeError,
+    LatticeRuntimeError,
+    NetworkError,
     Recoverability,
-    ErrorContext,
+    RemediationInfo,
+    SchemaValidationError,
+    Severity,
+    SheriffViolationError,
     classify_error,
-    get_severity,
+    format_remediation,
     get_category,
     get_recoverability,
     get_remediation,
-    format_remediation,
-    RemediationInfo,
+    get_severity,
 )
 
 

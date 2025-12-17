@@ -5,16 +5,17 @@ Validates that models enforce Lattice Lock schema constraints.
 """
 
 import pytest
+
 from src.models import (
-    User,
-    Product,
+    Currency,
     Order,
     OrderItem,
-    Payment,
     OrderStatus,
-    PaymentStatus,
+    Payment,
     PaymentMethod,
-    Currency,
+    PaymentStatus,
+    Product,
+    User,
 )
 
 

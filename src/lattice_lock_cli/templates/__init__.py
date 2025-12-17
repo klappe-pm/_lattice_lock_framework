@@ -18,7 +18,9 @@ def get_template_env() -> Environment:
     """Get the Jinja2 environment configured for the templates directory."""
     return get_secure_environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
-        autoescape=select_autoescape(enabled_extensions=("html", "htm", "xml"), default_for_string=False, default=False),
+        autoescape=select_autoescape(
+            enabled_extensions=("html", "htm", "xml"), default_for_string=False, default=False
+        ),
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,

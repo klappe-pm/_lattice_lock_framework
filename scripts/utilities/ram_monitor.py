@@ -5,14 +5,13 @@ Provides real-time RAM usage tracking and model capacity recommendations
 """
 
 import subprocess
-import json
-from typing import Dict, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
 
 
 class RAMTier(Enum):
     """System RAM tier classification"""
+
     TIER_16GB = "16GB"
     TIER_32GB = "32GB+"
     TIER_64GB = "64GB+"
@@ -21,6 +20,7 @@ class RAMTier(Enum):
 @dataclass
 class RAMStatus:
     """Current RAM status"""
+
     total_gb: float
     used_gb: float
     free_gb: float
@@ -28,7 +28,7 @@ class RAMStatus:
     utilization_percent: float
     tier: RAMTier
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "total_gb": round(self.total_gb, 2),
             "used_gb": round(self.used_gb, 2),
@@ -42,6 +42,7 @@ class RAMStatus:
 @dataclass
 class ModelCapacity:
     """Model loading capacity recommendations"""
+
     tier: RAMTier
     max_concurrent_models: int
     recommended_models: list
@@ -59,14 +60,11 @@ class RAMMonitor:
         """Get total system RAM in GB"""
         try:
             result = subprocess.run(
-                ["sysctl", "hw.memsize"],
-                capture_output=True,
-                text=True,
-                check=True
+                ["sysctl", "hw.memsize"], capture_output=True, text=True, check=True
             )
             # Parse: hw.memsize: 38654705664
-            memsize = int(result.stdout.split(':')[1].strip())
-            return memsize / (1024 ** 3)  # Convert to GB
+            memsize = int(result.stdout.split(":")[1].strip())
+            return memsize / (1024**3)  # Convert to GB
         except Exception:
             return 0.0
 
@@ -82,12 +80,7 @@ class RAMMonitor:
     def get_current_status(self) -> RAMStatus:
         """Get current RAM usage status"""
         try:
-            result = subprocess.run(
-                ["vm_stat"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(["vm_stat"], capture_output=True, text=True, check=True)
 
             # Parse vm_stat output
             lines = result.stdout.split("\n")
@@ -111,9 +104,9 @@ class RAMMonitor:
             free = pages.get("free", 0)
             inactive = pages.get("inactive", 0)
 
-            used_gb = (active + wired) * page_size / (1024 ** 3)
-            free_gb = free * page_size / (1024 ** 3)
-            available_gb = (free + inactive) * page_size / (1024 ** 3)
+            used_gb = (active + wired) * page_size / (1024**3)
+            free_gb = free * page_size / (1024**3)
+            available_gb = (free + inactive) * page_size / (1024**3)
             utilization = (used_gb / self.total_ram) * 100 if self.total_ram > 0 else 0
 
             return RAMStatus(
@@ -122,10 +115,10 @@ class RAMMonitor:
                 free_gb=free_gb,
                 available_gb=available_gb,
                 utilization_percent=utilization,
-                tier=self.tier
+                tier=self.tier,
             )
 
-        except Exception as e:
+        except Exception:
             # Return safe defaults on error
             return RAMStatus(
                 total_gb=self.total_ram,
@@ -133,7 +126,7 @@ class RAMMonitor:
                 free_gb=0,
                 available_gb=0,
                 utilization_percent=0,
-                tier=self.tier
+                tier=self.tier,
             )
 
     def get_model_capacity(self) -> ModelCapacity:
@@ -156,7 +149,7 @@ class RAMMonitor:
                     "deepseek-r1:70b",
                     "llama3.1:70b",
                 ],
-                total_ram_budget_gb=60.0
+                total_ram_budget_gb=60.0,
             )
         elif self.tier == RAMTier.TIER_32GB:
             return ModelCapacity(
@@ -171,7 +164,7 @@ class RAMMonitor:
                     "codellama:13b",
                     "qwen2.5:32b",
                 ],
-                total_ram_budget_gb=28.0
+                total_ram_budget_gb=28.0,
             )
         else:  # 16GB tier
             return ModelCapacity(
@@ -184,10 +177,10 @@ class RAMMonitor:
                     "llama3.1:8b",
                     "qwen2.5:7b-instruct",
                 ],
-                total_ram_budget_gb=14.0
+                total_ram_budget_gb=14.0,
             )
 
-    def can_load_model(self, model_size_gb: float) -> Tuple[bool, str]:
+    def can_load_model(self, model_size_gb: float) -> tuple[bool, str]:
         """
         Check if a model can be loaded given current RAM status
 
@@ -203,7 +196,10 @@ class RAMMonitor:
         available_for_models = status.available_gb - 8.0
 
         if available_for_models < model_size_gb:
-            return False, f"Insufficient RAM: {available_for_models:.1f}GB available, {model_size_gb:.1f}GB needed"
+            return (
+                False,
+                f"Insufficient RAM: {available_for_models:.1f}GB available, {model_size_gb:.1f}GB needed",
+            )
 
         if status.utilization_percent > 85:
             return False, f"High RAM utilization: {status.utilization_percent:.1f}%"

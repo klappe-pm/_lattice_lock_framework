@@ -1,13 +1,16 @@
-import click
 import logging
+
+import click
 from lattice_lock_cli.utils.console import get_console
 
 logger = logging.getLogger(__name__)
+
 
 @click.group(name="admin")
 def admin_group():
     """Administrative tools and dashboard."""
     pass
+
 
 @admin_group.command(name="dashboard")
 @click.option("--port", default=8000, help="Port to run the dashboard on.")

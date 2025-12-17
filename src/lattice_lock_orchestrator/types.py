@@ -1,10 +1,11 @@
-from enum import Enum, auto
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from enum import Enum, auto
+from typing import Any, Optional
 
 
 class TaskType(Enum):
     """Categorizes the nature of the request to optimize model selection."""
+
     CODE_GENERATION = auto()
     DEBUGGING = auto()
     ARCHITECTURAL_DESIGN = auto()
@@ -17,8 +18,10 @@ class TaskType(Enum):
     SECURITY_AUDIT = auto()
     CREATIVE_WRITING = auto()
 
+
 class ModelProvider(Enum):
     """Supported model providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
@@ -27,40 +30,46 @@ class ModelProvider(Enum):
     AZURE = "azure"
     BEDROCK = "bedrock"
 
+
 class ModelStatus(Enum):
     """Lifecycle status of the model."""
+
     ACTIVE = auto()
     DEPRECATED = auto()
     SUNSET = auto()
 
+
 class ProviderMaturity(Enum):
     """Maturity tier of the provider implementation."""
-    PRODUCTION = auto()    # Stable, verified, default
-    BETA = auto()         # Functional but evolving
-    EXPERIMENTAL = auto() # Gated, requires setup
+
+    PRODUCTION = auto()  # Stable, verified, default
+    BETA = auto()  # Functional but evolving
+    EXPERIMENTAL = auto()  # Gated, requires setup
+
 
 @dataclass
 class ModelCapabilities:
     """Defines the capabilities and costs of a specific model."""
+
     name: str
     api_name: str
     provider: ModelProvider
     context_window: int
     input_cost: float  # Per 1M tokens
-    output_cost: float # Per 1M tokens
-    reasoning_score: float # 0-100
-    coding_score: float # 0-100
-    speed_rating: float # 0-10
+    output_cost: float  # Per 1M tokens
+    reasoning_score: float  # 0-100
+    coding_score: float  # 0-100
+    speed_rating: float  # 0-10
     maturity: ProviderMaturity = ProviderMaturity.BETA
     status: ModelStatus = ModelStatus.ACTIVE
-    
+
     # Feature Flags
     supports_vision: bool = False
     supports_function_calling: bool = False
     supports_json_mode: bool = False
-    
+
     # Explicit task scores
-    task_scores: Dict[TaskType, float] = field(default_factory=dict)
+    task_scores: dict[TaskType, float] = field(default_factory=dict)
 
     @property
     def blended_cost(self) -> float:
@@ -81,37 +90,44 @@ class ModelCapabilities:
 @dataclass
 class TaskRequirements:
     """Defines the requirements for a specific task."""
+
     task_type: TaskType
     min_context: int = 4000
-    max_cost: Optional[float] = None # Max blended cost per 1M tokens
+    max_cost: Optional[float] = None  # Max blended cost per 1M tokens
     min_reasoning: float = 0.0
     min_coding: float = 0.0
-    priority: str = "balanced" # "speed", "cost", "quality", "balanced"
+    priority: str = "balanced"  # "speed", "cost", "quality", "balanced"
     require_vision: bool = False
     require_functions: bool = False
+
 
 @dataclass
 class FunctionCall:
     """Represents a function call requested by the model."""
+
     name: str
-    arguments: Dict[str, Any]
+    arguments: dict[str, Any]
+
 
 @dataclass
 class FunctionDefinition:
     """Represents a function that can be called by the model."""
+
     name: str
     description: str
-    parameters: Dict[str, Any] = field(default_factory=dict) # JSON schema for parameters
+    parameters: dict[str, Any] = field(default_factory=dict)  # JSON schema for parameters
+
 
 @dataclass
 class APIResponse:
     """Standardized API response format."""
+
     content: str
     model: str
     provider: str
-    usage: Dict[str, int]  # input_tokens, output_tokens
+    usage: dict[str, int]  # input_tokens, output_tokens
     latency_ms: int
-    raw_response: Optional[Dict] = None
+    raw_response: Optional[dict] = None
     error: Optional[str] = None
     function_call: Optional[FunctionCall] = None
     function_call_result: Optional[Any] = None

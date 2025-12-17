@@ -36,60 +36,49 @@ Examples:
 
     # Generate only Gauntlet tests
     python scripts/compile_lattice.py examples/basic/lattice.yaml --no-pydantic --gauntlet
-        """
+        """,
     )
 
-    parser.add_argument(
-        "schema_path",
-        type=str,
-        help="Path to the lattice.yaml schema file"
-    )
+    parser.add_argument("schema_path", type=str, help="Path to the lattice.yaml schema file")
 
     parser.add_argument(
-        "--output-dir", "-o",
+        "--output-dir",
+        "-o",
         type=str,
         default=None,
-        help="Output directory for generated files (default: same directory as schema)"
+        help="Output directory for generated files (default: same directory as schema)",
     )
 
     parser.add_argument(
         "--pydantic",
         action="store_true",
         default=True,
-        help="Generate Pydantic models (default: enabled)"
+        help="Generate Pydantic models (default: enabled)",
     )
 
     parser.add_argument(
-        "--no-pydantic",
-        action="store_true",
-        help="Disable Pydantic model generation"
+        "--no-pydantic", action="store_true", help="Disable Pydantic model generation"
     )
 
     parser.add_argument(
         "--sqlmodel",
         action="store_true",
         default=False,
-        help="Generate SQLModel ORM classes (default: disabled)"
+        help="Generate SQLModel ORM classes (default: disabled)",
     )
 
     parser.add_argument(
         "--gauntlet",
         action="store_true",
         default=True,
-        help="Generate Gauntlet test contracts (default: enabled)"
+        help="Generate Gauntlet test contracts (default: enabled)",
     )
 
     parser.add_argument(
-        "--no-gauntlet",
-        action="store_true",
-        help="Disable Gauntlet test generation"
+        "--no-gauntlet", action="store_true", help="Disable Gauntlet test generation"
     )
 
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
 
     args = parser.parse_args()
 
