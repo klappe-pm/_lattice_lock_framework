@@ -56,7 +56,7 @@ def validate_agent_file(filepath):
 
 
 def main():
-    root_dir = "Agents-v3"
+    root_dir = "agent_definitions"
     if not os.path.exists(root_dir):
         print(f"Error: {root_dir} does not exist.")
         sys.exit(1)

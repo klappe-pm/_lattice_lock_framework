@@ -145,7 +145,7 @@ def main():
         print("\n--- Model Recommendations ---", file=sys.stderr)
         avail_ram = registry["system_info"]["available_ram_gb"]
 
-        if isinstance(avail_ram, (int, float)):
+        if isinstance(avail_ram, int | float):
             safe_limit = avail_ram - 2.0  # Leave 2GB buffer
             print(
                 f"Available RAM for models: {avail_ram:.2f} GB (Safe limit: {safe_limit:.2f} GB)",

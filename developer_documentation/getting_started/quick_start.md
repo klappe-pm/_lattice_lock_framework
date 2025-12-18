@@ -45,7 +45,7 @@ Project 'my-first-agent' is valid!
 (Note: This assumes you have an API key set for the default model).
 
 ```bash
-lattice-lock run --agent default --prompt "Hello, world!"
+lattice-lock orchestrator route "Hello, world!"
 ```
 
 You should see the agent's response in your terminal.

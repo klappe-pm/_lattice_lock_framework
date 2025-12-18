@@ -42,17 +42,15 @@ repos:
       - id: lattice-structure-check
         name: Lattice Structure Validation
         entry: python3 -m lattice_lock_validator.structure
-        language: python
+        language: system
         types: [file]
         pass_filenames: false
-        additional_dependencies: [pyyaml]
         stages: [pre-commit]
 
       - id: lattice-naming-check
         name: File Naming Convention Check
         entry: python3 -m lattice_lock_validator.structure --naming-only
-        language: python
+        language: system
         types: [file]
         pass_filenames: false
-        additional_dependencies: [pyyaml]
         stages: [pre-commit]

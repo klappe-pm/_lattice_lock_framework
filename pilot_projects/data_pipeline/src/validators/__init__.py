@@ -148,7 +148,7 @@ class RangeValidator(BaseValidator):
             return result
 
         value = data[field_name]
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             return result
 
         config = self.rule.rule_config

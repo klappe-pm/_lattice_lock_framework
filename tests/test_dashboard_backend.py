@@ -424,7 +424,6 @@ class TestWebSocketManager:
         assert stats["connections"] == []
 
 
-@pytest.mark.asyncio
 class TestWebSocketEndpoint:
     """Tests for the WebSocket endpoint."""
 

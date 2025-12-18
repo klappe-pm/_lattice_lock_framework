@@ -58,7 +58,7 @@ def main():
             print(f"     Provider: {model.provider.value} | Cost: ${model.input_cost:.2f}")
             print(f"     Code Score: {model.task_scores.get(TaskType.CODE_GENERATION, 0):.2f}")
             print(f"     Accuracy: {model.accuracy:.2f} | Speed: {model.speed:.2f}")
-            if score and isinstance(score, (int, float)):
+            if score and isinstance(score, int | float):
                 print(f"     Selection Score: {score:.3f}")
         else:
             print(f"  Unexpected result: {selected_result}")

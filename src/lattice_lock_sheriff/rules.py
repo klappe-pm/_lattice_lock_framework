@@ -37,7 +37,7 @@ class ImportDisciplineRule(Rule):
 
     def check(self, node: ast.AST, context: RuleContext) -> list[Violation]:
         violations = []
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
+        if isinstance(node, ast.Import | ast.ImportFrom):
             module_name = None
             if isinstance(node, ast.Import):
                 for name in node.names:
@@ -79,7 +79,7 @@ class TypeHintRule(Rule):
         if not context.config.enforce_type_hints:
             return violations
 
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             # Skip checking __init__ or other magic methods if desired, but for now enforcing on all
             if node.returns is None:
                 violations.append(
