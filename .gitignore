@@ -109,10 +109,12 @@ dmypy.json
 # =============================================================================
 # AI/LLM SPECIFIC
 # =============================================================================
+# MCP local overrides (user-specific configs)
+.mcp/local/
+
 # Claude and Claude Flow
 .claude/
 .claude-flow/
-
 
 # Agent Memory State (optional - decide per project)
 # agent_memory/agents/*_memory.md
