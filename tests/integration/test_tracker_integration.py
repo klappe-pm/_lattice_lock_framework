@@ -27,8 +27,8 @@ class TestTrackerIntegration(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp()
         self.test_path = Path(self.test_dir)
 
-        # Setup repo root structure mock
-        self.prompts_dir = self.test_path / "project_prompts"
+        # Setup repo root structure mock (implementation/project_prompts/)
+        self.prompts_dir = self.test_path / "implementation" / "project_prompts"
         self.prompts_dir.mkdir(parents=True)
 
         # Create phase directories

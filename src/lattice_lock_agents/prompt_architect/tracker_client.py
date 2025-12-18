@@ -74,17 +74,17 @@ class TrackerClient:
             use_cli: If True, use CLI subprocess calls. If False, direct file access.
         """
         if repo_root is None:
-            # Auto-detect repo root by looking for project_prompts directory
+            # Auto-detect repo root by looking for implementation/project_prompts directory
             current = Path(__file__).resolve()
             for parent in current.parents:
-                if (parent / "project_prompts").exists():
+                if (parent / "implementation" / "project_prompts").exists():
                     repo_root = parent
                     break
             if repo_root is None:
                 repo_root = Path.cwd()
 
         self.repo_root = repo_root
-        self.prompts_dir = repo_root / "project_prompts"
+        self.prompts_dir = repo_root / "implementation" / "project_prompts"
         self.state_file = self.prompts_dir / "project_prompts_state.json"
         self.tracker_script = repo_root / "scripts" / "prompt_tracker.py"
         self.use_cli = use_cli
