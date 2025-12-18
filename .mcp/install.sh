@@ -37,10 +37,10 @@ echo -e "${YELLOW}Detected OS: $OS${NC}"
 echo ""
 
 # Define target paths based on OS
-declare -A CURSOR_PATH
-declare -A VSCODE_PATH
-declare -A CLAUDE_PATH
-declare -A WARP_PATH
+CURSOR_PATH=""
+VSCODE_PATH=""
+CLAUDE_PATH=""
+WARP_PATH=""
 
 if [[ "$OS" == "macos" ]]; then
     CURSOR_PATH="$HOME/.cursor/mcp.json"
