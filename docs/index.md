@@ -73,12 +73,7 @@ API and CLI documentation:
 
 AI model configuration and usage:
 
-- [Model Usage Guide](models/model_usage_guide.md) - How to use models
-- [Model Capabilities](models/model_capabilities.md) - What each model can do
-- [Model Registry](models/model_registry.md) - Available models
-- [Model Selection Guidelines](models/model_selection_guidelines.md) - Choosing the right model
-- [Local Models Setup](models/local_models_setup.md) - Running models locally with Ollama
-- [Grok Models Setup](models/grok_models_setup.md) - Using xAI Grok models
+- [Model Registry](../models/README.md) - Model configuration and selection guide
 
 ### Agents
 
