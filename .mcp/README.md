@@ -22,9 +22,10 @@ Everything is self-contained in this repository - no external dependencies requi
 
 ```
 .mcp/
-├── README.md           # This file
-├── .env.example        # Template showing required environment variables
-├── install.sh          # Installation script for IDE configs
+├── README.md               # This file
+├── .env.example            # Template showing required environment variables
+├── install.sh              # Installation script for IDE configs
+├── check_no_secrets.sh     # Pre-commit hook for secrets detection
 ├── config/
 │   └── mcp_servers.json    # Master configuration (all servers defined here)
 ├── templates/
@@ -32,8 +33,11 @@ Everything is self-contained in this repository - no external dependencies requi
 │   ├── vscode-mcp.json         # Ready-to-use VS Code config
 │   ├── claude-desktop-mcp.json # Ready-to-use Claude Desktop config
 │   └── warp-mcp.json           # Ready-to-use Warp Terminal config
-└── local/              # Your local overrides (gitignored)
+└── local/                  # Your local overrides (gitignored)
 ```
+
+> **Note:** Package names were last verified on 2025-12-18. MCP servers are maintained
+> by different organizations (Google, Brave, MCP, Community) and may change over time.
 
 ## Quick Start
 
@@ -99,15 +103,14 @@ After installing configs and setting environment variables, restart your IDE to 
 
 ## Available MCP Servers
 
-| Server | Description | Required Env Vars |
-|--------|-------------|-------------------|
-| `gcloud` | Google Cloud Platform API access | GCP auth |
-| `observability` | Google Cloud monitoring and logging | GCP auth |
-| `storage` | Google Cloud Storage management | GCP auth |
-| `brave-search` | Web search via Brave Search API | `BRAVE_API_KEY` |
-| `sequential-thinking` | Extended reasoning capabilities | None |
-| `mcp-omnisearch` | Multi-source search (Tavily, Brave, Kagi) | At least one: `TAVILY_API_KEY`, `BRAVE_API_KEY`, `KAGI_API_KEY` |
-| `aws-api` | AWS service access and management | AWS credentials |
+| Server | Description | Required Env Vars | Maintainer |
+|--------|-------------|-------------------|------------|
+| `gcloud` | Google Cloud Platform API access | GCP auth | Google |
+| `observability` | Google Cloud monitoring and logging | GCP auth | Google |
+| `storage` | Google Cloud Storage management | GCP auth | Google |
+| `brave-search` | Web search via Brave Search API | `BRAVE_API_KEY` | Brave |
+| `sequential-thinking` | Extended reasoning capabilities | None | MCP |
+| `mcp-omnisearch` | Multi-source search (Tavily, Brave, Kagi, Perplexity, Jina) | At least one: `TAVILY_API_KEY`, `BRAVE_API_KEY`, `KAGI_API_KEY` | Community |
 
 ## Customization
 
@@ -126,14 +129,23 @@ For personal customizations that shouldn't be committed:
 
 ## Integration with Lattice Lock Orchestrator
 
-The MCP servers provide IDE integration for AI assistants. The Lattice Lock Orchestrator
-(Python runtime) uses a separate configuration system based on environment variables.
+The MCP servers in this directory provide **IDE integration** for AI assistants (Cursor, VS Code,
+Claude Desktop, etc.). These are separate from the **Python orchestrator runtime**.
 
-See `src/lattice_lock_orchestrator/api_clients.py` for the orchestrator's credential requirements:
-- `OPENAI_API_KEY` - OpenAI models
-- `ANTHROPIC_API_KEY` - Claude models
+### Key Distinction
+
+| System | Purpose | Credentials |
+|--------|---------|-------------|
+| MCP IDE Servers | Tools for AI assistants in your IDE | Search API keys, GCP auth |
+| Python Orchestrator | LLM routing in Python code | LLM provider API keys |
+
+The Python orchestrator uses its own credential system. See `src/lattice_lock_orchestrator/api_clients.py`:
+- `OPENAI_API_KEY` - OpenAI models (GPT-4, GPT-3.5-turbo)
+- `ANTHROPIC_API_KEY` - Claude models (Opus, Sonnet, Haiku)
 - `GOOGLE_API_KEY` - Gemini models
 - `XAI_API_KEY` - Grok models
+- `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT` - Azure OpenAI (optional)
+- `DIAL_API_KEY` - DIAL proxy for Anthropic (optional, enterprise)
 
 **Note:** The Zen MCP Bridge component for runtime MCP integration is planned but not yet implemented.
 

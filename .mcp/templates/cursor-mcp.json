@@ -14,27 +14,23 @@
     },
     "brave-search": {
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-brave-search"],
+      "args": ["-y", "@brave/brave-search-mcp-server"],
       "env": {
         "BRAVE_API_KEY": ""
       }
     },
     "sequential-thinking": {
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-sequential-thinking"]
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     "mcp-omnisearch": {
       "command": "npx",
-      "args": ["-y", "mcp-omnisearch"],
+      "args": ["-y", "@mseep/mcp-omnisearch"],
       "env": {
         "TAVILY_API_KEY": "",
         "BRAVE_API_KEY": "",
         "KAGI_API_KEY": ""
       }
-    },
-    "aws-api": {
-      "command": "npx",
-      "args": ["-y", "@aws/mcp-server-aws"]
     }
   }
 }

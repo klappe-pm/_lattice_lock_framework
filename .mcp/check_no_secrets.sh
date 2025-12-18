@@ -8,7 +8,13 @@ EXIT_CODE=0
 
 for f in "$@"; do
     # Check for common secret patterns and hardcoded user paths
-    if grep -qE "(sk-[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|-----BEGIN|/Users/[a-zA-Z]+/)" "$f"; then
+    # Patterns checked:
+    #   - OpenAI API keys (sk-...)
+    #   - AWS Access Key IDs (AKIA...)
+    #   - Private key headers (-----BEGIN)
+    #   - macOS home paths (/Users/<username>/)
+    #   - Linux home paths (/home/<username>/) - excludes /home/runner/ for CI
+    if grep -qE "(sk-[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|-----BEGIN|/Users/[a-zA-Z]+/|/home/(?!runner)[a-zA-Z]+/)" "$f"; then
         echo "ERROR: $f may contain secrets or hardcoded paths"
         EXIT_CODE=1
     fi
