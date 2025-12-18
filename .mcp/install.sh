@@ -67,26 +67,26 @@ install_config() {
     local name="$1"
     local source="$2"
     local target="$3"
-    
+
     if [[ ! -f "$source" ]]; then
         echo -e "${RED}Source file not found: $source${NC}"
         return 1
     fi
-    
+
     # Create target directory if it doesn't exist
     local target_dir=$(dirname "$target")
     if [[ ! -d "$target_dir" ]]; then
         echo -e "${YELLOW}Creating directory: $target_dir${NC}"
         mkdir -p "$target_dir"
     fi
-    
+
     # Backup existing config if it exists
     if [[ -f "$target" ]]; then
         local backup="${target}.backup.$(date +%Y%m%d_%H%M%S)"
         echo -e "${YELLOW}Backing up existing config to: $backup${NC}"
         cp "$target" "$backup"
     fi
-    
+
     # Copy the config
     cp "$source" "$target"
     echo -e "${GREEN}Installed $name config to: $target${NC}"
@@ -144,6 +144,8 @@ echo -e "${YELLOW}Required for some MCP servers:${NC}"
 echo "  - BRAVE_API_KEY (for brave-search, mcp-omnisearch)"
 echo "  - TAVILY_API_KEY (for mcp-omnisearch)"
 echo "  - KAGI_API_KEY (for mcp-omnisearch)"
+echo "  - PERPLEXITY_API_KEY (for mcp-omnisearch, optional)"
+echo "  - JINA_API_KEY (for mcp-omnisearch, optional)"
 echo ""
 echo -e "${YELLOW}For Google Cloud servers:${NC}"
 echo "  Run: gcloud auth application-default login"
