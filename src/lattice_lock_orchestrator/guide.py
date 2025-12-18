@@ -10,8 +10,12 @@ class ModelGuideParser:
     """Parse MODELS.md for model selection guidance"""
 
     def __init__(self, guide_path: str | None = None):
-        default_path = Path.home() / "Obsidian/Power Prompts/gitignore/Claude Context/MODELS.md"
-        self.guide_path = Path(guide_path) if guide_path else default_path
+        if guide_path:
+            self.guide_path = Path(guide_path)
+        else:
+            # Default to MODELS.md in the project root (if it exists)
+            project_root = Path(__file__).parent.parent.parent.parent
+            self.guide_path = project_root / "MODELS.md"
         self.rules = self._parse_guide()
 
     def _parse_guide(self) -> dict[str, Any]:
