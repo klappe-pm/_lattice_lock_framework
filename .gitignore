@@ -112,8 +112,9 @@ dmypy.json
 # MCP local overrides (user-specific configs)
 .mcp/local/
 
-# Claude Flow Metrics (can be regenerated)
-.claude-flow/metrics/
+# Claude and Claude Flow
+.claude/
+.claude-flow/
 
 # Agent Memory State (optional - decide per project)
 # agent_memory/agents/*_memory.md
@@ -198,3 +199,6 @@ coverage_reports/
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
 snyk
+
+# Implementation artifacts and prototypes
+implementation/
