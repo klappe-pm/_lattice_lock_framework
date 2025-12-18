@@ -109,8 +109,10 @@ dmypy.json
 # =============================================================================
 # AI/LLM SPECIFIC
 # =============================================================================
-# Claude Flow Metrics (can be regenerated)
-.claude-flow/metrics/
+# Claude and Claude Flow
+.claude/
+.claude-flow/
+
 
 # Agent Memory State (optional - decide per project)
 # agent_memory/agents/*_memory.md
