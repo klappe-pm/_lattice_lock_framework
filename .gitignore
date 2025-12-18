@@ -177,6 +177,9 @@ Desktop.ini
 # =============================================================================
 # PROJECT SPECIFIC
 # =============================================================================
+# Work Breakdown Structure tracking files (local working copies)
+WBS/
+
 # Lattice compilation artifacts (if you want to regenerate)
 # src/generated/
 
