@@ -21,7 +21,7 @@ from pathlib import Path
 
 # Paths relative to repo root
 REPO_ROOT = Path(__file__).parent.parent
-PROMPTS_DIR = REPO_ROOT / "project_prompts"
+PROMPTS_DIR = REPO_ROOT / "implementation" / "project_prompts"
 STATE_FILE = PROMPTS_DIR / "project_prompts_state.json"
 TRACKER_FILE = PROMPTS_DIR / "project_prompts_tracker.md"
 

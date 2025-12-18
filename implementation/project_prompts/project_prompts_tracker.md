@@ -7,9 +7,9 @@
 | Metric | Count |
 |--------|-------|
 | Total Prompts | 66 |
-| Delivered (Merged) | 47 |
+| Delivered (Merged) | 57 |
 | In Progress | 0 |
-| Pending | 19 |
+| Pending | 63 |
 
 ---
 
@@ -60,7 +60,7 @@
 | 3.3.1 | Admin API endpoints | Claude Code App | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
 | 3.3.2 | Admin authentication | Claude Code App | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
 | 3.4.1 | Dashboard backend | Codex CLI (Retired) | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
-| 3.4.2 | Dashboard frontend | Codex CLI (Retired) | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 3.4.2 | Dashboard frontend | Codex CLI (Retired) | - | Yes | Yes | - | - | 2025-12-14 20:21:49 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/39) |
 
 ---
 
@@ -72,10 +72,10 @@
 | 4.1.2 | CLI reference documentation | Claude Code Website | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
 | 4.1.3 | API reference documentation | Claude Code Website | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
 | 4.2.1 | Getting started tutorial | Claude Code Website | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
-| 4.2.2 | Advanced usage guides | Claude Code Website | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
-| 4.3.1 | Pilot project 1 setup | Devin AI | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
-| 4.3.2 | Pilot project 2 setup | Devin AI | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
-| 4.4.1 | Feedback collection system | Claude Code App | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 4.2.2 | Advanced usage guides | Claude Code Website | - | Yes | Yes | - | - | 2025-12-14 20:21:49 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/39) |
+| 4.3.1 | Pilot project 1 setup | Devin AI | - | Yes | Yes | - | - | 2025-12-14 20:21:49 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/39) |
+| 4.3.2 | Pilot project 2 setup | Devin AI | - | Yes | Yes | - | - | 2025-12-14 20:21:49 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/39) |
+| 4.4.1 | Feedback collection system | Claude Code App | - | Yes | Yes | - | - | - | - | - |
 
 ---
 
@@ -83,14 +83,14 @@
 
 | ID | Title | Tool | Picked Up | Done | Merged | Model | Start Time | End Time | Duration (min) | PR |
 |:---|:------|:-----|:----------|:-----|:-------|:------|:-----------|:---------|:---------------|:---|
-| 5.1.1 | Prompt Architect Agent core setup | Devin AI | - | - | - | - | - | - | - | - |
-| 5.1.2 | Prompt Architect integration with Project Agent | Devin AI | - | - | - | - | - | - | - | - |
-| 5.2.1 | Specification analyzer implementation | Gemini Antimatter | - | - | - | - | - | - | - | - |
-| 5.2.2 | Roadmap parser implementation | Gemini Antimatter | - | - | - | - | - | - | - | - |
-| 5.3.1 | Tool matcher implementation | Codex CLI (Retired) | - | - | - | - | - | - | - | - |
-| 5.3.2 | Prompt generator implementation | Codex CLI (Retired) | - | - | - | - | - | - | - | - |
-| 5.4.1 | Tracker integration | Claude Code App | - | - | - | - | - | - | - | - |
-| 5.4.2 | Prompt validation integration | Claude Code App | - | - | - | - | - | - | - | - |
+| 5.1.1 | Prompt Architect Agent core setup | Devin AI | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 5.1.2 | Prompt Architect integration with Project Agent | Devin AI | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 5.2.1 | Specification analyzer implementation | Gemini Antimatter | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 5.2.2 | Roadmap parser implementation | Gemini Antimatter | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 5.3.1 | Tool matcher implementation | Codex CLI (Retired) | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 5.3.2 | Prompt generator implementation | Codex CLI (Retired) | - | Yes | Yes | - | - | 2025-12-14 20:08:24 | - | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/37) |
+| 5.4.1 | Tracker integration | Claude Code App | Yes | Yes | Yes | claude-opus-4-5-20251101 | 2025-12-14 13:30:00 | 2025-12-14 13:45:00 | 15 | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/45) |
+| 5.4.2 | Prompt validation integration | Claude Code App | Yes | Yes | Yes | claude-opus-4-5-20251101 | 2025-12-14 13:30:00 | 2025-12-14 13:45:00 | 15 | [PR](https://github.com/klappe-pm/lattice-lock-framework/pull/45) |
 
 ---
 
