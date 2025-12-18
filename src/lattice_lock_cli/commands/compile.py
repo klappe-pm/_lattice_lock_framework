@@ -6,29 +6,31 @@ Pydantic models, SQLModel ORM classes, and Gauntlet test contracts.
 """
 
 import sys
+import time
 from pathlib import Path
 
 import click
-from rich.console import Console
 from rich.table import Table
 
 from lattice_lock.compile import CompilationResult, compile_lattice
+from lattice_lock_cli.utils.console import get_console
 
-console = Console()
+console = get_console()
 
 
-def _print_result(result: CompilationResult, verbose: bool = False) -> None:
+def _print_result(result: CompilationResult, duration: float, verbose: bool = False) -> None:
     """Print compilation result with colorful output."""
+    
     if result.success:
-        console.print("[green]Compilation successful![/green]")
+        console.success(f"Compilation successful in {duration:.2f}s")
     else:
-        console.print("[red]Compilation failed![/red]")
+        console.error("Compilation Failed", "The schema compilation process encountered errors.", "Check the error list below and fix schema issues.")
 
     if result.generated_files:
-        table = Table(title="Generated Files")
+        table = Table(title="Generated Files", box=None, show_header=True)
         table.add_column("File", style="cyan")
         table.add_column("Type", style="magenta")
-        table.add_column("Entity", style="green")
+        table.add_column("Entity", style="spring_green1")
 
         for gen_file in result.generated_files:
             table.add_row(
@@ -36,24 +38,25 @@ def _print_result(result: CompilationResult, verbose: bool = False) -> None:
                 gen_file.file_type,
                 gen_file.entity_name or "-",
             )
-
-        console.print(table)
+        
+        console.internal_console.print(table)
+        console.internal_console.print()
 
     if result.warnings:
-        console.print(f"\n[yellow]Warnings ({len(result.warnings)}):[/yellow]")
+        console.warning(f"Warnings ({len(result.warnings)}):")
         for warning in result.warnings:
-            console.print(f"  [yellow]- {warning}[/yellow]")
+            console.internal_console.print(f"  [yellow]- {warning}[/yellow]")
 
     if result.errors:
-        console.print(f"\n[red]Errors ({len(result.errors)}):[/red]")
+        console.internal_console.print(f"\n[bold red]Errors ({len(result.errors)}):[/bold red]")
         for error in result.errors:
-            console.print(f"  [red]- {error}[/red]")
+            console.internal_console.print(f"  [red]- {error}[/red]")
 
     if verbose and result.validation_result:
-        console.print("\n[dim]Validation Details:[/dim]")
-        console.print(f"  Valid: {result.validation_result.valid}")
-        console.print(f"  Errors: {len(result.validation_result.errors)}")
-        console.print(f"  Warnings: {len(result.validation_result.warnings)}")
+        console.internal_console.print("\n[dim]Validation Details:[/dim]")
+        console.internal_console.print(f"  Valid: {result.validation_result.valid}")
+        console.internal_console.print(f"  Errors: {len(result.validation_result.errors)}")
+        console.internal_console.print(f"  Warnings: {len(result.validation_result.warnings)}")
 
 
 @click.command()
@@ -101,26 +104,32 @@ def compile_command(
     SCHEMA_PATH: Path to lattice.yaml file (default: ./lattice.yaml)
     """
     verbose = ctx.obj.get("VERBOSE", False) if ctx.obj else False
-
-    console.print(f"[bold]Compiling schema:[/bold] {schema_path}")
+    console.set_verbose(verbose)
 
     if output:
-        console.print(f"[bold]Output directory:[/bold] {output}")
+        console.info(f"Output directory: {output}")
 
-    console.print()
+    start_time = time.time()
 
-    result = compile_lattice(
-        schema_path=schema_path,
-        output_dir=output,
-        generate_pydantic=pydantic,
-        generate_sqlmodel=sqlmodel,
-        generate_gauntlet=gauntlet,
-    )
+    with console.internal_console.status("[bold cyan]Compiling lattice.yaml...[/]") as status:
+        status.update("[bold cyan]Reading and validating schema...[/]")
+        # Simulate some steps if logical separation existed, 
+        # but compile_lattice does it all.
+        
+        result = compile_lattice(
+            schema_path=schema_path,
+            output_dir=output,
+            generate_pydantic=pydantic,
+            generate_sqlmodel=sqlmodel,
+            generate_gauntlet=gauntlet,
+        )
+        
+        status.update("[bold cyan]Finalizing...[/]")
+    
+    end_time = time.time()
+    duration = end_time - start_time
 
-    _print_result(result, verbose)
+    _print_result(result, duration, verbose)
 
     if not result.success:
         sys.exit(1)
-
-    console.print()
-    console.print(f"[green]Generated {len(result.generated_files)} file(s)[/green]")
