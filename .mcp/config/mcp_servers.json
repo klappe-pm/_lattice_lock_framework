@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_comment": "Master MCP server configuration for Lattice Lock Framework. NEVER put actual API keys in this file.",
+  "version": "1.0.0",
+  "servers": {
+    "gcloud": {
+      "description": "Google Cloud Platform API access via gcloud CLI",
+      "package": "@google-cloud/gcloud-mcp",
+      "command": "npx",
+      "args": ["-y", "@google-cloud/gcloud-mcp"],
+      "env": {},
+      "auth_method": "gcloud auth application-default login",
+      "documentation": "https://github.com/googleapis/gcloud-mcp"
+    },
+    "observability": {
+      "description": "Google Cloud monitoring, logging, and tracing",
+      "package": "@google-cloud/observability-mcp",
+      "command": "npx",
+      "args": ["-y", "@google-cloud/observability-mcp"],
+      "env": {},
+      "auth_method": "gcloud auth application-default login",
+      "documentation": "https://github.com/googleapis/gcloud-mcp"
+    },
+    "storage": {
+      "description": "Google Cloud Storage management",
+      "package": "@google-cloud/storage-mcp",
+      "command": "npx",
+      "args": ["-y", "@google-cloud/storage-mcp"],
+      "env": {},
+      "auth_method": "gcloud auth application-default login",
+      "documentation": "https://github.com/googleapis/gcloud-mcp"
+    },
+    "brave-search": {
+      "description": "Web search via Brave Search API",
+      "package": "@anthropic/mcp-brave-search",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": ""
+      },
+      "env_required": ["BRAVE_API_KEY"],
+      "auth_method": "Set BRAVE_API_KEY environment variable",
+      "documentation": "https://github.com/anthropics/mcp-brave-search"
+    },
+    "sequential-thinking": {
+      "description": "Extended reasoning capabilities for complex tasks",
+      "package": "@anthropic/mcp-sequential-thinking",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-sequential-thinking"],
+      "env": {},
+      "auth_method": "None required",
+      "documentation": "https://github.com/anthropics/mcp-sequential-thinking"
+    },
+    "mcp-omnisearch": {
+      "description": "Multi-source search (Tavily, Brave, Kagi)",
+      "package": "mcp-omnisearch",
+      "command": "npx",
+      "args": ["-y", "mcp-omnisearch"],
+      "env": {
+        "TAVILY_API_KEY": "",
+        "BRAVE_API_KEY": "",
+        "KAGI_API_KEY": ""
+      },
+      "env_required": [],
+      "env_optional": ["TAVILY_API_KEY", "BRAVE_API_KEY", "KAGI_API_KEY"],
+      "auth_method": "Set at least one search API key",
+      "documentation": "https://github.com/mcp-omnisearch/mcp-omnisearch"
+    },
+    "aws-api": {
+      "description": "AWS service access and management",
+      "package": "@aws/mcp-server-aws",
+      "command": "npx",
+      "args": ["-y", "@aws/mcp-server-aws"],
+      "env": {},
+      "env_optional": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
+      "auth_method": "AWS credentials via environment or ~/.aws/credentials",
+      "documentation": "https://github.com/aws/mcp-server-aws"
+    }
+  }
+}

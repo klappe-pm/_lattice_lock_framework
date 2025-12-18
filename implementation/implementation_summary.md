@@ -1,16 +1,17 @@
 # Configuration System Implementation Summary
 
-**MCP Configuration System – v1.0.0 (2025-12-01) – Kevin Lappe**
+**MCP Configuration System – v2.0.0 (2025-12-18)**
 
-Single-source-of-truth system that automatically generates consistent, secure MCP configurations for multiple IDEs/tools from one JSON file.
+Self-contained MCP configuration system with all configs stored in-repo. No external dependencies required.
 
 **Core Components**
-- `mcp_config_main.json` – master config (all servers + shared settings)
-- `tool_formats.json` – per-IDE JSON structure & file-path templates
-- `generate_mcp_configs.py` – one-command generator + JSON validation
+- `.mcp/config/mcp_servers.json` – master config (all servers defined here)
+- `.mcp/templates/` – ready-to-use IDE-specific configs
+- `.mcp/install.sh` – installation script for IDE configs
+- `.mcp/.env.example` – template showing required environment variables
 
-**Supported IDEs/Tools (9)**
-Cursor → VS Code → Warp → Antimatter → Claude Desktop → Windsurf → Verdant → Zed → Generic Template
+**Supported IDEs/Tools (4)**
+Cursor, VS Code, Claude Desktop, Warp Terminal
 
 **Configured MCP Servers (7)**
 - gcloud (GCP API)
@@ -22,38 +23,41 @@ Cursor → VS Code → Warp → Antimatter → Claude Desktop → Windsurf → V
 - aws-api (AWS services)
 
 **Security Model**
-- No secrets in repo
-- All API keys stored only in macOS Keychain
-- Configs use `${VAR_NAME}` placeholders
-- Load with `eval "$(load-keychain-credentials)"`
+- No secrets in repo (enforced by pre-commit hook)
+- All API keys via environment variables
+- Configs use `env` blocks to pass env vars to MCP servers
+- `.mcp/local/` directory gitignored for user overrides
 
 **Key Features**
-- Edit once → generate all IDE configs automatically
-- Fully extensible (add new server = 2 lines in main JSON; add new IDE = entry in tool_formats.json)
-- Zero-downtime updates across all tools
-- Full documentation + quick reference
+- All configs self-contained in repo
+- Ready-to-use templates (no generation required)
+- Cross-platform install script (macOS, Linux)
+- Security guardrails (pre-commit hook blocks secrets/hardcoded paths)
 
-**Usage (3 commands)**
+**Usage (2 steps)**
 ```bash
-cd ~/Documents/llm_configurations
-python3 generate_mcp_configs.py          # generates mcp/*.json
-cp mcp/cursor-mcp.json ~/.cursor/mcp.json  # repeat per IDE
-eval "$(load-keychain-credentials)"       # load secrets into env
+# 1. Set environment variables in your shell profile
+export BRAVE_API_KEY="your-key"
+export TAVILY_API_KEY="your-key"
+
+# 2. Install configs to your IDE
+cd .mcp && ./install.sh
 ```
 
 **Maintenance Workflow**
-1. Edit `mcp_config_main.json` or `tool_formats.json`
-2. Run generator
-3. Copy new files to IDE locations
-4. Restart IDE → done
+1. Edit `.mcp/config/mcp_servers.json` (master config)
+2. Update templates in `.mcp/templates/`
+3. Update `.env.example` if new env vars needed
+4. Commit changes (pre-commit hook validates security)
 
-**Repository**
-https://github.com/klappe-pm/llm-configurations
+**Documentation**
+See `.mcp/README.md` for full setup instructions.
 
 **Status**
-✅ Complete & production-ready
+Complete & production-ready
 
-**Future ideas**
-auto-install script, per-project/env configs, connection testing, versioning
-
-(Word count reduced from ~720 to ~240 while preserving all critical information)
+**Changes from v1.0.0**
+- Migrated from external `llm_configurations` repo to in-repo configs
+- Removed dependency on local folder setup
+- Added security guardrails (pre-commit hook)
+- Simplified installation with ready-to-use templates

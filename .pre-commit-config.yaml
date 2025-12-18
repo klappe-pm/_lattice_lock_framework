@@ -54,3 +54,10 @@ repos:
         types: [file]
         pass_filenames: false
         stages: [pre-commit]
+
+      - id: mcp-no-secrets
+        name: Check MCP configs for secrets and hardcoded paths
+        entry: .mcp/check_no_secrets.sh
+        language: script
+        files: ^\.mcp/.*\.(json|yaml|yml|md)$
+        stages: [pre-commit]

@@ -109,6 +109,9 @@ dmypy.json
 # =============================================================================
 # AI/LLM SPECIFIC
 # =============================================================================
+# MCP local overrides (user-specific configs)
+.mcp/local/
+
 # Claude Flow Metrics (can be regenerated)
 .claude-flow/metrics/
 
