@@ -458,7 +458,7 @@ def generate_api_key(
         name=name,
     )
 
-    logger.info("API key generated for user %s: %s", username, key_id)
+    logger.info("API key generated: %s", key_id)
 
     return api_key, key_id
 
