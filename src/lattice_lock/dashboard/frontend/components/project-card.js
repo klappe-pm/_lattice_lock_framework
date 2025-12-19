@@ -7,17 +7,58 @@ export default class ProjectCard {
         const div = document.createElement('div');
         div.className = `project-card ${this.getStatusClass()}`;
 
-        div.innerHTML = `
-            <div class="project-header">
-                <span class="project-name">${this.project.name}</span>
-                <span class="project-status">${this.project.status}</span>
-            </div>
-            <div class="project-details">
-                <div>Health Score: <strong>${this.project.health_score}</strong></div>
-                <div>Last Validated: ${this.formatDate(this.project.last_validated)}</div>
-                <div>Errors: ${this.project.error_count}</div>
-            </div>
-        `;
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'project-header';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'project-name';
+        nameSpan.textContent = this.project.name;
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'project-status';
+        statusSpan.textContent = this.project.status;
+
+        header.appendChild(nameSpan);
+        header.appendChild(statusSpan);
+
+        // Create details
+        const details = document.createElement('div');
+        details.className = 'project-details';
+
+        // Health score
+        const healthDiv = document.createElement('div');
+        const healthLabel = document.createElement('span');
+        healthLabel.textContent = 'Health Score: ';
+        const healthValue = document.createElement('strong');
+        healthValue.textContent = String(this.project.health_score);
+        healthDiv.appendChild(healthLabel);
+        healthDiv.appendChild(healthValue);
+
+        // Last validated
+        const lastValidatedDiv = document.createElement('div');
+        const lastValidatedLabel = document.createElement('span');
+        lastValidatedLabel.textContent = 'Last Validated: ';
+        const lastValidatedValue = document.createElement('span');
+        lastValidatedValue.textContent = this.formatDate(this.project.last_validated);
+        lastValidatedDiv.appendChild(lastValidatedLabel);
+        lastValidatedDiv.appendChild(lastValidatedValue);
+
+        // Errors
+        const errorsDiv = document.createElement('div');
+        const errorsLabel = document.createElement('span');
+        errorsLabel.textContent = 'Errors: ';
+        const errorsValue = document.createElement('span');
+        errorsValue.textContent = String(this.project.error_count);
+        errorsDiv.appendChild(errorsLabel);
+        errorsDiv.appendChild(errorsValue);
+
+        details.appendChild(healthDiv);
+        details.appendChild(lastValidatedDiv);
+        details.appendChild(errorsDiv);
+
+        div.appendChild(header);
+        div.appendChild(details);
 
         return div;
     }
