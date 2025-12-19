@@ -1,10 +1,9 @@
-from typing import Any, Optional
 import json
+from typing import Any
+
 from rich.console import Console
-from rich.theme import Theme
 from rich.panel import Panel
-from rich.table import Table
-from rich import box
+from rich.theme import Theme
 
 # Design-compliant theme
 custom_theme = Theme(
@@ -16,6 +15,7 @@ custom_theme = Theme(
         "muted": "grey50",
     }
 )
+
 
 class LatticeConsole:
     def __init__(self):
@@ -51,24 +51,19 @@ class LatticeConsole:
         if not self._json_mode:
             self._console.print(f"[warning]⚠ {message}[/]")
 
-    def error(self, title: str, message: str, suggestion: Optional[str] = None):
+    def error(self, title: str, message: str, suggestion: str | None = None):
         """Standardized error panel."""
         if self._json_mode:
-             # In JSON mode, we might want to print a JSON error object, 
-             # but usually the command logic handles the final JSON response.
-             # This method is primarily for human-readable output.
-             return
+            # In JSON mode, we might want to print a JSON error object,
+            # but usually the command logic handles the final JSON response.
+            # This method is primarily for human-readable output.
+            return
 
         content = f"{message}"
         if suggestion:
             content += f"\n\n[dim]Suggestion: {suggestion}[/]"
-        
-        panel = Panel(
-            content,
-            title=f"[error]{title}[/]",
-            border_style="red",
-            expand=False
-        )
+
+        panel = Panel(content, title=f"[error]{title}[/]", border_style="red", expand=False)
         self._console.print(panel)
 
     def print_json(self, data: Any):
@@ -76,7 +71,9 @@ class LatticeConsole:
         # We use strict print here to ensure it goes to stdout even if console is quieted
         print(json.dumps(data, indent=2))
 
+
 console = LatticeConsole()
+
 
 def get_console() -> LatticeConsole:
     """Get the global console wrapper."""

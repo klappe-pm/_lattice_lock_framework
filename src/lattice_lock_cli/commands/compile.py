@@ -20,11 +20,15 @@ console = get_console()
 
 def _print_result(result: CompilationResult, duration: float, verbose: bool = False) -> None:
     """Print compilation result with colorful output."""
-    
+
     if result.success:
         console.success(f"Compilation successful in {duration:.2f}s")
     else:
-        console.error("Compilation Failed", "The schema compilation process encountered errors.", "Check the error list below and fix schema issues.")
+        console.error(
+            "Compilation Failed",
+            "The schema compilation process encountered errors.",
+            "Check the error list below and fix schema issues.",
+        )
 
     if result.generated_files:
         table = Table(title="Generated Files", box=None, show_header=True)
@@ -38,7 +42,7 @@ def _print_result(result: CompilationResult, duration: float, verbose: bool = Fa
                 gen_file.file_type,
                 gen_file.entity_name or "-",
             )
-        
+
         console.internal_console.print(table)
         console.internal_console.print()
 
@@ -113,9 +117,9 @@ def compile_command(
 
     with console.internal_console.status("[bold cyan]Compiling lattice.yaml...[/]") as status:
         status.update("[bold cyan]Reading and validating schema...[/]")
-        # Simulate some steps if logical separation existed, 
+        # Simulate some steps if logical separation existed,
         # but compile_lattice does it all.
-        
+
         result = compile_lattice(
             schema_path=schema_path,
             output_dir=output,
@@ -123,9 +127,9 @@ def compile_command(
             generate_sqlmodel=sqlmodel,
             generate_gauntlet=gauntlet,
         )
-        
+
         status.update("[bold cyan]Finalizing...[/]")
-    
+
     end_time = time.time()
     duration = end_time - start_time
 

@@ -1,7 +1,23 @@
+version: v2.1
+generated_module: alpha_types
 
-version: "2.1"
+entities:
+  AlphaRecord:
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      name:
+        type: str
+        min_length: 1
+      status:
+        type: enum
+        enum: [active, inactive]
+        default: active
+
 project:
   name: "alpha-service"
+
 rules:
   - id: "enforce-types"
     severity: "error"
