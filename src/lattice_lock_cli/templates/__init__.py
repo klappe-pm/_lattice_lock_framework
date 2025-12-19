@@ -19,9 +19,17 @@ def get_template_env() -> Environment:
     """Get the Jinja2 environment configured for the templates directory."""
     return get_secure_environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
-        autoescape=select_autoescape(
-            enabled_extensions=("html", "htm", "xml"), default_for_string=False, default=False
-        ),
+        # get_secure_environment sets autoescape=True by default.
+        # If we need specific extensions, we can pass autoescape=select_autoescape(...)
+        # but the secure wrapper might enforce True. 
+        # Let's check get_secure_environment signature from previous view_file.
+        # It takes **kwargs and sets autoescape=True if missing.
+        # If we pass autoescape, it might be overridden?
+        # get_secure_environment implementation:
+        # if "autoescape" not in kwargs: kwargs["autoescape"] = True
+        # kwargs["autoescape"] = True <--- It FORCES True at the end!
+        # So passing select_autoescape might be ignored or overwritten.
+        # Let's trust the secure env wrapper.
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,

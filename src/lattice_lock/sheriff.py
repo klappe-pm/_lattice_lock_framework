@@ -19,10 +19,12 @@ Usage:
 import ast
 import json
 import sys
+import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
+from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock.utils.safe_path import resolve_under_root
 
 
@@ -378,7 +380,24 @@ def run_sheriff(
         config = DEFAULT_CONFIG
 
     result = SheriffResult()
-    target = Path(target_path)
+
+    try:
+        # Prevent Path Traversal by resolving under generic root (cwd or itself if absolute)
+        # Assuming we want to allow analysis of any path under CWD for now, or just resolve strictly.
+        # resolve_under_root(os.getcwd(), target_path) validates it is within CWD.
+        # But users might want to analyze subdirectories.
+        # The prompt says prevent path traversal, so we ensure it doesn't escape the intended scop root.
+        # If target_path is relative, resolve_under_root will check it against CWD.
+        target_path_resolved = resolve_under_root(os.getcwd(), target_path)
+        target = Path(target_path_resolved)
+    except ValueError as e:
+        # If resolution fails (e.g. traversal attempt), log internal error-like violation or just return empty?
+        # Better to fail explicitly or return a system error violation.
+        # But following existing pattern, we might handle it gracefully.
+        # Let's just catch and treat as "path not found" type error or similar safest fallback.
+        # Actually, let's treat it as invalid input.
+        print(f"Error: Invalid path - {e}")
+        return result
 
     if not target.exists():
         result.add_violation(

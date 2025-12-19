@@ -4,6 +4,7 @@ import re
 import sys
 from pathlib import Path
 
+from lattice_lock.utils.safe_path import resolve_under_root
 from .schema import ValidationResult
 
 
