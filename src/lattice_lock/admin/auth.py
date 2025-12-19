@@ -449,9 +449,9 @@ def generate_api_key(
     key_secret = secrets.token_urlsafe(32)
     api_key = f"{config.api_key_prefix}{key_secret}"
 
-    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    api_key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt()).decode()
 
-    _api_keys[key_hash] = (username, role, key_id)
+    _api_keys[api_key_hash] = (username, role, key_id)
     _api_key_metadata[key_id] = APIKeyInfo(
         key_id=key_id,
         created_at=datetime.now(timezone.utc),
@@ -475,20 +475,20 @@ def verify_api_key(api_key: str) -> tuple[str, Role]:
     Raises:
         HTTPException: If API key is invalid
     """
-    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    for stored_hash, (username, role, key_id) in _api_keys.items():
+        try:
+            if bcrypt.checkpw(api_key.encode(), stored_hash.encode()):
+                if key_id in _api_key_metadata:
+                    _api_key_metadata[key_id].last_used = datetime.now(timezone.utc)
+                return username, role
+        except ValueError:
+            # Skip any entries with invalid hash format
+            continue
 
-    if key_hash not in _api_keys:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API key",
-        )
-
-    username, role, key_id = _api_keys[key_hash]
-
-    if key_id in _api_key_metadata:
-        _api_key_metadata[key_id].last_used = datetime.now(timezone.utc)
-
-    return username, role
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid API key",
+    )
 
 
 def revoke_api_key(key_id: str) -> bool:
