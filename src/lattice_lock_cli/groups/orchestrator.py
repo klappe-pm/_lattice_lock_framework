@@ -2,11 +2,10 @@ import asyncio
 import logging
 
 import click
-from rich.panel import Panel
-from rich.table import Table
-
 from lattice_lock import ModelOrchestrator, TaskType
 from lattice_lock_cli.utils.console import get_console
+from rich.panel import Panel
+from rich.table import Table
 
 # Optional imports with graceful degradation
 try:

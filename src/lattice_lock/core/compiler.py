@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from lattice_lock_validator.schema import validate_lattice_schema
 
 logger = logging.getLogger(__name__)

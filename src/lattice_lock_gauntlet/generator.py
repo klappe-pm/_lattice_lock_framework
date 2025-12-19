@@ -1,8 +1,7 @@
 from pathlib import Path
 
 from jinja2 import FileSystemLoader
-
-from lattice_lock.utils.jinja import get_secure_environment
+from lattice_lock.utils.jinja import get_code_environment
 
 from .parser import EnsuresClause, EntityDefinition, LatticeParser
 
@@ -20,7 +19,7 @@ class GauntletGenerator:
     def __init__(self, lattice_file: str, output_dir: str):
         self.parser = LatticeParser(lattice_file)
         self.output_dir = Path(output_dir)
-        self.env = get_secure_environment(
+        self.env = get_code_environment(
             loader=FileSystemLoader(Path(__file__).parent / "templates")
         )
 

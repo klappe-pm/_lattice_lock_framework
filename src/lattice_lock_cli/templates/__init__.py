@@ -7,8 +7,7 @@ Template loader and renderer for project scaffolding.
 from pathlib import Path
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
-
+from jinja2 import Environment, FileSystemLoader, Template
 from lattice_lock.utils.jinja import get_secure_environment
 
 # Get the templates directory path
@@ -21,7 +20,7 @@ def get_template_env() -> Environment:
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         # get_secure_environment sets autoescape=True by default.
         # If we need specific extensions, we can pass autoescape=select_autoescape(...)
-        # but the secure wrapper might enforce True. 
+        # but the secure wrapper might enforce True.
         # Let's check get_secure_environment signature from previous view_file.
         # It takes **kwargs and sets autoescape=True if missing.
         # If we pass autoescape, it might be overridden?

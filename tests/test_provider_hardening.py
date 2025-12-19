@@ -13,7 +13,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from lattice_lock_orchestrator.api_clients import (
     AnthropicAPIClient,
     BedrockAPIClient,

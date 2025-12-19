@@ -8,7 +8,6 @@ import time
 
 import pytest
 from fastapi.testclient import TestClient
-
 from lattice_lock.admin import (
     API_VERSION,
     Project,

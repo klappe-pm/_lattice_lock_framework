@@ -10,7 +10,6 @@ Security Notes:
     - Token revocation is tracked in memory (use Redis/DB for production)
 """
 
-import hashlib
 import logging
 import os
 import secrets

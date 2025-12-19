@@ -12,11 +12,9 @@ Tests cover:
 
 from datetime import datetime, timedelta, timezone
 
-import os
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
-
 from lattice_lock.admin.auth import (
     AuthConfig,
     Role,
@@ -47,9 +45,7 @@ from lattice_lock.admin.auth import (
 )
 from lattice_lock.admin.auth_routes import router as auth_router
 
-
 TEST_PASSWORD_DEFAULT = "dummy_user_password"
-
 
 
 @pytest.fixture(autouse=True)

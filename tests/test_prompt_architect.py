@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from lattice_lock.agents.prompt_architect.cli import (
     create_parser,
     format_result_json,

@@ -18,13 +18,12 @@ Usage:
 
 import ast
 import json
-import sys
 import os
+import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock.utils.safe_path import resolve_under_root
 
 

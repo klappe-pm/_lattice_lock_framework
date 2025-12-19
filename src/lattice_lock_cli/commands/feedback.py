@@ -3,12 +3,11 @@
 from pathlib import Path
 
 import click
+from lattice_lock.feedback.collector import FeedbackCollector
+from lattice_lock.feedback.schemas import FeedbackCategory, FeedbackPriority
+from lattice_lock.utils.safe_path import resolve_under_root
 from rich.console import Console
 from rich.prompt import Prompt
-
-from lattice_lock.feedback.collector import FeedbackCollector
-from lattice_lock.utils.safe_path import resolve_under_root
-from lattice_lock.feedback.schemas import FeedbackCategory, FeedbackPriority
 
 console = Console()
 
@@ -41,10 +40,10 @@ def feedback(category: str, priority: str, storage: str):
 
     if storage:
         try:
-             # Allow absolute paths
+            # Allow absolute paths
             storage_path = resolve_under_root("/", storage)
         except ValueError:
-             # Fallback
+            # Fallback
             storage_path = Path(storage).resolve()
     else:
         storage_path = DEFAULT_FEEDBACK_PATH

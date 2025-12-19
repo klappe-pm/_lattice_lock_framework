@@ -8,7 +8,6 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from lattice_lock.errors import (
     ConfigurationError,
     ErrorContext,

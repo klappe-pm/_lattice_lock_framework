@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-
 from lattice_lock.rollback.checkpoint import CheckpointManager
 from lattice_lock.rollback.state import RollbackState
 from lattice_lock.rollback.trigger import RollbackTrigger
