@@ -87,7 +87,7 @@ class ConventionChecker:
             "src/lattice_lock_admin/",
         ],
         "claude_docs": [
-            "developer_documentation/",
+            "docs/",
         ],
     }
 
@@ -288,7 +288,7 @@ class ConventionChecker:
                     if pattern in [
                         "src/lattice_lock_cli/",
                         "src/lattice_lock_validator/",
-                        "developer_documentation/",
+                        "docs/",
                     ]:
                         result.add_warning(
                             f"Consider adding '{pattern}' to Do NOT Touch section "

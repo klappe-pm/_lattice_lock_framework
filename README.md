@@ -62,7 +62,7 @@ lattice-lock-framework/
 ├── agent_specifications/            # Agent format specifications
 ├── agent_workflows/                 # Workflow templates
 ├── agent_memory/                    # Memory directives
-├── developer_documentation/         # How-to guides
+├── docs/                        # How-to guides and reference
 ├── models/                          # Model configuration and guides
 └── directory/                       # Repository standards
 ```

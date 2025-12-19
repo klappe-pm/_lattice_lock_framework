@@ -489,7 +489,7 @@ class PromptArchitectOrchestrator:
     def __init__(
         self,
         spec_path: str = "specifications/lattice_lock_framework_specifications.md",
-        roadmap_dir: str = "developer_documentation",
+        roadmap_dir: str = "docs",
         output_dir: str = "project_prompts",
         state_file: str = "project_prompts/project_prompts_state.json",
     ) -> None:
