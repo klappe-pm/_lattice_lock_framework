@@ -207,7 +207,11 @@ def main():
 
     args = parser.parse_args()
 
-    repo_path = os.path.abspath(args.path)
+    try:
+        repo_path = resolve_under_root(os.getcwd(), args.path)
+    except ValueError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
     if args.naming_only:
         # Just walk and check naming

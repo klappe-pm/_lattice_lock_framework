@@ -28,6 +28,7 @@ def get_secure_environment(**kwargs: Any) -> jinja2.Environment:
 
     # If autoescape is explicitly passed as False, log a warning (omitted for simplicity here)
     # but we will force strict adherence for this refactor.
+    kwargs["autoescape"] = True
 
     return jinja2.Environment(**kwargs)
 

@@ -450,7 +450,7 @@ Examples:
     config = DEFAULT_CONFIG
     if args.config:
         try:
-            config_path = resolve_under_root(args.config)
+            config_path = resolve_under_root(os.getcwd(), args.config)
         except ValueError as e:
             print(f"Error validating config path: {e}")
             sys.exit(1)
@@ -466,14 +466,14 @@ Examples:
 
     # Run analysis
     try:
-        target_path = resolve_under_root(args.target)
+        target_path = resolve_under_root(os.getcwd(), args.target)
     except ValueError as e:
         print(f"Error: {e}")
         sys.exit(1)
 
     if args.config:
         try:
-            resolve_under_root(args.config)  # Just validate
+            resolve_under_root(os.getcwd(), args.config)  # Just validate
         except ValueError as e:
             print(f"Error: {e}")
             sys.exit(1)

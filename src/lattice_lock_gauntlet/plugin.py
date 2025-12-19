@@ -85,10 +85,11 @@ class GauntletPlugin:
             if summary_file:
                 # Allow absolute path anywhere since it's from env var
                 try:
-                    summary_path = resolve_under_root(summary_file, root=Path("/"))
+                    # Sanitize path, allowing absolute paths by using root="/"
+                    summary_path = resolve_under_root("/", summary_file)
                 except ValueError:
-                    # Fallback if somehow fails or on windows (root=/ not valid)
-                    summary_path = Path(summary_file).resolve()
+                    # Fallback
+                    summary_path = str(Path(summary_file).resolve())
 
                 passed = len([r for r in self.results if r["outcome"] == "passed"])
                 failed = len([r for r in self.results if r["outcome"] == "failed"])

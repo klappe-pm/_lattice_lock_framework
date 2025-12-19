@@ -26,7 +26,7 @@ class GrokAPI:
 
         # Load configuration
         if config_path:
-            self.config_path = resolve_under_root(config_path)
+            self.config_path = resolve_under_root(os.getcwd(), config_path)
         else:
             # Look for config in models directory relative to project root
             project_root = Path(__file__).parent.parent.parent
@@ -89,7 +89,7 @@ class GrokAPI:
         """Send vision completion request with image input"""
         if image_path:
             # Encode image to base64
-            img_path_obj = resolve_under_root(image_path)
+            img_path_obj = resolve_under_root(os.getcwd(), image_path)
             with open(img_path_obj, "rb") as img_file:
                 image_data = base64.b64encode(img_file.read()).decode("utf-8")
 

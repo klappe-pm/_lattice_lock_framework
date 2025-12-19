@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -463,7 +464,7 @@ def cmd_batch_add(args) -> None:
         sys.path.append(str(REPO_ROOT / "src"))
         from lattice_lock.utils.safe_path import resolve_under_root
 
-        batch_file = resolve_under_root(args.file)
+        batch_file = resolve_under_root(os.getcwd(), args.file)
     except (ImportError, ValueError) as e:
         print(f"Error validating path: {e}", file=sys.stderr)
         sys.exit(1)
