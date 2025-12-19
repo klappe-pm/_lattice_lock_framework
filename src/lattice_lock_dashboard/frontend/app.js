@@ -250,12 +250,25 @@ class LatticeDashboard {
             .sort((a, b) => new Date(b.time) - new Date(a.time))
             .slice(0, 5);
 
-        container.innerHTML = activities.map(activity => `
-            <div class="activity-item">
-                <div>${activity.message}</div>
-                <div class="activity-time">${this.formatTime(activity.time)}</div>
-            </div>
-        `).join('');
+        // Clear existing content
+        container.innerHTML = '';
+
+        // Safely render recent activity items without using innerHTML for untrusted data
+        activities.forEach(activity => {
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+
+            const messageEl = document.createElement('div');
+            messageEl.textContent = activity.message;
+
+            const timeEl = document.createElement('div');
+            timeEl.className = 'activity-time';
+            timeEl.textContent = this.formatTime(activity.time);
+
+            item.appendChild(messageEl);
+            item.appendChild(timeEl);
+            container.appendChild(item);
+        });
     }
 
     initCharts() {
