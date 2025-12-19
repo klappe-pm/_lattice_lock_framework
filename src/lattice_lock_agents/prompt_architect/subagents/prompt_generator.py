@@ -5,8 +5,6 @@ from typing import Any
 
 import aiofiles
 import yaml
-from pydantic import BaseModel, Field
-
 from lattice_lock.utils.jinja import create_template
 from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
@@ -20,6 +18,7 @@ from lattice_lock_agents.prompt_architect.validators import (
     ValidationResult,
 )
 from lattice_lock_orchestrator.api_clients import get_api_client
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -85,17 +84,17 @@ class PromptGenerator:
             # Or fall back if it exists?
             # Existing logic had explicit check.
             pass
-        
+
         if not os.path.exists(path):
             # Fallback for testing or if path is relative to project root
             # resolve_under_root handles the joining, so if we are here it failed or doesn't exist
             # Let's try to resolve again if it wasn't resolved successfully above?
             # Actually, let's keep it simple: assume path is relative to cwd if not absolute
-             pass
+            pass
 
         if not os.path.exists(path):
-             logger.warning(f"Config file not found at {path}, using defaults")
-             return {}
+            logger.warning(f"Config file not found at {path}, using defaults")
+            return {}
 
         with open(path) as f:
             return yaml.safe_load(f)

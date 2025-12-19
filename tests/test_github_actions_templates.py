@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import yaml
-
 from lattice_lock_cli.templates import render_template
 
 TEMPLATE_DIR = (

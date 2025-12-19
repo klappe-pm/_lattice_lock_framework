@@ -11,9 +11,9 @@ class SheriffCache:
         self.cache_dir = cache_dir
         self.config_hash = config_hash
         self.cache_file = self.cache_dir / f"sheriff_cache_{config_hash}.json"
-        self._cache: dict[Path, dict[str, Any]] = (
-            {}
-        )  # {file_path: {file_hash: str, violations: List[dict]}}
+        self._cache: dict[
+            Path, dict[str, Any]
+        ] = {}  # {file_path: {file_hash: str, violations: List[dict]}}
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_file_hash(self, file_path: Path) -> str:

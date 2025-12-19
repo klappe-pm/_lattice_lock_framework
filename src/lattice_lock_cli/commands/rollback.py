@@ -1,7 +1,6 @@
 import logging
 
 import click
-
 from lattice_lock.rollback import CheckpointManager, RollbackTrigger
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,6 @@ import re
 import sys
 from pathlib import Path
 
-from lattice_lock.utils.safe_path import resolve_under_root
 from .schema import ValidationResult
 
 
@@ -208,11 +207,18 @@ def main():
 
     args = parser.parse_args()
 
-    try:
-        repo_path = resolve_under_root(os.getcwd(), args.path)
-    except ValueError as e:
-        print(f"Error: {e}")
+    # Resolve the path - users can validate any directory, not just within the framework
+    repo_path = Path(args.path).expanduser().resolve()
+
+    if not repo_path.exists():
+        print(f"Error: Path does not exist: {repo_path}")
         sys.exit(1)
+        return  # Explicit return for test mocking of sys.exit
+
+    if not repo_path.is_dir():
+        print(f"Error: Path is not a directory: {repo_path}")
+        sys.exit(1)
+        return  # Explicit return for test mocking of sys.exit
 
     if args.naming_only:
         # Just walk and check naming

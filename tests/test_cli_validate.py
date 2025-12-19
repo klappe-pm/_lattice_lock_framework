@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-
 from lattice_lock_cli.__main__ import cli
 
 

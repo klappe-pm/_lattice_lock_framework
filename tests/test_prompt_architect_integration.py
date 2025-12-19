@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
-
 from lattice_lock.agents.prompt_architect.integration import (
     IntegrationConfig,
     ProjectAgentInterface,

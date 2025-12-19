@@ -193,9 +193,9 @@ class ProjectAgentClient:
         if not scope_data.get("name"):
             scope_data["name"] = "Lattice Lock Framework"
         if not scope_data.get("description"):
-            scope_data["description"] = (
-                "Governance-first framework for AI-assisted software development"
-            )
+            scope_data[
+                "description"
+            ] = "Governance-first framework for AI-assisted software development"
 
         return scope_data
 

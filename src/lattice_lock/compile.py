@@ -10,9 +10,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
-
-from lattice_lock.utils.safe_path import resolve_under_root
-from lattice_lock_gauntlet.generator import GauntletGenerator
 from lattice_lock_validator.schema import ValidationResult, validate_lattice_schema
 
 
@@ -88,17 +85,12 @@ def compile_lattice(
     """
     result = CompilationResult()
 
-    # Convert to Path objects
-    import os
-    try:
-        schema_path = resolve_under_root(os.getcwd(), schema_path)
-        if output_dir is None:
-            output_dir = schema_path.parent
-        else:
-            output_dir = resolve_under_root(os.getcwd(), output_dir)
-    except ValueError as e:
-        result.add_error(f"Invalid path: {e}")
-        return result
+    # Convert to Path objects - users can compile schemas to any directory they specify
+    schema_path = Path(schema_path).expanduser().resolve()
+    if output_dir is None:
+        output_dir = schema_path.parent
+    else:
+        output_dir = Path(output_dir).expanduser().resolve()
 
     # Step 1: Validate schema exists
     if not schema_path.exists():
@@ -153,6 +145,9 @@ def compile_lattice(
     # Step 6: Generate Gauntlet test contracts (if requested)
     if generate_gauntlet:
         try:
+            # Lazy import to avoid circular dependency
+            from lattice_lock_gauntlet.generator import GauntletGenerator
+
             gauntlet_dir = output_dir / "tests"
             generator = GauntletGenerator(str(schema_path), str(gauntlet_dir))
             generator.generate()
