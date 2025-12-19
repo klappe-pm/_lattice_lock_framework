@@ -25,6 +25,10 @@ lattice-lock [OPTIONS] COMMAND [ARGS]...
 | [`doctor`](doctor.md) | Check environment health for Lattice Lock |
 | [`sheriff`](sheriff.md) | AST-based validation for import discipline and type hints |
 | [`gauntlet`](gauntlet.md) | Generate and run semantic tests from lattice.yaml |
+| [`compile`](compile.md) | Compile and enforce lattice.yaml specifications |
+| [`admin`](admin.md) | Manage users, keys, and system configuration |
+| [`orchestrator`](orchestrator.md) | Manage model routing and analysis |
+| [`feedback`](feedback.md) | Submit bugs and feature requests |
 
 ## Command Categories
 

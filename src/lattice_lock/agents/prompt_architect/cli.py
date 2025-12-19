@@ -77,7 +77,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
     generate_parser.add_argument(
         "--roadmap-dir",
-        default="developer_documentation",
+        default="docs",
         help="Directory containing roadmap files",
     )
     generate_parser.add_argument(
