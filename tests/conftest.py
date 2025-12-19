@@ -34,7 +34,6 @@ def auth_secrets():
 LEGACY_TEST_FILES = [
     "test_tool_matcher.py",  # Requires lattice_lock_agents package which may not exist
     "test_admin_api.py",  # Missing bcrypt dependency
-    "test_admin_auth.py",  # Missing bcrypt dependency
 ]
 
 

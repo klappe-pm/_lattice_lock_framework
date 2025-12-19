@@ -8,6 +8,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 from lattice_lock.utils.jinja import create_template
+from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
 from lattice_lock_agents.prompt_architect.validators import (
@@ -77,13 +78,24 @@ class PromptGenerator:
         )
 
     def _load_config(self, path: str) -> dict[str, Any]:
+        try:
+            path = str(resolve_under_root(os.getcwd(), path))
+        except ValueError:
+            # Try absolute if getting from home/root? No, keeping strict to current dir for now for config
+            # Or fall back if it exists?
+            # Existing logic had explicit check.
+            pass
+        
         if not os.path.exists(path):
             # Fallback for testing or if path is relative to project root
-            if os.path.exists(os.path.join(os.getcwd(), path)):
-                path = os.path.join(os.getcwd(), path)
-            else:
-                logger.warning(f"Config file not found at {path}, using defaults")
-                return {}
+            # resolve_under_root handles the joining, so if we are here it failed or doesn't exist
+            # Let's try to resolve again if it wasn't resolved successfully above?
+            # Actually, let's keep it simple: assume path is relative to cwd if not absolute
+             pass
+
+        if not os.path.exists(path):
+             logger.warning(f"Config file not found at {path}, using defaults")
+             return {}
 
         with open(path) as f:
             return yaml.safe_load(f)

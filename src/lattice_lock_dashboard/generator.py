@@ -1,4 +1,5 @@
 import logging
+import html
 from pathlib import Path
 from typing import Any
 
@@ -49,12 +50,12 @@ class DashboardGenerator:
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        html = self.DASHBOARD_TEMPLATE.format(
-            status=data.get("status", "UNKNOWN"),
+        html_content = self.DASHBOARD_TEMPLATE.format(
+            status=html.escape(str(data.get("status", "UNKNOWN"))),
             status_class="status-ok" if data.get("status") == "HEALTHY" else "status-err",
-            version=data.get("version", "0.0.0"),
-            active_models=data.get("active_models", 0),
+            version=html.escape(str(data.get("version", "0.0.0"))),
+            active_models=html.escape(str(data.get("active_models", 0))),
         )
 
         with open(path, "w") as f:
-            f.write(html)
+            f.write(html_content)

@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yaml
 
+from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock_gauntlet.generator import GauntletGenerator
 from lattice_lock_validator.schema import ValidationResult, validate_lattice_schema
 
@@ -88,11 +89,16 @@ def compile_lattice(
     result = CompilationResult()
 
     # Convert to Path objects
-    schema_path = Path(schema_path)
-    if output_dir is None:
-        output_dir = schema_path.parent
-    else:
-        output_dir = Path(output_dir)
+    import os
+    try:
+        schema_path = resolve_under_root(os.getcwd(), schema_path)
+        if output_dir is None:
+            output_dir = schema_path.parent
+        else:
+            output_dir = resolve_under_root(os.getcwd(), output_dir)
+    except ValueError as e:
+        result.add_error(f"Invalid path: {e}")
+        return result
 
     # Step 1: Validate schema exists
     if not schema_path.exists():

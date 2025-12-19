@@ -35,7 +35,7 @@ def test_plaintext_secret():
     content = """
 ORCHESTRATOR_STRATEGY=balanced
 LOG_LEVEL=INFO
-MY_API_KEY=12345-actual-secret-key
+MY_API_KEY=test-fixture-key-123
 """
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(content)

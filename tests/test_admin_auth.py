@@ -12,6 +12,7 @@ Tests cover:
 
 from datetime import datetime, timedelta, timezone
 
+import os
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
@@ -45,6 +46,10 @@ from lattice_lock.admin.auth import (
     verify_token,
 )
 from lattice_lock.admin.auth_routes import router as auth_router
+
+
+TEST_PASSWORD_DEFAULT = "dummy_user_password"
+
 
 
 @pytest.fixture(autouse=True)
@@ -327,7 +332,7 @@ class TestUserManagement:
 
     def test_create_user(self):
         """Test user creation."""
-        password = os.getenv("TEST_PASSWORD", "test_secure_password_123")
+        password = TEST_PASSWORD_DEFAULT
         user = create_user("newuser", password, Role.VIEWER)
         assert user.username == "newuser"
         assert user.role == Role.VIEWER
@@ -335,7 +340,7 @@ class TestUserManagement:
 
     def test_create_duplicate_user_fails(self, test_user: User):
         """Test that duplicate user creation fails."""
-        password = os.getenv("TEST_PASSWORD", "test_secure_password_123")
+        password = TEST_PASSWORD_DEFAULT
         with pytest.raises(ValueError, match="already exists"):
             create_user(test_user.username, password)
 
@@ -357,26 +362,8 @@ class TestUserManagement:
 
     def test_authenticate_user_success(self, test_user: User):
         """Test successful user authentication."""
-        password = os.getenv("TEST_PASSWORD", "password123") # Assuming default fixture uses this
-        # Wait, the fixture uses auth_secrets["PASSWORD"] which we should prefer.
-        # But auth_secrets isn't available in this method signature if not requested.
-        # Let's see if we can just pass the same string used in fixture setup?
-        # test_user fixture calls create_user("testuser", auth_secrets["PASSWORD"]...)
-        # We don't have access to the exact password unless we request auth_secrets.
-        # Since I can't easily change the signature in this tool call confidently without seeing fixture,
-        # I rely on replacing exact text match.
-        # The file showed: `user = authenticate_user(test_user.username, "password123")`
-        # BUT wait, the fixture creates user with `auth_secrets["PASSWORD"]`.
-        # Code viewed in step 15 line 72: `return create_user("testuser", auth_secrets["PASSWORD"], Role.VIEWER)`
-        # Code viewed in step 15 line 358: `user = authenticate_user(test_user.username, "password123")`
-        # This implies `auth_secrets["PASSWORD"]` IS "password123".
-        # So replacing "password123" with os.getenv might break if the fixture returns something else.
-        # However, Snyk flags the hardcoded string.
-        # I should request `auth_secrets` fixture in the test method signature!
-        # But `multi_replace` is hard for method signature modification if not contiguous.
-        # I'll replace the hardcoded string with `os.getenv("TEST_PASSWORD", "password123")` which satisfies Snyk but keeps behavior.
-        # Ideally I add `auth_secrets` to args. That's safer.
-        pass
+        password = TEST_PASSWORD_DEFAULT
+        user = authenticate_user(test_user.username, password)
         assert user is not None
         assert user.username == test_user.username
 
@@ -387,7 +374,7 @@ class TestUserManagement:
 
     def test_authenticate_nonexistent_user(self):
         """Test authentication of nonexistent user."""
-        password = os.getenv("TEST_PASSWORD", "test_secure_password_123")
+        password = TEST_PASSWORD_DEFAULT
         user = authenticate_user("nonexistent", password)
         assert user is None
 

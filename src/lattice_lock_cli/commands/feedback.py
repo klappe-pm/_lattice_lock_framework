@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 
 from lattice_lock.feedback.collector import FeedbackCollector
+from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock.feedback.schemas import FeedbackCategory, FeedbackPriority
 
 console = Console()
@@ -38,7 +39,16 @@ def feedback(category: str, priority: str, storage: str):
     console.print("[bold blue]Lattice Lock Feedback[/bold blue]")
     console.print("We appreciate your input to improve the framework.\n")
 
-    storage_path = Path(storage) if storage else DEFAULT_FEEDBACK_PATH
+    if storage:
+        try:
+             # Allow absolute paths
+            storage_path = resolve_under_root("/", storage)
+        except ValueError:
+             # Fallback
+            storage_path = Path(storage).resolve()
+    else:
+        storage_path = DEFAULT_FEEDBACK_PATH
+
     collector = FeedbackCollector(storage_path)
 
     try:

@@ -16,9 +16,9 @@ const ProjectCard = {
         card.innerHTML = `
             <div class="project-header">
                 <span class="project-name">${this.escapeHtml(project.name)}</span>
-                <span class="project-status ${statusClass}">
+                <span class="project-status ${this.escapeHtml(statusClass)}">
                     ${statusIcon}
-                    ${this.capitalizeFirst(project.status)}
+                    ${this.escapeHtml(this.capitalizeFirst(project.status))}
                 </span>
             </div>
             <div class="project-details">
@@ -105,7 +105,7 @@ const ProjectCard = {
         card.dataset.status = newStatus;
         const statusEl = card.querySelector('.project-status');
         statusEl.className = `project-status ${newStatus}`;
-        statusEl.innerHTML = `${this.getStatusIcon(newStatus)} ${this.capitalizeFirst(newStatus)}`;
+        statusEl.innerHTML = `${this.getStatusIcon(newStatus)} ${this.escapeHtml(this.capitalizeFirst(newStatus))}`;
         this.highlight(card);
     }
 };
