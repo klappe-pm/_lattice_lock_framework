@@ -50,6 +50,8 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
             dirs.remove("__pycache__")
         if "venv" in dirs:
             dirs.remove("venv")
+        if ".construction" in dirs:
+            dirs.remove(".construction")
 
         for filename in files:
             if filename == ".DS_Store":
@@ -217,6 +219,8 @@ def main():
                 dirs.remove("__pycache__")
             if "venv" in dirs:
                 dirs.remove("venv")
+            if ".construction" in dirs:
+                dirs.remove(".construction")
 
             for filename in files:
                 file_path = os.path.join(root, filename)

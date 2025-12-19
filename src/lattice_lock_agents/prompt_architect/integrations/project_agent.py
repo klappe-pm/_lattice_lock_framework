@@ -244,10 +244,7 @@ class ProjectAgentClient:
 
         # Try to read from work breakdown structure
         wbs_paths = [
-            self.repo_root
-            / "docs"
-            / "development"
-            / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root / "docs" / "development" / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
         ]
 
@@ -403,10 +400,7 @@ class ProjectAgentClient:
         self._log_interaction("get_roadmap_path", "Discovering roadmap path")
 
         roadmap_paths = [
-            self.repo_root
-            / "docs"
-            / "development"
-            / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root / "docs" / "development" / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
             self.repo_root / "ROADMAP.md",
         ]

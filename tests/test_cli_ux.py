@@ -1,10 +1,12 @@
 import pytest
-from rich.console import Console
+
 from lattice_lock_cli.utils.console import LatticeConsole
+
 
 @pytest.fixture
 def console_fixture():
     return LatticeConsole()
+
 
 def test_console_json_mode(console_fixture):
     """Test that JSON mode suppresses standard output and sets console to quiet."""
@@ -13,11 +15,13 @@ def test_console_json_mode(console_fixture):
     assert console._json_mode
     assert console._console.quiet
 
+
 def test_console_verbosity(console_fixture):
     """Test setting verbosity."""
     console = console_fixture
     console.set_verbose(True)
     assert console._verbose
+
 
 def test_console_error_structure(capsys):
     """Test that error prints a panel (indirectly by checking output presence if possible, or mocking)."""

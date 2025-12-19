@@ -420,10 +420,7 @@ class PromptOrchestrator:
         # For now, try to find a default roadmap file
         default_paths = [
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
-            self.repo_root
-            / "docs"
-            / "development"
-            / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root / "docs" / "development" / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "ROADMAP.md",
         ]
 
