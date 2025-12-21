@@ -77,7 +77,7 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
         return result
 
     # Required root directories
-    required_dirs = ["agent_definitions", "src", "scripts"]
+    required_dirs = ["developer_documentation", "src", "scripts"]
     for d in required_dirs:
         if not (path / d).is_dir():
             result.add_error(f"Missing required root directory: {d}/")
@@ -89,7 +89,7 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
             result.add_error(f"Missing required root file: {f}")
 
     # Agent definitions nesting
-    agent_def_path = path / "agent_definitions"
+    agent_def_path = path / "developer_documentation" / "agent_definitions"
     if agent_def_path.is_dir():
         for item in agent_def_path.iterdir():
             if item.is_file() and item.name not in [".DS_Store", "README.md"]:
@@ -165,6 +165,10 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
     try:
         parts = path.parts
         if "agent_definitions" in parts:
+            # path parts: .../developer_documentation/agent_definitions/{category}/{filename}
+            # We need to find where agent_definitions is.
+            # It's likely parts[idx] = agent_definitions
+            idx = parts.index("agent_definitions")
             if filename.endswith(".yaml") or filename.endswith(".yml"):
                 if not filename.endswith("_definition.yaml") and not filename.endswith(
                     "_definition.yml"
