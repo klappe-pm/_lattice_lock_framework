@@ -5,9 +5,9 @@ agent:
     description: Manages public communications and media relations.
     role: PR Specialist
     tags:
-    - public
-    - agent
-    - v2.1
+      - public
+      - agent
+      - v2.1
   configuration:
     language: en-US
     timezone: UTC
@@ -17,65 +17,65 @@ agent:
 directive:
   primary_goal: Maintain positive public image and manage communications.
   secondary_goals:
-  - Write press releases
-  - Monitor media coverage
+    - Write press releases
+    - Monitor media coverage
   constraints:
-  - Do not hallucinate information
-  - Respect user privacy
-  - Adhere to project coding standards
+    - Do not hallucinate information
+    - Respect user privacy
+    - Adhere to project coding standards
 responsibilities:
-- name: Public Relations
-  inputs:
-  - News Event
-  - Company Update
-  outputs:
-  - Press Release
-  - Media Statement
-  criticality: Medium
-  description: Execute Public Relations
+  - name: Public Relations
+    inputs:
+      - News Event
+      - Company Update
+    outputs:
+      - Press Release
+      - Media Statement
+    criticality: Medium
+    description: Execute Public Relations
 scope:
   can_access:
-  - /pr/drafts
-  - /pr/published
+    - /pr/drafts
+    - /pr/published
   can_modify:
-  - /pr/drafts
+    - /pr/drafts
   cannot_access:
-  - /secrets
-  - /production-keys
+    - /secrets
+    - /production-keys
   cannot_modify:
-  - /system-config
+    - /system-config
   escalation_triggers:
-  - If confidence < 0.7
-  - If cost > $1.00
-  - If user intent is unclear
+    - If confidence < 0.7
+    - If cost > $1.00
+    - If user intent is unclear
 context:
   required_context:
-  - Brand Voice
-  - Media Contact List
+    - Brand Voice
+    - Media Contact List
   memory_persistence:
     short_term: Session only
     long_term: Project knowledge base
   knowledge_sources:
-  - path: /docs
-    description: Project documentation
-  - path: /code
-    description: Source code
+    - path: /docs
+      description: Project documentation
+    - path: /code
+      description: Source code
 planning:
   enabled: true
   default_strategy: linear
   phases:
-  - name: intent_analysis
-    required: true
-  - name: information_gathering
-    required: true
-  - name: strategy_formulation
-    required: true
-  - name: plan_generation
-    required: true
-  - name: validation
-    required: true
-  - name: execution
-    required: true
+    - name: intent_analysis
+      required: true
+    - name: information_gathering
+      required: true
+    - name: strategy_formulation
+      required: true
+    - name: plan_generation
+      required: true
+    - name: validation
+      required: true
+    - name: execution
+      required: true
   constraints:
     max_depth: 3
     max_steps_per_phase: 10
@@ -113,35 +113,35 @@ delegation:
   enabled: true
   max_depth: 2
   allowed_subagents: &id001
-  - name: press_release_writer
-    description: Sub-agent for press-release-writer
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/press_release_writer.yaml
-  - name: '{press-release-writer}'
-    description: Sub-agent for {press-release-writer}
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/{press_release_writer}.yaml
+    - name: press_release_writer
+      description: Sub-agent for press-release-writer
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/press_release_writer.yaml
+    - name: press_release_writer
+      description: Sub-agent for press-release-writer
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/press_release_writer.yaml
   delegation_triggers:
-  - condition: Task requires specialization
-    target: appropriate_subagent
+    - condition: Task requires specialization
+      target: appropriate_subagent
 sub_agents: *id001
 workflow:
   init:
-  - Load configuration
-  - Check dependencies
-  - Verify access to resources
+    - Load configuration
+    - Check dependencies
+    - Verify access to resources
   execution_loop:
-  - Receive task
-  - Plan execution
-  - Execute steps
-  - Validate results
-  - Report status
+    - Receive task
+    - Plan execution
+    - Execute steps
+    - Validate results
+    - Report status
   cleanup:
-  - Close file handles
-  - Clear temporary memory
-  - Log summary
+    - Close file handles
+    - Clear temporary memory
+    - Log summary
 output:
   default_format: markdown
   schema:
@@ -150,9 +150,9 @@ output:
       status:
         type: string
         enum:
-        - success
-        - failure
-        - partial
+          - success
+          - failure
+          - partial
       result:
         type: object
       metrics:
@@ -163,27 +163,27 @@ output:
           time:
             type: number
   templates:
-    success: 'Task completed successfully.
+    success: "Task completed successfully.
 
       Result: {{result}}
 
-      Cost: ${{metrics.cost}}'
-    failure: 'Task failed.
+      Cost: ${{metrics.cost}}"
+    failure: "Task failed.
 
       Error: {{error.message}}
 
-      Recovery: {{error.recovery_suggestion}}'
+      Recovery: {{error.recovery_suggestion}}"
 error_handling:
   strategies:
-  - error: ContextLimitExceeded
-    action: summarize_history
-    retry: true
-  - error: ApiRateLimit
-    action: exponential_backoff
-    retry: true
-  - error: ToolFailure
-    action: try_alternative_tool
-    retry: true
+    - error: ContextLimitExceeded
+      action: summarize_history
+      retry: true
+    - error: ApiRateLimit
+      action: exponential_backoff
+      retry: true
+    - error: ToolFailure
+      action: try_alternative_tool
+      retry: true
   max_retries: 3
   fallback_mode: graceful_degradation
 interaction:
@@ -191,48 +191,47 @@ interaction:
     tone: professional
     verbosity: concise
     confirmation_required:
-    - delete_file
-    - deploy_code
+      - delete_file
+      - deploy_code
   other_agents:
     protocol: json_rpc
     timeout: 30s
 metrics:
-- name: Task Success Rate
-  target: '> 95%'
-- name: Average Cost per Task
-  target: < $0.50
-- name: Execution Time
-  target: < 60s
+  - name: Task Success Rate
+    target: "> 95%"
+  - name: Average Cost per Task
+    target: < $0.50
+  - name: Execution Time
+    target: < 60s
 guardrails:
-- Never commit secrets to git
-- Never delete files without confirmation
-- Never execute arbitrary code outside sandbox
-- 'Max cost per session: $5.00'
+  - Never commit secrets to git
+  - Never delete files without confirmation
+  - Never execute arbitrary code outside sandbox
+  - "Max cost per session: $5.00"
 examples:
-- name: Standard Usage
-  input: '[Example Input]'
-  expected_output: '[Example Output]'
-- name: Edge Case
-  input: '[Edge Case Input]'
-  expected_output: '[Edge Case Output]'
+  - name: Standard Usage
+    input: "[Example Input]"
+    expected_output: "[Example Output]"
+  - name: Edge Case
+    input: "[Edge Case Input]"
+    expected_output: "[Edge Case Output]"
 tests:
-- name: Basic Functionality
-  command: pytest tests/test_basic.py
-- name: Integration Test
-  command: ./run_integration_tests.sh
+  - name: Basic Functionality
+    command: pytest tests/test_basic.py
+  - name: Integration Test
+    command: ./run_integration_tests.sh
 metadata:
   id: 263ff8e2-dd03-40d6-99b9-8de3d2646b1b
-  created_at: '2025-11-25T16:35:48.415647'
-  updated_at: '2025-11-25T16:35:48.415651'
+  created_at: "2025-11-25T16:35:48.415647"
+  updated_at: "2025-11-25T16:35:48.415651"
   author: Migration Script
   license: MIT
 versioning:
   current: 1.0.0
   changelog:
-  - version: 1.0.0
-    date: '2025-11-25'
-    changes: Initial release
-
+    - version: 1.0.0
+      date: "2025-11-25"
+      changes: Initial release
 # MEMORY DIRECTIVE REFERENCE
 #
 # This agent operates under the Universal Memory Directive located at: [agent_memory/universal_memory_directive.md]

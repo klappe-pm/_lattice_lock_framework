@@ -4,10 +4,11 @@ agent:
     version: 1.0.0
     description: Conducts market, user, and competitive research.
     role: Lead Researcher
+    status: beta
     tags:
-    - research
-    - agent
-    - v2.1
+      - research
+      - agent
+      - v2.1
   configuration:
     language: en-US
     timezone: UTC
@@ -15,86 +16,90 @@ agent:
     max_steps: 50
     timeout_seconds: 300
 directive:
-  primary_goal: Provide data-driven insights to support decision making.
+  primary_goal: Provide data-driven insights to support decision making and reduce product risk.
+  primary_use_cases:
+    - "User interview synthesis, persona development, and journey mapping"
+    - "Competitor analysis, market trend reporting, and benchmarking"
+    - "Usability testing, survey analysis, and feedback synthesis"
   secondary_goals:
-  - Analyze trends
-  - Validate hypotheses
+    - Analyze trends
+    - Validate hypotheses
   constraints:
-  - Do not hallucinate information
-  - Respect user privacy
-  - Adhere to project coding standards
+    - Do not hallucinate information
+    - Respect user privacy
+    - Adhere to project coding standards
 responsibilities:
-- name: Research Execution
-  inputs:
-  - Research Question
-  - Research Plan
-  - Research Methodology
-  - Research Objectives
-  - Target Demographics
-  outputs:
-  - Research reports
-  - UX Research Reports
-  - Market Research Reports
-  - Competitive Research Reports
-  - Survey Research Reports
-  - Data Set
-  criticality: Medium
-  description: Execute Research Execution
+  - name: Research Execution
+    inputs:
+      - Research Question
+      - Research Plan
+      - Research Methodology
+      - Research Objectives
+      - Target Demographics
+    outputs:
+      - Research reports
+      - UX Research Reports
+      - Market Research Reports
+      - Competitive Research Reports
+      - Survey Research Reports
+      - Data Set
+    criticality: Medium
+    description: Execute Research Execution
 scope:
   can_access:
-  - /research/data
-  - /research/reports
-  - /research/ux-reports
-  - /research/market-reports
-  - /research/competitive-reports
-  - /research/survey-reports
+    - /research/data
+    - /research/reports
+    - /research/ux-reports
+    - /research/market-reports
+    - /research/competitive-reports
+    - /research/survey-reports
   can_modify:
-  - /research/data
-  - /research/reports
-  - /research/ux-reports
-  - /research/market-reports
-  - /research/competitive-reports
-  - /research/survey-reports
+    - /research/data
+    - /research/reports
+    - /research/ux-reports
+    - /research/market-reports
+    - /research/competitive-reports
+    - /research/survey-reports
   cannot_access:
-  - /secrets
-  - /production-keys
+    - /secrets
+    - /production-keys
   cannot_modify:
-  - /system-config
+    - /system-config
   escalation_triggers:
-  - If confidence < 0.7
-  - If cost > $1.00
-  - If user intent is unclear
+    - If confidence < 0.7
+    - If cost > $1.00
+    - If user intent is unclear
 context:
   required_context:
-  - Research Objectives
-  - Target Demographics
-  - Research Question
-  - Research Plan
-  - Research Methodology
+    - Research Objectives
+    - Target Demographics
+    - Research Question
+    - Research Plan
+    - Research Methodology
   memory_persistence:
     short_term: Session only
     long_term: Project knowledge base
   knowledge_sources:
-  - path: /docs
-    description: Project documentation
-  - path: /code
-    description: Source code
+    - path: /docs
+      description: Project documentation
+    - path: /code
+      description: Source code
 planning:
   enabled: true
   default_strategy: linear
   phases:
-  - name: intent_analysis
-    required: true
-  - name: information_gathering
-    required: true
-  - name: strategy_formulation
-    required: true
-  - name: plan_generation
-    required: true
-  - name: validation
-    required: true
-  - name: execution
-    required: true
+    - name: intent_analysis
+      required: true
+    - name: information_gathering
+      required: true
+    - name: strategy_formulation
+      required: true
+    - name: plan_generation
+      required: true
+    - name: validation
+      required: true
+    - name: execution
+      required: true
   constraints:
     max_depth: 3
     max_steps_per_phase: 10
@@ -114,78 +119,85 @@ model_selection:
   default_model: claude-3.5-sonnet
   strategies:
     code_generation:
-      primary: codellama:34b
-      fallback: claude-3.5-sonnet
+      primary: claude-3.5-sonnet
+      fallback: gpt-4o
       selection_criteria: accuracy > speed
     reasoning:
       primary: deepseek-r1:70b
-      fallback: claude-3.5-sonnet
+      fallback: o1-preview
       selection_criteria: depth > speed
     quick_response:
-      primary: llama3.1:8b
+      primary: llama3.1:70b
       fallback: gpt-4o-mini
       selection_criteria: speed > accuracy
   overrides:
     force_local_if_offline: true
     force_cloud_if_complex: false
+tool_capabilities:
+  - tool: devin
+    file_ownership:
+      - paths: ["docs/research/"]
+        patterns:
+          ["**/*.md", "interviews/**/*.txt", "market_analysis/**/*.json"]
+        description: "User interview notes, competitor analysis, and market research data."
 delegation:
   enabled: true
   max_depth: 2
   allowed_subagents: &id001
-  - name: qualitative_research_expert
-    description: Sub-agent for qualitative-research-expert
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/qualitative_research_expert.yaml
-  - name: data_analyst
-    description: Sub-agent for data-analyst
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/data_analyst.yaml
-  - name: competitive_intelligence_analyst
-    description: Sub-agent for competitive-intelligence-analyst
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/competitive_intelligence_analyst.yaml
-  - name: report_writer
-    description: Sub-agent for report-writer
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/report_writer.yaml
-  - name: market_research_analyst
-    description: Sub-agent for market-research-analyst
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/market_research_analyst.yaml
-  - name: user_research_specialist
-    description: Sub-agent for user-research-specialist
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/user_research_specialist.yaml
-  - name: survey_research_specialist
-    description: Sub-agent for survey-research-specialist
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/survey_research_specialist.yaml
+    - name: qualitative_research_expert
+      description: Sub-agent for qualitative-research-expert
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/qualitative_research_expert.yaml
+    - name: data_analyst
+      description: Sub-agent for data-analyst
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/data_analyst.yaml
+    - name: competitive_intelligence_analyst
+      description: Sub-agent for competitive-intelligence-analyst
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/competitive_intelligence_analyst.yaml
+    - name: report_writer
+      description: Sub-agent for report-writer
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/report_writer.yaml
+    - name: market_research_analyst
+      description: Sub-agent for market-research-analyst
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/market_research_analyst.yaml
+    - name: user_research_specialist
+      description: Sub-agent for user-research-specialist
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/user_research_specialist.yaml
+    - name: survey_research_specialist
+      description: Sub-agent for survey-research-specialist
+      access_level: full_access
+      communication_channel: direct_call
+      file: subagents/survey_research_specialist.yaml
   delegation_triggers:
-  - condition: Task requires specialization
-    target: appropriate_subagent
+    - condition: Task requires specialization
+      target: appropriate_subagent
 sub_agents: *id001
 workflow:
   init:
-  - Load configuration
-  - Check dependencies
-  - Verify access to resources
+    - Load configuration
+    - Check dependencies
+    - Verify access to resources
   execution_loop:
-  - Receive task
-  - Plan execution
-  - Execute steps
-  - Validate results
-  - Report status
+    - Receive task
+    - Plan execution
+    - Execute steps
+    - Validate results
+    - Report status
   cleanup:
-  - Close file handles
-  - Clear temporary memory
-  - Log summary
+    - Close file handles
+    - Clear temporary memory
+    - Log summary
 output:
   default_format: markdown
   schema:
@@ -194,9 +206,9 @@ output:
       status:
         type: string
         enum:
-        - success
-        - failure
-        - partial
+          - success
+          - failure
+          - partial
       result:
         type: object
       metrics:
@@ -207,27 +219,27 @@ output:
           time:
             type: number
   templates:
-    success: 'Task completed successfully.
+    success: "Task completed successfully.
 
       Result: {{result}}
 
-      Cost: ${{metrics.cost}}'
-    failure: 'Task failed.
+      Cost: ${{metrics.cost}}"
+    failure: "Task failed.
 
       Error: {{error.message}}
 
-      Recovery: {{error.recovery_suggestion}}'
+      Recovery: {{error.recovery_suggestion}}"
 error_handling:
   strategies:
-  - error: ContextLimitExceeded
-    action: summarize_history
-    retry: true
-  - error: ApiRateLimit
-    action: exponential_backoff
-    retry: true
-  - error: ToolFailure
-    action: try_alternative_tool
-    retry: true
+    - error: ContextLimitExceeded
+      action: summarize_history
+      retry: true
+    - error: ApiRateLimit
+      action: exponential_backoff
+      retry: true
+    - error: ToolFailure
+      action: try_alternative_tool
+      retry: true
   max_retries: 3
   fallback_mode: graceful_degradation
 interaction:
@@ -235,48 +247,59 @@ interaction:
     tone: professional
     verbosity: concise
     confirmation_required:
-    - delete_file
-    - deploy_code
+      - delete_file
+      - deploy_code
   other_agents:
     protocol: json_rpc
     timeout: 30s
 metrics:
-- name: Task Success Rate
-  target: '> 95%'
-- name: Average Cost per Task
-  target: < $0.50
-- name: Execution Time
-  target: < 60s
+  - name: Task Success Rate
+    target: "> 95%"
+  - name: Average Cost per Task
+    target: < $0.50
+  - name: Execution Time
+    target: < 60s
 guardrails:
-- Never commit secrets to git
-- Never delete files without confirmation
-- Never execute arbitrary code outside sandbox
-- 'Max cost per session: $5.00'
+  - Never commit secrets to git
+  - Never delete files without confirmation
+  - Never execute arbitrary code outside sandbox
+  - "Max cost per session: $5.00"
 examples:
-- name: Standard Usage
-  input: '[Example Input]'
-  expected_output: '[Example Output]'
-- name: Edge Case
-  input: '[Edge Case Input]'
-  expected_output: '[Edge Case Output]'
+  - name: Competitor Analysis
+    input: "Analyze top 3 competitors in 'AI Code Assistant' space. Focus on: Pricing, Features, User Sentiment."
+    expected_output: |
+      Competitive Landscape Report:
+      1. GitHub Copilot:
+         - Pricing: $10/mo
+         - Strengths: IDE integration, massive user base.
+         - Weaknesses: Limited context window.
+      2. Cursor:
+         - Pricing: Freemium
+         - Strengths: Native editor, better context.
+  - name: User Interview Synthesis
+    input: "Synthesize themes from 5 user interviews about 'Onboarding Friction'. Notes attached."
+    expected_output: |
+      Key Themes:
+      1. Too many configuration steps (mentioned by 4/5 users).
+      2. Documentation is hard to find (3/5).
+      Recommendation: Simplify initial setup wizard.
 tests:
-- name: Basic Functionality
-  command: pytest tests/test_basic.py
-- name: Integration Test
-  command: ./run_integration_tests.sh
+  - name: Basic Functionality
+    command: pytest tests/test_basic.py
+  - name: Integration Test
+    command: ./run_integration_tests.sh
 metadata:
   id: 74f3f464-b2d9-4b96-8b30-7dc500533b47
-  created_at: '2025-11-25T16:35:48.238755'
-  updated_at: '2025-11-25T16:35:48.238764'
+  created_at: "2025-11-25T16:35:48.238755"
+  updated_at: "2025-11-25T16:35:48.238764"
   author: Migration Script
   license: MIT
 versioning:
   current: 1.0.0
   changelog:
-  - version: 1.0.0
-    date: '2025-11-25'
-    changes: Initial release
-
+    - version: 1.0.0
+      date: "2025-11-25"
+      changes: Initial release
 # MEMORY DIRECTIVE REFERENCE
 #
 # This agent operates under the Universal Memory Directive located at: [agent_memory/universal_memory_directive.md]
