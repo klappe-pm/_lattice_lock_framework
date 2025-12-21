@@ -4,7 +4,7 @@ Get up and running with Lattice Lock in 5 minutes.
 
 ## Prerequisites
 
-Ensure you have [installed Lattice Lock](installation.md) and have your [API keys configured](configuration.md).
+Ensure you have [installed Lattice Lock](installation.md) and have your [API keys configured](docs/getting_started/configuration.md).
 
 ## Step 1: Initialize a New Project
 
@@ -53,5 +53,5 @@ You should see the agent's response in your terminal.
 ## Next Steps
 
 - Explore the [Core Concepts](../concepts/overview.md)
-- Learn about [Advanced Configuration](configuration.md)
-- Check out the [API Reference](../reference/api/index.md)
+- Learn about [Advanced Configuration](docs/getting_started/configuration.md)
+- Check out the [API Reference](docs/reference/api/index.md)

@@ -91,12 +91,10 @@ asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 norecursedirs = [
-    "pilot_projects",
     "scripts/tests",
     "examples",
     ".git",
     ".venv",
-    "venv",
     "__pycache__",
     "build",
     "dist",
@@ -111,7 +109,6 @@ extend-exclude = '''
 /(
     \.git
     | \.venv
-    | venv
     | __pycache__
     | \.pytest_cache
     | build
@@ -124,7 +121,7 @@ extend-exclude = '''
 profile = "black"
 line_length = 100
 skip_gitignore = true
-skip = [".git", ".venv", "venv", "__pycache__", ".pytest_cache", "build", "dist"]
+skip = [".git", ".venv", "__pycache__", ".pytest_cache", "build", "dist"]
 known_first_party = ["lattice_lock", "lattice_lock_orchestrator", "lattice_lock_cli", "lattice_lock_validator"]
 
 # Ruff configuration
@@ -134,7 +131,6 @@ target-version = "py310"
 exclude = [
     ".git",
     ".venv",
-    "venv",
     "__pycache__",
     ".pytest_cache",
     "build",
@@ -163,12 +159,12 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ARG001", "ARG002", "ARG003", "S101", "F841", "B017", "E402", "E712", "SIM103", "SIM117"]  # Allow assert, unused args/vars, and style issues in tests
 "scripts/*" = ["ARG001", "ARG002", "F401", "F841", "E402", "B007", "B017", "SIM103", "SIM105", "SIM117", "E712"]  # Allow unused imports/vars and style issues in scripts
-"pilot_projects/*" = ["F401", "F841", "ARG002", "E402", "B007", "B904", "SIM102", "SIM105", "SIM117"]  # Allow style issues in pilot projects
+"examples/*" = ["F401", "F841", "ARG002", "E402", "B007", "B904", "SIM102", "SIM105", "SIM117"]  # Allow style issues in examples
 "src/*" = ["ARG002", "ARG003", "SIM102", "SIM103", "SIM105", "SIM108", "SIM117", "SIM118", "B007", "B904", "C401", "E402"]  # Allow unused method args and style preferences in src
 
 # Pylint configuration
 [tool.pylint.main]
-ignore = [".git", ".venv", "venv", "__pycache__", ".pytest_cache", "build", "dist"]
+ignore = [".git", ".venv", "__pycache__", ".pytest_cache", "build", "dist"]
 ignore-patterns = ["test_.*\\.py"]
 
 [tool.pylint.messages_control]

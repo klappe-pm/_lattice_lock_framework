@@ -45,7 +45,7 @@ def test_cli_entry_point_naming_only(tmp_path):
 
 def test_cli_entry_point_full_check(tmp_path):
     # Create valid structure
-    (tmp_path / "agent_definitions").mkdir()
+    (tmp_path / "docs" / "agents" / "agent_definitions").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
     (tmp_path / ".gitignore").touch()
@@ -59,11 +59,11 @@ def test_cli_entry_point_full_check(tmp_path):
 
 
 def test_cli_entry_point_missing_dir(tmp_path):
-    # Missing agent_definitions
+    # Missing docs
     (tmp_path / "src").mkdir()
 
     cmd = [sys.executable, "-m", "src.lattice_lock_validator.structure", str(tmp_path)]
     result = subprocess.run(cmd, capture_output=True, text=True)
 
     assert result.returncode == 1
-    assert "Missing required root directory: agent_definitions/" in result.stdout
+    assert "Missing required root directory: docs/" in result.stdout

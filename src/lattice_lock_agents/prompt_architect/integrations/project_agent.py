@@ -99,7 +99,7 @@ class ProjectAgentClient:
             # Auto-detect repo root
             current = Path(__file__).resolve()
             for parent in current.parents:
-                if (parent / "developer_documentation" / "agent_definitions").exists():
+                if (parent / "docs" / "agents" / "agent_definitions").exists():
                     repo_root = parent
                     break
             if repo_root is None:
@@ -115,9 +115,9 @@ class ProjectAgentClient:
         # Actually user said "move all of these folders... agent_memory" but agent_memory didn't exist.
         # If it were to exist, it should probably be under developer_documentation too given the pattern.
         # But safest is to point where it's expected.
-        # Let's updating to developer_documentation/agent_memory for consistency with the request.
+        # Let's updating to docs/agents/agent_memory for consistency with the request.
         self.agent_memory_path = Path(
-            agent_memory_path or repo_root / "developer_documentation" / "agent_memory"
+            agent_memory_path or repo_root / "docs" / "agents" / "agent_memory"
         )
 
         # Load Project Agent definition
@@ -182,7 +182,7 @@ class ProjectAgentClient:
 
         # Try to read from specifications
         spec_paths = [
-            self.repo_root / "specifications" / "lattice_lock_framework_specifications.md",
+            self.repo_root / "docs" / "agents" / "agent_definitions" / "lattice_lock_framework_specifications.md",
             self.repo_root / "SPECIFICATION.md",
         ]
         for spec_path in spec_paths:
@@ -387,7 +387,7 @@ class ProjectAgentClient:
         self._log_interaction("get_specification_path", "Discovering specification path")
 
         spec_paths = [
-            self.repo_root / "developer_documentation" / "specifications" / "lattice_lock_framework_specifications.md",
+            self.repo_root / "docs" / "specifications" / "lattice_lock_framework_specifications.md",
             self.repo_root / "SPECIFICATION.md",
             self.repo_root / "spec.md",
         ]

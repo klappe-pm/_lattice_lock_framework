@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 
 
-class User(BaseModel):
-    id: str
-    name: str
+class Order(BaseModel):
+    id: uuid
+    amount: decimal
+    status: enum
+
+class Customer(BaseModel):
+    id: uuid
+    email: str
+    rating: int

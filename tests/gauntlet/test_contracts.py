@@ -1,5 +1,5 @@
 import pytest
-from lattice_lock.governance import check_policy
+# from lattice_lock.governance import check_policy
 
 # Generated tests for Example Project
 

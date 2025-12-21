@@ -24,8 +24,8 @@ pip install lattice-lock
 We recommend installing in a virtual environment:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install lattice-lock
 ```
 
@@ -79,4 +79,4 @@ This will verify your Python version, dependencies, environment variables, and o
 
 ## Next Steps
 
-Once installed, proceed to [Configuration](configuration.md) to set up your environment and API keys.
+Once installed, proceed to [Configuration](docs/getting_started/configuration.md) to set up your environment and API keys.

@@ -401,7 +401,7 @@ class PromptOrchestrator:
         # This will be implemented in 5.1.2 with ProjectAgentClient
         # For now, try to find a default spec file
         default_paths = [
-            self.repo_root / "developer_documentation" / "specifications" / "lattice_lock_framework_specifications.md",
+            self.repo_root / "docs" / "specifications" / "lattice_lock_framework_specifications.md",
             self.repo_root / "SPECIFICATION.md",
             self.repo_root / "spec.md",
         ]

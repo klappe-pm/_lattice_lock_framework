@@ -48,8 +48,8 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
             dirs.remove(".git")
         if "__pycache__" in dirs:
             dirs.remove("__pycache__")
-        if "venv" in dirs:
-            dirs.remove("venv")
+        if ".venv" in dirs:
+            dirs.remove(".venv")
         if ".construction" in dirs:
             dirs.remove(".construction")
 
@@ -77,7 +77,7 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
         return result
 
     # Required root directories
-    required_dirs = ["developer_documentation", "src", "scripts"]
+    required_dirs = ["docs", "src", "scripts"]
     for d in required_dirs:
         if not (path / d).is_dir():
             result.add_error(f"Missing required root directory: {d}/")
@@ -89,7 +89,7 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
             result.add_error(f"Missing required root file: {f}")
 
     # Agent definitions nesting
-    agent_def_path = path / "developer_documentation" / "agent_definitions"
+    agent_def_path = path / "docs" / "agents" / "agent_definitions"
     if agent_def_path.is_dir():
         for item in agent_def_path.iterdir():
             if item.is_file() and item.name not in [".DS_Store", "README.md"]:
@@ -178,7 +178,7 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
                     )
 
                 # Check prefix matches category?
-                # path parts: .../agent_definitions/{category}/{filename}
+                # path parts: .../docs/agents/agent_definitions/{category}/{filename}
                 idx = parts.index("agent_definitions")
                 # parts[idx] = agent_definitions
                 # parts[idx+1] = category
@@ -232,8 +232,8 @@ def main():
                 dirs.remove(".git")
             if "__pycache__" in dirs:
                 dirs.remove("__pycache__")
-            if "venv" in dirs:
-                dirs.remove("venv")
+            if ".venv" in dirs:
+                dirs.remove(".venv")
             if ".construction" in dirs:
                 dirs.remove(".construction")
 

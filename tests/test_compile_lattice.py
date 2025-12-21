@@ -15,7 +15,7 @@ class TestCompileLattice(unittest.TestCase):
         self.test_dir = Path(tempfile.mkdtemp())
         PROJECT_ROOT = Path(__file__).parent.parent
         self.fixtures_dir = PROJECT_ROOT / "tests" / "fixtures"
-        self.examples_dir = PROJECT_ROOT / "examples"
+        self.examples_dir = PROJECT_ROOT / "docs" / "examples"
 
         self.valid_schema = self.examples_dir / "basic" / "lattice.yaml"
         self.invalid_schema = self.fixtures_dir / "invalid_lattice.yaml"

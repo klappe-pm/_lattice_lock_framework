@@ -13,7 +13,7 @@ def test_registry_load_yaml():
     print("\nTesting YAML loading...")
 
     # Point to the real file we just created
-    registry_path = os.path.abspath("models/registry.yaml")
+    registry_path = os.path.abspath("docs/models/registry.yaml")
     registry = ModelRegistry(registry_path=registry_path)
 
     # Check if loaded

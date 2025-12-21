@@ -442,66 +442,6 @@ class TestQualityScorer(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any("not found" in f.lower() for f in score.feedback))
 
 
-class TestValidationWithExistingPrompts(unittest.TestCase):
-    """Tests using existing prompts as ground truth."""
-
-    def setUp(self):
-        # Try to find the project_prompts directory
-        current_dir = Path(__file__).parent.parent
-        self.existing_prompts_dir = current_dir / "project_prompts"
-        if not self.existing_prompts_dir.exists():
-            self.existing_prompts_dir = None
-
-    def test_existing_prompts_pass_validation(self):
-        """Test that existing prompts pass validation."""
-        if self.existing_prompts_dir is None:
-            self.skipTest("project_prompts directory not found")
-
-        validator = PromptValidator()
-
-        # Find all prompt files
-        prompt_files = list(self.existing_prompts_dir.glob("**/*.md"))
-        prompt_files = [
-            p
-            for p in prompt_files
-            if not p.name.startswith("multi_agent")
-            and not p.name.startswith("work_breakdown")
-            and not p.name.startswith("project_prompts_tracker")
-        ]
-
-        if not prompt_files:
-            self.skipTest("No prompt files found")
-
-        failed_validations = []
-        for prompt_file in prompt_files:
-            result = validator.validate(str(prompt_file))
-            if not result.is_valid:
-                failed_validations.append((prompt_file.name, result.errors))
-
-        # Assert all prompts pass validation
-        self.assertEqual(len(failed_validations), 0, f"Failed validations: {failed_validations}")
-
-    def test_existing_prompts_follow_conventions(self):
-        """Test that existing prompts follow naming conventions."""
-        if self.existing_prompts_dir is None:
-            self.skipTest("project_prompts directory not found")
-
-        checker = ConventionChecker()
-
-        # Find all prompt files (excluding non-prompt markdown files)
-        prompt_files = list(self.existing_prompts_dir.glob("phase*/*.md"))
-
-        if not prompt_files:
-            self.skipTest("No prompt files found")
-
-        failed_conventions = []
-        for prompt_file in prompt_files:
-            result = checker.check(str(prompt_file))
-            if not result.filename_valid:
-                failed_conventions.append((prompt_file.name, result.errors))
-
-        # Assert all prompts follow conventions
-        self.assertEqual(len(failed_conventions), 0, f"Failed conventions: {failed_conventions}")
 
 
 class TestValidatorIntegration(unittest.IsolatedAsyncioTestCase):

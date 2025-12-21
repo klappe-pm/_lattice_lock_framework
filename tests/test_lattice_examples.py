@@ -11,7 +11,7 @@ from lattice_lock_validator.schema import validate_lattice_schema
 class TestLatticeExamples(unittest.TestCase):
     def setUp(self):
         self.root_dir = Path(__file__).parent.parent
-        self.examples_dir = self.root_dir / "examples"
+        self.examples_dir = self.root_dir / "docs" / "examples"
         self.fixtures_dir = self.root_dir / "tests" / "fixtures"
 
     def test_basic_example(self):

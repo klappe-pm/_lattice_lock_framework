@@ -28,7 +28,7 @@ This guide addresses common issues encountered during installation and configura
 **Cause:** Incorrect syntax or missing required fields in `lattice.yaml`.
 **Solution:**
 - Run `lattice-lock validate` to see specific error messages.
-- Compare your file with the example in the [Configuration Guide](configuration.md).
+- Compare your file with the example in the [Configuration Guide](docs/getting_started/configuration.md).
 
 ## Network and Firewall
 
@@ -42,7 +42,7 @@ This guide addresses common issues encountered during installation and configura
 ## FAQ
 
 **Q: Can I use Lattice Lock offline?**
-A: Yes, by configuring [local models](configuration.md#local-models-ollama) via Ollama.
+A: Yes, by configuring [local models](docs/getting_started/configuration.md#local-models-ollama) via Ollama.
 
 **Q: How do I update Lattice Lock?**
 A: Run `pip install --upgrade lattice-lock`.
