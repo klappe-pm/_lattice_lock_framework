@@ -34,9 +34,7 @@ echo -e "\nMaking scripts executable..."
 chmod +x orchestrator_cli.py 2>/dev/null || true
 chmod +x grok.sh 2>/dev/null || true
 chmod +x grok_api.py 2>/dev/null || true
-chmod +x model_orchestrator.py 2>/dev/null || true
-chmod +x model_orchestrator_v2.py 2>/dev/null || true
-chmod +x zen_mcp_bridge.py 2>/dev/null || true
+
 
 echo "✓ Scripts made executable"
 

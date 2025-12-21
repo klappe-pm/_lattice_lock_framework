@@ -7,12 +7,7 @@ from lattice_lock_cli.utils.console import get_console
 from rich.panel import Panel
 from rich.table import Table
 
-# Optional imports with graceful degradation
-try:
-    from lattice_lock_orchestrator.zen_mcp_bridge import ModelRouter, ZenMCPBridge
-except ImportError:
-    ZenMCPBridge = None
-    ModelRouter = None
+
 
 try:
     from lattice_lock_agents.prompt_architect.agent import PromptArchitectAgent

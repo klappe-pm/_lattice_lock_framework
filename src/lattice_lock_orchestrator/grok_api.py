@@ -29,7 +29,7 @@ class GrokAPI:
         else:
             # Look for config in models directory relative to project root
             project_root = Path(__file__).parent.parent.parent
-            self.config_path = project_root / "models" / "grok-models-config.yaml"
+            self.config_path = project_root / "developer_documentation" / "models" / "grok-models-config.yaml"
 
         self.config = self._load_config()
         self.base_url = self.config["api"]["base_url"]

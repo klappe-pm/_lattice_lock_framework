@@ -4,19 +4,11 @@ Comprehensive listing of all available models in the Power Prompts orchestration
 Shows local models, cloud models, API key status, and detailed capabilities
 """
 
-import importlib.util
 import os
 
 # Import the orchestrator
-spec = importlib.util.spec_from_file_location(
-    "model_orchestrator", os.path.join(os.path.dirname(__file__), "model-orchestrator.py")
-)
-model_orchestrator = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(model_orchestrator)
-
-ModelOrchestrator = model_orchestrator.ModelOrchestrator
-TaskType = model_orchestrator.TaskType
-ModelProvider = model_orchestrator.ModelProvider
+from lattice_lock import ModelOrchestrator
+from lattice_lock.types import TaskType, ModelProvider
 
 
 def check_api_keys():
@@ -68,7 +60,7 @@ def format_task_scores(task_scores, top_n=3):
 
     score_strs = []
     for task_type, score in top_scores:
-        task_name = task_type.value.replace("_", " ").title()
+        task_name = task_type.name.replace("_", " ").title()
         score_strs.append(f"{task_name}: {score:.2f}")
 
     return " | ".join(score_strs)
@@ -102,13 +94,13 @@ def main():
 
     # Group models by provider
     models_by_provider = {}
-    for model_id, model in orchestrator.models.items():
+    for model_id, model in orchestrator.registry.models.items():
         provider = model.provider.value
         if provider not in models_by_provider:
             models_by_provider[provider] = []
         models_by_provider[provider].append((model_id, model))
 
-    print(f"\n📊 All Configured Models ({len(orchestrator.models)} total):")
+    print(f"\n📊 All Configured Models ({len(orchestrator.registry.models)} total):")
     print("=" * 80)
 
     for provider_name, models in models_by_provider.items():
@@ -146,7 +138,7 @@ def main():
         print("-" * 60)
 
         # Sort models by accuracy for better display
-        models.sort(key=lambda x: x[1].accuracy, reverse=True)
+        models.sort(key=lambda x: x[1].reasoning_score, reverse=True)
 
         for model_id, model in models:
             # Check if local model is actually installed
@@ -162,7 +154,7 @@ def main():
             print(f"  📝 {model_id}")
             print(f"     Status: {availability}")
             print(
-                f"     Context: {model.context_window:,} tokens | Speed: {model.speed:.2f} | Accuracy: {model.accuracy:.2f}"
+                f"     Context: {model.context_window:,} tokens | Speed: {model.speed_rating:.2f} | Reasoning: {model.reasoning_score:.2f}"
             )
             print(f"     Cost: ${model.input_cost:.2f}/${model.output_cost:.2f} per 1M tokens")
 
@@ -189,14 +181,14 @@ def main():
     print("\n📈 Summary Statistics:")
     print("-" * 40)
 
-    total_models = len(orchestrator.models)
-    local_models = len([m for m in orchestrator.models.values() if m.provider.value == "local"])
+    total_models = len(orchestrator.registry.models)
+    local_models = len([m for m in orchestrator.registry.models.values() if m.provider.value == "local"])
     cloud_models = total_models - local_models
 
     available_local = len(
         [
             m
-            for m_id, m in orchestrator.models.items()
+            for m_id, m in orchestrator.registry.models.items()
             if m.provider.value == "local"
             and any(m_id in installed for installed in installed_local)
         ]
@@ -204,9 +196,9 @@ def main():
 
     configured_providers = sum(1 for configured in api_status.values() if configured)
 
-    code_specialized = len([m for m in orchestrator.models.values() if m.code_specialized])
-    vision_capable = len([m for m in orchestrator.models.values() if m.supports_vision])
-    free_models = len([m for m in orchestrator.models.values() if m.input_cost == 0.0])
+    code_specialized = len([m for m in orchestrator.registry.models.values() if m.code_specialized])
+    vision_capable = len([m for m in orchestrator.registry.models.values() if m.supports_vision])
+    free_models = len([m for m in orchestrator.registry.models.values() if m.input_cost == 0.0])
 
     print(f"  Total Models Configured: {total_models}")
     print(f"  Local Models: {local_models} ({available_local} actually installed)")
