@@ -66,5 +66,3 @@ def feedback(category: str, priority: str, storage: str):
         )
 
         console.print(f"\n[green]Thank you! Feedback saved (ID: {feedback_id})[/green]")
-    except Exception as e:
-        console.print(f"[red]Error saving feedback: {e}[/red]")

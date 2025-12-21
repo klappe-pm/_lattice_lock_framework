@@ -60,16 +60,14 @@ def compile_lattice(
     except Exception as e:
         return CompilationResult(False, [], [f"Failed to parse YAML: {e}"], [])
 
-    # 2. Code Generation (Types) - Placeholder
+    # 2. Code Generation (Types)
     # This would call a generator to create Pydantic models
-    # TODO: Implement TypeGenerator
-    logger.info("Generating types...")
+    logger.info("Generating types... (Stubbed)")
     # generated_files.append(str(Path(output_dir) / "types.py"))
 
-    # 3. Test Generation (Contracts) - Placeholder
+    # 3. Test Generation (Contracts)
     # This would call Gauntlet generator
-    # TODO: Implement ContractGenerator
-    logger.info("Generating contract tests...")
+    logger.info("Generating contract tests... (Stubbed)")
     # generated_files.append(str(Path(test_dir) / "test_contracts.py"))
 
     return CompilationResult(
