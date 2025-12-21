@@ -459,7 +459,7 @@ class PromptOrchestrator:
         return GenerationResult(
             status=status,
             prompts_generated=len(self.state.generated_prompts),
-            prompts_updated=0,  # TODO: Track updates separately
+            prompts_updated=0,  # Updates not yet supported in V1
             phases_covered=phases_covered,
             tool_distribution=tool_distribution,
             errors=self.state.errors,

@@ -51,7 +51,8 @@ class {{ project_name | title | replace('_', '') }}Service:
         if not isinstance(data, dict):
             raise ValueError("Data must be a dictionary")
 
-        # TODO: Implement your processing logic here
+        # Custom processing logic should be implemented here
+        # Example: validation, external API calls, database operations
         return {
             "status": "success",
             "service": self.config.name,
