@@ -62,13 +62,7 @@ lattice-lock-framework/
 │   ├── validation/                  # Validation tools
 │   └── utilities/                   # Utility scripts
 ├── tests/                           # Test suite
-├── agent_definitions/               # Agent YAML specifications
-├── agent_specifications/            # Agent format specifications
-├── agent_workflows/                 # Workflow templates
-├── agent_memory/                    # Memory directives
-├── docs/                        # How-to guides and reference
-├── models/                          # Model configuration and guides
-└── directory/                       # Repository standards
+└── docs/                            # Documentation site source
 ```
 
 ## Supported Providers

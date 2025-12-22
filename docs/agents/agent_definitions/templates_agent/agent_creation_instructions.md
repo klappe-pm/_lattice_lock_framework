@@ -13,7 +13,7 @@ Comprehensive catalog of all available agent templates for creating new agents q
 
 ### Base Agent Template
 
-**Location**: `gitignore/Agent Library/templates/base-templates/base-agent-template.md`
+**Location**: `docs/agent_definitions/templates_agent/base_agent_template.md`
 **Purpose**: Foundation template for all agents
 **Use When**: Creating any new agent from scratch
 **Customization Required**: All sections (this is a blank template)
@@ -33,7 +33,7 @@ Comprehensive catalog of all available agent templates for creating new agents q
 
 ### Analysis Agent Template
 
-**Location**: `gitignore/Agent Library/templates/analysis-agent-template.md`
+**Location**: `docs/agent_definitions/templates_agent/analysis_agent_template.md`
 **Purpose**: Template for agents that discover, analyze, and map project structure
 **Use When**: Creating agents for file discovery, dependency analysis, code analysis
 **Version**: 1.0
@@ -62,7 +62,7 @@ Comprehensive catalog of all available agent templates for creating new agents q
 
 ### Implementation Agent Template
 
-**Location**: `gitignore/Agent Library/templates/implementation-agent-template.md`
+**Location**: `docs/agent_definitions/templates_agent/implementation_agent_template.md`
 **Purpose**: Template for agents that create or modify code
 **Use When**: Creating agents for code development, API integration, feature implementation
 **Version**: 1.0
@@ -90,7 +90,7 @@ Comprehensive catalog of all available agent templates for creating new agents q
 
 ### Documentation Agent Template
 
-**Location**: `gitignore/Agent Library/templates/documentation-agent-template.md`
+**Location**: `docs/agent_definitions/templates_agent/documentation_agent_template.md`
 **Purpose**: Template for agents that create or update documentation
 **Use When**: Creating agents for user guides, API docs, technical writing
 **Version**: 1.0
@@ -119,7 +119,7 @@ Comprehensive catalog of all available agent templates for creating new agents q
 
 ### Testing Agent Template
 
-**Location**: `gitignore/Agent Library/templates/testing-agent-template.md`
+**Location**: `docs/agent_definitions/templates_agent/testing_agent_template.md`
 **Purpose**: Template for agents that create and maintain test suites
 **Use When**: Creating agents for unit testing, integration testing, E2E testing, performance testing
 **Version**: 1.0
@@ -150,7 +150,7 @@ Comprehensive catalog of all available agent templates for creating new agents q
 
 ### Sub-Agent Base Template
 
-**Location**: `gitignore/Agent Library/templates/sub-agent-templates/sub-agent-base-template.md`
+**Location**: `docs/agent_definitions/templates_agent/sub_agent_base_template.md`
 **Purpose**: Foundation template for all sub-agents
 **Use When**: Creating any new sub-agent
 

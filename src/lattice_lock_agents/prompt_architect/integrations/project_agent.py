@@ -108,7 +108,7 @@ class ProjectAgentClient:
         self.repo_root = repo_root
         self.agent_definitions_path = Path(
             agent_definitions_path
-            or repo_root / "developer_documentation" / "agent_definitions"
+            or repo_root / "docs" / "agents" / "agent_definitions"
         )
         # Agent memory doesn't exist yet, but if it did, it would be in developer_documentation/agent_memory?
         # The prompt only said move existing folders. But let's assume standard structure.

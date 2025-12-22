@@ -165,7 +165,7 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
     try:
         parts = path.parts
         if "agent_definitions" in parts:
-            # path parts: .../developer_documentation/agent_definitions/{category}/{filename}
+            # path parts: .../docs/agent_definitions/{category}/{filename}
             # We need to find where agent_definitions is.
             # It's likely parts[idx] = agent_definitions
             idx = parts.index("agent_definitions")

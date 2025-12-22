@@ -176,11 +176,11 @@ The orchestrator uses different strategies to select the best model based on `Ta
 - **`strategies`**: Task-specific model preferences.
 	- **`code_generation`**:
 		- `primary`: First choice model. Example: `codellama:34b`.
-		- `fallback`: Backup if primary unavailable. Example: `claude-3.5-sonnet`.
+		- `fallback`: Backup if primary unavailable. Example: `claude-3-5-sonnet`.
 		- `selection_criteria`: Prioritization rule. Example: `accuracy > speed`.
 	- **`reasoning`**:
 		- `primary`: Example: `deepseek-r1:70b`.
-		- `fallback`: Example: `claude-3.5-sonnet`.
+		- `fallback`: Example: `claude-3-5-sonnet`.
 		- `selection_criteria`: Example: `depth > speed`.
 	- **`quick_response`**:
 		- `primary`: Example: `llama3.1:8b`.

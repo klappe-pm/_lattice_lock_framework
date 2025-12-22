@@ -3,7 +3,7 @@ dateCreated: [YYYY-MM-DD]
 agentType: [Primary Agent|Sub-Agent]
 tier: [0|1]
 status: [Draft|Active|Deprecated]
-template_version: 1.0
+template_version: 2.1
 ---
 
 # [Agent Name]
@@ -17,7 +17,7 @@ template_version: 1.0
 
 ## Memory Directive Reference
 
-This agent operates under the Universal Memory Directive located at: `agent_memory/universal_memory_directive.md`
+This agent operates under the Universal Memory Directive located at: `docs/agents/universal_memory_directive.md`
 
 ### Memory Management Instructions
 
@@ -49,8 +49,8 @@ This agent operates under the Universal Memory Directive located at: `agent_memo
 
 ### Permitted Directories
 
-- `/Users/kevinlappe/Obsidian/Power Prompts/[directory]` ([read|write|read/write], [purpose])
-- `/Users/kevinlappe/Obsidian/Power Prompts/[directory]` ([read|write|read/write], [purpose])
+- `[directory]` ([read|write|read/write], [purpose])
+- `[directory]` ([read|write|read/write], [purpose])
 
 ### Permitted File Types
 
@@ -123,8 +123,8 @@ This agent operates under the Universal Memory Directive located at: `agent_memo
 
 ### Location
 
-- **[Output Type]**: `/Users/kevinlappe/Obsidian/Power Prompts/[directory]/[filename pattern]`
-- **[Output Type]**: `/Users/kevinlappe/Obsidian/Power Prompts/[directory]/[filename pattern]`
+- **[Output Type]**: `docs/agent_outputs/[directory]/[filename pattern]`
+- **[Output Type]**: `docs/agent_outputs/[directory]/[filename pattern]`
 
 ### Validation Criteria
 
