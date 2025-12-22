@@ -9,11 +9,20 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 import requests
 import yaml
 from lattice_lock.utils.safe_path import resolve_under_root
+
+from .exceptions import (
+    APIClientError,
+    AuthenticationError,
+    InvalidRequestError,
+    RateLimitError,
+    ServerError,
+    ProviderConnectionError,
+)
 
 
 class GrokAPI:
@@ -41,6 +50,30 @@ class GrokAPI:
 
         with open(self.config_path) as f:
             return yaml.safe_load(f)
+
+    def _handle_error(self, response: requests.Response) -> None:
+        """Map HTTP status codes to specific exceptions"""
+        if response.status_code == 200:
+            return
+
+        try:
+            error_data = response.json()
+            error_msg = error_data.get("error", {}).get("message", response.text)
+        except Exception:
+            error_msg = response.text
+
+        msg = f"API Error: {response.status_code} - {error_msg}"
+        
+        if response.status_code == 401 or response.status_code == 403:
+            raise AuthenticationError(msg, provider="grok", status_code=response.status_code)
+        elif response.status_code == 429:
+            raise RateLimitError(msg, provider="grok", status_code=response.status_code)
+        elif response.status_code >= 500:
+            raise ServerError(msg, provider="grok", status_code=response.status_code)
+        elif response.status_code == 400:
+            raise InvalidRequestError(msg, provider="grok", status_code=response.status_code)
+        else:
+            raise APIClientError(msg, provider="grok", status_code=response.status_code)
 
     def list_models(self, category: str | None = None) -> list[dict]:
         """List available models, optionally filtered by category"""
@@ -75,12 +108,12 @@ class GrokAPI:
 
         payload = {"model": model_id, "messages": messages, **kwargs}
 
-        response = requests.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
-
-        if response.status_code != 200:
-            raise Exception(f"API Error: {response.status_code} - {response.text}")
-
-        return response.json()
+        try:
+            response = requests.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+            self._handle_error(response)
+            return response.json()
+        except requests.RequestException as e:
+            raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
     def vision_completion(
         self, model_id: str, messages: list[dict], image_path: str | None = None, **kwargs
@@ -113,16 +146,16 @@ class GrokAPI:
 
         payload = {"model": model_id, "prompt": prompt, **kwargs}
 
-        response = requests.post(
-            f"{self.base_url}/images/generations", headers=headers, json=payload
-        )
+        try:
+            response = requests.post(
+                f"{self.base_url}/images/generations", headers=headers, json=payload
+            )
+            self._handle_error(response)
+            return response.json()
+        except requests.RequestException as e:
+            raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
-        if response.status_code != 200:
-            raise Exception(f"API Error: {response.status_code} - {response.text}")
-
-        return response.json()
-
-    def stream_completion(self, model_id: str, messages: list[dict[str, str]], **kwargs) -> Any:
+    def stream_completion(self, model_id: str, messages: list[dict[str, str]], **kwargs) -> Iterator[Any]:
         """Stream chat completion responses"""
         # Resolve aliases
         if model_id in self.config["aliases"]:
@@ -132,17 +165,22 @@ class GrokAPI:
 
         payload = {"model": model_id, "messages": messages, "stream": True, **kwargs}
 
-        response = requests.post(
-            f"{self.base_url}/chat/completions", headers=headers, json=payload, stream=True
-        )
+        try:
+            response = requests.post(
+                f"{self.base_url}/chat/completions", headers=headers, json=payload, stream=True
+            )
+            self._handle_error(response)
 
-        for line in response.iter_lines():
-            if line:
-                line = line.decode("utf-8")
-                if line.startswith("data: "):
-                    data = line[6:]
-                    if data != "[DONE]":
-                        yield json.loads(data)
+            for line in response.iter_lines():
+                if line:
+                    line_utf8 = line.decode("utf-8")
+                    if line_utf8.startswith("data: "):
+                        data = line_utf8[6:]
+                        if data != "[DONE]":
+                            yield json.loads(data)
+                            
+        except requests.RequestException as e:
+            raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
 
 def main():

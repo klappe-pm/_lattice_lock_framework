@@ -5,6 +5,7 @@ from pathlib import Path
 import yaml
 
 from .types import ModelCapabilities, ModelProvider, ProviderMaturity, TaskType
+from .exceptions import APIClientError
 
 logger = logging.getLogger(__name__)
 

@@ -8,9 +8,12 @@ Includes error interception, automatic classification, logging, and recovery act
 import functools
 import logging
 import time
-from collections.abc import Callable
+import asyncio
+import inspect
+from collections.abc import Callable, Awaitable
 from dataclasses import dataclass, field
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar, Union
+
 
 from lattice_lock.errors.classification import ErrorContext, classify_error
 
@@ -220,9 +223,64 @@ def error_boundary(
     recoverable_errors = recoverable_errors or []
     retry_config = retry_config or RetryConfig(max_retries=0)
 
-    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+    def decorator(func: Callable[P, Union[R, Awaitable[R]]]) -> Callable[P, Union[R, Awaitable[R]]]:
         @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            last_error: Exception | None = None
+            attempt = 0
+
+            while attempt <= retry_config.max_retries:
+                try:
+                    if inspect.iscoroutinefunction(func):
+                        return await func(*args, **kwargs)
+                    else:
+                        return func(*args, **kwargs)
+                except Exception as e:
+                    last_error = e
+                    context = classify_error(e)
+
+                    if track_metrics:
+                        _global_metrics.record_error(context)
+
+                    if log_errors:
+                        _log_error(context)
+
+                    if on_error:
+                        on_error(context)
+
+                    is_recoverable = any(isinstance(e, err_type) for err_type in recoverable_errors)
+                    can_retry = (
+                        is_recoverable
+                        and context.recoverability.should_retry
+                        and attempt < retry_config.max_retries
+                    )
+
+                    if can_retry:
+                        delay = retry_config.get_delay(attempt)
+                        logger.info(
+                            f"Retrying {func.__name__} in {delay:.2f}s "
+                            f"(attempt {attempt + 1}/{retry_config.max_retries})"
+                        )
+                        await asyncio.sleep(delay)
+                        attempt += 1
+                    else:
+                        break
+
+            if fallback is not None:
+                logger.warning(f"Using fallback for {func.__name__} after {attempt} attempts")
+                if inspect.iscoroutinefunction(fallback):
+                    return await fallback(*args, **kwargs)
+                return fallback(*args, **kwargs)
+
+            if last_error is not None:
+                raise last_error
+
+            raise RuntimeError("Unexpected state in error boundary")
+
+        @functools.wraps(func)
+        def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            # Keep sync wrapper for sync functions that don't need async retries
+            # Note: This will block if using retries with sleep
             last_error: Exception | None = None
             attempt = 0
 
@@ -269,7 +327,9 @@ def error_boundary(
 
             raise RuntimeError("Unexpected state in error boundary")
 
-        return wrapper
+        if inspect.iscoroutinefunction(func):
+            return async_wrapper
+        return sync_wrapper
 
     return decorator
 
