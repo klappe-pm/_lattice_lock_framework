@@ -45,7 +45,7 @@ class RegistryValidationResult:
 class ModelRegistry:
     """Centralized model registry with all model definitions"""
 
-    def __init__(self, registry_path: str | None = "models/registry.yaml"):
+    def __init__(self, registry_path: str | None = "docs/models/registry.yaml"):
         self.models: dict[str, ModelCapabilities] = {}
         self.registry_path = registry_path
         self._validation_result: RegistryValidationResult | None = None

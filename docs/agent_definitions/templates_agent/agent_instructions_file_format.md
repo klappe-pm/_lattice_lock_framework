@@ -132,8 +132,8 @@ relationship_model:
       - "Validate final results"
       - "Report to user"
 
-    file_location: "/agents/[agent-name].agent.yaml"
-    naming_convention: "[domain]-[role]-agent.yaml"
+    file_location: "docs/agent_definitions/[agent-name]/[agent-name].yaml"
+    naming_convention: "[agent-name].yaml"
     example: "model-orchestrator-agent.yaml"
 
   sub_agent:
@@ -146,9 +146,9 @@ relationship_model:
       - "Return structured results to parent"
       - "Report errors with recovery suggestions"
 
-    file_location: "/agents/subagents/[parent-agent]/[subagent-name].subagent.yaml"
-    naming_convention: "[parent-name]-[specialty]-subagent.yaml"
-    example: "model-orchestrator-task-analysis-subagent.yaml"
+    file_location: "docs/agent_definitions/[agent-name]/subagents/[subagent-name].yaml"
+    naming_convention: "[subagent-name].yaml"
+    example: "task-analysis-subagent.yaml"
 
   key_differences:
     scope:
@@ -240,18 +240,18 @@ graph TD
 
 | Task Category | Primary Recommendation (Local) | Secondary Recommendation (Cloud) |
 |---------------|--------------------------------|----------------------------------|
-| **Code Generation** | `codellama:34b` | `claude-sonnet-4.5` |
-| **Code Review** | `deepseek-r1:70b` | `claude-opus-4.1` |
+| **Code Generation** | `codellama:34b` | `claude-3.5-sonnet` |
+| **Code Review** | `deepseek-r1:70b` | `claude-3.5-sonnet` |
 | **Debugging** | `deepseek-r1:70b` | `o1-pro` |
-| **System Design** | `deepseek-r1:70b` | `claude-opus-4.1` |
+| **System Design** | `deepseek-r1:70b` | `claude-3.5-sonnet` |
 | **Complex Reasoning** | `deepseek-r1:70b` | `o1-pro` |
 | **Data Analysis** | `qwen2.5:32b` | `gemini-2.0-pro` |
-| **Creative Writing** | `qwen2.5:32b` | `claude-opus-4.1` |
-| **Storytelling** | `qwen2.5:32b` | `gpt-4.1-2025` |
+| **Creative Writing** | `qwen2.5:32b` | `claude-3.5-sonnet` |
+| **Storytelling** | `qwen2.5:32b` | `gpt-4o` |
 | **Translation** | `qwen2.5:32b` | `gemini-2.0-flash` |
 | **Summarization** | `llama3.1:8b` | `claude-3-haiku` |
 | **Quick QA** | `llama3.2:3b` | `gpt-4o-mini` |
-| **Vision Analysis** | `llama-3.2-90b` | `gpt-4o` |
+| **Vision Analysis** | `llama3.2:90b` | `gpt-4o` |
 | **Research** | `deepseek-r1:70b` | `grok-4-fast-reasoning` |
 
 ### 0.5.4 Selection Patterns
@@ -613,7 +613,7 @@ model_selection:
 
 	  primary: "codellama:34b"
 
-	  fallback: "claude-sonnet-4.5"
+	  fallback: "claude-3-5-sonnet"
 
 	  selection_criteria: "accuracy > speed"
 

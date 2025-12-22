@@ -44,19 +44,16 @@ Lattice Lock Framework/
 
 Lattice Lock Framework/
 
-├── agent_definitions/ # Agent definition files (YAML/Markdown)
-
-├── agent_interactions/ # Interaction protocols and logs
-
-├── agent_memory/ # Memory structures and storage
-
-├── agent_specifications/ # High-level agent specs and templates
-
-├── agent_workflows/ # Defined workflows and processes
-
+├── docs/ # Developer guides, Agent Definitions
+│   ├── agent_definitions/ # Agent definition files (YAML/Markdown)
+│   ├── agent_interactions/ # Interaction protocols and logs
+│   ├── agent_memory/ # Memory structures and storage
+│   ├── agent_specifications/ # High-level agent specs and templates
+│   ├── agent_workflows/ # Defined workflows and processes
+│   ├── models/ # Model configuration and registry
+│   └── specifications/ # Framework specifications
+│
 ├── context/ # Contextual information and global state
-
-├── developer_documentation/ # Developer guides and API docs
 
 ├── directory/ # Repository meta-documentation
 

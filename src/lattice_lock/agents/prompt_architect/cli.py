@@ -72,7 +72,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
     generate_parser.add_argument(
         "--spec",
-        default="specifications/lattice_lock_framework_specifications.md",
+        default="docs/specifications/lattice_lock_framework_specifications.md",
         help="Path to specification file",
     )
     generate_parser.add_argument(

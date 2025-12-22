@@ -5,9 +5,9 @@ agent:
     description: [Brief description of the agent's purpose]
     role: [Role Name]
     tags:
-    - [tag1]
-    - [tag2]
-    - v2.1
+      - [tag1]
+      - [tag2]
+      - v2.1
   configuration:
     language: en-US
     timezone: UTC
@@ -17,52 +17,52 @@ agent:
   directive:
     primary_goal: [Main objective]
     secondary_goals:
-    - [Goal 1]
-    - [Goal 2]
+      - [Goal 1]
+      - [Goal 2]
     constraints:
-    - Do not hallucinate information
-    - Respect user privacy
-    - Adhere to project coding standards
+      - Do not hallucinate information
+      - Respect user privacy
+      - Adhere to project coding standards
   responsibilities:
-  - name: [Responsibility Name]
-    inputs:
-    - [Input 1]
-    outputs:
-    - [Output 1]
-    criticality: [High/Medium/Low]
-    description: [Description]
+    - name: [Responsibility Name]
+      inputs:
+        - [Input 1]
+      outputs:
+        - [Output 1]
+      criticality: [High/Medium/Low]
+      description: [Description]
   scope:
     can_access:
-    - [Path 1]
+      - [Path 1]
     can_modify:
-    - [Path 1]
+      - [Path 1]
     cannot_access:
-    - [Path 1]
+      - [Path 1]
     cannot_modify:
-    - [Path 1]
+      - [Path 1]
     escalation_triggers:
-    - If confidence < 0.7
-    - If cost > $1.00
-    - If user intent is unclear
+      - If confidence < 0.7
+      - If cost > $1.00
+      - If user intent is unclear
   context:
     required_context:
-    - [Context Item 1]
+      - [Context Item 1]
     memory_persistence:
       short_term: Session only
       long_term: Project knowledge base
     knowledge_sources:
-    - path: /docs
-      description: Project documentation
-    - path: /code
-      description: Source code
+      - path: /docs
+        description: Project documentation
+      - path: /code
+        description: Source code
   planning:
     enabled: true
     default_strategy: linear
     phases:
-    - name: intent_analysis
-      required: true
-    - name: execution
-      required: true
+      - name: intent_analysis
+        required: true
+      - name: execution
+        required: true
     constraints:
       max_depth: 3
       max_steps_per_phase: 10
@@ -79,15 +79,15 @@ agent:
       approval_required_above: 0.5
   model_selection:
     default_provider: anthropic
-    default_model: claude-3.5-sonnet
+    default_model: claude-3-5-sonnet
     strategies:
       code_generation:
         primary: codellama:34b
-        fallback: claude-3.5-sonnet
+        fallback: claude-3-5-sonnet
         selection_criteria: accuracy > speed
       reasoning:
         primary: deepseek-r1:70b
-        fallback: claude-3.5-sonnet
+        fallback: claude-3-5-sonnet
         selection_criteria: depth > speed
       quick_response:
         primary: llama3.1:8b
@@ -101,22 +101,22 @@ agent:
     max_depth: 2
     allowed_subagents: []
     delegation_triggers:
-    - condition: Task requires specialization
-      target: appropriate_subagent
+      - condition: Task requires specialization
+        target: appropriate_subagent
   sub_agents: []
   workflow:
     init:
-    - Load configuration
-    - Check dependencies
+      - Load configuration
+      - Check dependencies
     execution_loop:
-    - Receive task
-    - Plan execution
-    - Execute steps
-    - Validate results
-    - Report status
+      - Receive task
+      - Plan execution
+      - Execute steps
+      - Validate results
+      - Report status
     cleanup:
-    - Close file handles
-    - Log summary
+      - Close file handles
+      - Log summary
   output:
     default_format: markdown
     schema:
@@ -125,9 +125,9 @@ agent:
         status:
           type: string
           enum:
-          - success
-          - failure
-          - partial
+            - success
+            - failure
+            - partial
         result:
           type: object
         metrics:
@@ -138,27 +138,27 @@ agent:
             time:
               type: number
     templates:
-      success: 'Task completed successfully.
+      success: "Task completed successfully.
 
         Result: {{result}}
 
-        Cost: ${{metrics.cost}}'
-      failure: 'Task failed.
+        Cost: ${{metrics.cost}}"
+      failure: "Task failed.
 
         Error: {{error.message}}
 
-        Recovery: {{error.recovery_suggestion}}'
+        Recovery: {{error.recovery_suggestion}}"
   error_handling:
     strategies:
-    - error: ContextLimitExceeded
-      action: summarize_history
-      retry: true
-    - error: ApiRateLimit
-      action: exponential_backoff
-      retry: true
-    - error: ToolFailure
-      action: try_alternative_tool
-      retry: true
+      - error: ContextLimitExceeded
+        action: summarize_history
+        retry: true
+      - error: ApiRateLimit
+        action: exponential_backoff
+        retry: true
+      - error: ToolFailure
+        action: try_alternative_tool
+        retry: true
     max_retries: 3
     fallback_mode: graceful_degradation
   interaction:
@@ -166,46 +166,45 @@ agent:
       tone: professional
       verbosity: concise
       confirmation_required:
-      - delete_file
-      - deploy_code
+        - delete_file
+        - deploy_code
     other_agents:
       protocol: json_rpc
       timeout: 30s
   metrics:
     - name: Task Success Rate
-      target: '> 95%'
+      target: "> 95%"
     - name: Average Cost per Task
       target: < $0.50
     - name: Execution Time
       target: < 60s
   guardrails:
-  - Never commit secrets to git
-  - Never delete files without confirmation
-  - Never execute arbitrary code outside sandbox
-  - 'Max cost per session: $5.00'
+    - Never commit secrets to git
+    - Never delete files without confirmation
+    - Never execute arbitrary code outside sandbox
+    - "Max cost per session: $5.00"
   examples:
-  - name: Standard Usage
-    input: '[Example Input]'
-    expected_output: '[Example Output]'
+    - name: Standard Usage
+      input: "[Example Input]"
+      expected_output: "[Example Output]"
   tests:
-  - name: Basic Functionality
-    command: pytest tests/test_basic.py
+    - name: Basic Functionality
+      command: pytest tests/test_basic.py
   metadata:
     id: [UUID]
-    created_at: '[ISO Date]'
-    updated_at: '[ISO Date]'
+    created_at: "[ISO Date]"
+    updated_at: "[ISO Date]"
     author: [Author]
     license: MIT
   versioning:
     current: 1.0.0
     changelog:
-    - version: 1.0.0
-      date: '[Date]'
-      changes: Initial release
-
+      - version: 1.0.0
+        date: "[Date]"
+        changes: Initial release
 # MEMORY DIRECTIVE REFERENCE
 #
-# This agent operates under the Universal Memory Directive located at: [agent_memory/universal_memory_directive.md]
+# This agent operates under the Universal Memory Directive located at: docs/agents/universal_memory_directive.md
 #
 # ## Memory Management Instructions
 #

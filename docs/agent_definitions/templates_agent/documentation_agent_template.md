@@ -3,7 +3,7 @@ dateCreated: [YYYY-MM-DD]
 agentType: Documentation
 tier: 1
 status: Template
-templateVersion: 1.0
+templateVersion: 2.1
 ---
 
 # [Agent Name] - Documentation Agent
@@ -15,11 +15,11 @@ templateVersion: 1.0
 
 ## Memory Directive Reference
 
-This agent operates under the Universal Memory Directive located at: `agent_memory/universal_memory_directive.md`
+This agent operates under the Universal Memory Directive located at: `docs/agents/universal_memory_directive.md`
 
 ### Memory Management Instructions
 
-1. **Find Memory File**: Locate your specific memory file in `agent_memory/agents/`. The filename format is `agent_{agent_name}_memory.md` or `sub_{sub_agent_name}_memory.md`.
+1. **Find Memory File**: Locate your specific memory file in `docs/agents/subagents/[parent-agent]/`. The filename format is `agent_{agent_name}_memory.md` or `sub_{sub_agent_name}_memory.md`.
 2. **Review Memory File**: Read the "Agent Summary", "Agent Next Steps", and "Interactions" sections of your memory file to understand the current context and state.
 3. **Plan with Memory**: Include the instructions and context from your memory file in your current planning operations. Ensure your plan aligns with the "Agent Next Steps".
 4. **Update Memory File**: At the completion of your task, you MUST update your memory file. Update the "Agent Summary" with your accomplishments, update "Agent Next Steps", and log any interactions.
@@ -253,7 +253,7 @@ handoff_back_condition: [Criteria]
 **User Guides**: `docs/guides/[guide-name].md`
 **API Reference**: `docs/api/[component].md`
 **Tutorials**: `docs/tutorials/[tutorial-name].md`
-**Technical Specs**: `gitignore/Plans/` or `gitignore/Architecture/`
+**Technical Specs**: `docs/agent_outputs/Plans/` or `docs/agent_outputs/Architecture/`
 **README Updates**: `/README.md`
 
 ### Validation Criteria
@@ -484,7 +484,7 @@ Documentation is complete when:
 
 ---
 
-**Template Version**: 1.0
+**Template Version**: 2.1
 **Created**: 2025-10-05
 **Template Type**: Documentation Agent
 **Maintainer**: Framework Development Agent (Agent Definition Specialist)

@@ -42,9 +42,14 @@ lattice-lock orchestrator list --verbose
 ```
 lattice-lock-framework/
 ├── version.txt                      # Framework version (2.1.0)
-├── specifications/                  # Authoritative specifications
-│   ├── lattice_lock_framework_specifications.md
-│   └── lattice_lock_versioning_strategy.md
+├── developer_documentation/         # [DEPRECATED] Moved to docs/
+├── docs/                            # Developer guides, Agent Definitions, Models, Specs
+│   ├── agent_definitions/           # Agent YAML specifications
+│   ├── agent_specifications/        # Agent format specifications
+│   ├── agent_workflows/             # Workflow templates
+│   ├── agent_memory/                # Memory directives
+│   ├── models/                      # Model configurations and registry
+│   └── specifications/              # Authoritative specifications
 ├── src/
 │   └── lattice_lock_orchestrator/   # Core library
 │       ├── core.py                  # ModelOrchestrator class
@@ -58,13 +63,7 @@ lattice-lock-framework/
 │   ├── validation/                  # Validation tools
 │   └── utilities/                   # Utility scripts
 ├── tests/                           # Test suite
-├── agent_definitions/               # Agent YAML specifications
-├── agent_specifications/            # Agent format specifications
-├── agent_workflows/                 # Workflow templates
-├── agent_memory/                    # Memory directives
-├── docs/                        # How-to guides and reference
-├── models/                          # Model configuration and guides
-└── directory/                       # Repository standards
+└── docs/                            # Documentation site source
 ```
 
 ## Supported Providers
@@ -82,8 +81,8 @@ lattice-lock-framework/
 
 ## Documentation
 
-- [Lattice-Lock Specification](specifications/lattice_lock_framework_specifications.md) - Authoritative reference
-- [Agent Specification](agent_specifications/agent_instructions_file_format_v2_1.md) - Agent definition format
+- [Lattice-Lock Specification](docs/specifications/lattice_lock_framework_specifications.md) - Authoritative reference
+- [Agent Specification](docs/agent_specifications/agent_instructions_file_format_v2_1.md) - Agent definition format
 
 
 ## License
