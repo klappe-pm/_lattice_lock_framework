@@ -79,7 +79,7 @@ class TestConfigurableRegistry(unittest.TestCase):
     def test_real_example_yaml(self):
         # Test against the actual example file we created
         project_root = Path(__file__).parent.parent
-        example_path = project_root / "examples" / "config" / "models.yaml"
+        example_path = project_root / "docs" / "examples" / "config" / "models.yaml"
 
         if not example_path.exists():
             self.skipTest("Example models.yaml not found")

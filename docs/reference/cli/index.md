@@ -23,11 +23,11 @@ lattice-lock [OPTIONS] COMMAND [ARGS]...
 | [`init`](init.md) | Initialize a new Lattice Lock project with scaffolding |
 | [`validate`](validate.md) | Validate a Lattice Lock project against schemas and rules |
 | [`doctor`](doctor.md) | Check environment health for Lattice Lock |
-| [`sheriff`](sheriff.md) | AST-based validation for import discipline and type hints |
-| [`gauntlet`](gauntlet.md) | Generate and run semantic tests from lattice.yaml |
+| [`sheriff`](docs/reference/cli/sheriff.md) | AST-based validation for import discipline and type hints |
+| [`gauntlet`](docs/reference/cli/gauntlet.md) | Generate and run semantic tests from lattice.yaml |
 | [`compile`](compile.md) | Compile and enforce lattice.yaml specifications |
-| [`admin`](admin.md) | Manage users, keys, and system configuration |
-| [`orchestrator`](orchestrator.md) | Manage model routing and analysis |
+| [`admin`](docs/reference/cli/admin.md) | Manage users, keys, and system configuration |
+| [`orchestrator`](docs/reference/cli/orchestrator.md) | Manage model routing and analysis |
 | [`feedback`](feedback.md) | Submit bugs and feature requests |
 
 ## Command Categories
@@ -111,6 +111,6 @@ lattice-lock gauntlet --generate --run
 
 ## See Also
 
-- [Configuration Reference](../configuration.md) - lattice.yaml schema documentation
-- [Getting Started Guide](../../getting_started/interactive_onboarding_guide.md)
-- [Development Guide](../../development/development_guide.md)
+- [Configuration Reference](docs/reference/configuration.md) - lattice.yaml schema documentation
+- [Getting Started Guide](interactive_onboarding_guide.md)
+- [Development Guide](development_guide.md)

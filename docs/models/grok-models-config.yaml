@@ -1,0 +1,98 @@
+# Grok Models Configuration
+# Complete catalog of xAI Grok models as of October 2025
+
+models:
+  language:
+    - id: grok-code-fast-1
+      name: "Grok Code Fast"
+      context_window: 256000
+      capabilities: ["code", "fast-inference"]
+      rate_limit: "2M/480"
+      description: "Optimized for programming tasks"
+
+    - id: grok-4-fast-reasoning
+      name: "Grok 4 Fast Reasoning"
+      context_window: 2000000
+      capabilities: ["reasoning", "function-calling", "structured-outputs"]
+      rate_limit: "4M/480"
+      description: "Fast reasoning with 2M context"
+      notes: "No support for presencePenalty, frequencyPenalty, stop, or reasoning_effort"
+
+    - id: grok-4-fast-non-reasoning
+      name: "Grok 4 Fast Non-Reasoning"
+      context_window: 2000000
+      capabilities: ["fast-inference"]
+      rate_limit: "4M/480"
+      description: "Lighter inference variant with 2M context"
+
+    - id: grok-4-0709
+      name: "Grok 4 July 2025"
+      context_window: 256000
+      capabilities: ["reasoning"]
+      rate_limit: "2M/480"
+      description: "Specific Grok-4 release (July 09, 2025)"
+      knowledge_cutoff: "2024-11"
+
+    - id: grok-3-mini
+      name: "Grok 3 Mini"
+      context_window: 131072
+      capabilities: ["compact", "efficient"]
+      rate_limit: "480"
+      description: "Compact variant for efficiency"
+      knowledge_cutoff: "2024-11"
+
+    - id: grok-3
+      name: "Grok 3"
+      context_window: 131072
+      capabilities: ["enterprise", "data-extraction", "coding"]
+      rate_limit: "600"
+      description: "Standard Grok-3 for enterprise tasks"
+      knowledge_cutoff: "2024-11"
+
+    - id: grok-3-fast
+      name: "Grok 3 Fast"
+      context_window: 131072
+      capabilities: ["fast-inference"]
+      rate_limit: "600"
+      description: "Higher performance variant"
+
+  vision:
+    - id: grok-2-vision-1212
+      name: "Grok 2 Vision"
+      context_window: 32768
+      capabilities: ["vision", "image-input"]
+      regions:
+        - name: "us-east-1"
+          rate_limit: "600"
+        - name: "eu-west-1"
+          rate_limit: "50"
+      description: "Vision model with image input (up to 20MiB, jpg/png)"
+
+  image_generation:
+    - id: grok-2-image-1212
+      name: "Grok 2 Image Generation"
+      capabilities: ["image-generation"]
+      rate_limit: "300"
+      description: "Image generation model"
+
+aliases:
+  # Short aliases for convenience
+  grok: grok-3
+  grok3: grok-3
+  grok-mini: grok-3-mini
+  grok-code: grok-code-fast-1
+  grok4: grok-4-0709
+  grok4-fast: grok-4-fast-reasoning
+  grok-vision: grok-2-vision-1212
+  grok-image: grok-2-image-1212
+
+  # Latest versions
+  grok-3-latest: grok-3
+  grok-4-latest: grok-4-0709
+
+# API Configuration
+api:
+  base_url: "https://api.x.ai/v1"
+  headers:
+    Content-Type: "application/json"
+  auth_env_var: "XAI_API_KEY"

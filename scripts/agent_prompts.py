@@ -265,11 +265,11 @@ Task ID: 5.1.1 - Prompt Architect Agent Core Implementation
 
 Context:
 - Repository: lattice-lock-framework
-- Agent definitions in: `docs/agent_definitions/`
-- Memory protocol in: `docs/agent_memory/universal_memory_directive.md`
+- Agent definitions in: `docs/agents/agent_definitions/`
+- Memory protocol in: `docs/agents/agent_memory/universal_memory_directive.md`
 
 Goals:
-1. Create `docs/agent_definitions/prompt_architect_agent/`:
+1. Create `docs/agents/agent_definitions/prompt_architect_agent/`:
    ```
    prompt_architect_agent/
    ├── agent_prompt_architect.md
@@ -287,7 +287,7 @@ Goals:
    - Update existing prompts
 
 3. Create memory file:
-   `docs/agent_memory/agents/agent_prompt_architect_memory.md`
+   `docs/agents/agent_memory/agents/agent_prompt_architect_memory.md`
 
 Output:
 - Complete agent definition files
@@ -910,8 +910,8 @@ lattice-lock init pilot-api-service --type service --ci github
 
 2. Navigate and set up:
 cd pilot-api-service
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 
 3. Run validation:
@@ -941,8 +941,8 @@ lattice-lock init pilot-cli-tool --type library --ci github
 
 2. Navigate and set up:
 cd pilot-cli-tool
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 
 3. Run validation:
@@ -968,6 +968,7 @@ Task ID: 5.1.1 - Prompt Architect Agent Setup Commands
 Generate commands to set up the Prompt Architect Agent:
 
 1. Create agent directory structure:
+<<<<<<< HEAD
 mkdir -p docs/agent_definitions/prompt_architect_agent/workflows
 mkdir -p docs/agent_definitions/prompt_architect_agent/examples
 
@@ -979,6 +980,19 @@ touch docs/agent_definitions/prompt_architect_agent/workflows/update_prompt.md
 
 3. Create memory file:
 touch docs/agent_memory/agents/agent_prompt_architect_memory.md
+=======
+mkdir -p developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/workflows
+mkdir -p developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/examples
+
+2. Create agent files:
+touch developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/agent_prompt_architect.md
+touch developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/capabilities.md
+touch developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/workflows/generate_prompt.md
+touch developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/workflows/update_prompt.md
+
+3. Create memory file:
+touch developer_documentation/docs/agents/agent_memory/agents/agent_prompt_architect_memory.md
+>>>>>>> origin/main
 
 4. Validate agent structure:
 python scripts/validate_agents.py
@@ -986,7 +1000,11 @@ python scripts/validate_agents.py
 5. Test agent definition:
 python -c "
 import yaml
+<<<<<<< HEAD
 with open('docs/agent_definitions/prompt_architect_agent/agent_prompt_architect.md') as f:
+=======
+with open('developer_documentation/docs/agents/agent_definitions/prompt_architect_agent/agent_prompt_architect.md') as f:
+>>>>>>> origin/main
     print('Agent definition loaded successfully')
 "''',
     "5.1.2": '''You are assisting from a terminal context.

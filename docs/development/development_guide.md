@@ -2,7 +2,7 @@
 
 All files in this directory provide guidance to WARP (warp.dev), Gemini (GEMINI.MD), Claude/Claude Code (CLAUDE.MD), Grok (GROK.MD), Codex (CODEX.MD), Chat GPT (CHATGPT.md) when working with code in this repository.
 
-[[Overview]]
+[[overview]]
 
 [[High-Level Architecture]]
 

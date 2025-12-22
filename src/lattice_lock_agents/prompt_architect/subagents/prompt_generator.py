@@ -42,7 +42,7 @@ class PromptGenerator:
 
     def __init__(
         self,
-        config_path: str = "docs/agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml",
+        config_path: str = "docs/agents/agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml",
     ):
         self.config = self._load_config(config_path)
         self.template_path = os.path.join(

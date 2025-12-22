@@ -102,7 +102,7 @@ class TestTemplateRendering:
 
         assert "__pycache__" in output
         assert ".env" in output
-        assert "venv/" in output
+        assert ".venv/" in output
 
     def test_render_github_workflow(self) -> None:
         """Test rendering GitHub workflow template."""

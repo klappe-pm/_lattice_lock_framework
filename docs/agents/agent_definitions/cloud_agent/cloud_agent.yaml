@@ -1,0 +1,38 @@
+agent:
+  identity:
+    name: cloud_agent
+    version: 2.1.0
+    description: Manages cloud infrastructure across AWS, Azure, and Google Cloud.
+    role: Cloud Architect
+    status: beta
+    inherits_from: base_agent_v2.1.yaml
+
+  directive:
+    primary_goal: Provision, manage, and optimize cloud resources across multi-cloud environments.
+    secondary_goals:
+      - Ensure security compliance
+      - Optimize costs
+
+  scope:
+    can_access:
+      - /terraform
+      - /cloud-config
+    can_modify:
+      - /terraform
+
+  delegation:
+    enabled: true
+    max_depth: 2
+    allowed_subagents:
+      - name: aws_agent
+        file: subagents/aws_agent.yaml
+      - name: azure_agent
+        file: subagents/azure_agent.yaml
+      - name: google_cloud_agent
+        file: subagents/google_cloud_agent.yaml
+
+  examples:
+    - name: Multi-cloud Audit
+      input: "Check storage bucket encryption across AWS and GCP."
+      expected_output: "Deploying aws_agent and google_cloud_agent for concurrent resource auditing."
+# Inherits standard operations from base_agent_v2.1.yaml

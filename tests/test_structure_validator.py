@@ -13,7 +13,7 @@ def temp_repo():
     # Create a temporary directory structure mimicking a valid repo
     with tempfile.TemporaryDirectory() as tmpdirname:
         path = Path(tmpdirname)
-        (path / "docs" / "agent_definitions").mkdir(parents=True)
+        (path / "docs" / "agents" / "agent_definitions").mkdir(parents=True)
         (path / "src").mkdir()
         (path / "scripts").mkdir()
         (path / ".gitignore").touch()
@@ -31,7 +31,9 @@ def test_missing_required_directory(temp_repo):
     shutil.rmtree(os.path.join(temp_repo, "docs"))
     result = validate_repository_structure(temp_repo)
     assert not result.valid
-    assert any("Missing required root directory: docs/" in e.message for e in result.errors)
+    assert any(
+        "Missing required root directory: docs/" in e.message for e in result.errors
+    )
 
 
 def test_snake_case_violation(temp_repo):
@@ -51,7 +53,7 @@ def test_space_in_filename(temp_repo):
 
 def test_agent_definition_naming(temp_repo):
     # Valid
-    cat_dir = Path(temp_repo) / "docs" / "agent_definitions" / "test_agent"
+    cat_dir = Path(temp_repo) / "docs" / "agents" / "agent_definitions" / "test_agent"
     cat_dir.mkdir()
     (cat_dir / "test_agent_my_agent_definition.yaml").touch()
 

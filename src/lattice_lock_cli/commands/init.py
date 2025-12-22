@@ -260,8 +260,8 @@ def init_command(
         click.echo()
         click.echo("Next steps:")
         click.echo(f"  cd {project_name}")
-        click.echo("  python -m venv venv")
-        click.echo("  source venv/bin/activate")
+        click.echo("  python -m venv .venv")
+        click.echo("  source .venv/bin/activate")
         click.echo("  pip install lattice-lock")
         click.echo("  lattice-lock validate")
 

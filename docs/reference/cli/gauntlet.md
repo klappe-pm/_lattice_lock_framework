@@ -343,6 +343,6 @@ lattice-lock gauntlet --generate
 ## See Also
 
 - [CLI Overview](index.md)
-- [sheriff](sheriff.md) - AST-based static validation
+- [sheriff](docs/reference/cli/sheriff.md) - AST-based static validation
 - [validate](validate.md) - Schema validation
-- [Configuration Reference](../configuration.md) - lattice.yaml schema
+- [Configuration Reference](docs/reference/configuration.md) - lattice.yaml schema

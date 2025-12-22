@@ -78,7 +78,7 @@ The `--fix` flag automatically corrects common issues:
 
 **Supported file extensions:** `.py`, `.yaml`, `.yml`, `.md`, `.txt`, `.json`, `.toml`
 
-**Excluded directories:** `.git`, `__pycache__`, `venv`, `node_modules`, `.venv`
+**Excluded directories:** `.git`, `__pycache__`, `node_modules`, `.venv`
 
 ## Examples
 
@@ -196,6 +196,6 @@ The validate command is designed for CI/CD pipelines:
 ## See Also
 
 - [CLI Overview](index.md)
-- [sheriff](sheriff.md) - AST-based code validation
+- [sheriff](docs/reference/cli/sheriff.md) - AST-based code validation
 - [doctor](doctor.md) - Environment health check
-- [Configuration Reference](../configuration.md) - lattice.yaml schema
+- [Configuration Reference](docs/reference/configuration.md) - lattice.yaml schema

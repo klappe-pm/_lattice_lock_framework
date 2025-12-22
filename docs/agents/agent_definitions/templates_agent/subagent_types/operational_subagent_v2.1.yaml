@@ -1,0 +1,28 @@
+# Operational Subagent Template (v2.1)
+# Inherits from: base_agent_v2.1.yaml
+
+agent:
+  identity:
+    name: operational_subagent
+    version: 2.1.0
+    description: Optimized for task coordination, status tracking, and workflow management.
+    role: Operations Specialist
+    tags:
+      - operations
+      - management
+
+  configuration:
+    timeout_seconds: 600 # Operational syncs might take longer
+
+  model_selection:
+    default_model: gpt-4o
+    strategies:
+      quick_response:
+        primary: gpt-4o-mini
+
+  interaction:
+    user:
+      tone: professional
+      verbosity: concise
+    other_agents:
+      protocol: heartbeat_sync # Custom logic for ops subagents

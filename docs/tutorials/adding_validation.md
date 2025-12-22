@@ -484,6 +484,6 @@ Now that you understand validation, learn how to integrate it into your CI/CD pi
 ## See Also
 
 - [CI/CD Integration](ci_integration.md) - Next tutorial
-- [Configuration Reference](../reference/configuration.md) - Entity schema details
-- [Sheriff Reference](../reference/cli/sheriff.md) - Complete Sheriff docs
-- [Gauntlet Reference](../reference/cli/gauntlet.md) - Complete Gauntlet docs
+- [Configuration Reference](docs/reference/configuration.md) - Entity schema details
+- [Sheriff Reference](docs/reference/cli/sheriff.md) - Complete Sheriff docs
+- [Gauntlet Reference](docs/reference/cli/gauntlet.md) - Complete Gauntlet docs

@@ -180,9 +180,7 @@ class TestProjectScopeDiscovery:
         """Test discovering scope from specification files."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create a mock specification file
-            spec_dir = Path(tmpdir) / "specifications"
-            spec_dir.mkdir()
-            spec_file = spec_dir / "lattice_lock_framework_specifications.md"
+            spec_file = Path(tmpdir) / "SPECIFICATION.md"
             spec_file.write_text(
                 """# Test Project
 

@@ -593,9 +593,9 @@ Congratulations! You've completed the Lattice Lock tutorial series. You now know
 
 ### Continue Learning
 
-- [Configuration Reference](../reference/configuration.md) - Full lattice.yaml schema
-- [CLI Reference](../reference/cli/index.md) - All commands documented
-- [Development Guide](../development/development_guide.md) - Contribute to Lattice Lock
+- [Configuration Reference](docs/reference/configuration.md) - Full lattice.yaml schema
+- [CLI Reference](docs/reference/cli/index.md) - All commands documented
+- [Development Guide](development_guide.md) - Contribute to Lattice Lock
 
 ## Quick Reference
 
@@ -627,4 +627,4 @@ uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-gauntlet-only.
 - [Getting Started](getting_started.md) - First tutorial
 - [Creating Your First Project](first_project.md) - Project setup
 - [Adding Validation Rules](adding_validation.md) - Validation details
-- [CLI Reference](../reference/cli/index.md) - Command documentation
+- [CLI Reference](docs/reference/cli/index.md) - Command documentation

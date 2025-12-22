@@ -223,4 +223,4 @@ sudo apt install git
 
 - [CLI Overview](index.md)
 - [validate](validate.md) - Project validation
-- [Getting Started Guide](../../getting_started/interactive_onboarding_guide.md)
+- [Getting Started Guide](interactive_onboarding_guide.md)

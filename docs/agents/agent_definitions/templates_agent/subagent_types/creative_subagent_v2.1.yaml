@@ -1,0 +1,28 @@
+# Creative Subagent Template (v2.1)
+# Inherits from: base_agent_v2.1.yaml
+
+agent:
+  identity:
+    name: creative_subagent
+    version: 2.1.0
+    description: Optimized for content creation, UX design, and visual communication.
+    role: Creative Specialist
+    tags:
+      - creative
+      - content
+
+  model_selection:
+    default_model: claude-3.5-sonnet # Claude is generally better for creative writing
+
+  interaction:
+    user:
+      tone: empathetic
+      verbosity: descriptive
+
+  output:
+    templates:
+      success: |
+        The following creative assets have been generated:
+        {{result}}
+
+        Style Notes: Maintains consistent brand voice.

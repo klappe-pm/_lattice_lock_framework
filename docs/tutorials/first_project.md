@@ -22,8 +22,8 @@ Created 9 files in ./my_first_project
 
 Next steps:
   cd my_first_project
-  python -m venv venv
-  source venv/bin/activate
+  python -m venv .venv
+  source .venv/bin/activate
   pip install lattice-lock
   lattice-lock validate
 ```
@@ -506,5 +506,5 @@ Your first project is now set up and validated! Next, learn how to add more soph
 ## See Also
 
 - [Adding Validation Rules](adding_validation.md) - Next tutorial
-- [Configuration Reference](../reference/configuration.md) - Complete lattice.yaml docs
-- [CLI Reference](../reference/cli/init.md) - init command details
+- [Configuration Reference](docs/reference/configuration.md) - Complete lattice.yaml docs
+- [CLI Reference](init.md) - init command details

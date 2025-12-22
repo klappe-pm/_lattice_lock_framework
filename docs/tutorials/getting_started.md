@@ -56,8 +56,8 @@ git clone https://github.com/klappe-pm/lattice-lock-framework.git
 cd lattice-lock-framework
 
 # Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install in development mode
 pip install -e ".[dev]"
@@ -230,6 +230,6 @@ Now that your environment is set up, you're ready to create your first project!
 
 ## See Also
 
-- [CLI Reference](../reference/cli/index.md) - Complete command documentation
-- [Configuration Reference](../reference/configuration.md) - lattice.yaml schema
-- [Development Guide](../development/development_guide.md) - Contributing to Lattice Lock
+- [CLI Reference](docs/reference/cli/index.md) - Complete command documentation
+- [Configuration Reference](docs/reference/configuration.md) - lattice.yaml schema
+- [Development Guide](development_guide.md) - Contributing to Lattice Lock

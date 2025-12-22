@@ -8,42 +8,42 @@ Welcome to the Lattice-Lock Framework documentation. This framework provides gov
 
 If you're new to Lattice-Lock, start here:
 
-- [Installation Guide](getting_started/installation.md) - Set up the framework
-- [Quick Start](getting_started/quick_start.md) - Get running in 5 minutes
+- [Installation Guide](installation.md) - Set up the framework
+- [Quick Start](quick_start.md) - Get running in 5 minutes
 - [Configuration](getting_started/configuration.md) - Configure your project
-- [Credentials Setup](getting_started/credentials_setup.md) - Set up API keys
-- [Troubleshooting](getting_started/troubleshooting.md) - Common issues and solutions
+- [Credentials Setup](credentials_setup.md) - Set up API keys
+- [Troubleshooting](troubleshooting.md) - Common issues and solutions
 
 ### Tutorials
 
 Step-by-step guides for common tasks:
 
-- [Getting Started Tutorial](tutorials/getting_started.md) - Your first project
-- [First Project](tutorials/first_project.md) - Build your first governed project
-- [Adding Validation](tutorials/adding_validation.md) - Add governance rules
-- [CI Integration](tutorials/ci_integration.md) - Integrate with CI/CD pipelines
+- [Getting Started Tutorial](getting_started.md) - Your first project
+- [First Project](first_project.md) - Build your first governed project
+- [Adding Validation](adding_validation.md) - Add governance rules
+- [CI Integration](ci_integration.md) - Integrate with CI/CD pipelines
 
 ### Guides
 
 In-depth guides for specific features:
 
-- [Governance Guide](guides/governance.md) - Understanding governance rules
-- [Model Orchestration](guides/model_orchestration.md) - Using the Model Orchestrator
-- [Advanced Validation](guides/advanced_validation.md) - Complex validation scenarios
-- [Custom Rules](guides/custom_rules.md) - Creating custom governance rules
-- [Production Deployment](guides/production_deployment.md) - Deploying to production
-- [Multi-Project Setup](guides/multi_project.md) - Managing multiple projects
+- [Governance Guide](governance.md) - Understanding governance rules
+- [Model Orchestration](model_orchestration.md) - Using the Model Orchestrator
+- [Advanced Validation](advanced_validation.md) - Complex validation scenarios
+- [Custom Rules](custom_rules.md) - Creating custom governance rules
+- [Production Deployment](production_deployment.md) - Deploying to production
+- [Multi-Project Setup](multi_project.md) - Managing multiple projects
 
 ### Architecture
 
 Understanding the system design:
 
-- [High-Level Architecture](architecture/high_level_architecture.md) - System overview
-- [System Design Diagram](architecture/system_design.md) - Visual architecture with component details
-- [Sequence Diagrams](architecture/sequence_diagrams.md) - Key workflow sequences
-- [Domain Model](architecture/domain_model.md) - Entity relationship diagram
-- [Model Orchestrator Architecture](architecture/model_orchestrator_architecture.md) - Orchestrator internals
-- [Data Flow](architecture/model_orchestrator_data_flow.md) - How data flows through the system
+- [High-Level Architecture](high_level_architecture.md) - System overview
+- [System Design Diagram](system_design.md) - Visual architecture with component details
+- [Sequence Diagrams](sequence_diagrams.md) - Key workflow sequences
+- [Domain Model](domain_model.md) - Entity relationship diagram
+- [Model Orchestrator Architecture](model_orchestrator_architecture.md) - Orchestrator internals
+- [Data Flow](model_orchestrator_data_flow.md) - How data flows through the system
 
 ### Reference
 
@@ -52,18 +52,18 @@ API and CLI documentation:
 #### CLI Commands
 
 - [CLI Overview](reference/cli/index.md) - Command-line interface overview
-- [validate](reference/cli/validate.md) - Validate project structure
+- [validate](validate.md) - Validate project structure
 - [sheriff](reference/cli/sheriff.md) - Run static analysis
 - [gauntlet](reference/cli/gauntlet.md) - Generate contract tests
-- [doctor](reference/cli/doctor.md) - Diagnose issues
-- [init](reference/cli/init.md) - Initialize a new project
+- [doctor](doctor.md) - Diagnose issues
+- [init](init.md) - Initialize a new project
 - [orchestrator](reference/cli/orchestrator.md) - Model orchestrator commands
 
 #### API Reference
 
 - [API Overview](reference/api/index.md) - Programmatic API overview
-- [Compiler API](reference/api/compiler.md) - Lattice compiler
-- [Validator API](reference/api/validator.md) - Schema validation
+- [Compiler API](compiler.md) - Lattice compiler
+- [Validator API](validator.md) - Schema validation
 - [Sheriff API](reference/api/sheriff.md) - Static analysis
 - [Gauntlet API](reference/api/gauntlet.md) - Test generation
 - [Admin API](reference/api/admin.md) - Administration
@@ -73,13 +73,13 @@ API and CLI documentation:
 
 AI model configuration and usage:
 
-- [Model Registry](../models/README.md) - Model configuration and selection guide
+- [Model Registry](models/README.md) - Model configuration and selection guide
 
 ### Agents
 
 Agent definitions and workflows:
 
-- [Agent Glossary](agents/glossary.md) - Agent terminology
+- [Agent Glossary](glossary.md) - Agent terminology
 - [Agent Instructions Format](agents/agent_instructions_format.md) - How to define agents
 - [Agent Memory](agents/agent_memory_storage.md) - Persistent agent memory
 - [Universal Memory Directive](agents/universal_memory_directive.md) - Memory guidelines
@@ -94,29 +94,29 @@ Agent definitions and workflows:
 
 Authoritative specifications:
 
-- [Framework Specifications](specifications/framework_specifications.md) - Complete framework spec
-- [Versioning Strategy](specifications/versioning_strategy.md) - Version management
-- [Repository Structure](specifications/repository_structure.md) - Project structure standards
+- [Framework Specifications](framework_specifications.md) - Complete framework spec
+- [Versioning Strategy](versioning_strategy.md) - Version management
+- [Repository Structure](repository_structure.md) - Project structure standards
 
 ### Design Documents
 
 Design decisions and strategies:
 
-- [Provider Strategy](design/provider_strategy.md) - AI provider integration
-- [Cost Telemetry Strategy](design/6.3.3_cost_telemetry_strategy.md) - Cost tracking design
-- [Provider Fallback Strategy](design/6.1.3_provider_fallback_strategy.md) - Fallback handling
-- [Orchestrator Capabilities](design/6.1.1_orchestrator_capabilities_contract.md) - Capability contracts
+- [Provider Strategy](provider_strategy.md) - AI provider integration
+- [Cost Telemetry Strategy](6.3.3_cost_telemetry_strategy.md) - Cost tracking design
+- [Provider Fallback Strategy](6.1.3_provider_fallback_strategy.md) - Fallback handling
+- [Orchestrator Capabilities](6.1.1_orchestrator_capabilities_contract.md) - Capability contracts
 
 ### Development
 
 Contributing and development guides:
 
-- [Development Overview](development/overview.md) - Development setup
-- [Development Guide](development/development_guide.md) - Contributing guidelines
-- [Development Workflow](development/development_workflow.md) - Git workflow
-- [API Documentation](development/api_documentation.md) - Internal APIs
-- [Troubleshooting Guide](development/troubleshooting_guide.md) - Debugging issues
-- [Agent Scripts](development/agent_scripts.md) - Script documentation
+- [Development Overview](overview.md) - Development setup
+- [Development Guide](development_guide.md) - Contributing guidelines
+- [Development Workflow](development_workflow.md) - Git workflow
+- [API Documentation](api_documentation.md) - Internal APIs
+- [Troubleshooting Guide](troubleshooting_guide.md) - Debugging issues
+- [Agent Scripts](agent_scripts.md) - Script documentation
 
 ### Security
 
@@ -186,6 +186,10 @@ lattice-lock validate ./my-project
 
 ## Getting Help
 
+<<<<<<< HEAD
 - [Troubleshooting Guide](getting_started/troubleshooting.md) - Common issues
+=======
+- [Troubleshooting Guide](troubleshooting.md) - Common issues
+>>>>>>> origin/main
 - [GitHub Issues](https://github.com/klappe-pm/lattice-lock-framework/issues) - Report bugs
 - [Discussions](https://github.com/klappe-pm/lattice-lock-framework/discussions) - Ask questions

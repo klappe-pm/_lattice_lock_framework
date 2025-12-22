@@ -416,7 +416,7 @@ def run_sheriff(
     else:
         python_files = list(target.rglob("*.py"))
         # Exclude common directories
-        exclude_dirs = {"__pycache__", ".git", ".venv", "venv", "build", "dist", ".pytest_cache"}
+        exclude_dirs = {"__pycache__", ".git", ".venv", "build", "dist", ".pytest_cache"}
         python_files = [
             f for f in python_files if not any(excluded in f.parts for excluded in exclude_dirs)
         ]

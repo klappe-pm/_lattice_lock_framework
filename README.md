@@ -42,12 +42,11 @@ lattice-lock orchestrator list --verbose
 ```
 lattice-lock-framework/
 ├── version.txt                      # Framework version (2.1.0)
-├── developer_documentation/         # [DEPRECATED] Moved to docs/
 ├── docs/                            # Developer guides, Agent Definitions, Models, Specs
-│   ├── agent_definitions/           # Agent YAML specifications
-│   ├── agent_specifications/        # Agent format specifications
-│   ├── agent_workflows/             # Workflow templates
-│   ├── agent_memory/                # Memory directives
+│   ├── agents/                      # Agent Definitions and Memory
+│   │   ├── agent_definitions/       # Agent YAML specifications
+│   │   ├── agent_workflows/         # Workflow templates
+│   │   └── agent_memory/            # Memory directives
 │   ├── models/                      # Model configurations and registry
 │   └── specifications/              # Authoritative specifications
 ├── src/
@@ -82,7 +81,7 @@ lattice-lock-framework/
 ## Documentation
 
 - [Lattice-Lock Specification](docs/specifications/lattice_lock_framework_specifications.md) - Authoritative reference
-- [Agent Specification](docs/agent_specifications/agent_instructions_file_format_v2_1.md) - Agent definition format
+- [Agent Specification](docs/agents/agent_definitions/agents_glossary/agent_instructions_file_format.md) - Agent definition format
 
 
 ## License

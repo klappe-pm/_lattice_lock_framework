@@ -4,7 +4,7 @@
 **Last Updated:** 2025-12-01
 **Status:** Ready for Implementation
 
-This document provides a concrete implementation plan for Phase 1 (Foundation) of the Engineering Framework, as defined in the [Lattice-Lock Framework Specification](../../specifications/lattice_lock_framework_specifications.md).
+This document provides a concrete implementation plan for Phase 1 (Foundation) of the Engineering Framework, as defined in the [Lattice-Lock Framework Specification](lattice_lock_framework_specifications.md).
 
 ## Overview
 
@@ -201,11 +201,11 @@ Upon completion of Phase 1, proceed to Phase 2 (CI/CD Integration) which include
 - Sheriff CLI wrapper
 - Gauntlet test runner
 
-See the [Framework Specification](../../specifications/lattice_lock_framework_specifications.md) for full Phase 2-4 details.
+See the [Framework Specification](lattice_lock_framework_specifications.md) for full Phase 2-4 details.
 
 ## References
 
-- [Lattice-Lock Framework Specification](../../specifications/lattice_lock_framework_specifications.md)
+- [Lattice-Lock Framework Specification](lattice_lock_framework_specifications.md)
 - [Repository Structure Standards](../../directory/repository_structure_standards.md)
 - [Agent Specification v2.1](../../agent_specifications/agent_instructions_file_format_v2_1.md)
-- [Versioning Strategy](../../specifications/lattice_lock_versioning_strategy.md)
+- [Versioning Strategy](lattice_lock_versioning_strategy.md)

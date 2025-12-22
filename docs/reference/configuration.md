@@ -504,8 +504,8 @@ lattice-lock validate --schema-only
 
 ## See Also
 
-- [CLI Overview](cli/index.md)
-- [init](cli/init.md) - Generate lattice.yaml with scaffolding
-- [validate](cli/validate.md) - Validate configuration
-- [sheriff](cli/sheriff.md) - AST validation using config
-- [gauntlet](cli/gauntlet.md) - Generate tests from entities
+- [CLI Overview](docs/reference/cli/index.md)
+- [init](init.md) - Generate lattice.yaml with scaffolding
+- [validate](validate.md) - Validate configuration
+- [sheriff](docs/reference/cli/sheriff.md) - AST validation using config
+- [gauntlet](docs/reference/cli/gauntlet.md) - Generate tests from entities

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: task_manager
+    version: 2.1.0
+    description: Manages discrete task assignment, priority tracking, and board updates.
+    role: Task Coordinator
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+
+  directive:
+    primary_goal: Ensure all team tasks are clearly defined, assigned, and moving through the workflow.
+
+  scope:
+    can_access:
+      - /docs/project/tasks
+    can_modify:
+      - /docs/project/tasks/board
+Sync: true

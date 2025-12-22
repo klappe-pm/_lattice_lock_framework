@@ -47,6 +47,7 @@ class TestModelRegistryLoading:
 
     def test_loads_from_yaml(self):
         """Test that registry loads models from YAML file."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -55,6 +56,7 @@ class TestModelRegistryLoading:
 
     def test_loads_all_providers(self):
         """Test that registry loads models from all providers."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -83,6 +85,7 @@ class TestModelRegistryValidation:
 
     def test_validates_registry_yaml(self):
         """Test that registry validates the YAML file on load."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -94,6 +97,7 @@ class TestModelRegistryValidation:
 
     def test_validation_counts_models(self):
         """Test that validation counts models correctly."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -105,6 +109,7 @@ class TestModelRegistryValidation:
 
     def test_validation_counts_providers(self):
         """Test that validation counts providers correctly."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -220,6 +225,7 @@ class TestModelRegistryLookup:
 
     def test_get_model_by_id(self):
         """Test getting a model by its ID."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -230,6 +236,7 @@ class TestModelRegistryLookup:
 
     def test_get_model_returns_none_for_unknown(self):
         """Test that get_model returns None for unknown model ID."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -239,6 +246,7 @@ class TestModelRegistryLookup:
 
     def test_get_models_by_provider(self):
         """Test getting all models for a provider."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -251,6 +259,7 @@ class TestModelRegistryLookup:
 
     def test_get_all_models(self):
         """Test getting all registered models."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -265,6 +274,7 @@ class TestModelCapabilitiesFromYAML:
 
     def test_model_has_required_attributes(self):
         """Test that loaded models have all required attributes."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -279,6 +289,7 @@ class TestModelCapabilitiesFromYAML:
 
     def test_model_capabilities_are_booleans(self):
         """Test that model capabilities are boolean values."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )
@@ -297,6 +308,7 @@ class TestRegistryModelCount:
 
     def test_registry_has_expected_model_count(self):
         """Test that registry has a reasonable number of models."""
+
         registry = ModelRegistry(
             registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
         )

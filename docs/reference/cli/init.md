@@ -195,8 +195,8 @@ After creating a project, the command displays recommended next steps:
 ```
 Next steps:
   cd my_project
-  python -m venv venv
-  source venv/bin/activate
+  python -m venv .venv
+  source .venv/bin/activate
   pip install lattice-lock
   lattice-lock validate
 ```
@@ -205,4 +205,4 @@ Next steps:
 
 - [CLI Overview](index.md)
 - [validate](validate.md) - Validate the created project
-- [Configuration Reference](../configuration.md) - Customize lattice.yaml
+- [Configuration Reference](docs/reference/configuration.md) - Customize lattice.yaml

@@ -1,0 +1,163 @@
+# Lattice Lock Code Policy Configuration
+# This file defines machine-readable code policies that Sheriff and agents use
+# to understand and enforce code constraints.
+#
+# Version: 1.0
+# Last Updated: 2024-12-14
+
+version: "1.0"
+
+# Canonical module paths - use these for imports
+canonical_modules:
+  types: "lattice_lock.types"
+  orchestrator: "lattice_lock_orchestrator.core"
+  api_clients: "lattice_lock_orchestrator.api_clients"
+  registry: "lattice_lock_orchestrator.registry"
+  scorer: "lattice_lock_orchestrator.scorer"
+  validator_schema: "lattice_lock_validator.schema"
+  validator_agents: "lattice_lock_validator.agents"
+  validator_env: "lattice_lock_validator.env"
+  validator_structure: "lattice_lock_validator.structure"
+  sheriff: "lattice_lock.sheriff"
+  compile: "lattice_lock.compile"
+
+# Modules that should NOT be imported directly
+# Use approved alternatives instead
+forbidden_imports:
+  - module: requests
+    reason: "Use lattice_lock_orchestrator.api_clients instead"
+    alternative: "from lattice_lock_orchestrator.api_clients import get_api_client"
+
+  - module: psycopg2
+    reason: "Use SQLModel for database access"
+    alternative: "from sqlmodel import SQLModel"
+
+  - module: sqlite3
+    reason: "Use SQLModel for database access"
+    alternative: "from sqlmodel import SQLModel"
+
+  - module: urllib
+    reason: "Use aiohttp or api_clients for HTTP requests"
+    alternative: "import aiohttp"
+
+# Allowed import patterns - these are the only valid ways to import
+allowed_import_patterns:
+  - "from lattice_lock import *"
+  - "from lattice_lock_orchestrator import *"
+  - "from lattice_lock_validator import *"
+  - "from lattice_lock_cli import *"
+
+# Legacy import patterns that should be migrated
+deprecated_import_patterns:
+  - pattern: "from src."
+    replacement: "from "
+    reason: "Legacy src. prefix no longer needed with proper package installation"
+
+  - pattern: "from model_orchestrator"
+    replacement: "from lattice_lock_orchestrator"
+    reason: "Module renamed to lattice_lock_orchestrator"
+
+# Path hygiene rules - these patterns should not appear in code
+path_hygiene:
+  forbidden_patterns:
+    - pattern: 'Path.home() / "Obsidian"'
+      reason: "Hardcoded user-specific path"
+
+    - pattern: 'Path.home() / "Downloads"'
+      reason: "Hardcoded user-specific path"
+
+    - pattern: 'Path.home() / "Desktop"'
+      reason: "Hardcoded user-specific path"
+
+    - pattern: '"/Users/"'
+      reason: "Hardcoded macOS user path"
+
+    - pattern: '"/home/"'
+      reason: "Hardcoded Linux user path"
+
+    - pattern: 'os.path.expanduser("~/'
+      reason: "Use configuration or environment variables for user paths"
+
+  allowed_exceptions:
+    - "# lattice:ignore"  # Inline comment to suppress this check
+
+# Code size limits
+size_limits:
+  max_function_lines: 100
+  warn_function_lines: 50
+  max_file_lines: 500
+  warn_file_lines: 300
+  max_class_methods: 20
+  warn_class_methods: 15
+
+# Type hint requirements
+type_hints:
+  require_return_types: true
+  require_parameter_types: false  # Recommended but not required
+  exclude_patterns:
+    - "test_*"  # Test functions don't need type hints
+    - "_*"      # Private functions have relaxed requirements
+
+# Documentation requirements
+documentation:
+  require_module_docstrings: true
+  require_class_docstrings: true
+  require_public_function_docstrings: true
+  exclude_patterns:
+    - "test_*"
+    - "__*__"  # Dunder methods
+
+# Naming conventions
+naming_conventions:
+  files:
+    pattern: "^[a-z][a-z0-9_]*\\.py$"
+    description: "snake_case with .py extension"
+
+  classes:
+    pattern: "^[A-Z][a-zA-Z0-9]*$"
+    description: "PascalCase"
+
+  functions:
+    pattern: "^[a-z_][a-z0-9_]*$"
+    description: "snake_case"
+
+  constants:
+    pattern: "^[A-Z][A-Z0-9_]*$"
+    description: "UPPER_SNAKE_CASE"
+
+  private:
+    pattern: "^_[a-z][a-z0-9_]*$"
+    description: "Leading underscore with snake_case"
+
+# Exception handling rules
+exception_handling:
+  forbid_bare_except: true
+  forbid_generic_exception: true
+  allowed_generic_handlers:
+    - "Exception"  # Only when logged with context
+  require_logging: true
+
+# Testing requirements
+testing:
+  min_coverage: 80
+  require_unit_tests: true
+  require_integration_tests: false
+  test_file_pattern: "test_*.py"
+  fixture_file: "conftest.py"
+
+# CI/CD integration
+ci_integration:
+  required_checks:
+    - sheriff
+    - pytest
+    - black
+    - ruff
+    - isort
+
+  optional_checks:
+    - pylint
+    - mypy
+    - bandit
+
+  fail_on_warning: false
+  fail_on_error: true

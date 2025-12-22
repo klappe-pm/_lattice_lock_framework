@@ -73,7 +73,7 @@ orchestrator:
 
 **Cause**: N+1 query problem in cross-entity validation.
 
-**Fix**: Use batch loading or caching (see [Advanced Validation Guide](./advanced_validation.md)).
+**Fix**: Use batch loading or caching (see [Advanced Validation Guide](advanced_validation.md)).
 
 ### High Memory Usage
 

@@ -9,6 +9,7 @@ def test_main_success(tmp_path):
     (tmp_path / "docs" / "agent_definitions").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
+    (tmp_path / "docs").mkdir()
     (tmp_path / ".gitignore").touch()
     (tmp_path / "README.md").touch()
 

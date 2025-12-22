@@ -72,11 +72,9 @@ class PromptArchitectAgent:
     and manages the prompt generation workflow.
     """
 
-    DEFAULT_DEFINITION_PATH = (
-        "docs/agent_definitions/prompt_architect_agent/prompt_architect_agent.yaml"
-    )
+    DEFAULT_DEFINITION_PATH = "docs/agents/agent_definitions/prompt_architect_agent/prompt_architect_agent.yaml"
     DEFAULT_TOOL_PROFILES_PATH = (
-        "docs/agent_definitions/prompt_architect_agent/subagents/tool_matcher.yaml"
+        "docs/agents/agent_definitions/prompt_architect_agent/subagents/tool_matcher.yaml"
     )
 
     def __init__(
@@ -95,7 +93,7 @@ class PromptArchitectAgent:
             # Auto-detect repo root
             current = Path(__file__).resolve()
             for parent in current.parents:
-                if (parent / "docs" / "agent_definitions").exists():
+                if (parent / "docs" / "agents" / "agent_definitions").exists():
                     repo_root = parent
                     break
             if repo_root is None:
@@ -185,7 +183,7 @@ class PromptArchitectAgent:
         if self._prompt_generator is None:
             config_path = str(
                 self.repo_root
-                / "docs/agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"
+                / "docs/agents/agent_definitions/prompt_architect_agent/subagents/prompt_generator.yaml"
             )
             from lattice_lock_agents.prompt_architect.subagents.prompt_generator import (
                 PromptGenerator,

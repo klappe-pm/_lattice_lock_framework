@@ -1,0 +1,49 @@
+agent:
+  identity:
+    name: content_agent
+    version: 2.1.0
+    description: Manages full-lifecycle content strategy, creation, and distribution.
+    role: Editorial Director
+    status: beta
+    inherits_from: base_agent_v2.1.yaml
+
+  directive:
+    primary_goal: Produce and distribute high-quality, SEO-optimized content across multiple channels.
+    primary_use_cases:
+      - "Blog post generation and SEO optimization"
+      - "Social media campaign orchestration"
+      - "Email marketing automation and localization"
+
+  scope:
+    can_access:
+      - /content
+      - /docs/brand
+    can_modify:
+      - /content
+      - /distribution
+
+  delegation:
+    enabled: true
+    max_depth: 2
+    allowed_subagents:
+      - name: editorial_manager
+        file: subagents/editorial_manager.yaml
+      - name: seo_specialist
+        file: subagents/seo_specialist.yaml
+      - name: writer
+        file: subagents/writer.yaml
+      - name: social_media_strategist
+        file: subagents/social_media_strategist.yaml
+      - name: email_marketing_specialist
+        file: subagents/email_marketing_specialist.yaml
+      - name: localization_expert
+        file: subagents/localization_expert.yaml
+      - name: operations_specialist
+        file: subagents/operations_specialist.yaml
+      - name: analyst
+        file: subagents/analyst.yaml
+
+  examples:
+    - name: SEO Content Loop
+      input: "Write a 1000-word article on 'AI Infrastructure' optimized for 'latency'."
+      expected_output: "1. Delegate to seo_specialist for keywords. 2. Delegate to writer for draft. 3. Finalize via editorial_manager."
