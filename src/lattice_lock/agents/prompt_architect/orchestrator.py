@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from lattice_lock.agents.prompt_architect.models import (
     EpicSpec,
     FileOwnership,
@@ -50,7 +52,7 @@ DEFAULT_TOOL_CAPABILITIES = [
             FileOwnership(
                 tool=ToolType.DEVIN,
                 paths=[],
-                patterns=["src/lattice_lock/agents/*", "pilot_projects/*"],
+                patterns=[],  # Configured via agent yaml
                 description="Agent implementations and pilot projects",
             ),
         ],
@@ -492,6 +494,7 @@ class PromptArchitectOrchestrator:
         roadmap_dir: str = "docs",
         output_dir: str = "project_prompts",
         state_file: str = "project_prompts/project_prompts_state.json",
+        config_path: str | None = None,
     ) -> None:
         self.spec_analyzer = SpecificationAnalyzer(spec_path)
         self.roadmap_dir = Path(roadmap_dir)
@@ -499,6 +502,56 @@ class PromptArchitectOrchestrator:
         self.prompt_generator = PromptGenerator(output_dir)
         self.state_file = Path(state_file)
         self._state: dict[str, Any] = {}
+        
+        if config_path:
+            self._load_config(config_path)
+
+    def _load_config(self, config_path: str) -> None:
+        """Load configuration from a YAML file."""
+        path = Path(config_path)
+        if not path.exists():
+            logger.warning(f"Config file not found: {path}")
+            return
+
+        try:
+            with path.open() as f:
+                config = yaml.safe_load(f)
+            
+            # Update tool capabilities if present
+            if "tool_capabilities" in config:
+                self._update_capabilities(config["tool_capabilities"])
+        except Exception as e:
+            logger.error(f"Failed to load config from {path}: {e}")
+
+    def _update_capabilities(self, capabilities_config: list[dict[str, Any]]) -> None:
+        """Update tool capabilities from configuration."""
+        # This is a simplified implementation. In a real scenario, you'd likely
+        # merge with existing defaults or fully replace them.
+        # For this fix, we specifically look for file_ownership updates.
+        
+        for cap_config in capabilities_config:
+            tool_name = cap_config.get("tool")
+            try:
+                tool_type = ToolType(tool_name)
+            except ValueError:
+                continue
+
+            # Find matching capability
+            for capability in self.tool_matcher.capabilities:
+                if capability.tool == tool_type:
+                    # Update file ownerships
+                    if "file_ownership" in cap_config:
+                        new_ownerships = []
+                        for owner_config in cap_config["file_ownership"]:
+                            new_ownerships.append(FileOwnership(
+                                tool=tool_type,
+                                paths=owner_config.get("paths", []),
+                                patterns=owner_config.get("patterns", []),
+                                description=owner_config.get("description", "")
+                            ))
+                        # Extend existing ownerships (or replace?) 
+                        # Replacing is safer for overrides
+                        capability.file_ownership = new_ownerships
 
     def load_state(self) -> None:
         """Load the current state from disk."""

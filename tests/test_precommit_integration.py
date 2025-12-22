@@ -45,7 +45,7 @@ def test_cli_entry_point_naming_only(tmp_path):
 
 def test_cli_entry_point_full_check(tmp_path):
     # Create valid structure
-    (tmp_path / "docs" / "agent_definitions").mkdir(parents=True)
+    (tmp_path / "docs" / "agents" / "agent_definitions").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
     (tmp_path / ".gitignore").touch()

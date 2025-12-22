@@ -64,7 +64,10 @@ class IntegrationConfig:
     track_metrics: bool = True
     max_concurrent_prompts: int = 5
     retry_failed_prompts: bool = True
+    max_concurrent_prompts: int = 5
+    retry_failed_prompts: bool = True
     max_retries: int = 3
+    config_path: str | None = None
 
 
 class PromptArchitectIntegration:
@@ -84,8 +87,10 @@ class PromptArchitectIntegration:
         config: IntegrationConfig | None = None,
         state_file: str = "project_prompts/integration_state.json",
     ) -> None:
-        self.orchestrator = orchestrator or PromptArchitectOrchestrator()
         self.config = config or IntegrationConfig()
+        self.orchestrator = orchestrator or PromptArchitectOrchestrator(
+            config_path=self.config.config_path
+        )
         self.state_file = Path(state_file)
         self._state: dict[str, Any] = {}
         self._callbacks: dict[str, list[Callable]] = {

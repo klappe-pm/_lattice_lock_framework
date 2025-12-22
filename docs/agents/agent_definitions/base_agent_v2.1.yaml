@@ -1,0 +1,203 @@
+agent:
+  identity:
+    name: base_agent
+    version: 2.1.0
+    description: Base template for V2.1 agents. Inherit and override specific sections.
+    role: Base Agent
+    tags:
+      - base
+      - v2.1
+  configuration:
+    language: en-US
+    timezone: UTC
+    log_level: INFO
+    max_steps: 50
+    timeout_seconds: 300
+  directive:
+    primary_goal: "[Start with a verb: Manage, Analyze, Execute...]"
+    primary_use_cases:
+      - "[Use Case 1]"
+      - "[Use Case 2]"
+    secondary_goals: []
+    constraints:
+      - Do not hallucinate information
+      - Respect user privacy
+      - Adhere to project coding standards
+    should_not_handle:
+      - "[Out of Scope Item 1]"
+  responsibilities: []
+  scope:
+    can_access:
+      - /docs
+    can_modify: []
+    cannot_access:
+      - /secrets
+      - /production-keys
+    cannot_modify:
+      - /system-config
+    escalation_triggers:
+      - If confidence < 0.7
+      - If cost > $1.00
+      - If user intent is unclear
+  context:
+    required_context: []
+    memory_persistence:
+      short_term: Session only
+      long_term:
+        storage: agent_memory/agents/agent_{agent_name}_memory.md
+        scope: Project-wide access for context retrieval
+        retention: Until agent is deactivated
+      conflicts:
+        handling: Last-write-wins with timestamp logging
+        recovery: Revert to version control if corruption detected
+    knowledge_sources:
+      - path: /docs
+        description: Project documentation
+      - path: /code
+        description: Source code
+  planning:
+    enabled: true
+    default_strategy: linear
+    phases:
+      - name: intent_analysis
+        required: true
+      - name: information_gathering
+        required: true
+      - name: strategy_formulation
+        required: true
+      - name: plan_generation
+        required: true
+      - name: validation
+        required: true
+      - name: execution
+        required: true
+    constraints:
+      max_depth: 3
+      max_steps_per_phase: 10
+  estimation:
+    enabled: true
+    currency: USD
+    complexity_weights:
+      code_modification: 1.5
+      new_file_creation: 1.2
+      read_only_analysis: 0.8
+    cost_limits:
+      warning_threshold: 0.1
+      hard_limit: 1.0
+      approval_required_above: 0.5
+  model_selection:
+    default_provider: anthropic
+    default_model: claude-3.5-sonnet
+    strategies:
+      code_generation:
+        primary: codellama:34b
+        fallback: claude-3.5-sonnet
+        selection_criteria: accuracy > speed
+      reasoning:
+        primary: deepseek-r1:70b
+        fallback: claude-3.5-sonnet
+        selection_criteria: depth > speed
+      quick_response:
+        primary: llama3.1:8b
+        fallback: gpt-4o-mini
+        selection_criteria: speed > accuracy
+    overrides:
+      force_local_if_offline: true
+      force_cloud_if_complex: false
+  delegation:
+    enabled: true
+    max_depth: 2
+    allowed_subagents: []
+    delegation_triggers:
+      - condition: Task requires specialization
+        target: appropriate_subagent
+  workflow:
+    init:
+      - Load configuration
+      - Check dependencies
+      - Verify access to resources
+    execution_loop:
+      - Receive task
+      - Plan execution
+      - Execute steps
+      - Validate results
+      - Report status
+    cleanup:
+      - Close file handles
+      - Clear temporary memory
+      - Log summary
+  output:
+    default_format: markdown
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+            - failure
+            - partial
+        result:
+          type: object
+        metrics:
+          type: object
+          properties:
+            cost:
+              type: number
+            time:
+              type: number
+    templates:
+      success: |
+        Task completed successfully.
+        Result: {{result}}
+        Cost: ${{metrics.cost}}
+      failure: |
+        Task failed.
+        Error: {{error.message}}
+        Recovery: {{error.recovery_suggestion}}
+  error_handling:
+    strategies:
+      - error: ContextLimitExceeded
+        action: summarize_history
+        retry: true
+      - error: ApiRateLimit
+        action: exponential_backoff
+        retry: true
+      - error: ToolFailure
+        action: try_alternative_tool
+        retry: true
+    max_retries: 3
+    fallback_mode: graceful_degradation
+  interaction:
+    user:
+      tone: professional
+      verbosity: concise
+      confirmation_required:
+        - delete_file
+        - deploy_code
+    other_agents:
+      protocol: json_rpc
+      timeout: 30s
+  metrics:
+    - name: Task Success Rate
+      target: "> 95%"
+    - name: Average Cost per Task
+      target: < $0.50
+    - name: Execution Time
+      target: < 60s
+  guardrails:
+    - Never commit secrets to git
+    - Never delete files without confirmation
+    - Never execute arbitrary code outside sandbox
+    - "Max cost per session: $5.00"
+  examples: []
+  tests: []
+  metadata:
+    author: System
+    license: MIT
+  versioning:
+    current: 2.1.0
+    changelog:
+      - version: 2.1.0
+        date: "2025-12-20"
+        changes: Initial base template creation

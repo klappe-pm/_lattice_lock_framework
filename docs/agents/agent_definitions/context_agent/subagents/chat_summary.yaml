@@ -1,0 +1,12 @@
+agent:
+  identity:
+    name: chat_summary
+    version: 2.1.0
+    description: Distills long conversation histories into concise, structured summaries to manage context window limits.
+    role: Session Summarizer
+    status: beta
+    inherits_from: memory_subagent_v2.1.yaml
+
+  directive:
+    primary_goal: Preserve critical intent and decisions while radically reducing token count.
+Sync: true

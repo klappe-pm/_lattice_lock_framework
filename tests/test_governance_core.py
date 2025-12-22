@@ -11,7 +11,7 @@ from lattice_lock.core.compiler import compile_lattice
 def test_compiler_pipeline():
     """Test the full compilation pipeline with the example file."""
     base_dir = Path(os.getcwd())
-    source_path = base_dir / "examples" / "lattice.yaml"
+    source_path = base_dir / "docs" / "examples" / "lattice.yaml"
     output_dir = base_dir / "src" / "generated"
     test_dir = base_dir / "tests" / "gauntlet"
 
