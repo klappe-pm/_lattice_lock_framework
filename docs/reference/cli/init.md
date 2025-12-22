@@ -203,6 +203,6 @@ Next steps:
 
 ## See Also
 
-- [CLI Overview](index.md)
+- [CLI Overview](docs/reference/cli/index.md)
 - [validate](validate.md) - Validate the created project
 - [Configuration Reference](docs/reference/configuration.md) - Customize lattice.yaml

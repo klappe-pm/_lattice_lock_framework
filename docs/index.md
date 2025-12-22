@@ -61,13 +61,13 @@ API and CLI documentation:
 
 #### API Reference
 
-- [API Overview](docs/reference/api/index.md) - Programmatic API overview
-- [Compiler API](compiler.md) - Lattice compiler
-- [Validator API](validator.md) - Schema validation
-- [Sheriff API](docs/reference/api/sheriff.md) - Static analysis
-- [Gauntlet API](docs/reference/api/gauntlet.md) - Test generation
-- [Admin API](docs/reference/api/admin.md) - Administration
-- [Orchestrator API](docs/reference/api/orchestrator.md) - Model orchestration
+- [API Overview](api_index.md) - Programmatic API overview
+- [Compiler API](api_compiler.md) - Lattice compiler
+- [Validator API](api_validator.md) - Schema validation
+- [Sheriff API](api_sheriff.md) - Static analysis
+- [Gauntlet API](api_gauntlet.md) - Test generation
+- [Admin API](api_admin.md) - Administration
+- [Orchestrator API](api_orchestrator.md) - Model orchestration
 
 ### Models
 
@@ -94,7 +94,7 @@ Agent definitions and workflows:
 
 Authoritative specifications:
 
-- [Framework Specifications](framework_specifications.md) - Complete framework spec
+- [Framework Specifications](lattice_lock_framework_specifications.md) - Complete framework spec
 - [Versioning Strategy](versioning_strategy.md) - Version management
 - [Repository Structure](repository_structure.md) - Project structure standards
 

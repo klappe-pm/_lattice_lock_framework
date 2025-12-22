@@ -14,12 +14,12 @@ Lattice Lock is designed as a modular framework. Each component can be used inde
 
 ## Module Hierarchy
 
-- [`lattice_lock.validator`](validator.md): Core validation engine.
-- [`lattice_lock.compiler`](compiler.md): Polyglot schema compiler.
-- [`lattice_lock.sheriff`](docs/reference/api/sheriff.md): AST-based static analysis.
-- [`lattice_lock.gauntlet`](docs/reference/api/gauntlet.md): Semantic test generation.
-- [`lattice_lock.orchestrator`](docs/reference/api/orchestrator.md): LLM orchestration and routing.
-- [`lattice_lock.admin`](docs/reference/api/admin.md): Administrative and dashboard APIs.
+- [`lattice_lock.validator`](api_validator.md): Core validation engine.
+- [`lattice_lock.compiler`](api_compiler.md): Polyglot schema compiler.
+- [`lattice_lock.sheriff`](api_sheriff.md): AST-based static analysis.
+- [`lattice_lock.gauntlet`](api_gauntlet.md): Semantic test generation.
+- [`lattice_lock.orchestrator`](api_orchestrator.md): LLM orchestration and routing.
+- [`lattice_lock.admin`](api_admin.md): Administrative and dashboard APIs.
 
 ## Import Patterns
 

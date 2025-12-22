@@ -80,7 +80,7 @@ lattice-lock-framework/
 
 ## Documentation
 
-- [Lattice-Lock Specification](docs/specifications/lattice_lock_framework_specifications.md) - Authoritative reference
+- [Lattice-Lock Specification](lattice_lock_framework_specifications.md) - Authoritative reference
 - [Agent Specification](docs/agents/agent_definitions/agents_glossary/agent_instructions_file_format.md) - Agent definition format
 
 

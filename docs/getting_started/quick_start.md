@@ -54,4 +54,4 @@ You should see the agent's response in your terminal.
 
 - Explore the [Core Concepts](../concepts/overview.md)
 - Learn about [Advanced Configuration](docs/getting_started/configuration.md)
-- Check out the [API Reference](docs/reference/api/index.md)
+- Check out the [API Reference](api_index.md)
