@@ -5,7 +5,7 @@ from pathlib import Path
 # Add src to path
 sys.path.append(os.path.abspath("src"))
 
-from lattice_lock.core.compiler import compile_lattice
+from lattice_lock.compile import compile_lattice
 
 
 def test_compiler_pipeline():

@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from lattice_lock_validator.structure import validate_file_naming, validate_repository_structure
 
 
@@ -30,9 +31,7 @@ def test_missing_required_directory(temp_repo):
     shutil.rmtree(os.path.join(temp_repo, "docs"))
     result = validate_repository_structure(temp_repo)
     assert not result.valid
-    assert any(
-        "Missing required root directory: docs/" in e.message for e in result.errors
-    )
+    assert any("Missing required root directory: docs/" in e.message for e in result.errors)
 
 
 def test_snake_case_violation(temp_repo):

@@ -1,4 +1,5 @@
 import pytest
+
 from lattice_lock_cli.utils.console import LatticeConsole
 
 

@@ -44,14 +44,13 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     for root, dirs, files in os.walk(repo_path):
         # Skip .git and other hidden directories if necessary, but prompt says "Required root files: .gitignore"
         # so we shouldn't skip everything starting with dot, but definitely .git
-        if ".git" in dirs:
-            dirs.remove(".git")
-        if "__pycache__" in dirs:
-            dirs.remove("__pycache__")
-        if "venv" in dirs:
-            dirs.remove("venv")
-        if ".construction" in dirs:
-            dirs.remove(".construction")
+        # Skip hidden directories and those starting with underscore (like _archive)
+        dirs[:] = [d for d in dirs if not (d.startswith(".") and d not in [".github"]) and not d.startswith("_") and not d.endswith(".egg-info")]
+        
+        # Also remove existing explicit skips for safety
+        for skip in ["__pycache__", "venv", "build", "dist"]:
+            if skip in dirs:
+                dirs.remove(skip)
 
         for filename in files:
             if filename == ".DS_Store":
@@ -148,14 +147,25 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
         # Prompt: "Prohibited patterns: ... temp files (*.tmp, *.bak, .DS_Store)"
         pass
     else:
-        # Check stem for snake_case: lowercase, numbers, underscores.
+        # Check all segments (stem parts) for snake_case: lowercase, numbers, underscores.
         # Exception: README.md, LICENSE.md (PascalCase/UPPERCASE)
-        if filename in ["README.md", "LICENSE.md", "Dockerfile", "Makefile"]:
+        if filename in ["README.md", "LICENSE.md", "Dockerfile", "Makefile", "ROADMAP.md", "requirements-dev.lock"]:
+            pass
+        elif ".github" in path.parts:
+            # Allow hyphens in GitHub workflows/actions
             pass
         else:
-            if not re.match(r"^[a-z0-9_]+$", stem):
-                # Check if it's a known exception or we should flag it
-                result.add_error(f"File '{filename}' does not follow snake_case naming convention")
+            # For files like cloudbuild.yaml.j2, we want to check 'cloudbuild' and 'yaml'
+            segments = filename.split(".")
+            # The last segment is generally the extension, but we should check all but the last
+            # if there are multiple, or just the first if there's only one.
+            # Actually, even the middle ones should be snake_case.
+            parts_to_check = segments[:-1] if len(segments) > 1 else segments
+            
+            for part in parts_to_check:
+                if not re.match(r"^[a-z0-9_]+$", part):
+                    result.add_error(f"File '{filename}' does not follow snake_case naming convention")
+                    break
 
     # Agent definitions pattern
     # {category}_{name}_definition.yaml

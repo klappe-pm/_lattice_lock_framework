@@ -13,13 +13,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Dict, Any
 
 # Ensure src is in path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
+
 
 class TestTrackerIntegration(unittest.TestCase):
     def setUp(self):
@@ -245,6 +245,7 @@ class TestTrackerIntegration(unittest.TestCase):
         self.assertEqual(len(pending), 2)
 
         # Mark one as done
+
 
 if __name__ == "__main__":
     unittest.main()

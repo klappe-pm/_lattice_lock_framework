@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, Template
+
 from lattice_lock.utils.jinja import get_secure_environment
 
 # Get the templates directory path

@@ -1,6 +1,7 @@
 import logging
 
 import click
+
 from lattice_lock_cli.utils.console import get_console
 
 logger = logging.getLogger(__name__)

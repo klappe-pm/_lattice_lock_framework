@@ -107,8 +107,7 @@ class ProjectAgentClient:
 
         self.repo_root = repo_root
         self.agent_definitions_path = Path(
-            agent_definitions_path
-            or repo_root / "docs" / "agent_definitions"
+            agent_definitions_path or repo_root / "docs" / "agent_definitions"
         )
         # Agent memory doesn't exist yet, but if it did, it would be in developer_documentation/agent_memory?
         # The prompt only said move existing folders. But let's assume standard structure.
@@ -116,9 +115,7 @@ class ProjectAgentClient:
         # If it were to exist, it should probably be under developer_documentation too given the pattern.
         # But safest is to point where it's expected.
         # Let's updating to developer_documentation/agent_memory for consistency with the request.
-        self.agent_memory_path = Path(
-            agent_memory_path or repo_root / "docs" / "agent_memory"
-        )
+        self.agent_memory_path = Path(agent_memory_path or repo_root / "docs" / "agent_memory")
 
         # Load Project Agent definition
         self.project_agent_def = self._load_project_agent_definition()
@@ -202,9 +199,9 @@ class ProjectAgentClient:
         if not scope_data.get("name"):
             scope_data["name"] = "Lattice Lock Framework"
         if not scope_data.get("description"):
-            scope_data[
-                "description"
-            ] = "Governance-first framework for AI-assisted software development"
+            scope_data["description"] = (
+                "Governance-first framework for AI-assisted software development"
+            )
 
         return scope_data
 

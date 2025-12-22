@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+
 from lattice_lock_validator.schema import ValidationResult, validate_lattice_schema
 
 

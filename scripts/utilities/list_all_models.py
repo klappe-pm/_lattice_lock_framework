@@ -8,7 +8,7 @@ import os
 
 # Import the orchestrator
 from lattice_lock import ModelOrchestrator
-from lattice_lock.types import TaskType, ModelProvider
+from lattice_lock.types import ModelProvider, TaskType
 
 
 def check_api_keys():
@@ -182,7 +182,9 @@ def main():
     print("-" * 40)
 
     total_models = len(orchestrator.registry.models)
-    local_models = len([m for m in orchestrator.registry.models.values() if m.provider.value == "local"])
+    local_models = len(
+        [m for m in orchestrator.registry.models.values() if m.provider.value == "local"]
+    )
     cloud_models = total_models - local_models
 
     available_local = len(

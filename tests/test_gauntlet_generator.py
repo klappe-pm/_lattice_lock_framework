@@ -1,4 +1,5 @@
 import pytest
+
 from lattice_lock_gauntlet.generator import GauntletGenerator
 from lattice_lock_gauntlet.parser import LatticeParser
 

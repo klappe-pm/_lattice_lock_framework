@@ -2,6 +2,7 @@ from pathlib import Path
 
 import click
 import pytest
+
 from lattice_lock_gauntlet.generator import GauntletGenerator
 
 

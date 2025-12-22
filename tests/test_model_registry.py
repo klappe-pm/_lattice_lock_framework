@@ -47,13 +47,17 @@ class TestModelRegistryLoading:
 
     def test_loads_from_yaml(self):
         """Test that registry loads models from YAML file."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
-        assert len(registry.models) > 0, "Should load models from YAML"
+        assert len(registry.models) >= 55, "Should load models from YAML"
 
     def test_loads_all_providers(self):
         """Test that registry loads models from all providers."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         providers_with_models = set()
         for model in registry.get_all_models():
@@ -79,7 +83,9 @@ class TestModelRegistryValidation:
 
     def test_validates_registry_yaml(self):
         """Test that registry validates the YAML file on load."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         assert registry.validation_result is not None, "Should have validation result"
         assert (
@@ -88,7 +94,9 @@ class TestModelRegistryValidation:
 
     def test_validation_counts_models(self):
         """Test that validation counts models correctly."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         assert registry.validation_result.model_count > 0, "Should count models"
         assert registry.validation_result.model_count == len(
@@ -97,7 +105,9 @@ class TestModelRegistryValidation:
 
     def test_validation_counts_providers(self):
         """Test that validation counts providers correctly."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         assert registry.validation_result.provider_count > 0, "Should count providers"
 
@@ -210,7 +220,9 @@ class TestModelRegistryLookup:
 
     def test_get_model_by_id(self):
         """Test getting a model by its ID."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         model = registry.get_model("gpt-4o")
         assert model is not None, "Should find gpt-4o model"
@@ -218,14 +230,18 @@ class TestModelRegistryLookup:
 
     def test_get_model_returns_none_for_unknown(self):
         """Test that get_model returns None for unknown model ID."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         model = registry.get_model("nonexistent-model")
         assert model is None
 
     def test_get_models_by_provider(self):
         """Test getting all models for a provider."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         openai_models = registry.get_models_by_provider(ModelProvider.OPENAI)
         assert len(openai_models) > 0, "Should have OpenAI models"
@@ -235,7 +251,9 @@ class TestModelRegistryLookup:
 
     def test_get_all_models(self):
         """Test getting all registered models."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         all_models = registry.get_all_models()
         assert len(all_models) > 0, "Should have models"
@@ -247,7 +265,9 @@ class TestModelCapabilitiesFromYAML:
 
     def test_model_has_required_attributes(self):
         """Test that loaded models have all required attributes."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         for model_id, model in registry.models.items():
             assert model.name is not None, f"Model {model_id} should have name"
@@ -259,7 +279,9 @@ class TestModelCapabilitiesFromYAML:
 
     def test_model_capabilities_are_booleans(self):
         """Test that model capabilities are boolean values."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         for model_id, model in registry.models.items():
             assert isinstance(
@@ -275,15 +297,19 @@ class TestRegistryModelCount:
 
     def test_registry_has_expected_model_count(self):
         """Test that registry has a reasonable number of models."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         assert (
-            len(registry.models) >= 40
-        ), f"Expected at least 40 models, got {len(registry.models)}"
+            len(registry.models) >= 55
+        ), f"Expected at least 60 models, got {len(registry.models)}"
 
     def test_registry_has_models_from_major_providers(self):
         """Test that registry has models from major providers."""
-        registry = ModelRegistry(registry_path=str(PROJECT_ROOT / "developer_documentation" / "models" / "registry.yaml"))
+        registry = ModelRegistry(
+            registry_path=str((PROJECT_ROOT / "docs" / "models" / "registry.yaml").resolve())
+        )
 
         major_providers = [
             ModelProvider.OPENAI,

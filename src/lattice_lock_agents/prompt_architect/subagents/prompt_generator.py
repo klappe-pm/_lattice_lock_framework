@@ -5,6 +5,8 @@ from typing import Any
 
 import aiofiles
 import yaml
+from pydantic import BaseModel, Field
+
 from lattice_lock.utils.jinja import create_template
 from lattice_lock.utils.safe_path import resolve_under_root
 from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
@@ -18,7 +20,6 @@ from lattice_lock_agents.prompt_architect.validators import (
     ValidationResult,
 )
 from lattice_lock_orchestrator.api_clients import get_api_client
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 

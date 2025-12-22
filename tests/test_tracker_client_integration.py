@@ -2,6 +2,7 @@ import json
 import logging
 
 import pytest
+
 from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
 
 logger = logging.getLogger(__name__)

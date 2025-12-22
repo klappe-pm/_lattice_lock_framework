@@ -14,28 +14,34 @@ def main():
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
     import importlib.util
-    
+
     # Import the orchestrator
     from lattice_lock import ModelOrchestrator
-    from lattice_lock.types import TaskType, TaskRequirements
+    from lattice_lock.types import TaskRequirements, TaskType
 
     print("Testing Local Code Model Integration")
     print("=" * 50)
 
     orchestrator = ModelOrchestrator()
 
-    local_models = [k for k, v in orchestrator.registry.models.items() if v.provider.value == "local"]
+    local_models = [
+        k for k, v in orchestrator.registry.models.items() if v.provider.value == "local"
+    ]
     print(f"\nFound {len(local_models)} local models:")
     for model_id in local_models:
         model = orchestrator.registry.models[model_id]
-        print(f"  - {model_id}: {model.reasoning_score:.2f} reasoning, ${model.input_cost:.2f} cost")
+        print(
+            f"  - {model_id}: {model.reasoning_score:.2f} reasoning, ${model.input_cost:.2f} cost"
+        )
 
     print("\nTesting code generation model selection...")
 
     requirements = TaskRequirements(task_type=TaskType.CODE_GENERATION, max_cost=0.01)
 
     prompt = "Write a Python function to calculate fibonacci sequence"
-    selected_result = orchestrator._select_best_model(orchestrator.analyzer.analyze(prompt, requirements))
+    selected_result = orchestrator._select_best_model(
+        orchestrator.analyzer.analyze(prompt, requirements)
+    )
 
     print("\nSelected model for code generation:")
     if selected_result:

@@ -10,9 +10,10 @@ import time
 from pathlib import Path
 
 import click
+from rich.table import Table
+
 from lattice_lock.compile import CompilationResult, compile_lattice
 from lattice_lock_cli.utils.console import get_console
-from rich.table import Table
 
 console = get_console()
 

@@ -6,7 +6,7 @@ from lattice_lock_validator.structure import main
 
 def test_main_success(tmp_path):
     # Create valid structure
-    (tmp_path / "agent_definitions").mkdir()
+    (tmp_path / "docs" / "agent_definitions").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
     (tmp_path / ".gitignore").touch()

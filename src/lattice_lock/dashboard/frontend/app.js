@@ -1,6 +1,6 @@
-import ProjectCard from './components/project-card.js';
-import MetricsChart from './components/metrics-chart.js';
-import AlertList from './components/alert-list.js';
+import ProjectCard from './components/project_card.js';
+import MetricsChart from './components/metrics_chart.js';
+import AlertList from './components/alert_list.js';
 
 class DashboardApp {
     constructor() {

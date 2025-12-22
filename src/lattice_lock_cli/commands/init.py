@@ -82,7 +82,7 @@ def create_project_structure(
         ("base/readme.md.j2", project_dir / "README.md"),
         ("base/gitignore.j2", project_dir / ".gitignore"),
         (
-            "ci/github_actions/lattice-lock.yml.j2",
+            "ci/github_actions/lattice_lock.yml.j2",
             project_dir / ".github" / "workflows" / "lattice-lock.yml",
         ),
     ]
@@ -111,7 +111,7 @@ def create_project_structure(
                 ("ci/aws/buildspec.yml.j2", project_dir / "ci" / "aws" / "buildspec.yml"),
                 ("ci/aws/pipeline.yml.j2", project_dir / "ci" / "aws" / "pipeline.yml"),
                 (
-                    "ci/aws/codebuild-project.yml.j2",
+                    "ci/aws/codebuild_project.yml.j2",
                     project_dir / "ci" / "aws" / "codebuild-project.yml",
                 ),
             ]
@@ -126,11 +126,11 @@ def create_project_structure(
                     project_dir / "ci" / "gcp" / "cloudbuild.yaml",
                 ),
                 (
-                    "ci/gcp/cloudbuild-pr.yaml.j2",
+                    "ci/gcp/cloudbuild_pr.yaml.j2",
                     project_dir / "ci" / "gcp" / "cloudbuild-pr.yaml",
                 ),
                 (
-                    "ci/gcp/trigger-config.yaml.j2",
+                    "ci/gcp/trigger_config.yaml.j2",
                     project_dir / "ci" / "gcp" / "trigger-config.yaml",
                 ),
             ]
