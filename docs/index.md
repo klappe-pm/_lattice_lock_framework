@@ -103,9 +103,9 @@ Authoritative specifications:
 Design decisions and strategies:
 
 - [Provider Strategy](provider_strategy.md) - AI provider integration
-- [Cost Telemetry Strategy](6.3.3_cost_telemetry_strategy.md) - Cost tracking design
-- [Provider Fallback Strategy](6.1.3_provider_fallback_strategy.md) - Fallback handling
-- [Orchestrator Capabilities](6.1.1_orchestrator_capabilities_contract.md) - Capability contracts
+- [Cost Telemetry Strategy](cost_telemetry_strategy.md) - Cost tracking design
+- [Provider Fallback Strategy](provider_fallback_strategy.md) - Fallback handling
+- [Orchestrator Capabilities](orchestrator_capabilities_contract.md) - Capability contracts
 
 ### Development
 
