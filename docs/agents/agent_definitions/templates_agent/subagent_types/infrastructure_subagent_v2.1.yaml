@@ -1,0 +1,29 @@
+# Infrastructure Subagent Template (v2.1)
+# Inherits from: base_agent_v2.1.yaml
+
+agent:
+  identity:
+    name: infrastructure_subagent
+    version: 2.1.0
+    description: Optimized for cloud orchestration, deployments, and system reliability.
+    role: Site Reliability Engineer
+    tags:
+      - infrastructure
+      - cloud
+      - sre
+
+  scope:
+    can_modify:
+      - /infrastructure
+      - /docker
+
+  model_selection:
+    strategies:
+      reasoning:
+        primary: deepseek-r1:70b
+        fallback: gpt-4o
+
+  guardrails:
+    - Never modify production environment variables without double-confirmation
+    - Always verify connectivity after deployment
+    - Use idempotent scripts for all infrastructure changes

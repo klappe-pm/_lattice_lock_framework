@@ -1,274 +1,49 @@
 agent:
   identity:
     name: content_agent
-    version: 1.0.0
-    description: Develops and manages content strategy, creation, and distribution.
-    role: Content Strategist
-    tags:
-    - content
-    - agent
-    - v2.1
-  configuration:
-    language: en-US
-    timezone: UTC
-    log_level: INFO
-    max_steps: 50
-    timeout_seconds: 300
-directive:
-  primary_goal: Create high-quality, engaging content aligned with brand voice.
-  secondary_goals:
-  - Optimize for SEO
-  - Manage editorial calendar
-  constraints:
-  - Do not hallucinate information
-  - Respect user privacy
-  - Adhere to project coding standards
-responsibilities:
-- name: Content Creation
-  inputs:
-  - Topic
-  - Keywords
-  outputs:
-  - Draft Content
-  criticality: Medium
-  description: Execute Content Creation
-scope:
-  can_access:
-  - /content/drafts
-  - /content/published
-  can_modify:
-  - /content/drafts
-  cannot_access:
-  - /secrets
-  - /production-keys
-  cannot_modify:
-  - /system-config
-  escalation_triggers:
-  - If confidence < 0.7
-  - If cost > $1.00
-  - If user intent is unclear
-context:
-  required_context:
-  - Brand Guidelines
-  - Target Audience Persona
-  memory_persistence:
-    short_term: Session only
-    long_term: Project knowledge base
-  knowledge_sources:
-  - path: /docs
-    description: Project documentation
-  - path: /code
-    description: Source code
-planning:
-  enabled: true
-  default_strategy: linear
-  phases:
-  - name: intent_analysis
-    required: true
-  - name: information_gathering
-    required: true
-  - name: strategy_formulation
-    required: true
-  - name: plan_generation
-    required: true
-  - name: validation
-    required: true
-  - name: execution
-    required: true
-  constraints:
-    max_depth: 3
-    max_steps_per_phase: 10
-estimation:
-  enabled: true
-  currency: USD
-  complexity_weights:
-    code_modification: 1.5
-    new_file_creation: 1.2
-    read_only_analysis: 0.8
-  cost_limits:
-    warning_threshold: 0.1
-    hard_limit: 1.0
-    approval_required_above: 0.5
-model_selection:
-  default_provider: anthropic
-  default_model: claude-3.5-sonnet
-  strategies:
-    code_generation:
-      primary: codellama:34b
-      fallback: claude-3.5-sonnet
-      selection_criteria: accuracy > speed
-    reasoning:
-      primary: deepseek-r1:70b
-      fallback: claude-3.5-sonnet
-      selection_criteria: depth > speed
-    quick_response:
-      primary: llama3.1:8b
-      fallback: gpt-4o-mini
-      selection_criteria: speed > accuracy
-  overrides:
-    force_local_if_offline: true
-    force_cloud_if_complex: false
-delegation:
-  enabled: true
-  max_depth: 2
-  allowed_subagents: &id001
-  - name: analyst
-    description: Sub-agent for analyst
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/analyst.yaml
-  - name: operations_specialist
-    description: Sub-agent for operations-specialist
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/operations_specialist.yaml
-  - name: social_media_strategist
-    description: Sub-agent for social-media-strategist
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/social_media_strategist.yaml
-  - name: seo_specialist
-    description: Sub-agent for seo-specialist
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/seo_specialist.yaml
-  - name: writer
-    description: Sub-agent for writer
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/writer.yaml
-  - name: email_marketing_specialist
-    description: Sub-agent for email-marketing-specialist
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/email_marketing_specialist.yaml
-  - name: editorial_manager
-    description: Sub-agent for editorial-manager
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/editorial_manager.yaml
-  - name: localization_expert
-    description: Sub-agent for localization-expert
-    access_level: full_access
-    communication_channel: direct_call
-    file: subagents/localization_expert.yaml
-  delegation_triggers:
-  - condition: Task requires specialization
-    target: appropriate_subagent
-sub_agents: *id001
-workflow:
-  init:
-  - Load configuration
-  - Check dependencies
-  - Verify access to resources
-  execution_loop:
-  - Receive task
-  - Plan execution
-  - Execute steps
-  - Validate results
-  - Report status
-  cleanup:
-  - Close file handles
-  - Clear temporary memory
-  - Log summary
-output:
-  default_format: markdown
-  schema:
-    type: object
-    properties:
-      status:
-        type: string
-        enum:
-        - success
-        - failure
-        - partial
-      result:
-        type: object
-      metrics:
-        type: object
-        properties:
-          cost:
-            type: number
-          time:
-            type: number
-  templates:
-    success: 'Task completed successfully.
+    version: 2.1.0
+    description: Manages full-lifecycle content strategy, creation, and distribution.
+    role: Editorial Director
+    status: beta
+    inherits_from: base_agent_v2.1.yaml
 
-      Result: {{result}}
+  directive:
+    primary_goal: Produce and distribute high-quality, SEO-optimized content across multiple channels.
+    primary_use_cases:
+      - "Blog post generation and SEO optimization"
+      - "Social media campaign orchestration"
+      - "Email marketing automation and localization"
 
-      Cost: ${{metrics.cost}}'
-    failure: 'Task failed.
+  scope:
+    can_access:
+      - /content
+      - /docs/brand
+    can_modify:
+      - /content
+      - /distribution
 
-      Error: {{error.message}}
+  delegation:
+    enabled: true
+    max_depth: 2
+    allowed_subagents:
+      - name: editorial_manager
+        file: subagents/editorial_manager.yaml
+      - name: seo_specialist
+        file: subagents/seo_specialist.yaml
+      - name: writer
+        file: subagents/writer.yaml
+      - name: social_media_strategist
+        file: subagents/social_media_strategist.yaml
+      - name: email_marketing_specialist
+        file: subagents/email_marketing_specialist.yaml
+      - name: localization_expert
+        file: subagents/localization_expert.yaml
+      - name: operations_specialist
+        file: subagents/operations_specialist.yaml
+      - name: analyst
+        file: subagents/analyst.yaml
 
-      Recovery: {{error.recovery_suggestion}}'
-error_handling:
-  strategies:
-  - error: ContextLimitExceeded
-    action: summarize_history
-    retry: true
-  - error: ApiRateLimit
-    action: exponential_backoff
-    retry: true
-  - error: ToolFailure
-    action: try_alternative_tool
-    retry: true
-  max_retries: 3
-  fallback_mode: graceful_degradation
-interaction:
-  user:
-    tone: professional
-    verbosity: concise
-    confirmation_required:
-    - delete_file
-    - deploy_code
-  other_agents:
-    protocol: json_rpc
-    timeout: 30s
-metrics:
-- name: Task Success Rate
-  target: '> 95%'
-- name: Average Cost per Task
-  target: < $0.50
-- name: Execution Time
-  target: < 60s
-guardrails:
-- Never commit secrets to git
-- Never delete files without confirmation
-- Never execute arbitrary code outside sandbox
-- 'Max cost per session: $5.00'
-examples:
-- name: Standard Usage
-  input: '[Example Input]'
-  expected_output: '[Example Output]'
-- name: Edge Case
-  input: '[Edge Case Input]'
-  expected_output: '[Edge Case Output]'
-tests:
-- name: Basic Functionality
-  command: pytest tests/test_basic.py
-- name: Integration Test
-  command: ./run_integration_tests.sh
-metadata:
-  id: 90c955af-b77e-463f-941e-cb305570ca1d
-  created_at: '2025-11-25T16:35:48.153792'
-  updated_at: '2025-11-25T16:35:48.153798'
-  author: Migration Script
-  license: MIT
-versioning:
-  current: 1.0.0
-  changelog:
-  - version: 1.0.0
-    date: '2025-11-25'
-    changes: Initial release
-
-# MEMORY DIRECTIVE REFERENCE
-#
-# This agent operates under the Universal Memory Directive located at: [agent_memory/universal_memory_directive.md]
-#
-# ## Memory Management Instructions
-#
-# 1. **Find Memory File**: Locate your specific memory file in `agent_memory/agents/`. The filename format is `agent_{agent_name}_memory.md` or `sub_{sub_agent_name}_memory.md`.
-# 2. **Review Memory File**: Read the "Agent Summary", "Agent Next Steps", and "Interactions" sections of your memory file to understand the current context and state.
-# 3. **Plan with Memory**: Include the instructions and context from your memory file in your current planning operations. Ensure your plan aligns with the "Agent Next Steps".
-# 4. **Update Memory File**: At the completion of your task, you MUST update your memory file. Update the "Agent Summary" with your accomplishments, update "Agent Next Steps", and log any interactions.
+  examples:
+    - name: SEO Content Loop
+      input: "Write a 1000-word article on 'AI Infrastructure' optimized for 'latency'."
+      expected_output: "1. Delegate to seo_specialist for keywords. 2. Delegate to writer for draft. 3. Finalize via editorial_manager."

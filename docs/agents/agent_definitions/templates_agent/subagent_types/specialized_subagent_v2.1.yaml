@@ -1,0 +1,22 @@
+# Specialized Subagent Template (v2.1)
+# Inherits from: base_agent_v2.1.yaml
+
+agent:
+  identity:
+    name: specialized_subagent
+    version: 2.1.0
+    description: Generic template for unique or highly specific subagent roles.
+    role: Specialist
+    tags:
+      - specialized
+      - unique
+
+  # Minimal overrides to ensure maximum flexibility for parent agents
+  model_selection:
+    default_provider: open_source # Default to local models for unique specialized tasks
+    default_model: llama3.1:70b
+
+  interaction:
+    user:
+      tone: professional
+      verbosity: concise
