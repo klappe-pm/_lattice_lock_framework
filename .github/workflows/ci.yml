@@ -33,6 +33,9 @@ jobs:
       - name: Governance Check (Validate)
         run: lattice-lock validate
 
+      - name: Lint (Pylint)
+        run: pylint src/lattice_lock --disable=C0114,C0115,C0116 --max-line-length=120 || true
+
   test:
     needs: validate
     runs-on: ubuntu-latest

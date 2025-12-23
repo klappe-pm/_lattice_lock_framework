@@ -25,9 +25,7 @@ astroid==4.0.2
 attrs==25.4.0
     # via aiohttp
 bcrypt==5.0.0
-    # via
-    #   lattice-lock (pyproject.toml)
-    #   passlib
+    # via lattice-lock (pyproject.toml)
 black==25.12.0
     # via lattice-lock (pyproject.toml)
 boto3==1.42.14
@@ -125,15 +123,11 @@ mypy-extensions==1.1.0
     #   mypy
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.0
-    # via lattice-lock (pyproject.toml)
 packaging==25.0
     # via
     #   black
     #   build
     #   pytest
-passlib[bcrypt]==1.7.4
-    # via lattice-lock (pyproject.toml)
 pathspec==0.12.1
     # via
     #   black
