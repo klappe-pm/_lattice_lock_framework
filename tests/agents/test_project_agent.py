@@ -1,29 +1,35 @@
+import yaml
+from pathlib import Path
 import pytest
-from unittest.mock import MagicMock
 
-def test_project_agent_initialization():
-    """Test that project_agent loads with correct configuration."""
-    # Placeholder for actual agent loading logic
-    agent_config = {
-        "name": "project_agent",
-        "role": "Senior Project Manager",
-        "directive": {
-            "primary_goal": "Drive project success"
-        }
-    }
-    assert agent_config["name"] == "project_agent"
-    assert agent_config["role"] == "Senior Project Manager"
-
-def test_project_agent_sprint_planning_scenario():
-    """Test the Sprint Planning use case."""
-    # Mock input
-    input_text = "Plan the next 2-week sprint..."
+def get_agent_definition(agent_name: str) -> dict:
+    """Helper to load agent definition."""
+    repo_root = Path(__file__).parents[2]
+    def_path = repo_root / "docs" / "agents" / "agent_definitions" / agent_name / f"{agent_name}_definition.yaml"
+    if not def_path.exists():
+        pytest.fail(f"Definition not found: {def_path}")
     
-    # Mock expected behavior (using schema)
-    # response = agent.run(input_text)
-    # assert "Sprint Plan" in response.output
-    pass
+    with open(def_path) as f:
+        return yaml.safe_load(f)
 
-def test_project_agent_constraints():
-    """Test that agent respects constraints (e.g. no secrets in git)."""
-    pass
+def test_project_agent_definition_exists():
+    """Test that project_agent definition exists and is valid YAML."""
+    data = get_agent_definition("project_agent")
+    assert data is not None
+    assert "agent" in data
+
+def test_project_agent_identity():
+    """Test project_agent identity configuration."""
+    data = get_agent_definition("project_agent")
+    identity = data["agent"]["identity"]
+    
+    assert identity["name"] == "project_agent"
+    assert "Project" in identity["role"]
+
+def test_project_agent_scope():
+    """Test project_agent scope configuration."""
+    data = get_agent_definition("project_agent")
+    scope = data["agent"]["scope"]
+    
+    assert "can_access" in scope
+    assert "can_modify" in scope

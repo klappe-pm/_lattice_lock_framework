@@ -29,19 +29,6 @@ def auth_secrets():
     }
 
 
-# Legacy test files skip list - imports normalized as of 2025-12-14
-# Only skip files that genuinely can't be run
-LEGACY_TEST_FILES = [
-    "test_tool_matcher.py",  # Requires lattice_lock_agents package which may not exist
-    "test_admin_api.py",  # Missing bcrypt dependency
-]
-
-
-def pytest_ignore_collect(collection_path, config):
-    """Skip legacy test files with broken imports."""
-    if collection_path.name in LEGACY_TEST_FILES:
-        return True
-    return False
 
 
 @pytest.fixture

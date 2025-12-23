@@ -53,7 +53,11 @@ jobs:
           # Use make test to ensure environment consistency (env vars, flags)
           make test
 
-      # Semantic tests run only on limited scope or authorized PRs
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
       # - name: Semantic Tests (Gauntlet)
       #   if: github.event_name == 'push'
       #   run: lattice-lock test
