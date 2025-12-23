@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -8,7 +9,6 @@ from typing import Any
 from lattice_lock.utils.safe_path import resolve_under_root
 
 logger = logging.getLogger("lattice_lock.gauntlet")
-
 
 class GauntletPlugin:
     """

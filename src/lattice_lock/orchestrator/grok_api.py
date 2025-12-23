@@ -19,7 +19,6 @@ import yaml
 from lattice_lock.utils.safe_path import resolve_under_root
 
 logger = logging.getLogger("lattice_lock.orchestrator.grok")
-
 from .exceptions import (
     APIClientError,
     AuthenticationError,
@@ -276,7 +275,7 @@ def main():
             print(f"Generated image URL: {response['data'][0]['url']}")
 
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.error(f"Grok API error: {e}")
         sys.exit(1)
 
 

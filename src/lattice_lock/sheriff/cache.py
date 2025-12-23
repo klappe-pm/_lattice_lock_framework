@@ -8,7 +8,6 @@ from .config import SheriffConfig
 
 logger = logging.getLogger("lattice_lock.sheriff.cache")
 
-
 class SheriffCache:
     def __init__(self, cache_dir: Path = Path(".sheriff_cache"), config_hash: str = ""):
         self.cache_dir = cache_dir

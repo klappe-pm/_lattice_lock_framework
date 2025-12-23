@@ -169,7 +169,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     try:
         state_file = resolve_under_root(args.state_file)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Invalid state file path: {e}")
         return 1
 
     if not state_file.exists():
@@ -201,7 +201,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
     try:
         prompt_dir = resolve_under_root(args.prompt_dir)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Invalid prompt directory path: {e}")
         return 1
 
     if not prompt_dir.exists():
