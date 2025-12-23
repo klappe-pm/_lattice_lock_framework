@@ -66,7 +66,7 @@ lattice-lock --version
 You should see output similar to:
 
 ```text
-Lattice Lock Framework v1.0.0
+Lattice Lock Framework v2.1.0
 ```
 
 To run a system health check:

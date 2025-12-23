@@ -14,15 +14,15 @@ from enum import Enum
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from .types import APIResponse, FunctionCall
 from .exceptions import (
     APIClientError,
+    AuthenticationError,
+    InvalidRequestError,
     ProviderConnectionError,
     RateLimitError,
     ServerError,
-    AuthenticationError,
-    InvalidRequestError,
 )
+from .types import APIResponse, FunctionCall
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +147,9 @@ class BaseAPIClient:
         if self.session:
             await self.session.close()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True)
+    @retry(
+        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True
+    )
     async def _make_request(self, method: str, endpoint: str, headers: dict, payload: dict) -> dict:
         """Make API request with retry logic"""
         if not self.session:
@@ -167,9 +169,9 @@ class BaseAPIClient:
                         try:
                             error_json = json.loads(error_text)
                             error_msg = error_json.get("error", {}).get("message", error_text)
-                        except:
+                        except (json.JSONDecodeError, KeyError, TypeError):
                             error_msg = error_text
-                    except:
+                    except (aiohttp.ClientError, UnicodeDecodeError):
                         error_msg = f"Unknown error (status {response.status})"
 
                     msg = f"API Error {response.status}: {error_msg}"
@@ -476,7 +478,7 @@ class GoogleAPIClient(BaseAPIClient):
                     function_call = FunctionCall(
                         name=part["functionCall"]["name"], arguments=part["functionCall"]["args"]
                     )
-        
+
         # safely handle usage metadata if missing
         usage_meta = data.get("usageMetadata", {})
 

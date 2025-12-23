@@ -40,15 +40,15 @@ lattice-lock validate
 Project 'my-first-agent' is valid!
 ```
 
-## Step 4: Run Your First Agent
+## Step 4: Run Your First Prompt
 
-(Note: This assumes you have an API key set for the default model).
+(Note: This assumes you have an API key set for a supported model provider).
 
 ```bash
-lattice-lock run --agent default --prompt "Hello, world!"
+lattice-lock orchestrator route "Hello, world!"
 ```
 
-You should see the agent's response in your terminal.
+You should see the model's response in your terminal. The orchestrator will automatically select the best available model based on your configured API keys.
 
 ## Next Steps
 

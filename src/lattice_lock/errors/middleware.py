@@ -5,15 +5,14 @@ Provides decorators and utilities for consistent error handling across the frame
 Includes error interception, automatic classification, logging, and recovery actions.
 """
 
+import asyncio
 import functools
+import inspect
 import logging
 import time
-import asyncio
-import inspect
-from collections.abc import Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar, Union
-
 
 from lattice_lock.errors.classification import ErrorContext, classify_error
 
@@ -111,7 +110,7 @@ class RetryConfig:
 
     def get_delay(self, attempt: int) -> float:
         """Calculate delay for a given retry attempt."""
-        import random
+        import secrets
 
         if self.exponential_backoff:
             delay = self.base_delay * (2**attempt)
@@ -121,7 +120,8 @@ class RetryConfig:
         delay = min(delay, self.max_delay)
 
         if self.jitter:
-            delay = delay * (0.5 + random.random())
+            # Use secrets.SystemRandom for cryptographically secure randomness
+            delay = delay * (0.5 + secrets.SystemRandom().random())
 
         return delay
 

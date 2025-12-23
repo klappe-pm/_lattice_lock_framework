@@ -717,6 +717,10 @@ def get_user(username: str) -> User | None:
 def authenticate_user(username: str, password: str) -> User | None:
     """Authenticate a user with username and password.
 
+    This function uses constant-time comparison to prevent timing attacks.
+    The password verification is always performed regardless of whether
+    the user exists to avoid leaking information about valid usernames.
+
     Args:
         username: Username to authenticate
         password: Plain text password
@@ -726,13 +730,15 @@ def authenticate_user(username: str, password: str) -> User | None:
     """
     user = get_user(username)
 
-    if user is None:
-        return None
+    # Always verify password to maintain constant execution time
+    # This prevents timing attacks that could enumerate valid usernames
+    # Use a dummy hash when user doesn't exist
+    dummy_hash = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.VTtYA/ICNVu5xO"
+    hash_to_verify = user.hashed_password if user else dummy_hash
 
-    if user.disabled:
-        return None
+    password_valid = verify_password(password, hash_to_verify)
 
-    if not verify_password(password, user.hashed_password):
+    if user is None or user.disabled or not password_valid:
         return None
 
     return user
