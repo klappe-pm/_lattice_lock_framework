@@ -63,28 +63,28 @@ class ConventionChecker:
     # Tool to file ownership patterns
     TOOL_OWNERSHIP = {
         "devin": [
-            "src/lattice_lock_orchestrator/",
+            "src/lattice_lock/orchestrator/",
             "src/lattice_lock/__init__.py",
-            "src/lattice_lock_agents/",
+            "src/lattice_lock/agents/",
             "pyproject.toml",
         ],
         "gemini": [
-            "src/lattice_lock_validator/",
-            "src/lattice_lock_sheriff/",
+            "src/lattice_lock/validator/",
+            "src/lattice_lock/sheriff/",
         ],
         "codex": [
-            "src/lattice_lock_validator/",
-            "src/lattice_lock_gauntlet/",
-            "src/lattice_lock_dashboard/",
+            "src/lattice_lock/validator/",
+            "src/lattice_lock/gauntlet/",
+            "src/lattice_lock/dashboard/",
             ".pre-commit-config.yaml",
         ],
         "claude_cli": [
-            "src/lattice_lock_cli/",
+            "src/lattice_lock/cli/",
         ],
         "claude_app": [
-            "src/lattice_lock_cli/commands/validate.py",
-            "src/lattice_lock_cli/commands/doctor.py",
-            "src/lattice_lock_admin/",
+            "src/lattice_lock/cli/commands/validate.py",
+            "src/lattice_lock/cli/commands/doctor.py",
+            "src/lattice_lock/admin/",
         ],
         "claude_docs": [
             "docs/",
@@ -286,8 +286,8 @@ class ConventionChecker:
                 if pattern.endswith("/") and pattern not in do_not_touch_content:
                     # Only warn for high-value directories
                     if pattern in [
-                        "src/lattice_lock_cli/",
-                        "src/lattice_lock_validator/",
+                        "src/lattice_lock/cli/",
+                        "src/lattice_lock/validator/",
                         "docs/",
                     ]:
                         result.add_warning(

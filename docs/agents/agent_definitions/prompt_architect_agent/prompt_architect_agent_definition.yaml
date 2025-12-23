@@ -17,7 +17,7 @@ agent:
   scope:
     can_access:
       - /docs/agents
-      - /src/lattice_lock_agents
+      - /src/lattice_lock/agents
     can_modify:
       - /docs/agents/agent_definitions/templates_agent
 
