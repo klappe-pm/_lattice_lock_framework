@@ -17,12 +17,12 @@ class RoadmapParser:
     def _load_definition(self) -> dict:
         # Assuming the agent definition is at a fixed relative path or we can find it
         # The prompt says: agent_definitions/prompt_architect_agent/subagents/roadmap_parser.yaml
-        # We are in src/lattice_lock_agents/prompt_architect/subagents/roadmap_parser.py
+        # We are in src/lattice_lock/agents/prompt_architect/subagents/roadmap_parser.py
         # So we need to go up to root.
 
         # Try to find the root
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Go up 4 levels to root: subagents -> prompt_architect -> lattice_lock_agents -> src -> root
+        # Go up 5 levels to root: subagents -> prompt_architect -> agents -> lattice_lock -> src -> root
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
 
         def_path = os.path.join(

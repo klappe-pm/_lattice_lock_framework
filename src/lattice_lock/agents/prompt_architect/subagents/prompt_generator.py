@@ -476,7 +476,7 @@ Return only the enhanced context text.
         # Default constraints + specific ones
         constraints = [
             "- Existing prompt files in `project_prompts/`",
-            "- `src/lattice_lock_cli/` (owned by Claude Code CLI)",
+            "- `src/lattice_lock/cli/` (owned by Claude Code CLI)",
         ]
         return "\n".join(constraints)
 
