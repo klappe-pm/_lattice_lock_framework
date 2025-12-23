@@ -734,7 +734,8 @@ def authenticate_user(username: str, password: str) -> User | None:
     # that could enumerate valid usernames. Use a dummy hash when user
     # doesn't exist to ensure constant-time behavior.
     # This dummy hash is a valid bcrypt hash that will never match any password
-    dummy_hash = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.VTtYA/pWrKJKUu"
+    # Reference module constant: _TIMING_ATTACK_DUMMY_HASH (define at top after _BCRYPT_ROUNDS)
+    dummy_hash = _TIMING_ATTACK_DUMMY_HASH
 
     if user is None:
         # Perform dummy verification to maintain constant time
