@@ -388,7 +388,7 @@ class ErrorHandler:
             risky_operation()
 
         if handler.error:
-            print(f"Error occurred: {handler.context.message}")
+            logger.error(f"Error occurred: {handler.context.message}")
     """
 
     def __init__(

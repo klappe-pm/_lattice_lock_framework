@@ -12,18 +12,19 @@ from pathlib import Path
 
 from lattice_lock.agents.prompt_architect.models import GenerationRequest, GenerationResult
 from lattice_lock.agents.prompt_architect.orchestrator import PromptArchitectOrchestrator
+from lattice_lock.logging_config import get_logger, set_trace_id
+from lattice_lock.logging_config import setup_logging as configure_logging
 from lattice_lock.utils.safe_path import resolve_under_root
 
-logger = logging.getLogger(__name__)
+logger = get_logger("agents.prompt_architect.cli")
 
 
 def setup_logging(verbose: bool = False) -> None:
-    """Configure logging for the CLI."""
+    """Configure logging for the CLI using centralized config."""
     level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    configure_logging(level=level, simple_format=True)
+    # Generate trace ID for this CLI session
+    set_trace_id()
 
 
 def create_parser() -> argparse.ArgumentParser:

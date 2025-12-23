@@ -717,9 +717,9 @@ def get_user(username: str) -> User | None:
 def authenticate_user(username: str, password: str) -> User | None:
     """Authenticate a user with username and password.
 
-    This function uses constant-time comparison to prevent timing attacks.
-    The password verification is always performed regardless of whether
-    the user exists to avoid leaking information about valid usernames.
+    Uses constant-time comparison to prevent timing attacks that could
+    enumerate valid usernames. Always performs a password hash comparison
+    even when the user doesn't exist.
 
     Args:
         username: Username to authenticate
