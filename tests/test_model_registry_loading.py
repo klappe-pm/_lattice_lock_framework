@@ -4,8 +4,8 @@ import sys
 # Add src to path
 sys.path.append(os.path.abspath("src"))
 
-from lattice_lock_orchestrator.registry import ModelRegistry
-from lattice_lock_orchestrator.types import ModelStatus, ProviderMaturity
+from lattice_lock.orchestrator.registry import ModelRegistry
+from lattice_lock.orchestrator.types import ModelStatus, ProviderMaturity
 
 
 def test_registry_load_yaml():

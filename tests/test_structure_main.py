@@ -1,7 +1,7 @@
 import sys
 from unittest.mock import patch
 
-from lattice_lock_validator.structure import main
+from lattice_lock.validator.structure import main
 
 
 def test_main_success(tmp_path):
@@ -9,7 +9,6 @@ def test_main_success(tmp_path):
     (tmp_path / "docs" / "agent_definitions").mkdir(parents=True)
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
-    (tmp_path / "docs").mkdir()
     (tmp_path / ".gitignore").touch()
     (tmp_path / "README.md").touch()
 

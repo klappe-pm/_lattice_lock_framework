@@ -7,7 +7,7 @@ Tests template loading, rendering, and YAML validity.
 import pytest
 import yaml
 
-from lattice_lock_cli.templates import get_template, render_template
+from lattice_lock.cli.templates import get_template, render_template
 
 
 class TestGCPTemplateLoading:
@@ -20,14 +20,14 @@ class TestGCPTemplateLoading:
         assert hasattr(template, "render")
 
     def test_load_cloudbuild_pr_template(self) -> None:
-        """Test loading cloudbuild-pr.yaml.j2 template."""
-        template = get_template("ci/gcp/cloudbuild-pr.yaml.j2")
+        """Test loading cloudbuild_pr.yaml.j2 template."""
+        template = get_template("ci/gcp/cloudbuild_pr.yaml.j2")
         assert template is not None
         assert hasattr(template, "render")
 
     def test_load_trigger_config_template(self) -> None:
-        """Test loading trigger-config.yaml.j2 template."""
-        template = get_template("ci/gcp/trigger-config.yaml.j2")
+        """Test loading trigger_config.yaml.j2 template."""
+        template = get_template("ci/gcp/trigger_config.yaml.j2")
         assert template is not None
         assert hasattr(template, "render")
 
@@ -112,7 +112,7 @@ class TestCloudBuildPRTemplate:
     def test_render_cloudbuild_pr_produces_valid_yaml(self) -> None:
         """Test that cloudbuild-pr template produces valid YAML."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/gcp/cloudbuild-pr.yaml.j2", context)
+        output = render_template("ci/gcp/cloudbuild_pr.yaml.j2", context)
 
         parsed = yaml.safe_load(output)
         assert parsed is not None
@@ -123,7 +123,7 @@ class TestCloudBuildPRTemplate:
         context = {"project_name": "test-project"}
 
         main_output = render_template("ci/gcp/cloudbuild.yaml.j2", context)
-        pr_output = render_template("ci/gcp/cloudbuild-pr.yaml.j2", context)
+        pr_output = render_template("ci/gcp/cloudbuild_pr.yaml.j2", context)
 
         main_parsed = yaml.safe_load(main_output)
         pr_parsed = yaml.safe_load(pr_output)
@@ -135,7 +135,7 @@ class TestCloudBuildPRTemplate:
         context = {"project_name": "test-project"}
 
         main_output = render_template("ci/gcp/cloudbuild.yaml.j2", context)
-        pr_output = render_template("ci/gcp/cloudbuild-pr.yaml.j2", context)
+        pr_output = render_template("ci/gcp/cloudbuild_pr.yaml.j2", context)
 
         main_parsed = yaml.safe_load(main_output)
         pr_parsed = yaml.safe_load(pr_output)
@@ -148,7 +148,7 @@ class TestCloudBuildPRTemplate:
     def test_cloudbuild_pr_has_pr_tag(self) -> None:
         """Test that PR build has pr-validation tag."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/gcp/cloudbuild-pr.yaml.j2", context)
+        output = render_template("ci/gcp/cloudbuild_pr.yaml.j2", context)
 
         parsed = yaml.safe_load(output)
         assert "pr-validation" in parsed["tags"]
@@ -164,7 +164,7 @@ class TestTriggerConfigTemplate:
             "github_owner": "test-owner",
             "repository_name": "test-repo",
         }
-        output = render_template("ci/gcp/trigger-config.yaml.j2", context)
+        output = render_template("ci/gcp/trigger_config.yaml.j2", context)
 
         docs = list(yaml.safe_load_all(output))
         assert len(docs) >= 1
@@ -173,7 +173,7 @@ class TestTriggerConfigTemplate:
     def test_trigger_config_has_github_section(self) -> None:
         """Test that trigger config has GitHub configuration."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/gcp/trigger-config.yaml.j2", context)
+        output = render_template("ci/gcp/trigger_config.yaml.j2", context)
 
         docs = list(yaml.safe_load_all(output))
         assert "github" in docs[0]
@@ -185,7 +185,7 @@ class TestTriggerConfigTemplate:
             "github_owner": "my-org",
             "repository_name": "my-repo",
         }
-        output = render_template("ci/gcp/trigger-config.yaml.j2", context)
+        output = render_template("ci/gcp/trigger_config.yaml.j2", context)
 
         assert "my-custom-project" in output
         assert "my-org" in output
@@ -206,8 +206,8 @@ class TestGCPTemplateIntegration:
 
         templates = [
             "ci/gcp/cloudbuild.yaml.j2",
-            "ci/gcp/cloudbuild-pr.yaml.j2",
-            "ci/gcp/trigger-config.yaml.j2",
+            "ci/gcp/cloudbuild_pr.yaml.j2",
+            "ci/gcp/trigger_config.yaml.j2",
         ]
 
         for template_name in templates:
@@ -225,7 +225,7 @@ class TestGCPTemplateIntegration:
         }
 
         cloudbuild_output = render_template("ci/gcp/cloudbuild.yaml.j2", context)
-        pr_output = render_template("ci/gcp/cloudbuild-pr.yaml.j2", context)
+        pr_output = render_template("ci/gcp/cloudbuild_pr.yaml.j2", context)
 
         assert "consistent-naming-test" in cloudbuild_output
         assert "consistent-naming-test" in pr_output

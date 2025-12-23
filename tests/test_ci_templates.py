@@ -1,11 +1,11 @@
 from pathlib import Path
 
-TEMPLATES_DIR = Path("src/lattice_lock_cli/templates/ci")
+TEMPLATES_DIR = Path("src/lattice_lock/cli/templates/ci")
 
 
 def test_github_actions_hardening():
     """Verify GitHub Actions template contains security audit."""
-    template_path = TEMPLATES_DIR / "github_actions/lattice-lock.yml.j2"
+    template_path = TEMPLATES_DIR / "github_actions/lattice_lock.yml.j2"
     assert template_path.exists()
     content = template_path.read_text()
     assert "pip-audit" in content

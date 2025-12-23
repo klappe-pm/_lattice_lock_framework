@@ -14,7 +14,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from lattice_lock_agents.prompt_architect.integrations.project_agent import (
+from lattice_lock.agents.prompt_architect.integrations.project_agent import (
     InteractionLog,
     PendingTask,
     ProjectAgentClient,
@@ -286,7 +286,7 @@ class TestOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_orchestrate_from_project(self):
         """Test orchestration using Project Agent as input source."""
-        from lattice_lock_agents.prompt_architect.orchestrator import PromptOrchestrator
+        from lattice_lock.agents.prompt_architect.orchestrator import PromptOrchestrator
 
         orchestrator = PromptOrchestrator()
         result = await orchestrator.orchestrate_prompt_generation(
@@ -301,7 +301,7 @@ class TestOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_orchestrate_discovers_spec_from_project(self):
         """Test that orchestrator discovers spec from Project Agent."""
-        from lattice_lock_agents.prompt_architect.orchestrator import PromptOrchestrator
+        from lattice_lock.agents.prompt_architect.orchestrator import PromptOrchestrator
 
         orchestrator = PromptOrchestrator()
 

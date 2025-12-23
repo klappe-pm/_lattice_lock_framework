@@ -145,7 +145,7 @@ def scaffolded_project(cli_runner: CliRunner, temp_project_dir: Path) -> Path:
     Returns:
         Path: Path to the scaffolded project.
     """
-    from lattice_lock_cli.__main__ import cli
+    from lattice_lock.cli.__main__ import cli
 
     result = cli_runner.invoke(
         cli,
@@ -175,7 +175,7 @@ def scaffolded_agent_project(cli_runner: CliRunner, temp_project_dir: Path) -> P
     Returns:
         Path: Path to the scaffolded agent project.
     """
-    from lattice_lock_cli.__main__ import cli
+    from lattice_lock.cli.__main__ import cli
 
     result = cli_runner.invoke(
         cli,

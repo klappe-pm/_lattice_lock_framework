@@ -8,8 +8,8 @@ import yaml
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lattice_lock_orchestrator.registry import ModelRegistry
-from lattice_lock_orchestrator.types import ModelProvider
+from lattice_lock.orchestrator.registry import ModelRegistry
+from lattice_lock.orchestrator.types import ModelProvider
 
 
 class TestConfigurableRegistry(unittest.TestCase):

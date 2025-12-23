@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
-from lattice_lock_agents.prompt_architect.subagents.models import (
+from lattice_lock.agents.prompt_architect.subagents.models import (
     Component,
     ComponentLayer,
     Constraint,
@@ -24,18 +24,18 @@ from lattice_lock_agents.prompt_architect.subagents.models import (
     SpecificationAnalysis,
     SpecificationMetadata,
 )
-from lattice_lock_agents.prompt_architect.subagents.parsers.spec_parser import (
+from lattice_lock.agents.prompt_architect.subagents.parsers.spec_parser import (
     JSONSpecParser,
     MarkdownSpecParser,
     YAMLSpecParser,
     detect_parser,
     get_parser_for_file,
 )
-from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
+from lattice_lock.agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 
 # LLMClient is not yet implemented - tests that require it will be skipped
 try:
-    from lattice_lock_agents.prompt_architect.subagents.spec_analyzer import LLMClient
+    from lattice_lock.agents.prompt_architect.subagents.spec_analyzer import LLMClient
 except ImportError:
     LLMClient = None  # type: ignore[misc, assignment]
 

@@ -10,7 +10,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from lattice_lock_agents.prompt_architect.validators import (
+from lattice_lock.agents.prompt_architect.validators import (
     ConventionChecker,
     PromptValidator,
     QualityScorer,

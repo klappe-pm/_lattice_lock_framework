@@ -1,8 +1,8 @@
 import ast
 
-from lattice_lock_sheriff.ast_visitor import SheriffVisitor
-from lattice_lock_sheriff.config import SheriffConfig
-from lattice_lock_sheriff.rules import ImportDisciplineRule, RuleContext, TypeHintRule
+from lattice_lock.sheriff.ast_visitor import SheriffVisitor
+from lattice_lock.sheriff.config import SheriffConfig
+from lattice_lock.sheriff.rules import ImportDisciplineRule, RuleContext, TypeHintRule
 
 # --- Config Tests ---
 

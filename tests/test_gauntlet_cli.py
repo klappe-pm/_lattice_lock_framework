@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from click.testing import CliRunner
 
-from lattice_lock_cli.__main__ import cli
+from lattice_lock.cli.__main__ import cli
 
 
 @pytest.fixture
@@ -13,13 +13,13 @@ def runner():
 
 @pytest.fixture
 def mock_generator():
-    with patch("lattice_lock_cli.commands.gauntlet.GauntletGenerator") as mock:
+    with patch("lattice_lock.cli.commands.gauntlet.GauntletGenerator") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_pytest():
-    with patch("lattice_lock_cli.commands.gauntlet.pytest") as mock:
+    with patch("lattice_lock.cli.commands.gauntlet.pytest") as mock:
         mock.main.return_value = 0
         yield mock
 

@@ -5,7 +5,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lattice_lock_validator.schema import validate_lattice_schema
+from lattice_lock.validator.schema import validate_lattice_schema
 
 
 class TestLatticeExamples(unittest.TestCase):

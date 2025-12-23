@@ -139,18 +139,18 @@ class TestAllExports:
 
 
 class TestOrchestratorPackageExports:
-    """Tests for exports from lattice_lock_orchestrator package."""
+    """Tests for exports from lattice_lock.orchestrator package."""
 
     def test_orchestrator_version_matches(self):
         """Orchestrator version should match lattice_lock version."""
         from lattice_lock import __version__ as lattice_version
-        from lattice_lock_orchestrator import __version__ as orchestrator_version
+        from lattice_lock.orchestrator import __version__ as orchestrator_version
 
         assert lattice_version == orchestrator_version
 
     def test_orchestrator_exports(self):
-        """Core exports should be available from lattice_lock_orchestrator."""
-        from lattice_lock_orchestrator import (
+        """Core exports should be available from lattice_lock.orchestrator."""
+        from lattice_lock.orchestrator import (
             APIResponse,
             ModelOrchestrator,
             ModelProvider,

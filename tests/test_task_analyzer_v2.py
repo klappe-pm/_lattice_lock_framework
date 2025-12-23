@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import MagicMock
 
-from lattice_lock_orchestrator.routing.analyzer import TaskAnalyzer
+from lattice_lock.orchestrator.routing.analyzer import TaskAnalyzer
 
 
 class TestTaskAnalyzerV2(unittest.TestCase):

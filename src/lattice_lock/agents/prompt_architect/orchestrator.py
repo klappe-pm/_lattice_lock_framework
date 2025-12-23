@@ -1,700 +1,536 @@
 """
-Prompt Architect Agent Orchestrator
+Prompt Architect Orchestrator - Coordinates the prompt generation pipeline.
 
-Coordinates the generation of LLM prompts from project specifications.
+This module provides the main orchestration logic that coordinates the four
+subagents (spec_analyzer, roadmap_parser, tool_matcher, prompt_generator)
+to generate prompts from specifications and roadmaps.
 """
 
-import json
+import asyncio
 import logging
-import re
-import time
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import yaml
-
-from lattice_lock.agents.prompt_architect.models import (
-    EpicSpec,
-    FileOwnership,
-    GenerationRequest,
-    GenerationResult,
-    PhaseSpec,
-    PromptContext,
-    PromptOutput,
-    PromptStatus,
-    TaskAssignment,
-    TaskPriority,
-    TaskSpec,
-    ToolCapability,
-    ToolType,
-)
+from lattice_lock.agents.prompt_architect.agent import GenerationResult, PromptArchitectAgent
+from lattice_lock.agents.prompt_architect.subagents.tool_profiles import Task
 
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_TOOL_CAPABILITIES = [
-    ToolCapability(
-        tool=ToolType.DEVIN,
-        name="Devin AI",
-        description="Autonomous AI software engineer",
-        strengths=[
-            "Full-stack development",
-            "Complex multi-file changes",
-            "CI/CD integration",
-            "Long-running tasks",
-        ],
-        limitations=[
-            "May be slower for simple tasks",
-            "Higher cost for small changes",
-        ],
-        file_ownership=[
-            FileOwnership(
-                tool=ToolType.DEVIN,
-                paths=[],
-                patterns=[],  # Configured via agent yaml
-                description="Agent implementations and pilot projects",
-            ),
-        ],
-        max_context_tokens=200000,
-        supports_code_execution=True,
-        supports_file_editing=True,
-        supports_web_browsing=True,
-    ),
-    ToolCapability(
-        tool=ToolType.GEMINI_CLI,
-        name="Gemini CLI",
-        description="Google's Gemini model via CLI",
-        strengths=[
-            "Fast response times",
-            "Good at code analysis",
-            "Schema validation",
-        ],
-        limitations=[
-            "Limited file editing",
-            "No persistent state",
-        ],
-        file_ownership=[
-            FileOwnership(
-                tool=ToolType.GEMINI_CLI,
-                paths=[],
-                patterns=["src/lattice_lock_validator/*"],
-                description="Validator implementations",
-            ),
-        ],
-        max_context_tokens=100000,
-        supports_code_execution=False,
-        supports_file_editing=True,
-        supports_web_browsing=False,
-    ),
-    ToolCapability(
-        tool=ToolType.CLAUDE_CLI,
-        name="Claude CLI",
-        description="Anthropic's Claude via CLI",
-        strengths=[
-            "Excellent reasoning",
-            "Code generation",
-            "Documentation",
-        ],
-        limitations=[
-            "Rate limits",
-            "Context window constraints",
-        ],
-        file_ownership=[
-            FileOwnership(
-                tool=ToolType.CLAUDE_CLI,
-                paths=[],
-                patterns=["src/lattice_lock_cli/*"],
-                description="CLI implementations",
-            ),
-        ],
-        max_context_tokens=200000,
-        supports_code_execution=False,
-        supports_file_editing=True,
-        supports_web_browsing=False,
-    ),
-    ToolCapability(
-        tool=ToolType.CODEX_CLI,
-        name="Codex CLI",
-        description="OpenAI Codex via CLI",
-        strengths=[
-            "Code completion",
-            "Quick edits",
-            "Test generation",
-        ],
-        limitations=[
-            "Limited reasoning",
-            "Smaller context",
-        ],
-        file_ownership=[
-            FileOwnership(
-                tool=ToolType.CODEX_CLI,
-                paths=[".pre-commit-config.yaml"],
-                patterns=["src/lattice_lock_validator/*"],
-                description="Pre-commit and validator",
-            ),
-        ],
-        max_context_tokens=8000,
-        supports_code_execution=False,
-        supports_file_editing=True,
-        supports_web_browsing=False,
-    ),
-]
+@dataclass
+class OrchestrationConfig:
+    """Configuration for the orchestration pipeline."""
+
+    spec_path: str | None = None
+    roadmap_path: str | None = None
+    output_dir: str | None = None
+    dry_run: bool = False
+    from_project: bool = False
+    phases: list[str] | None = None
+    tools: list[str] | None = None
+    max_retries: int = 3
+    retry_delay: float = 1.0
 
 
-class SpecificationAnalyzer:
-    """Analyzes project specifications to extract requirements."""
+@dataclass
+class PipelineStage:
+    """Represents a stage in the orchestration pipeline."""
 
-    def __init__(self, spec_path: str) -> None:
-        self.spec_path = Path(spec_path)
-        self._cache: dict[str, Any] = {}
-
-    def analyze(self) -> dict[str, Any]:
-        """Analyze the specification file and extract structured data."""
-        if not self.spec_path.exists():
-            logger.warning(f"Specification file not found: {self.spec_path}")
-            return {}
-
-        content = self.spec_path.read_text()
-        return self._parse_specification(content)
-
-    def _parse_specification(self, content: str) -> dict[str, Any]:
-        """Parse specification content into structured data."""
-        result: dict[str, Any] = {
-            "title": "",
-            "version": "",
-            "phases": [],
-            "components": [],
-            "requirements": [],
-        }
-
-        lines = content.split("\n")
-        current_section = ""
-
-        for line in lines:
-            if line.startswith("# "):
-                result["title"] = line[2:].strip()
-            elif line.startswith("## "):
-                current_section = line[3:].strip().lower()
-            elif line.startswith("- ") and current_section:
-                item = line[2:].strip()
-                if "phase" in current_section:
-                    result["phases"].append(item)
-                elif "component" in current_section:
-                    result["components"].append(item)
-                elif "requirement" in current_section:
-                    result["requirements"].append(item)
-
-        return result
-
-    def extract_phases(self) -> list[PhaseSpec]:
-        """Extract phase specifications from the document."""
-        data = self.analyze()
-        phases = []
-
-        for i, phase_name in enumerate(data.get("phases", []), 1):
-            phase = PhaseSpec(
-                phase_id=f"phase_{i}",
-                name=phase_name,
-                description=f"Phase {i}: {phase_name}",
-                epics=[],
-            )
-            phases.append(phase)
-
-        return phases
+    name: str
+    status: str = "pending"  # pending, running, completed, failed, skipped
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    result: Any = None
+    error: str | None = None
+    retries: int = 0
 
 
-class RoadmapParser:
-    """Parses roadmaps and phase plans into task hierarchies."""
+@dataclass
+class OrchestrationState:
+    """State of the orchestration pipeline."""
 
-    def __init__(self, roadmap_path: str) -> None:
-        self.roadmap_path = Path(roadmap_path)
+    stages: dict[str, PipelineStage] = field(default_factory=dict)
+    spec_analysis: Any = None
+    roadmap_structure: Any = None
+    tool_assignments: list[Any] = field(default_factory=list)
+    generated_prompts: list[Any] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
-    def parse(self) -> list[PhaseSpec]:
-        """Parse the roadmap file into phase specifications."""
-        if not self.roadmap_path.exists():
-            logger.warning(f"Roadmap file not found: {self.roadmap_path}")
-            return []
-
-        content = self.roadmap_path.read_text()
-        return self._parse_roadmap(content)
-
-    def _parse_roadmap(self, content: str) -> list[PhaseSpec]:
-        """Parse roadmap content into phase specifications."""
-        phases = []
-        current_phase: PhaseSpec | None = None
-        current_epic: EpicSpec | None = None
-
-        lines = content.split("\n")
-        for line in lines:
-            if line.startswith("# Phase"):
-                match = re.match(r"# Phase (\d+)[:\s]+(.+)", line)
-                if match:
-                    phase_num = match.group(1)
-                    phase_name = match.group(2).strip()
-                    current_phase = PhaseSpec(
-                        phase_id=f"phase_{phase_num}",
-                        name=phase_name,
-                        description=f"Phase {phase_num}: {phase_name}",
-                        epics=[],
-                    )
-                    phases.append(current_phase)
-                    current_epic = None
-
-            elif line.startswith("## Epic") and current_phase:
-                match = re.match(r"## Epic (\d+\.\d+)[:\s]+(.+)", line)
-                if match:
-                    epic_id = match.group(1)
-                    epic_name = match.group(2).strip()
-                    current_epic = EpicSpec(
-                        epic_id=f"epic_{epic_id}",
-                        name=epic_name,
-                        description=epic_name,
-                        tasks=[],
-                    )
-                    current_phase.epics.append(current_epic)
-
-            elif line.startswith("### Task") and current_epic:
-                match = re.match(r"### Task (\d+\.\d+\.\d+)[:\s]+(.+)", line)
-                if match:
-                    task_id = match.group(1)
-                    task_name = match.group(2).strip()
-                    task = TaskSpec(
-                        task_id=f"task_{task_id}",
-                        name=task_name,
-                        description=task_name,
-                        requirements=[],
-                        acceptance_criteria=[],
-                    )
-                    current_epic.tasks.append(task)
-
-        return phases
+    def __post_init__(self) -> None:
+        """Initialize pipeline stages."""
+        if not self.stages:
+            self.stages = {
+                "spec_analysis": PipelineStage(name="Specification Analysis"),
+                "roadmap_parsing": PipelineStage(name="Roadmap Parsing"),
+                "tool_matching": PipelineStage(name="Tool Matching"),
+                "prompt_generation": PipelineStage(name="Prompt Generation"),
+            }
 
 
-class ToolMatcher:
-    """Matches tasks to appropriate tools based on capabilities."""
+class PromptOrchestrator:
+    """
+    Orchestrates the prompt generation pipeline.
+
+    Coordinates the four subagents in sequence:
+    1. spec_analyzer - Analyzes specifications
+    2. roadmap_parser - Parses roadmaps into tasks
+    3. tool_matcher - Assigns tasks to tools
+    4. prompt_generator - Generates detailed prompts
+    """
 
     def __init__(
         self,
-        capabilities: list[ToolCapability] | None = None,
-    ) -> None:
-        self.capabilities = capabilities or DEFAULT_TOOL_CAPABILITIES
-        self._capability_map = {cap.tool: cap for cap in self.capabilities}
+        agent: PromptArchitectAgent | None = None,
+        repo_root: Path | None = None,
+    ):
+        """
+        Initialize the orchestrator.
 
-    def match_task(self, task: TaskSpec) -> TaskAssignment:
-        """Match a task to the most appropriate tool."""
-        best_tool = ToolType.DEVIN
-        best_score = 0.0
+        Args:
+            agent: PromptArchitectAgent instance (created if not provided).
+            repo_root: Root directory of the repository.
+        """
+        self.agent = agent or PromptArchitectAgent(repo_root=repo_root)
+        self.repo_root = repo_root or self.agent.repo_root
+        self.state = OrchestrationState()
 
-        for capability in self.capabilities:
-            score = self._calculate_match_score(task, capability)
-            if score > best_score:
-                best_score = score
-                best_tool = capability.tool
+    def reset(self) -> None:
+        """Reset the orchestrator state for a new run."""
+        self.state = OrchestrationState()
+        self.agent.reset_state()
 
-        return TaskAssignment(
-            task_id=task.task_id,
-            task_name=task.name,
-            description=task.description,
-            tool=best_tool,
-            file_paths=task.file_paths,
-            dependencies=task.dependencies,
-            priority=TaskPriority.MEDIUM,
+    async def orchestrate_prompt_generation(
+        self,
+        spec_path: str | None = None,
+        roadmap_path: str | None = None,
+        output_dir: str | None = None,
+        dry_run: bool = False,
+        from_project: bool = False,
+        phases: list[str] | None = None,
+        tools: list[str] | None = None,
+    ) -> GenerationResult:
+        """
+        Orchestrate the full prompt generation pipeline.
+
+        Args:
+            spec_path: Path to the specification file.
+            roadmap_path: Path to the roadmap/WBS file.
+            output_dir: Directory to output generated prompts.
+            dry_run: If True, don't write files, just simulate.
+            from_project: If True, discover spec/roadmap from Project Agent.
+            phases: Filter to specific phases (e.g., ["1", "2"]).
+            tools: Filter to specific tools (e.g., ["devin", "gemini"]).
+
+        Returns:
+            GenerationResult with statistics and any errors.
+        """
+        self.reset()
+        self.state.start_time = datetime.now()
+
+        config = OrchestrationConfig(
+            spec_path=spec_path,
+            roadmap_path=roadmap_path,
+            output_dir=output_dir,
+            dry_run=dry_run,
+            from_project=from_project,
+            phases=phases,
+            tools=tools,
         )
 
-    def _calculate_match_score(
-        self,
-        task: TaskSpec,
-        capability: ToolCapability,
-    ) -> float:
-        """Calculate how well a tool matches a task."""
-        score = 0.0
-
-        for ownership in capability.file_ownership:
-            for path in task.file_paths:
-                if ownership.owns_path(path):
-                    score += 10.0
-
-        if task.assigned_tool == capability.tool:
-            score += 5.0
-
-        return score
-
-    def check_conflicts(
-        self,
-        assignments: list[TaskAssignment],
-    ) -> list[str]:
-        """Check for file ownership conflicts between assignments."""
-        conflicts = []
-        file_owners: dict[str, ToolType] = {}
-
-        for assignment in assignments:
-            for path in assignment.file_paths:
-                if path in file_owners:
-                    existing_tool = file_owners[path]
-                    if existing_tool != assignment.tool:
-                        conflicts.append(
-                            f"File conflict: {path} assigned to both "
-                            f"{existing_tool.value} and {assignment.tool.value}"
-                        )
-                else:
-                    file_owners[path] = assignment.tool
-
-        return conflicts
-
-
-class PromptGenerator:
-    """Generates detailed prompts from task specifications."""
-
-    def __init__(self, output_dir: str = "project_prompts") -> None:
-        self.output_dir = Path(output_dir)
-        self._prompt_counter = 0
-
-    def generate(
-        self,
-        context: PromptContext,
-        assignment: TaskAssignment,
-    ) -> PromptOutput:
-        """Generate a prompt from context and assignment."""
-        self._prompt_counter += 1
-        prompt_id = f"prompt_{self._prompt_counter:04d}"
-
-        content = self._build_prompt_content(context, assignment)
-        file_name = self._generate_file_name(context, assignment)
-        file_path = str(self.output_dir / context.phase_name / file_name)
-
-        return PromptOutput(
-            prompt_id=prompt_id,
-            task_id=context.task_id,
-            tool=assignment.tool,
-            title=context.task_name,
-            content=content,
-            file_path=file_path,
-            status=PromptStatus.READY,
-            metadata={
-                "phase": context.phase_name,
-                "epic": context.epic_name,
-                "dependencies": context.dependencies,
-            },
-        )
-
-    def _build_prompt_content(
-        self,
-        context: PromptContext,
-        assignment: TaskAssignment,
-    ) -> str:
-        """Build the prompt content from context and assignment."""
-        sections = []
-
-        sections.append(f"# {context.task_name}")
-        sections.append("")
-        sections.append(f"**Task ID:** {context.task_id}")
-        sections.append(f"**Tool:** {assignment.tool.value}")
-        sections.append(f"**Phase:** {context.phase_name}")
-        sections.append(f"**Epic:** {context.epic_name}")
-        sections.append("")
-
-        sections.append("## Context")
-        sections.append("")
-        sections.append(context.description)
-        sections.append("")
-
-        if context.requirements:
-            sections.append("## Requirements")
-            sections.append("")
-            for req in context.requirements:
-                sections.append(f"- {req}")
-            sections.append("")
-
-        if context.acceptance_criteria:
-            sections.append("## Acceptance Criteria")
-            sections.append("")
-            for criterion in context.acceptance_criteria:
-                sections.append(f"- {criterion}")
-            sections.append("")
-
-        if context.file_paths:
-            sections.append("## Files to Modify")
-            sections.append("")
-            for path in context.file_paths:
-                sections.append(f"- `{path}`")
-            sections.append("")
-
-        if context.do_not_touch:
-            sections.append("## Do NOT Touch")
-            sections.append("")
-            sections.append(
-                "The following files are owned by other tools and must not be modified:"
-            )
-            sections.append("")
-            for path in context.do_not_touch:
-                sections.append(f"- `{path}`")
-            sections.append("")
-
-        if context.dependencies:
-            sections.append("## Dependencies")
-            sections.append("")
-            sections.append("This task depends on the completion of:")
-            sections.append("")
-            for dep in context.dependencies:
-                sections.append(f"- {dep}")
-            sections.append("")
-
-        sections.append("## Instructions")
-        sections.append("")
-        sections.append("1. Review the requirements and acceptance criteria above")
-        sections.append("2. Implement the required changes in the specified files")
-        sections.append("3. Write tests to verify the implementation")
-        sections.append("4. Ensure all existing tests continue to pass")
-        sections.append("5. Update documentation as needed")
-        sections.append("")
-
-        sections.append("## Success Criteria")
-        sections.append("")
-        sections.append("- All acceptance criteria are met")
-        sections.append("- All tests pass")
-        sections.append("- Code follows project conventions")
-        sections.append("- No regressions introduced")
-        sections.append("")
-
-        return "\n".join(sections)
-
-    def _generate_file_name(
-        self,
-        context: PromptContext,
-        assignment: TaskAssignment,
-    ) -> str:
-        """Generate a file name for the prompt."""
-        task_id = context.task_id.replace("task_", "")
-        tool_name = assignment.tool.value
-        task_slug = re.sub(r"[^a-z0-9]+", "_", context.task_name.lower())
-        task_slug = task_slug[:30].strip("_")
-
-        return f"{task_id}_{tool_name}_{task_slug}.md"
-
-    def save_prompt(self, prompt: PromptOutput) -> bool:
-        """Save a prompt to disk."""
-        try:
-            file_path = Path(prompt.file_path)
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            file_path.write_text(prompt.content)
-            logger.info(f"Saved prompt to {file_path}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to save prompt: {e}")
-            return False
-
-
-class PromptArchitectOrchestrator:
-    """Main orchestrator for the Prompt Architect Agent."""
-
-    def __init__(
-        self,
-        spec_path: str = "docs/specifications/lattice_lock_framework_specifications.md",
-        roadmap_dir: str = "docs",
-        output_dir: str = "project_prompts",
-        state_file: str = "project_prompts/project_prompts_state.json",
-        config_path: str | None = None,
-    ) -> None:
-        self.spec_analyzer = SpecificationAnalyzer(spec_path)
-        self.roadmap_dir = Path(roadmap_dir)
-        self.tool_matcher = ToolMatcher()
-        self.prompt_generator = PromptGenerator(output_dir)
-        self.state_file = Path(state_file)
-        self._state: dict[str, Any] = {}
-        
-        if config_path:
-            self._load_config(config_path)
-
-    def _load_config(self, config_path: str) -> None:
-        """Load configuration from a YAML file."""
-        path = Path(config_path)
-        if not path.exists():
-            logger.warning(f"Config file not found: {path}")
-            return
+        logger.info("Starting prompt generation orchestration")
+        logger.info(f"Config: spec={spec_path}, roadmap={roadmap_path}, dry_run={dry_run}")
 
         try:
-            with path.open() as f:
-                config = yaml.safe_load(f)
-            
-            # Update tool capabilities if present
-            if "tool_capabilities" in config:
-                self._update_capabilities(config["tool_capabilities"])
+            # Stage 1: Specification Analysis
+            if spec_path or from_project:
+                await self._run_spec_analysis(config)
+
+            # Stage 2: Roadmap Parsing
+            if roadmap_path or from_project:
+                await self._run_roadmap_parsing(config)
+
+            # Stage 3: Tool Matching
+            await self._run_tool_matching(config)
+
+            # Stage 4: Prompt Generation
+            await self._run_prompt_generation(config)
+
         except Exception as e:
-            logger.error(f"Failed to load config from {path}: {e}")
+            logger.error(f"Orchestration failed: {e}")
+            self.state.errors.append(str(e))
 
-    def _update_capabilities(self, capabilities_config: list[dict[str, Any]]) -> None:
-        """Update tool capabilities from configuration."""
-        # This is a simplified implementation. In a real scenario, you'd likely
-        # merge with existing defaults or fully replace them.
-        # For this fix, we specifically look for file_ownership updates.
-        
-        for cap_config in capabilities_config:
-            tool_name = cap_config.get("tool")
-            try:
-                tool_type = ToolType(tool_name)
-            except ValueError:
-                continue
+        self.state.end_time = datetime.now()
+        return self._build_result()
 
-            # Find matching capability
-            for capability in self.tool_matcher.capabilities:
-                if capability.tool == tool_type:
-                    # Update file ownerships
-                    if "file_ownership" in cap_config:
-                        new_ownerships = []
-                        for owner_config in cap_config["file_ownership"]:
-                            new_ownerships.append(FileOwnership(
-                                tool=tool_type,
-                                paths=owner_config.get("paths", []),
-                                patterns=owner_config.get("patterns", []),
-                                description=owner_config.get("description", "")
-                            ))
-                        # Extend existing ownerships (or replace?) 
-                        # Replacing is safer for overrides
-                        capability.file_ownership = new_ownerships
+    async def _run_spec_analysis(self, config: OrchestrationConfig) -> None:
+        """Run the specification analysis stage."""
+        stage = self.state.stages["spec_analysis"]
+        stage.status = "running"
+        stage.start_time = datetime.now()
 
-    def load_state(self) -> None:
-        """Load the current state from disk."""
-        if self.state_file.exists():
-            try:
-                self._state = json.loads(self.state_file.read_text())
-            except json.JSONDecodeError:
-                logger.warning("Failed to parse state file, starting fresh")
-                self._state = {}
-        else:
-            self._state = {}
+        try:
+            if config.from_project:
+                # Discover spec from Project Agent
+                spec_path = await self._discover_spec_from_project()
+            else:
+                spec_path = config.spec_path
 
-    def save_state(self) -> None:
-        """Save the current state to disk."""
-        self.state_file.parent.mkdir(parents=True, exist_ok=True)
-        self._state["updated_at"] = datetime.now(timezone.utc).isoformat()
-        self.state_file.write_text(json.dumps(self._state, indent=2))
+            if not spec_path:
+                stage.status = "skipped"
+                logger.info("Skipping spec analysis - no spec path provided")
+                return
 
-    def generate_prompts(self, request: GenerationRequest) -> GenerationResult:
-        """Generate prompts based on the request."""
-        start_time = time.time()
-        result = GenerationResult(
-            success=True,
-            prompts_generated=0,
-            prompts_updated=0,
-            prompts_skipped=0,
-        )
+            # Validate path exists
+            if not Path(spec_path).exists():
+                raise FileNotFoundError(f"Specification file not found: {spec_path}")
 
-        self.load_state()
+            # Run analysis with retries
+            for attempt in range(config.max_retries):
+                try:
+                    self.state.spec_analysis = self.agent.invoke_spec_analyzer(spec_path)
+                    stage.result = self.state.spec_analysis
+                    stage.status = "completed"
+                    logger.info(
+                        f"Spec analysis completed: {len(self.state.spec_analysis.requirements)} requirements found"
+                    )
+                    break
+                except Exception as e:
+                    stage.retries += 1
+                    if attempt == config.max_retries - 1:
+                        raise
+                    logger.warning(f"Spec analysis attempt {attempt + 1} failed: {e}, retrying...")
+                    await asyncio.sleep(config.retry_delay)
 
-        phases = self._get_phases(request)
-        if not phases:
-            result.add_warning("No phases found to process")
-            return result
+        except Exception as e:
+            stage.status = "failed"
+            stage.error = str(e)
+            self.state.errors.append(f"Spec analysis failed: {e}")
+            logger.error(f"Spec analysis failed: {e}")
 
-        for phase in phases:
-            if request.phase and phase.phase_id != f"phase_{request.phase}":
+        stage.end_time = datetime.now()
+
+    async def _run_roadmap_parsing(self, config: OrchestrationConfig) -> None:
+        """Run the roadmap parsing stage."""
+        stage = self.state.stages["roadmap_parsing"]
+        stage.status = "running"
+        stage.start_time = datetime.now()
+
+        try:
+            if config.from_project:
+                # Discover roadmap from Project Agent
+                roadmap_path = await self._discover_roadmap_from_project()
+            else:
+                roadmap_path = config.roadmap_path
+
+            if not roadmap_path:
+                stage.status = "skipped"
+                logger.info("Skipping roadmap parsing - no roadmap path provided")
+                return
+
+            # Validate path exists
+            if not Path(roadmap_path).exists():
+                raise FileNotFoundError(f"Roadmap file not found: {roadmap_path}")
+
+            # Run parsing with retries
+            for attempt in range(config.max_retries):
+                try:
+                    self.state.roadmap_structure = self.agent.invoke_roadmap_parser(roadmap_path)
+                    stage.result = self.state.roadmap_structure
+                    stage.status = "completed"
+                    phase_count = len(self.state.roadmap_structure.phases)
+                    logger.info(f"Roadmap parsing completed: {phase_count} phases found")
+                    break
+                except Exception as e:
+                    stage.retries += 1
+                    if attempt == config.max_retries - 1:
+                        raise
+                    logger.warning(
+                        f"Roadmap parsing attempt {attempt + 1} failed: {e}, retrying..."
+                    )
+                    await asyncio.sleep(config.retry_delay)
+
+        except Exception as e:
+            stage.status = "failed"
+            stage.error = str(e)
+            self.state.errors.append(f"Roadmap parsing failed: {e}")
+            logger.error(f"Roadmap parsing failed: {e}")
+
+        stage.end_time = datetime.now()
+
+    async def _run_tool_matching(self, config: OrchestrationConfig) -> None:
+        """Run the tool matching stage."""
+        stage = self.state.stages["tool_matching"]
+        stage.status = "running"
+        stage.start_time = datetime.now()
+
+        try:
+            # Build task list from roadmap structure
+            tasks = self._build_task_list(config)
+
+            if not tasks:
+                stage.status = "skipped"
+                logger.info("Skipping tool matching - no tasks to match")
+                stage.end_time = datetime.now()
+                return
+
+            # Run matching with retries
+            for attempt in range(config.max_retries):
+                try:
+                    self.state.tool_assignments = self.agent.invoke_tool_matcher(tasks)
+                    stage.result = self.state.tool_assignments
+                    stage.status = "completed"
+                    logger.info(
+                        f"Tool matching completed: {len(self.state.tool_assignments)} assignments"
+                    )
+                    break
+                except Exception as e:
+                    stage.retries += 1
+                    if attempt == config.max_retries - 1:
+                        raise
+                    logger.warning(f"Tool matching attempt {attempt + 1} failed: {e}, retrying...")
+                    await asyncio.sleep(config.retry_delay)
+
+        except Exception as e:
+            stage.status = "failed"
+            stage.error = str(e)
+            self.state.errors.append(f"Tool matching failed: {e}")
+            logger.error(f"Tool matching failed: {e}")
+
+        stage.end_time = datetime.now()
+
+    async def _run_prompt_generation(self, config: OrchestrationConfig) -> None:
+        """Run the prompt generation stage."""
+        stage = self.state.stages["prompt_generation"]
+        stage.status = "running"
+        stage.start_time = datetime.now()
+
+        try:
+            if not self.state.tool_assignments:
+                stage.status = "skipped"
+                logger.info("Skipping prompt generation - no tool assignments")
+                stage.end_time = datetime.now()
+                return
+
+            # Filter assignments by tools if specified
+            assignments = self.state.tool_assignments
+            if config.tools:
+                assignments = [a for a in assignments if a.tool in config.tools]
+
+            # Generate prompts for each assignment
+            for assignment in assignments:
+                if config.dry_run:
+                    logger.info(f"[DRY RUN] Would generate prompt for {assignment.task_id}")
+                    continue
+
+                try:
+                    context_data = self._build_context_data(assignment)
+                    prompt = await self.agent.invoke_prompt_generator(assignment, context_data)
+                    self.state.generated_prompts.append(prompt)
+                    logger.info(f"Generated prompt: {prompt.prompt_id}")
+                except Exception as e:
+                    error_msg = f"Failed to generate prompt for {assignment.task_id}: {e}"
+                    self.state.errors.append(error_msg)
+                    logger.error(error_msg)
+
+            stage.result = self.state.generated_prompts
+            stage.status = "completed"
+            logger.info(f"Prompt generation completed: {len(self.state.generated_prompts)} prompts")
+
+        except Exception as e:
+            stage.status = "failed"
+            stage.error = str(e)
+            self.state.errors.append(f"Prompt generation failed: {e}")
+            logger.error(f"Prompt generation failed: {e}")
+
+        stage.end_time = datetime.now()
+
+    def _build_task_list(self, config: OrchestrationConfig) -> list[Task]:
+        """Build a list of tasks from the roadmap structure."""
+        tasks = []
+
+        if not self.state.roadmap_structure:
+            return tasks
+
+        for phase in self.state.roadmap_structure.phases:
+            # Filter by phases if specified
+            if config.phases and phase.id not in config.phases:
                 continue
 
             for epic in phase.epics:
-                if request.epic and epic.epic_id != f"epic_{request.epic}":
-                    continue
-
                 for task in epic.tasks:
-                    if request.task_ids and task.task_id not in request.task_ids:
-                        continue
+                    tasks.append(
+                        Task(
+                            id=task.id,
+                            description=task.description,
+                            files=task.files if hasattr(task, "files") else [],
+                        )
+                    )
 
-                    try:
-                        prompt = self._generate_task_prompt(phase, epic, task, request)
-                        if prompt:
-                            result.add_prompt(prompt)
-                            if not request.dry_run:
-                                self.prompt_generator.save_prompt(prompt)
-                    except Exception as e:
-                        result.add_error(f"Failed to generate prompt for {task.task_id}: {e}")
+        return tasks
 
-        if not request.dry_run:
-            self._update_state(result)
-            self.save_state()
+    def _build_context_data(self, assignment: Any) -> dict[str, Any]:
+        """Build context data for prompt generation."""
+        context_data: dict[str, Any] = {
+            "task_id": assignment.task_id,
+            "tool": assignment.tool,
+            "files_owned": assignment.files_owned,
+        }
 
-        result.execution_time_seconds = time.time() - start_time
-        return result
-
-    def _get_phases(self, request: GenerationRequest) -> list[PhaseSpec]:
-        """Get phases from roadmap files."""
-        phases = []
-
-        for roadmap_file in self.roadmap_dir.glob("*_phase_*_plan.md"):
-            parser = RoadmapParser(str(roadmap_file))
-            phases.extend(parser.parse())
-
-        if not phases:
-            phases = self.spec_analyzer.extract_phases()
-
-        return phases
-
-    def _generate_task_prompt(
-        self,
-        phase: PhaseSpec,
-        epic: EpicSpec,
-        task: TaskSpec,
-        request: GenerationRequest,
-    ) -> PromptOutput | None:
-        """Generate a prompt for a single task."""
-        assignment = self.tool_matcher.match_task(task)
-
-        do_not_touch = self._get_do_not_touch_paths(assignment.tool)
-
-        context = PromptContext(
-            project_name=request.project_name,
-            phase_name=phase.name,
-            epic_name=epic.name,
-            task_id=task.task_id,
-            task_name=task.name,
-            description=task.description,
-            requirements=task.requirements,
-            acceptance_criteria=task.acceptance_criteria,
-            dependencies=task.dependencies,
-            file_paths=task.file_paths,
-            do_not_touch=do_not_touch,
-        )
-
-        return self.prompt_generator.generate(context, assignment)
-
-    def _get_do_not_touch_paths(self, tool: ToolType) -> list[str]:
-        """Get paths that should not be touched by a tool."""
-        do_not_touch = []
-
-        for capability in self.tool_matcher.capabilities:
-            if capability.tool != tool:
-                for ownership in capability.file_ownership:
-                    do_not_touch.extend(ownership.paths)
-                    do_not_touch.extend(ownership.patterns)
-
-        return do_not_touch
-
-    def _update_state(self, result: GenerationResult) -> None:
-        """Update the state with generation results."""
-        if "prompts" not in self._state:
-            self._state["prompts"] = {}
-
-        for prompt in result.generated_prompts:
-            self._state["prompts"][prompt.prompt_id] = {
-                "task_id": prompt.task_id,
-                "tool": prompt.tool.value,
-                "file_path": prompt.file_path,
-                "status": prompt.status.value,
-                "created_at": prompt.created_at.isoformat() if prompt.created_at else None,
+        # Add spec analysis context if available
+        if self.state.spec_analysis:
+            context_data["spec_analysis"] = {
+                "project_name": self.state.spec_analysis.project_name,
+                "requirements_count": len(self.state.spec_analysis.requirements),
+                "components_count": len(self.state.spec_analysis.components),
             }
 
-        self._state["last_generation"] = {
-            "prompts_generated": result.prompts_generated,
-            "prompts_updated": result.prompts_updated,
-            "errors": result.errors,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        # Add roadmap context if available
+        if self.state.roadmap_structure:
+            context_data["roadmap"] = {
+                "phases_count": len(self.state.roadmap_structure.phases),
+            }
+
+        return context_data
+
+    async def _discover_spec_from_project(self) -> str | None:
+        """Discover specification path from Project Agent."""
+        # This will be implemented in 5.1.2 with ProjectAgentClient
+        # For now, try to find a default spec file
+        default_paths = [
+            self.repo_root / "docs" / "specifications" / "lattice_lock_framework_specifications.md",
+            self.repo_root / "SPECIFICATION.md",
+            self.repo_root / "spec.md",
+        ]
+
+        for path in default_paths:
+            if path.exists():
+                logger.info(f"Discovered spec file: {path}")
+                return str(path)
+
+        logger.warning("Could not discover spec file from project")
+        return None
+
+    async def _discover_roadmap_from_project(self) -> str | None:
+        """Discover roadmap path from Project Agent."""
+        # This will be implemented in 5.1.2 with ProjectAgentClient
+        # For now, try to find a default roadmap file
+        default_paths = [
+            self.repo_root / "project_prompts" / "work_breakdown_structure.md",
+            self.repo_root / "docs" / "development" / "lattice_lock_work_breakdown_v2_1.md",
+            self.repo_root / "ROADMAP.md",
+        ]
+
+        for path in default_paths:
+            if path.exists():
+                logger.info(f"Discovered roadmap file: {path}")
+                return str(path)
+
+        logger.warning("Could not discover roadmap file from project")
+        return None
+
+    def _build_result(self) -> GenerationResult:
+        """Build the final generation result."""
+        # Calculate tool distribution
+        tool_distribution: dict[str, int] = {}
+        for assignment in self.state.tool_assignments:
+            tool = assignment.tool
+            tool_distribution[tool] = tool_distribution.get(tool, 0) + 1
+
+        # Determine phases covered
+        phases_covered: list[str] = []
+        if self.state.roadmap_structure:
+            phases_covered = [p.id for p in self.state.roadmap_structure.phases]
+
+        # Determine status
+        if self.state.errors:
+            status = "partial" if self.state.generated_prompts else "failure"
+        else:
+            status = "success"
+
+        # Calculate duration
+        duration = None
+        if self.state.start_time and self.state.end_time:
+            duration = (self.state.end_time - self.state.start_time).total_seconds()
+
+        return GenerationResult(
+            status=status,
+            prompts_generated=len(self.state.generated_prompts),
+            prompts_updated=0,  # Updates not yet supported in V1
+            phases_covered=phases_covered,
+            tool_distribution=tool_distribution,
+            errors=self.state.errors,
+            metrics={
+                "start_time": self.state.start_time.isoformat() if self.state.start_time else None,
+                "end_time": self.state.end_time.isoformat() if self.state.end_time else None,
+                "duration_seconds": duration,
+                "stages": {
+                    name: {
+                        "status": stage.status,
+                        "retries": stage.retries,
+                        "error": stage.error,
+                    }
+                    for name, stage in self.state.stages.items()
+                },
+            },
+        )
+
+    def get_stage_status(self, stage_name: str) -> PipelineStage | None:
+        """Get the status of a specific pipeline stage."""
+        return self.state.stages.get(stage_name)
+
+    def get_all_stages(self) -> dict[str, PipelineStage]:
+        """Get all pipeline stages."""
+        return self.state.stages
+
+
+async def orchestrate_prompt_generation(
+    spec_path: str | None = None,
+    roadmap_path: str | None = None,
+    output_dir: str | None = None,
+    dry_run: bool = False,
+    from_project: bool = False,
+    phases: list[str] | None = None,
+    tools: list[str] | None = None,
+    repo_root: Path | None = None,
+) -> GenerationResult:
+    """
+    Convenience function to orchestrate prompt generation.
+
+    This is the main entry point for the orchestration pipeline.
+
+    Args:
+        spec_path: Path to the specification file.
+        roadmap_path: Path to the roadmap/WBS file.
+        output_dir: Directory to output generated prompts.
+        dry_run: If True, don't write files, just simulate.
+        from_project: If True, discover spec/roadmap from Project Agent.
+        phases: Filter to specific phases (e.g., ["1", "2"]).
+        tools: Filter to specific tools (e.g., ["devin", "gemini"]).
+        repo_root: Root directory of the repository.
+
+    Returns:
+        GenerationResult with statistics and any errors.
+    """
+    orchestrator = PromptOrchestrator(repo_root=repo_root)
+    return await orchestrator.orchestrate_prompt_generation(
+        spec_path=spec_path,
+        roadmap_path=roadmap_path,
+        output_dir=output_dir,
+        dry_run=dry_run,
+        from_project=from_project,
+        phases=phases,
+        tools=tools,
+    )
 
 
 __all__ = [
-    "SpecificationAnalyzer",
-    "RoadmapParser",
-    "ToolMatcher",
-    "PromptGenerator",
-    "PromptArchitectOrchestrator",
-    "DEFAULT_TOOL_CAPABILITIES",
+    "PromptOrchestrator",
+    "OrchestrationConfig",
+    "OrchestrationState",
+    "PipelineStage",
+    "orchestrate_prompt_generation",
 ]

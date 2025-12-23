@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from lattice_lock_orchestrator.scorer import ModelScorer, TaskAnalyzer
-from lattice_lock_orchestrator.types import (
+from lattice_lock.orchestrator.scorer import ModelScorer, TaskAnalyzer
+from lattice_lock.orchestrator.types import (
     ModelCapabilities,
     ModelProvider,
     TaskRequirements,

@@ -18,7 +18,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from lattice_lock_agents.prompt_architect.tracker_client import TrackerClient
+from lattice_lock.agents.prompt_architect.tracker_client import TrackerClient
 
 
 class TestTrackerIntegration(unittest.TestCase):

@@ -205,3 +205,15 @@ implementation/
 
 # Construction/development artifacts (non-essential files)
 .construction/
+
+# =============================================================================
+# DEPRECATED PACKAGES (Post-Consolidation)
+# =============================================================================
+# These packages have been consolidated into lattice_lock/
+src/lattice_lock_cli/
+src/lattice_lock_orchestrator/
+src/lattice_lock_validator/
+src/lattice_lock_sheriff/
+src/lattice_lock_gauntlet/
+src/lattice_lock_agents/
+src/lattice_lock_dashboard/

@@ -15,7 +15,7 @@ Lattice-Lock combines three integrated layers:
 ### Using the Model Orchestrator
 
 ```python
-from lattice_lock_orchestrator import ModelOrchestrator
+from lattice_lock.orchestrator import ModelOrchestrator
 
 orchestrator = ModelOrchestrator()
 response = await orchestrator.route_request(
@@ -50,16 +50,18 @@ lattice-lock-framework/
 │   ├── models/                      # Model configurations and registry
 │   └── specifications/              # Authoritative specifications
 ├── src/
-│   └── lattice_lock_orchestrator/   # Core library
-│       ├── core.py                  # ModelOrchestrator class
-│       ├── types.py                 # Type definitions
-│       ├── registry.py              # Model registry
-│       ├── scorer.py                # Task analysis and scoring
-│       ├── api_clients.py           # Provider clients
-│       └── guide.py                 # Model selection guide parser
+│   └── lattice_lock/                # Unified package
+│       ├── orchestrator/            # Intelligent routing
+│       │   ├── core.py              # ModelOrchestrator class
+│       │   ├── types.py             # Type definitions
+│       │   └── registry.py          # Model registry
+│       ├── validator/               # Validation tools
+│       ├── sheriff/                 # Policy enforcement
+│       ├── gauntlet/                # Contract testing
+│       ├── cli/                     # CLI entry point
+│       └── agents/                  # AI Agents
 ├── scripts/
 │   ├── setup/                       # Setup and initialization scripts
-│   ├── validation/                  # Validation tools
 │   └── utilities/                   # Utility scripts
 ├── tests/                           # Test suite
 └── docs/                            # Documentation site source

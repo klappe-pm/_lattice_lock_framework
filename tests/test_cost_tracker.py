@@ -9,11 +9,11 @@ from unittest.mock import MagicMock
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lattice_lock_orchestrator.cost.models import UsageRecord
-from lattice_lock_orchestrator.cost.storage import CostStorage
-from lattice_lock_orchestrator.cost.tracker import CostTracker
-from lattice_lock_orchestrator.registry import ModelRegistry
-from lattice_lock_orchestrator.types import APIResponse, ModelCapabilities
+from lattice_lock.orchestrator.cost.models import UsageRecord
+from lattice_lock.orchestrator.cost.storage import CostStorage
+from lattice_lock.orchestrator.cost.tracker import CostTracker
+from lattice_lock.orchestrator.registry import ModelRegistry
+from lattice_lock.orchestrator.types import APIResponse, ModelCapabilities
 
 
 class TestCostStorage(unittest.TestCase):

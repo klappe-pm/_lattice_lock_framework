@@ -4,9 +4,9 @@ import sys
 # Add src to path
 sys.path.append(os.path.abspath("src"))
 
-from lattice_lock_orchestrator.api_clients import BaseAPIClient, BedrockAPIClient
-from lattice_lock_orchestrator.registry import ModelRegistry
-from lattice_lock_orchestrator.types import ProviderMaturity
+from lattice_lock.orchestrator.api_clients import BaseAPIClient, BedrockAPIClient
+from lattice_lock.orchestrator.registry import ModelRegistry
+from lattice_lock.orchestrator.types import ProviderMaturity
 
 
 def test_maturity_enum():

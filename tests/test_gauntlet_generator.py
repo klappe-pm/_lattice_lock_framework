@@ -1,7 +1,7 @@
 import pytest
 
-from lattice_lock_gauntlet.generator import GauntletGenerator
-from lattice_lock_gauntlet.parser import LatticeParser
+from lattice_lock.gauntlet.generator import GauntletGenerator
+from lattice_lock.gauntlet.parser import LatticeParser
 
 TEST_LATTICE_YAML = """
 entities:

@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from lattice_lock_orchestrator.api_clients import (
+from lattice_lock.orchestrator.api_clients import (
     AnthropicAPIClient,
     BedrockAPIClient,
     GoogleAPIClient,
@@ -26,7 +26,7 @@ from lattice_lock_orchestrator.api_clients import (
     ProviderUnavailableError,
     get_api_client,
 )
-from lattice_lock_orchestrator.types import APIResponse
+from lattice_lock.orchestrator.types import APIResponse
 
 
 class TestProviderStatus:
@@ -342,7 +342,7 @@ class TestModelOrchestratorProviderIntegration:
     @patch.dict(os.environ, {"OPENAI_API_KEY": "test", "ANTHROPIC_API_KEY": "test"}, clear=True)
     def test_orchestrator_check_provider_status(self):
         """Test that orchestrator can check provider status."""
-        from lattice_lock_orchestrator.core import ModelOrchestrator
+        from lattice_lock.orchestrator.core import ModelOrchestrator
 
         ProviderAvailability.reset()
         orchestrator = ModelOrchestrator()
@@ -354,7 +354,7 @@ class TestModelOrchestratorProviderIntegration:
     @patch.dict(os.environ, {"OPENAI_API_KEY": "test"}, clear=True)
     def test_orchestrator_get_available_providers(self):
         """Test that orchestrator can get available providers."""
-        from lattice_lock_orchestrator.core import ModelOrchestrator
+        from lattice_lock.orchestrator.core import ModelOrchestrator
 
         ProviderAvailability.reset()
         orchestrator = ModelOrchestrator()
@@ -366,7 +366,7 @@ class TestModelOrchestratorProviderIntegration:
     @patch.dict(os.environ, {}, clear=True)
     def test_orchestrator_is_provider_available(self):
         """Test that orchestrator can check individual provider availability."""
-        from lattice_lock_orchestrator.core import ModelOrchestrator
+        from lattice_lock.orchestrator.core import ModelOrchestrator
 
         ProviderAvailability.reset()
         orchestrator = ModelOrchestrator()
@@ -391,7 +391,7 @@ class TestFallbackBehavior:
     @patch.dict(os.environ, {}, clear=True)
     def test_fallback_skips_unavailable_providers(self):
         """Test that fallback logic skips unavailable providers."""
-        from lattice_lock_orchestrator.core import ModelOrchestrator
+        from lattice_lock.orchestrator.core import ModelOrchestrator
 
         ProviderAvailability.reset()
         orchestrator = ModelOrchestrator()
@@ -462,7 +462,7 @@ class TestAcceptanceCriteria:
     @patch.dict(os.environ, {"OPENAI_API_KEY": "test"}, clear=True)
     def test_fallback_chain_skips_unavailable(self):
         """AC: Fallback chains work when primary provider unavailable."""
-        from lattice_lock_orchestrator.core import ModelOrchestrator
+        from lattice_lock.orchestrator.core import ModelOrchestrator
 
         ProviderAvailability.reset()
         orchestrator = ModelOrchestrator()

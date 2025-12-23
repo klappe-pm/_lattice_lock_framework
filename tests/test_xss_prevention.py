@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import unittest
 
-from lattice_lock_dashboard.generator import DashboardGenerator
+from lattice_lock.dashboard.generator import DashboardGenerator
 
 
 class TestXSSPrevention(unittest.TestCase):

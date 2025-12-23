@@ -1,6 +1,6 @@
 import pytest
 
-from lattice_lock_cli.utils.console import LatticeConsole
+from lattice_lock.cli.utils.console import LatticeConsole
 
 
 @pytest.fixture

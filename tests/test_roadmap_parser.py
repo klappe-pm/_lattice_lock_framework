@@ -2,12 +2,12 @@ import os
 
 import pytest
 
-from lattice_lock_agents.prompt_architect.subagents.parsers.roadmap_parser import (
+from lattice_lock.agents.prompt_architect.subagents.parsers.roadmap_parser import (
     Epic,
     Phase,
     RoadmapStructure,
 )
-from lattice_lock_agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
+from lattice_lock.agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
 
 # Path to the actual WBS file
 WBS_PATH = os.path.join(

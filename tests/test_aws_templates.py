@@ -10,8 +10,8 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from lattice_lock_cli.__main__ import cli
-from lattice_lock_cli.templates import TEMPLATES_DIR, get_template, render_template
+from lattice_lock.cli.__main__ import cli
+from lattice_lock.cli.templates import TEMPLATES_DIR, get_template, render_template
 
 
 def get_cfn_loader():
@@ -75,8 +75,8 @@ class TestAWSTemplateLoading:
         assert hasattr(template, "render")
 
     def test_load_codebuild_project_template(self) -> None:
-        """Test loading codebuild-project.yml.j2 template."""
-        template = get_template("ci/aws/codebuild-project.yml.j2")
+        """Test loading codebuild_project.yml.j2 template."""
+        template = get_template("ci/aws/codebuild_project.yml.j2")
         assert template is not None
         assert hasattr(template, "render")
 
@@ -246,7 +246,7 @@ class TestCodeBuildProjectTemplate:
             "project_name": "test-project",
             "python_version": "3.11",
         }
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         parsed = cfn_safe_load(output)
         assert parsed is not None
@@ -254,7 +254,7 @@ class TestCodeBuildProjectTemplate:
     def test_codebuild_has_cloudformation_version(self) -> None:
         """Test that codebuild template has AWSTemplateFormatVersion."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         parsed = cfn_safe_load(output)
         assert "AWSTemplateFormatVersion" in parsed
@@ -262,7 +262,7 @@ class TestCodeBuildProjectTemplate:
     def test_codebuild_has_service_role(self) -> None:
         """Test that codebuild template has IAM service role."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         parsed = cfn_safe_load(output)
         resources = parsed.get("Resources", {})
@@ -271,7 +271,7 @@ class TestCodeBuildProjectTemplate:
     def test_codebuild_has_project_resource(self) -> None:
         """Test that codebuild template has CodeBuild project resource."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         parsed = cfn_safe_load(output)
         resources = parsed.get("Resources", {})
@@ -280,7 +280,7 @@ class TestCodeBuildProjectTemplate:
     def test_codebuild_has_log_group(self) -> None:
         """Test that codebuild template has CloudWatch log group."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         parsed = cfn_safe_load(output)
         resources = parsed.get("Resources", {})
@@ -289,7 +289,7 @@ class TestCodeBuildProjectTemplate:
     def test_codebuild_has_outputs(self) -> None:
         """Test that codebuild template has Outputs section."""
         context = {"project_name": "test-project"}
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         parsed = cfn_safe_load(output)
         assert "Outputs" in parsed
@@ -302,7 +302,7 @@ class TestCodeBuildProjectTemplate:
             "project_name": "my-custom-project",
             "python_version": "3.12",
         }
-        output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         assert "my-custom-project" in output
 
@@ -322,7 +322,7 @@ class TestAWSTemplateIntegration:
         templates = [
             "ci/aws/buildspec.yml.j2",
             "ci/aws/pipeline.yml.j2",
-            "ci/aws/codebuild-project.yml.j2",
+            "ci/aws/codebuild_project.yml.j2",
         ]
 
         for template_name in templates:
@@ -342,7 +342,7 @@ class TestAWSTemplateIntegration:
         }
 
         pipeline_output = render_template("ci/aws/pipeline.yml.j2", context)
-        codebuild_output = render_template("ci/aws/codebuild-project.yml.j2", context)
+        codebuild_output = render_template("ci/aws/codebuild_project.yml.j2", context)
 
         assert "consistent-naming-test" in pipeline_output
         assert "consistent-naming-test" in codebuild_output
@@ -368,8 +368,8 @@ class TestAWSTemplatesExist:
         assert template_path.exists()
 
     def test_codebuild_project_template_exists(self) -> None:
-        """Test that codebuild-project.yml.j2 exists."""
-        template_path = TEMPLATES_DIR / "ci" / "aws" / "codebuild-project.yml.j2"
+        """Test that codebuild_project.yml.j2 exists."""
+        template_path = TEMPLATES_DIR / "ci" / "aws" / "codebuild_project.yml.j2"
         assert template_path.exists()
 
 

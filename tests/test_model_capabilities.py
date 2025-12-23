@@ -12,8 +12,8 @@ import pytest
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from lattice_lock_orchestrator.registry import ModelRegistry
-from lattice_lock_orchestrator.types import (
+from lattice_lock.orchestrator.registry import ModelRegistry
+from lattice_lock.orchestrator.types import (
     ModelCapabilities,
     ModelProvider,
     TaskRequirements,

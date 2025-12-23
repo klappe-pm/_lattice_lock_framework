@@ -16,7 +16,7 @@ from pathlib import Path
 
 from lattice_lock.compile import CompilationResult, compile_lattice
 from lattice_lock.sheriff import SheriffResult, Violation, ViolationSeverity, run_sheriff
-from lattice_lock_orchestrator import (
+from lattice_lock.orchestrator import (
     APIResponse,
     ModelOrchestrator,
     ModelProvider,
@@ -25,7 +25,7 @@ from lattice_lock_orchestrator import (
     TaskAnalyzer,
     TaskType,
 )
-from lattice_lock_orchestrator.types import ModelCapabilities, TaskRequirements
+from lattice_lock.orchestrator.types import ModelCapabilities, TaskRequirements
 
 
 def _get_version() -> str:

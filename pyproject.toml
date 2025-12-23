@@ -78,7 +78,7 @@ Homepage = "https://github.com/klappe-pm/lattice-lock-framework"
 Repository = "https://github.com/klappe-pm/lattice-lock-framework"
 
 [project.scripts]
-lattice-lock = "lattice_lock_cli.__main__:main"
+lattice-lock = "lattice_lock.cli.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -122,7 +122,7 @@ profile = "black"
 line_length = 100
 skip_gitignore = true
 skip = [".git", ".venv", "__pycache__", ".pytest_cache", "build", "dist"]
-known_first_party = ["lattice_lock", "lattice_lock_orchestrator", "lattice_lock_cli", "lattice_lock_validator"]
+known_first_party = ["lattice_lock"]
 
 # Ruff configuration
 [tool.ruff]

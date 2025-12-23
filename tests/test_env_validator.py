@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from lattice_lock_validator.env import validate_env_file
+from lattice_lock.validator.env import validate_env_file
 
 
 @pytest.fixture

@@ -7,7 +7,7 @@ Usage:
     from lattice_lock.types import TaskType, TaskRequirements
 """
 
-from lattice_lock_orchestrator.types import (
+from lattice_lock.orchestrator.types import (
     APIResponse,
     ModelCapabilities,
     ModelProvider,

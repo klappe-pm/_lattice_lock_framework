@@ -2,16 +2,16 @@ from pathlib import Path
 
 import yaml
 
-from lattice_lock_cli.templates import render_template
+from lattice_lock.cli.templates import render_template
 
 TEMPLATE_DIR = (
-    Path(__file__).parents[1] / "src" / "lattice_lock_cli" / "templates" / "ci" / "github_actions"
+    Path(__file__).parents[1] / "src" / "lattice_lock.cli" / "templates" / "ci" / "github_actions"
 )
 
 
 def test_lattice_lock_workflow_renders_valid_yaml():
     context = {"project_name": "test_project"}
-    rendered = render_template("ci/github_actions/lattice-lock.yml.j2", context)
+    rendered = render_template("ci/github_actions/lattice_lock.yml.j2", context)
 
     # Check if valid YAML
     data = yaml.safe_load(rendered)
@@ -22,7 +22,7 @@ def test_lattice_lock_workflow_renders_valid_yaml():
 
 def test_lattice_lock_workflow_steps():
     context = {"project_name": "test_project"}
-    rendered = render_template("ci/github_actions/lattice-lock.yml.j2", context)
+    rendered = render_template("ci/github_actions/lattice_lock.yml.j2", context)
 
     assert "lattice-lock validate" in rendered
     assert "lattice-lock sheriff src/" in rendered
@@ -32,7 +32,7 @@ def test_lattice_lock_workflow_steps():
 
 def test_validate_only_workflow_renders_valid_yaml():
     context = {"project_name": "test_project"}
-    rendered = render_template("ci/github_actions/validate-only.yml.j2", context)
+    rendered = render_template("ci/github_actions/validate_only.yml.j2", context)
 
     # Check if valid YAML
     data = yaml.safe_load(rendered)
@@ -43,7 +43,7 @@ def test_validate_only_workflow_renders_valid_yaml():
 
 def test_validate_only_workflow_steps():
     context = {"project_name": "test_project"}
-    rendered = render_template("ci/github_actions/validate-only.yml.j2", context)
+    rendered = render_template("ci/github_actions/validate_only.yml.j2", context)
 
     assert "lattice-lock validate" in rendered
     assert "lattice-lock sheriff src/" in rendered
@@ -52,7 +52,7 @@ def test_validate_only_workflow_steps():
 
 def test_full_pipeline_workflow_renders_valid_yaml():
     context = {"project_name": "test_project"}
-    rendered = render_template("ci/github_actions/full-pipeline.yml.j2", context)
+    rendered = render_template("ci/github_actions/full_pipeline.yml.j2", context)
 
     # Check if valid YAML
     data = yaml.safe_load(rendered)
@@ -61,7 +61,7 @@ def test_full_pipeline_workflow_renders_valid_yaml():
 
 def test_full_pipeline_workflow_steps():
     context = {"project_name": "test_project"}
-    rendered = render_template("ci/github_actions/full-pipeline.yml.j2", context)
+    rendered = render_template("ci/github_actions/full_pipeline.yml.j2", context)
 
     assert "lattice-lock validate" in rendered
     assert "lattice-lock sheriff src/" in rendered
@@ -73,6 +73,6 @@ def test_full_pipeline_workflow_steps():
 
 def test_variable_substitution():
     context = {"project_name": "my_custom_project"}
-    rendered = render_template("ci/github_actions/lattice-lock.yml.j2", context)
+    rendered = render_template("ci/github_actions/lattice_lock.yml.j2", context)
 
     assert "# Generated for: my_custom_project" in rendered

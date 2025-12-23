@@ -11,7 +11,7 @@ def verify_foundation():
 
     # 1.1 Orchestrator Import
     try:
-        import lattice_lock_orchestrator
+        import lattice_lock.orchestrator
 
         print("  [PASS] 1.1 Model Orchestrator package is importable.")
     except ImportError as e:
@@ -19,7 +19,7 @@ def verify_foundation():
 
     # 1.2 Configuration Validator
     try:
-        from lattice_lock_validator.schema import validate_lattice_schema
+        from lattice_lock.validator.schema import validate_lattice_schema
 
         print("  [PASS] 1.2 Configuration Validator importable.")
     except ImportError as e:
@@ -27,7 +27,7 @@ def verify_foundation():
 
     # 1.3 Structure Enforcement
     try:
-        from lattice_lock_validator.structure import validate_repository_structure
+        from lattice_lock.validator.structure import validate_repository_structure
 
         print("  [PASS] 1.3 Structure Enforcement importable.")
     except ImportError as e:

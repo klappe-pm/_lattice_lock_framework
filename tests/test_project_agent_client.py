@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from lattice_lock_agents.prompt_architect.integrations.project_agent import ProjectAgentClient
+from lattice_lock.agents.prompt_architect.integrations.project_agent import ProjectAgentClient
 
 logger = logging.getLogger(__name__)
 

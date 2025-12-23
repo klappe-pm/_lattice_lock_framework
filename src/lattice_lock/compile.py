@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from lattice_lock_validator.schema import ValidationResult, validate_lattice_schema
+from lattice_lock.validator.schema import ValidationResult, validate_lattice_schema
 
 
 @dataclass
@@ -147,7 +147,7 @@ def compile_lattice(
     if generate_gauntlet:
         try:
             # Lazy import to avoid circular dependency
-            from lattice_lock_gauntlet.generator import GauntletGenerator
+            from lattice_lock.gauntlet.generator import GauntletGenerator
 
             gauntlet_dir = output_dir / "tests"
             generator = GauntletGenerator(str(schema_path), str(gauntlet_dir))

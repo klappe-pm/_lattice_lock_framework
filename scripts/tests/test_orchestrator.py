@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 # Test imports
 print("Testing imports...")
-from lattice_lock_orchestrator import ModelOrchestrator, TaskType
+from lattice_lock.orchestrator import ModelOrchestrator, TaskType
 
 print("✓ Imports successful")
 

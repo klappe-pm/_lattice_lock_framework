@@ -7,8 +7,8 @@ Tests the CLI entry point, version, help, and verbose flag.
 import pytest
 from click.testing import CliRunner
 
-from lattice_lock_cli import __version__
-from lattice_lock_cli.__main__ import cli, main
+from lattice_lock.cli import __version__
+from lattice_lock.cli.__main__ import cli, main
 
 
 @pytest.fixture

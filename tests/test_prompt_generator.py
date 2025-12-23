@@ -4,11 +4,11 @@ import tempfile
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from lattice_lock_agents.prompt_architect.subagents.prompt_generator import (
+from lattice_lock.agents.prompt_architect.subagents.prompt_generator import (
     GeneratedPrompt,
     PromptGenerator,
 )
-from lattice_lock_agents.prompt_architect.subagents.tool_profiles import ToolAssignment
+from lattice_lock.agents.prompt_architect.subagents.tool_profiles import ToolAssignment
 
 
 class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
@@ -27,15 +27,15 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
         # Mock template
         self.template_dir = os.path.join(
             os.path.dirname(__file__),
-            "../src/lattice_lock_agents/prompt_architect/subagents/templates",
+            "../src/lattice_lock/agents/prompt_architect/subagents/templates",
         )
         # We'll patch the template path in the instance
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    @patch("lattice_lock_agents.prompt_architect.subagents.prompt_generator.get_api_client")
-    @patch("lattice_lock_agents.prompt_architect.subagents.prompt_generator.TrackerClient")
+    @patch("lattice_lock.agents.prompt_architect.subagents.prompt_generator.get_api_client")
+    @patch("lattice_lock.agents.prompt_architect.subagents.prompt_generator.TrackerClient")
     async def test_generate_prompt(self, mock_tracker_class, mock_get_client):
         # Setup mock client
         mock_client = AsyncMock()
@@ -92,7 +92,7 @@ class TestPromptGenerator(unittest.IsolatedAsyncioTestCase):
         mock_tracker.get_prompt.assert_called_with("1.2.3")
         mock_tracker.add_prompt.assert_called_once()
 
-    @patch("lattice_lock_agents.prompt_architect.subagents.prompt_generator.get_api_client")
+    @patch("lattice_lock.agents.prompt_architect.subagents.prompt_generator.get_api_client")
     async def test_generate_steps_llm_call(self, mock_get_client):
         mock_client = AsyncMock()
         mock_client.chat_completion.return_value = MagicMock(content="1. Step A\n2. Step B")

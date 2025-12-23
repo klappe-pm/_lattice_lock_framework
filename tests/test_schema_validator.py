@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from lattice_lock_validator.schema import validate_lattice_schema
+from lattice_lock.validator.schema import validate_lattice_schema
 
 
 @pytest.fixture

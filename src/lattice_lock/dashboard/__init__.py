@@ -7,6 +7,7 @@ with FastAPI backend, WebSocket support, and metrics aggregation.
 
 from .aggregator import Cache, DashboardSummary, DataAggregator, ProjectInfo
 from .backend import app, create_app, get_aggregator, get_ws_manager, router, run_server
+from .generator import DashboardGenerator
 from .metrics import MetricsCollector, MetricsSnapshot, ProjectHealthTrend
 from .websocket import ConnectionInfo, WebSocketManager
 
@@ -30,4 +31,6 @@ __all__ = [
     # WebSocket
     "WebSocketManager",
     "ConnectionInfo",
+    # Generator
+    "DashboardGenerator",
 ]

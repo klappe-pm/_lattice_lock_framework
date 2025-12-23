@@ -12,16 +12,16 @@ import defusedxml.ElementTree as ET
 import pytest
 from click.testing import CliRunner
 
-from lattice_lock_cli.commands.sheriff import sheriff_command
-from lattice_lock_sheriff.cache import SheriffCache, get_config_hash
-from lattice_lock_sheriff.formatters import (
+from lattice_lock.cli.commands.sheriff import sheriff_command
+from lattice_lock.sheriff.cache import SheriffCache, get_config_hash
+from lattice_lock.sheriff.formatters import (
     GitHubFormatter,
     JSONFormatter,
     JUnitFormatter,
     TextFormatter,
     get_formatter,
 )
-from lattice_lock_sheriff.rules import Violation
+from lattice_lock.sheriff.rules import Violation
 
 
 @pytest.fixture
@@ -37,8 +37,8 @@ def mock_validate_path():
     validate_file_with_audit directly, so we need to mock both.
     """
     with (
-        patch("lattice_lock_cli.commands.sheriff.validate_path_with_audit") as mock_path,
-        patch("lattice_lock_cli.commands.sheriff.validate_file_with_audit") as mock_file,
+        patch("lattice_lock.cli.commands.sheriff.validate_path_with_audit") as mock_path,
+        patch("lattice_lock.cli.commands.sheriff.validate_file_with_audit") as mock_file,
     ):
         # Make both return the same value
         mock_path.return_value = ([], [])
@@ -48,8 +48,8 @@ def mock_validate_path():
 
 @pytest.fixture
 def mock_config_from_yaml():
-    with patch("lattice_lock_sheriff.config.SheriffConfig.from_yaml") as mock:
-        from lattice_lock_sheriff.config import SheriffConfig
+    with patch("lattice_lock.sheriff.config.SheriffConfig.from_yaml") as mock:
+        from lattice_lock.sheriff.config import SheriffConfig
 
         mock.return_value = SheriffConfig()  # Return a default config
         yield mock
@@ -445,7 +445,7 @@ class TestSheriffCache:
 
     def test_config_hash_generation(self):
         """Test config hash generation using SheriffConfig."""
-        from lattice_lock_sheriff.config import SheriffConfig
+        from lattice_lock.sheriff.config import SheriffConfig
 
         config1 = SheriffConfig(forbidden_imports=["os"], enforce_type_hints=True)
         hash1 = get_config_hash(config1)
