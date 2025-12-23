@@ -1,6 +1,5 @@
 import os
 import sys
-import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -18,25 +17,28 @@ from lattice_lock.orchestrator.registry import ModelRegistry
 from lattice_lock.orchestrator.types import ModelProvider
 
 
-class TestBedrockClient(unittest.TestCase):
-    def setUp(self):
-        self.patcher = patch("boto3.client")
-        self.mock_boto = self.patcher.start()
-        # Ensure client is enabled for testing
-        with patch.dict(os.environ, {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}):
-            self.client = BedrockClient()
+@pytest.fixture
+def mock_boto():
+    with patch("boto3.client") as mock:
+        yield mock
 
-    def tearDown(self):
-        self.patcher.stop()
 
+@pytest.fixture
+def client(mock_boto):
+    with patch.dict(os.environ, {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}):
+        yield BedrockClient()
+
+
+class TestBedrockClient:
     def test_init_sets_region(self):
-        client = BedrockClient(region_name="us-west-2")
-        self.assertEqual(client.region_name, "us-west-2")
+        with patch.dict(os.environ, {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}):
+            client = BedrockClient(region_name="us-west-2")
+            assert client.region_name == "us-west-2"
 
-    def test_generate_calls_bedrock(self):
-        client = self.client
+    @pytest.mark.asyncio
+    async def test_generate_calls_bedrock(self, client, mock_boto):
         mock_bedrock = MagicMock()
-        self.mock_boto.return_value = mock_bedrock
+        mock_boto.return_value = mock_bedrock
         mock_response = {
             "body": MagicMock(
                 read=lambda: b'{"content":[{"type":"text", "text":"Hello"}], "usage":{"input_tokens":10, "output_tokens":5}}'
@@ -44,57 +46,75 @@ class TestBedrockClient(unittest.TestCase):
         }
         mock_bedrock.invoke_model.return_value = mock_response
 
-        response = client.generate(
+        response = await client.generate(
             model="anthropic.claude-3-sonnet-20240229-v1:0",
             messages=[{"role": "user", "content": "Hi"}],
         )
 
-        self.assertIsNotNone(response)
-        self.assertFalse(response.error)
+        assert response is not None
+        assert not response.error
         mock_bedrock.invoke_model.assert_called_once()
 
-    def test_generate_handles_error(self):
-        client = self.client
+    @pytest.mark.asyncio
+    async def test_generate_handles_error(self, client, mock_boto):
         mock_bedrock = MagicMock()
-        self.mock_boto.return_value = mock_bedrock
+        mock_boto.return_value = mock_bedrock
         mock_bedrock.invoke_model.side_effect = Exception("Bedrock error")
 
-        response = client.generate(model="test", messages=[])
-        self.assertTrue(response.error)
-        self.assertIn("Bedrock error", response.error)
+        response = await client.generate(model="test", messages=[])
+        assert response.error
+        assert "Bedrock error" in response.error
 
 
-class TestFallbackManager(unittest.TestCase):
-    def test_execute_primary_succeeds(self):
+class TestFallbackManager:
+    @pytest.mark.asyncio
+    async def test_execute_primary_succeeds(self):
         manager = FallbackManager()
-        mock_func = MagicMock(return_value="Success")
-        result = manager.execute_with_fallback(mock_func, ["primary", "backup"])
-        self.assertEqual(result, "Success")
-        mock_func.assert_called_once_with("primary")
+        
+        # Use simple tracking list
+        calls = []
+        async def mock_coro(model):
+             calls.append(model)
+             return "Success"
+        
+        result = await manager.execute_with_fallback(mock_coro, ["primary", "backup"])
+        assert result == "Success"
+        assert calls == ["primary"]
 
-    def test_execute_fallback_succeeds(self):
+    @pytest.mark.asyncio
+    async def test_execute_fallback_succeeds(self):
         manager = FallbackManager()
-        mock_func = MagicMock(side_effect=[Exception("Fail"), "Success"])
-        result = manager.execute_with_fallback(mock_func, ["primary", "backup"])
-        self.assertEqual(result, "Success")
-        self.assertEqual(mock_func.call_count, 2)
+        
+        calls = []
+        async def fail_then_succeed(model):
+            calls.append(model)
+            if model == "primary":
+                raise Exception("Fail")
+            return "Success"
+            
+        result = await manager.execute_with_fallback(fail_then_succeed, ["primary", "backup"])
+        assert result == "Success"
+        # Primary fails twice (initial + 1 retry default), then backup succeeds
+        assert len(calls) == 3
+        assert calls == ["primary", "primary", "backup"]
 
-    def test_all_fail_raises_exception(self):
-        manager = FallbackManager(max_retries=0)
-        mock_func = MagicMock(side_effect=Exception("Fail"))
-        with self.assertRaises(ProviderUnavailableError):
-            manager.execute_with_fallback(mock_func, ["primary", "backup"])
+    @pytest.mark.asyncio
+    async def test_all_fail_raises_exception(self):
+        # Set max_retries higher than number of models to ensure we exhaust models first
+        manager = FallbackManager(max_retries=1) 
+        
+        async def fail(model):
+             raise Exception("Fail")
+             
+        with pytest.raises(ProviderUnavailableError):
+            await manager.execute_with_fallback(fail, ["primary", "backup"])
 
 
-class TestRegistryHardening(unittest.TestCase):
+class TestRegistryHardening:
     def test_validate_credentials(self):
         registry = ModelRegistry()
         with patch.dict(os.environ, {"OPENAI_API_KEY": "test"}, clear=True):
-            self.assertTrue(registry.validate_credentials(ModelProvider.OPENAI))
+            assert registry.validate_credentials(ModelProvider.OPENAI)
 
         with patch.dict(os.environ, {}, clear=True):
-            self.assertFalse(registry.validate_credentials(ModelProvider.OPENAI))
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert not registry.validate_credentials(ModelProvider.OPENAI)
