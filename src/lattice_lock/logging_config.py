@@ -16,6 +16,7 @@ import uuid
 from contextvars import ContextVar
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Any
 
 # Context variable for trace ID propagation
@@ -220,6 +221,11 @@ def setup_logging(
 
     # File handler (if specified)
     if log_file:
+        # Ensure the log directory exists
+        log_dir = Path(log_file).parent
+        if log_dir != Path('.') and not log_dir.exists():
+            log_dir.mkdir(parents=True, exist_ok=True)
+
         file_handler = RotatingFileHandler(
             log_file,
             maxBytes=log_file_max_bytes,
