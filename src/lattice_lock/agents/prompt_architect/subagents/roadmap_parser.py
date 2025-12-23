@@ -44,17 +44,21 @@ class RoadmapParser:
         if not os.path.exists(roadmap_path):
             raise FileNotFoundError(f"Roadmap file not found: {roadmap_path}")
 
-        # Determine format
-        # For now, simplistic extension/name check
+        # Determine format based on file path
         if roadmap_path.endswith(".md") or "work_breakdown" in roadmap_path:
-            parser = self.parsers["wbs"]
+            format_hint = "wbs"
         else:
-            # Default to WBS for now as it's the only one fully implemented
-            parser = self.parsers["wbs"]
+            format_hint = "wbs"
 
         with open(roadmap_path) as f:
             content = f.read()
 
+        return self.parse_content(content, format_hint)
+
+    def parse_content(self, content: str, format_hint: str = "wbs") -> RoadmapStructure:
+        """Parse roadmap structure directly from string content."""
+        parser = self.parsers.get(format_hint, self.parsers["wbs"])
+        
         structure = parser.parse(content)
 
         # Post-processing: Validate and Analyze

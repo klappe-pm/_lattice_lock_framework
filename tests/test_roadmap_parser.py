@@ -9,36 +9,42 @@ from lattice_lock.agents.prompt_architect.subagents.parsers.roadmap_parser impor
 )
 from lattice_lock.agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
 
-# Path to the actual WBS file
-WBS_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "project_prompts", "work_breakdown_structure.md"
-)
-
-
 @pytest.fixture
 def parser():
     return RoadmapParser()
 
 
-def test_parse_wbs_structure(parser):
-    """Test parsing the actual work breakdown structure file."""
-    if not os.path.exists(WBS_PATH):
-        pytest.skip(f"WBS file not found at {WBS_PATH}")
+@pytest.fixture
+def sample_wbs_content():
+    return """# Lattice Lock Framework - Work Breakdown Structure
 
-    structure = parser.parse(WBS_PATH)
+### Phase 1: Foundation (2 weeks)
+**Goal:** Establish core infrastructure.
+
+| Epic | Description | Owner |
+|---|---|---|
+| 1.1 | Package Model Orchestrator | Devin AI |
+
+## Dependencies
+Epic 1.1 - No dependencies
+"""
+
+
+def test_parse_wbs_structure(parser, sample_wbs_content):
+    """Test parsing a work breakdown structure from content."""
+    structure = parser.parse_content(sample_wbs_content, format_hint="wbs")
 
     assert isinstance(structure, RoadmapStructure)
-    assert len(structure.phases) >= 5
+    assert len(structure.phases) == 1
 
     # Check Phase 1
-    phase1 = next((p for p in structure.phases if p.number == 1), None)
-    assert phase1 is not None
+    phase1 = structure.phases[0]
     assert phase1.name == "Foundation"
-    assert len(phase1.epics) >= 4
+    assert len(phase1.epics) == 1
 
     # Check Epic 1.1
-    epic1_1 = next((e for e in phase1.epics if e.id == "1.1"), None)
-    assert epic1_1 is not None
+    epic1_1 = phase1.epics[0]
+    assert epic1_1.id == "1.1"
     assert epic1_1.name == "Package Model Orchestrator"
     assert epic1_1.owner == "Devin AI"
 
