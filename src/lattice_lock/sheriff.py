@@ -18,6 +18,7 @@ Usage:
 
 import ast
 import json
+import logging
 import os
 import sys
 from dataclasses import dataclass, field
@@ -25,6 +26,8 @@ from enum import Enum
 from pathlib import Path
 
 from lattice_lock.utils.safe_path import resolve_under_root
+
+logger = logging.getLogger("lattice_lock.sheriff")
 
 
 class ViolationSeverity(Enum):
@@ -395,7 +398,7 @@ def run_sheriff(
         # But following existing pattern, we might handle it gracefully.
         # Let's just catch and treat as "path not found" type error or similar safest fallback.
         # Actually, let's treat it as invalid input.
-        print(f"Error: Invalid path - {e}")
+        logger.error(f"Invalid path: {e}")
         return result
 
     if not target.exists():
@@ -470,7 +473,7 @@ Examples:
         try:
             config_path = resolve_under_root(os.getcwd(), args.config)
         except ValueError as e:
-            print(f"Error validating config path: {e}")
+            logger.error(f"Error validating config path: {e}")
             sys.exit(1)
 
         if config_path.exists():
@@ -486,36 +489,35 @@ Examples:
     try:
         target_path = resolve_under_root(os.getcwd(), args.target)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         sys.exit(1)
 
     if args.config:
         try:
             resolve_under_root(os.getcwd(), args.config)  # Just validate
         except ValueError as e:
-            print(f"Error: {e}")
+            logger.error(f"Error: {e}")
             sys.exit(1)
 
     result = run_sheriff(target_path, config)
 
     # Output results
     if args.json:
+        logger.debug("Validation result", extra={"result": result.to_dict()})
         print(json.dumps(result.to_dict(), indent=2))
     else:
         if result.violations:
             for violation in result.violations:
-                print(violation)
-            print()
+                logger.warning(str(violation))
+            logger.info("")
 
         status = "PASSED" if result.passed else "FAILED"
-        print(f"Sheriff: {status}")
-        print(f"Files checked: {result.files_checked}")
-        print(
-            f"Errors: {sum(1 for v in result.violations if v.severity == ViolationSeverity.ERROR)}"
-        )
-        print(
-            f"Warnings: {sum(1 for v in result.violations if v.severity == ViolationSeverity.WARNING)}"
-        )
+        error_count = sum(1 for v in result.violations if v.severity == ViolationSeverity.ERROR)
+        warning_count = sum(1 for v in result.violations if v.severity == ViolationSeverity.WARNING)
+        logger.info(f"Sheriff validation complete: {status}")
+        logger.info(f"Files checked: {result.files_checked}")
+        logger.info(f"Errors: {error_count}")
+        logger.info(f"Warnings: {warning_count}")
 
     sys.exit(0 if result.passed else 1)
 

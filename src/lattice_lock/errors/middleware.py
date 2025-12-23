@@ -5,15 +5,14 @@ Provides decorators and utilities for consistent error handling across the frame
 Includes error interception, automatic classification, logging, and recovery actions.
 """
 
+import asyncio
 import functools
+import inspect
 import logging
 import time
-import asyncio
-import inspect
-from collections.abc import Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar, Union
-
 
 from lattice_lock.errors.classification import ErrorContext, classify_error
 
@@ -388,7 +387,14 @@ class ErrorHandler:
             risky_operation()
 
         if handler.error:
-            print(f"Error occurred: {handler.context.message}")
+            logger.error(
+                "error_handler_triggered",
+                extra={
+                    "error_code": handler.context.error_code,
+                    "message": handler.context.message,
+                    "trace_id": handler.context.trace_id,
+                }
+            )
     """
 
     def __init__(

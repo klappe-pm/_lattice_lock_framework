@@ -5,6 +5,7 @@ Provides comprehensive error classification, handling, and remediation
 for the Lattice Lock Framework.
 
 Usage:
+    import logging
     from lattice_lock.errors import (
         LatticeError,
         SchemaValidationError,
@@ -12,12 +13,19 @@ Usage:
         ErrorContext,
     )
 
+    logger = logging.getLogger("lattice_lock.errors")
+
     try:
         validate_schema(path)
     except SchemaValidationError as e:
         context = classify_error(e)
-        print(f"Severity: {context.severity}")
-        print(f"Remediation: {context.remediation}")
+        logger.info(
+            "error_context",
+            extra={
+                "severity": str(context.severity),
+                "remediation": context.remediation,
+            }
+        )
 """
 
 from lattice_lock.errors.classification import (
