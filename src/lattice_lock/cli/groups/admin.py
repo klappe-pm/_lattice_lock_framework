@@ -21,3 +21,9 @@ def run_dashboard(port):
     console.print(f"[info]Starting admin dashboard on port {port}...[/info]")
     # Placeholder for dashboard launch
     console.print(f"[success]Dashboard running at http://localhost:{port}[/success]")
+
+
+# Register subcommands
+from lattice_lock.cli.commands.admin import admin_command
+
+admin_group.add_command(admin_command, name="serve")

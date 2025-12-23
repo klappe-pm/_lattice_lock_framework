@@ -38,29 +38,7 @@ class AgentConfig:
     log_level: str = "INFO"
 
 
-@dataclass
-class GenerationResult:
-    """Result of a prompt generation run."""
-
-    status: str  # success, failure, partial
-    prompts_generated: int = 0
-    prompts_updated: int = 0
-    phases_covered: list[str] = field(default_factory=list)
-    tool_distribution: dict[str, int] = field(default_factory=dict)
-    metrics: dict[str, Any] = field(default_factory=dict)
-    errors: list[str] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        return {
-            "status": self.status,
-            "prompts_generated": self.prompts_generated,
-            "prompts_updated": self.prompts_updated,
-            "phases_covered": self.phases_covered,
-            "tool_distribution": self.tool_distribution,
-            "metrics": self.metrics,
-            "errors": self.errors,
-        }
+from lattice_lock.agents.prompt_architect.models import GenerationResult
 
 
 class PromptArchitectAgent:
