@@ -1,0 +1,12 @@
+{
+    "name": "lattice-lock-dashboard",
+    "version": "1.0.0",
+    "description": "Frontend dashboard for Lattice Lock Framework",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "chart.js": "^4.4.1"
+    }
+}

@@ -3,12 +3,17 @@
  * Handles WebSocket connection, state management, and UI coordination
  */
 
-class LatticeDashboard {
+import { CONSTANTS, formatTime, escapeHtml } from './utils.js';
+import { MetricsChart } from './components/metrics_chart.js';
+import { ProjectCard } from './components/project_card.js';
+import { AlertList } from './components/alert_list.js';
+
+export class LatticeDashboard {
     constructor() {
         this.ws = null;
         this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        this.reconnectDelay = 3000;
+        this.maxReconnectAttempts = CONSTANTS.MAX_RECONNECT_ATTEMPTS;
+        this.reconnectDelay = CONSTANTS.RECONNECT_DELAY_MS;
         this.state = {
             projects: [],
             metrics: {},
@@ -16,6 +21,7 @@ class LatticeDashboard {
             connected: false
         };
         this.charts = {};
+        this.boundRefresh = this.refresh.bind(this);
         this.init();
     }
 
@@ -28,7 +34,7 @@ class LatticeDashboard {
     }
 
     bindEvents() {
-        document.getElementById('refresh-btn').addEventListener('click', () => this.refresh());
+        document.getElementById('refresh-btn').addEventListener('click', this.boundRefresh);
         document.getElementById('validate-all-btn').addEventListener('click', () => this.validateAll());
         document.getElementById('run-gauntlet-btn').addEventListener('click', () => this.runGauntlet());
         document.getElementById('rollback-btn').addEventListener('click', () => this.triggerRollback());
@@ -36,6 +42,13 @@ class LatticeDashboard {
         document.getElementById('export-alerts-btn').addEventListener('click', () => this.exportAlerts());
         document.getElementById('status-filter').addEventListener('change', (e) => this.filterProjects(e.target.value));
         document.getElementById('time-range').addEventListener('change', (e) => this.updateTimeRange(e.target.value));
+    }
+
+    // Optional clean up method if we ever need to destroy this instance
+    destroy() {
+        document.getElementById('refresh-btn').removeEventListener('click', this.boundRefresh);
+        if (this.autoRefreshInterval) clearInterval(this.autoRefreshInterval);
+        if (this.ws) this.ws.close();
     }
 
     initNavigation() {
@@ -76,7 +89,12 @@ class LatticeDashboard {
             };
 
             this.ws.onmessage = (event) => {
-                this.handleMessage(JSON.parse(event.data));
+                try {
+                    const message = JSON.parse(event.data);
+                    this.handleMessage(message);
+                } catch (error) {
+                    console.error('Failed to parse WebSocket message:', error, event.data);
+                }
             };
 
             this.ws.onclose = () => {
@@ -104,8 +122,10 @@ class LatticeDashboard {
     attemptReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-            setTimeout(() => this.connectWebSocket(), this.reconnectDelay);
+            // Exponential backoff
+            const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+            console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${delay}ms...`);
+            setTimeout(() => this.connectWebSocket(), delay);
         }
     }
 
@@ -165,13 +185,14 @@ class LatticeDashboard {
     async fetchData(endpoint) {
         try {
             const response = await fetch(endpoint);
-            if (response.ok) {
-                return await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+            return await response.json();
         } catch (error) {
-            console.warn(`Failed to fetch ${endpoint}:`, error);
+            console.warn(`Failed to fetch ${endpoint}:`, error.message);
+            throw error; // Re-throw to be caught by loadInitialData or caller
         }
-        return null;
     }
 
     loadMockData() {
@@ -263,7 +284,7 @@ class LatticeDashboard {
 
             const timeEl = document.createElement('div');
             timeEl.className = 'activity-time';
-            timeEl.textContent = this.formatTime(activity.time);
+            timeEl.textContent = formatTime(activity.time);
 
             item.appendChild(messageEl);
             item.appendChild(timeEl);
@@ -347,7 +368,7 @@ class LatticeDashboard {
         await this.loadInitialData();
     }
 
-    async validateAll() {
+    validateAll() {
         console.log('Validating all projects...');
         this.addAlert({
             id: Date.now(),
@@ -358,7 +379,7 @@ class LatticeDashboard {
         });
     }
 
-    async runGauntlet() {
+    runGauntlet() {
         console.log('Running Gauntlet tests...');
         this.addAlert({
             id: Date.now(),
@@ -369,7 +390,7 @@ class LatticeDashboard {
         });
     }
 
-    async triggerRollback() {
+    triggerRollback() {
         if (confirm('Are you sure you want to trigger a rollback?')) {
             console.log('Triggering rollback...');
             this.addAlert({
@@ -382,11 +403,11 @@ class LatticeDashboard {
         }
     }
 
-    async validateProject(projectId) {
+    validateProject(projectId) {
         console.log('Validating project:', projectId);
     }
 
-    async rollbackProject(projectId) {
+    rollbackProject(projectId) {
         console.log('Rolling back project:', projectId);
     }
 
@@ -407,25 +428,10 @@ class LatticeDashboard {
     }
 
     startAutoRefresh() {
-        setInterval(() => {
+        this.autoRefreshInterval = setInterval(() => {
             if (!this.state.connected) {
                 this.loadInitialData();
             }
-        }, 30000);
-    }
-
-    formatTime(isoString) {
-        const date = new Date(isoString);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-        return date.toLocaleDateString();
+        }, CONSTANTS.AUTO_REFRESH_INTERVAL_MS);
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    window.dashboard = new LatticeDashboard();
-});

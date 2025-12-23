@@ -3,7 +3,9 @@
  * Displays project status with health indicator and actions
  */
 
-const ProjectCard = {
+import { formatTime, escapeHtml } from '../utils.js';
+
+export const ProjectCard = {
     create(project, callbacks = {}) {
         const card = document.createElement('div');
         card.className = 'project-card';
@@ -15,10 +17,10 @@ const ProjectCard = {
 
         card.innerHTML = `
             <div class="project-header">
-                <span class="project-name">${this.escapeHtml(project.name)}</span>
-                <span class="project-status ${this.escapeHtml(statusClass)}">
+                <span class="project-name">${escapeHtml(project.name)}</span>
+                <span class="project-status ${escapeHtml(statusClass)}">
                     ${statusIcon}
-                    ${this.escapeHtml(this.capitalizeFirst(project.status))}
+                    ${escapeHtml(this.capitalizeFirst(project.status))}
                 </span>
             </div>
             <div class="project-details">
@@ -32,7 +34,7 @@ const ProjectCard = {
                 </div>
                 <div class="project-detail">
                     <span>Last Validation</span>
-                    <span>${this.formatTime(project.lastValidation)}</span>
+                    <span>${formatTime(project.lastValidation)}</span>
                 </div>
             </div>
             <div class="project-actions">
@@ -66,33 +68,18 @@ const ProjectCard = {
             warning: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
             error: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
         };
+        // Sanitize status to prevent injection if it's not one of the keys
         return icons[status] || icons.healthy;
     },
 
-    formatTime(isoString) {
-        if (!isoString) return 'Never';
-        const date = new Date(isoString);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-        return date.toLocaleDateString();
-    },
-
     capitalizeFirst(str) {
+        if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
-    },
-
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     },
 
     showDetails(project) {
         console.log('Showing details for project:', project);
+        // Using alert for now as per original code, but could be improved
         alert(`Project: ${project.name}\nStatus: ${project.status}\nEntities: ${project.entities}\nConstraints: ${project.constraints}`);
     },
 
@@ -104,12 +91,10 @@ const ProjectCard = {
     updateStatus(card, newStatus) {
         card.dataset.status = newStatus;
         const statusEl = card.querySelector('.project-status');
-        statusEl.className = `project-status ${newStatus}`;
-        statusEl.innerHTML = `${this.getStatusIcon(newStatus)} ${this.escapeHtml(this.capitalizeFirst(newStatus))}`;
+        if (statusEl) {
+            statusEl.className = `project-status ${newStatus}`;
+            statusEl.innerHTML = `${this.getStatusIcon(newStatus)} ${escapeHtml(this.capitalizeFirst(newStatus))}`;
+        }
         this.highlight(card);
     }
 };
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ProjectCard;
-}

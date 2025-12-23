@@ -3,7 +3,7 @@
  * Chart.js visualizations for dashboard metrics
  */
 
-const MetricsChart = {
+export const MetricsChart = {
     colors: {
         primary: '#3b82f6',
         success: '#22c55e',
@@ -52,7 +52,8 @@ const MetricsChart = {
                         }
                     },
                     title: {
-                        display: false
+                        display: !!title,
+                        text: title
                     }
                 },
                 cutout: '60%'
@@ -69,7 +70,7 @@ const MetricsChart = {
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Usage',
+                    label: title || 'Usage',
                     data: [],
                     backgroundColor: this.colors.background,
                     borderRadius: 4
@@ -81,6 +82,10 @@ const MetricsChart = {
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    title: {
+                        display: !!title,
+                        text: title
                     }
                 },
                 scales: {
@@ -125,6 +130,10 @@ const MetricsChart = {
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    title: {
+                        display: !!title,
+                        text: title
                     }
                 },
                 scales: {
@@ -160,10 +169,10 @@ const MetricsChart = {
     },
 
     updateBar(chart, data) {
-        if (!chart || !data) return;
+        if (!chart || !data || typeof data !== 'object') return;
 
         const labels = Object.keys(data);
-        const values = Object.values(data);
+        const values = Object.values(data).map(v => Number(v) || 0);
 
         chart.data.labels = labels;
         chart.data.datasets[0].data = values;
@@ -194,7 +203,3 @@ const MetricsChart = {
         }
     }
 };
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MetricsChart;
-}

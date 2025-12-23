@@ -3,7 +3,9 @@
  * Scrollable list of recent alerts with visual indicators
  */
 
-const AlertList = {
+import { formatTime, escapeHtml } from '../utils.js';
+
+export const AlertList = {
     createAlertElement(alert) {
         const element = document.createElement('div');
         element.className = 'alert-item';
@@ -17,9 +19,9 @@ const AlertList = {
                 ${icon}
             </div>
             <div class="alert-content">
-                <div class="alert-title">${this.escapeHtml(alert.title)}</div>
-                <div class="alert-message">${this.escapeHtml(alert.message)}</div>
-                <div class="alert-time">${this.formatTime(alert.time)}</div>
+                <div class="alert-title">${escapeHtml(alert.title)}</div>
+                <div class="alert-message">${escapeHtml(alert.message)}</div>
+                <div class="alert-time">${formatTime(alert.time)}</div>
             </div>
             <button class="alert-dismiss" title="Dismiss">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -76,25 +78,6 @@ const AlertList = {
         return icons[type] || icons.info;
     },
 
-    formatTime(isoString) {
-        if (!isoString) return '';
-        const date = new Date(isoString);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)} minutes ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    },
-
-    escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    },
-
     showNotification(alert) {
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(alert.title, {
@@ -142,7 +125,3 @@ const AlertList = {
         return JSON.stringify(alerts, null, 2);
     }
 };
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AlertList;
-}
