@@ -1,10 +1,14 @@
 import json
+import logging
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 from lattice_lock.utils.safe_path import resolve_under_root
+
+logger = logging.getLogger(__name__)
 
 
 class GauntletPlugin:
@@ -57,7 +61,12 @@ class GauntletPlugin:
                 # pytest report.location lineno is 0-indexed.
 
                 message = str(report.longrepr).replace("\n", "%0A")
-                print(f"::error file={fpath},line={lineno+1}::Test failed: {domain}%0A{message}")
+                logger.error(f"Test failed: {domain} in {fpath}:{lineno+1}")
+                # GitHub Actions annotation format - must go to stdout
+                sys.stdout.write(
+                    f"::error file={fpath},line={lineno+1}::Test failed: {domain}%0A{message}\n"
+                )
+                sys.stdout.flush()
 
     def pytest_sessionfinish(self, session, exitstatus):
         """Hook called at the end of the session to generate reports."""

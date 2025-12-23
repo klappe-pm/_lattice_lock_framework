@@ -2,6 +2,8 @@ import json
 import logging
 from collections.abc import Callable
 
+from lattice_lock.tracing import AsyncSpanContext, generate_trace_id, get_current_trace_id, timed
+
 from .api_clients import ProviderAvailability, ProviderUnavailableError, get_api_client
 from .cost.tracker import CostTracker
 from .function_calling import FunctionCallHandler
@@ -37,6 +39,7 @@ class ModelOrchestrator:
         prompt: str,
         model_id: str | None = None,
         task_type: TaskType | None = None,
+        trace_id: str | None = None,
         **kwargs,
     ) -> APIResponse:
         """
@@ -46,40 +49,61 @@ class ModelOrchestrator:
             prompt: The user prompt.
             model_id: Optional specific model ID to force use.
             task_type: Optional manual task type override.
+            trace_id: Optional trace ID for distributed tracing.
             **kwargs: Additional arguments passed to the API client.
         """
+        # Generate or use provided trace ID for request correlation
+        request_trace_id = trace_id or get_current_trace_id() or generate_trace_id()
 
-        # 1. Analyze Task
-        requirements = self.analyzer.analyze(prompt)
-        if task_type:
-            requirements.task_type = task_type
+        async with AsyncSpanContext(
+            "route_request",
+            trace_id=request_trace_id,
+            attributes={"model_id": model_id, "task_type": str(task_type)},
+        ):
+            # 1. Analyze Task
+            requirements = self.analyzer.analyze(prompt)
+            if task_type:
+                requirements.task_type = task_type
 
-        logger.info(
-            f"Analyzed task: {requirements.task_type.name}, Priority: {requirements.priority}"
-        )
-
-        # 2. Select Model
-        selected_model_id = model_id
-        if not selected_model_id:
-            selected_model_id = self._select_best_model(requirements)
-
-        if not selected_model_id:
-            raise ValueError("No suitable model found for request")
-
-        model_cap = self.registry.get_model(selected_model_id)
-        if not model_cap:
-            raise ValueError(f"Model {selected_model_id} not found in registry")
-
-        logger.info(f"Selected model: {selected_model_id} ({model_cap.provider.value})")
-
-        # 3. Execute Request
-        try:
-            return await self._call_model(model_cap, prompt, **kwargs)
-        except Exception as e:
-            logger.error(f"Primary model failed: {e}. Attempting fallback...")
-            return await self._handle_fallback(
-                requirements, prompt, failed_model=selected_model_id, **kwargs
+            logger.info(
+                f"Analyzed task: {requirements.task_type.name}, Priority: {requirements.priority}",
+                extra={"trace_id": request_trace_id},
             )
+
+            # 2. Select Model
+            selected_model_id = model_id
+            if not selected_model_id:
+                selected_model_id = self._select_best_model(requirements)
+
+            if not selected_model_id:
+                raise ValueError("No suitable model found for request")
+
+            model_cap = self.registry.get_model(selected_model_id)
+            if not model_cap:
+                raise ValueError(f"Model {selected_model_id} not found in registry")
+
+            logger.info(
+                f"Selected model: {selected_model_id} ({model_cap.provider.value})",
+                extra={"trace_id": request_trace_id},
+            )
+
+            # 3. Execute Request
+            try:
+                return await self._call_model(
+                    model_cap, prompt, trace_id=request_trace_id, **kwargs
+                )
+            except Exception as e:
+                logger.error(
+                    f"Primary model failed: {e}. Attempting fallback...",
+                    extra={"trace_id": request_trace_id},
+                )
+                return await self._handle_fallback(
+                    requirements,
+                    prompt,
+                    failed_model=selected_model_id,
+                    trace_id=request_trace_id,
+                    **kwargs,
+                )
 
     def _select_best_model(self, requirements: TaskRequirements) -> str | None:
         """Select the best model based on requirements and guide"""
@@ -114,9 +138,13 @@ class ModelOrchestrator:
         candidates.sort(key=lambda x: x[1], reverse=True)
         return candidates[0][0]
 
-    async def _call_model(self, model: ModelCapabilities, prompt: str, **kwargs) -> APIResponse:
+    @timed("model_call")
+    async def _call_model(
+        self, model: ModelCapabilities, prompt: str, trace_id: str | None = None, **kwargs
+    ) -> APIResponse:
         """Call the specific model API"""
         client = self._get_client(model.provider.value)
+        request_trace_id = trace_id or get_current_trace_id() or "unknown"
 
         messages = [{"role": "user", "content": prompt}]
         if "messages" in kwargs:
@@ -198,7 +226,7 @@ class ModelOrchestrator:
                 self.cost_tracker.record_transaction(
                     final_response,
                     task_type="function_call",
-                    trace_id=kwargs.get("trace_id", "unknown"),
+                    trace_id=request_trace_id,
                 )
                 return final_response
 
@@ -210,13 +238,18 @@ class ModelOrchestrator:
         self.cost_tracker.record_transaction(
             first_response,
             task_type=kwargs.get("task_type", "general"),
-            trace_id=kwargs.get("trace_id", "unknown"),
+            trace_id=request_trace_id,
         )
 
         return first_response
 
     async def _handle_fallback(
-        self, requirements: TaskRequirements, prompt: str, failed_model: str, **kwargs
+        self,
+        requirements: TaskRequirements,
+        prompt: str,
+        failed_model: str,
+        trace_id: str | None = None,
+        **kwargs,
     ) -> APIResponse:
         """
         Handle fallback logic when primary model fails.
@@ -231,6 +264,7 @@ class ModelOrchestrator:
             requirements: The task requirements for model selection
             prompt: The user prompt
             failed_model: The model that failed (to skip in fallback)
+            trace_id: Optional trace ID for distributed tracing
             **kwargs: Additional arguments for the API call
 
         Returns:
@@ -239,6 +273,7 @@ class ModelOrchestrator:
         Raises:
             RuntimeError: If all fallback models fail or no providers available
         """
+        request_trace_id = trace_id or get_current_trace_id() or "unknown"
         # Get fallback chain from guide
         chain = self.guide.get_fallback_chain(requirements.task_type.name)
 
@@ -291,10 +326,15 @@ class ModelOrchestrator:
                 )
                 continue
 
-            logger.info(f"Attempting fallback to: {model_id} ({provider_name})")
+            logger.info(
+                f"Attempting fallback to: {model_id} ({provider_name})",
+                extra={"trace_id": request_trace_id},
+            )
 
             try:
-                response = await self._call_model(model_cap, prompt, **kwargs)
+                response = await self._call_model(
+                    model_cap, prompt, trace_id=request_trace_id, **kwargs
+                )
                 # Check if the response indicates an error (e.g., from experimental providers)
                 if response.error:
                     logger.warning(f"Fallback model {model_id} returned error: {response.error}")

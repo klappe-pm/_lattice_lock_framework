@@ -8,6 +8,7 @@ import logging
 
 import click
 from lattice_lock import __version__
+from lattice_lock.logging_config import configure_logging, get_logger
 
 # Import existing commands
 from lattice_lock_cli.commands.compile import compile_command
@@ -23,9 +24,9 @@ from lattice_lock_cli.groups.admin import admin_group
 from lattice_lock_cli.groups.orchestrator import orchestrator_group
 from lattice_lock_cli.utils.console import get_console
 
-# Configuration for logger
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger("lattice_lock")
+# Configure logging using centralized configuration
+configure_logging()
+logger = get_logger("lattice_lock")
 
 
 @click.group()

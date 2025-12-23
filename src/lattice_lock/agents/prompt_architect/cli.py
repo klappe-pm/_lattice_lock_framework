@@ -19,11 +19,10 @@ logger = logging.getLogger(__name__)
 
 def setup_logging(verbose: bool = False) -> None:
     """Configure logging for the CLI."""
+    from lattice_lock.logging_config import configure_logging
+
     level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    configure_logging(level=level)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -168,7 +167,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     try:
         state_file = resolve_under_root(args.state_file)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Invalid state file path: {e}")
         return 1
 
     if not state_file.exists():
@@ -200,7 +199,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
     try:
         prompt_dir = resolve_under_root(args.prompt_dir)
     except ValueError as e:
-        print(f"Error: {e}")
+        logger.error(f"Invalid prompt directory path: {e}")
         return 1
 
     if not prompt_dir.exists():
