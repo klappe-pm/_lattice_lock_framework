@@ -111,6 +111,12 @@ def compile_lattice(
     for warning in validation_result.warnings:
         result.add_warning(f"Schema validation warning: {warning.message}")
 
+    # Step 3.5: Gauntlet Meta-Policy Enforcement
+    try:
+        _validate_gauntlet_policies(schema_data, result)
+    except Exception as e:
+        result.add_warning(f"Meta-policy enforcement failed: {e}")
+
     # Step 3: Load schema data
     try:
         with open(schema_path) as f:
@@ -389,3 +395,28 @@ def _get_sqlmodel_field_kwargs(field_def: dict) -> str:
             kwargs.append(f"default={default_val}")
 
     return ", ".join(kwargs)
+def _validate_gauntlet_policies(schema_data: dict, result: CompilationResult):
+    """
+    Enforce Gauntlet meta-policies on the schema definition.
+    
+    Checks for compliance with high-level architectural and security standards.
+    """
+    entities = schema_data.get("entities", {})
+    
+    # Example Meta-Policy: Disallow direct database-like entity names if 'no-direct-db' is enforced
+    # This is a placeholder for real architectural policies.
+    for entity_name in entities:
+        if entity_name.lower() in ["database", "sql_session", "connection_pool"]:
+             result.add_warning(f"Entity '{entity_name}' may violate 'no-direct-db-access' architectural policy.")
+
+    # Check for forbidden fields in sensitive contexts
+    for entity_name, entity_def in entities.items():
+        fields = entity_def.get("fields", {})
+        if "password" in fields or "secret" in fields:
+            result.add_warning(f"Sensitive field found in '{entity_name}'. Ensure encryption and 'no-pii' policy compliance.")
+
+    # Validate that all 'ensures' clauses are well-formed (placeholder for deeper semantic check)
+    for entity_name, entity_def in entities.items():
+        for clause in entity_def.get("ensures", []):
+            if "constraint" not in clause:
+                result.add_error(f"Gauntlet Error: Ensure clause in '{entity_name}' missing 'constraint' field.")

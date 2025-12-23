@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'pilot_projects/data_pipeline/**'
+      - 'docs/examples/etl_pipeline/**'
   pull_request:
     branches: [main]
     paths:
-      - 'pilot_projects/data_pipeline/**'
+      - 'docs/examples/etl_pipeline/**'
 
 env:
   PYTHON_VERSION: '3.11'
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: pilot_projects/data_pipeline
+        working-directory: docs/examples/etl_pipeline
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: pilot_projects/data_pipeline
+        working-directory: docs/examples/etl_pipeline
     steps:
       - uses: actions/checkout@v4
 
@@ -68,7 +68,7 @@ jobs:
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
         with:
-          files: pilot_projects/data_pipeline/coverage.xml
+          files: docs/examples/etl_pipeline/coverage.xml
           flags: data-pipeline
           name: data-pipeline-coverage
 
@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: pilot_projects/data_pipeline
+        working-directory: docs/examples/etl_pipeline
     steps:
       - uses: actions/checkout@v4
 
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: pilot_projects/data_pipeline
+        working-directory: docs/examples/etl_pipeline
     steps:
       - uses: actions/checkout@v4
 
