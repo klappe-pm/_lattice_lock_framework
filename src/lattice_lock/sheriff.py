@@ -508,8 +508,7 @@ Examples:
     else:
         if result.violations:
             for violation in result.violations:
-                logger.warning(str(violation))
-            logger.info("")
+                print(violation)
 
         status = "PASSED" if result.passed else "FAILED"
         error_count = sum(1 for v in result.violations if v.severity == ViolationSeverity.ERROR)

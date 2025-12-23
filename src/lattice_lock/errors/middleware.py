@@ -387,14 +387,7 @@ class ErrorHandler:
             risky_operation()
 
         if handler.error:
-            logger.error(
-                "error_handler_triggered",
-                extra={
-                    "error_code": handler.context.error_code,
-                    "message": handler.context.message,
-                    "trace_id": handler.context.trace_id,
-                }
-            )
+            logger.error(f"Error occurred: {handler.context.message}")
     """
 
     def __init__(

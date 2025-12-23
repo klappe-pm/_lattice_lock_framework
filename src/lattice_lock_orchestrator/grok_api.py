@@ -213,12 +213,7 @@ def main():
 
         if args.command == "list":
             models = api.list_models(args.category)
-            logger.info(
-                "models_list",
-                extra={
-                    "models": [{"id": m["id"], "context": m.get("context_window")} for m in models]
-                },
-            )
+            logger.info(f"Listing {len(models)} models")
             print(f"\n{'='*80}")
             print(f"{'Model ID':<30} {'Context':<15} {'Description':<35}")
             print(f"{'-'*80}")
@@ -234,7 +229,7 @@ def main():
                 sys.exit(1)
             info = api.get_model_info(args.model)
             if info:
-                logger.info("model_info", extra={"model_id": info["id"], "info": info})
+                logger.info(f"Retrieving info for model: {info['id']}")
                 print(f"\nModel Information: {info['id']}")
                 print(f"{'-'*40}")
                 for key, value in info.items():
