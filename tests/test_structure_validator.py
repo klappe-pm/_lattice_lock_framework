@@ -44,6 +44,22 @@ def test_snake_case_violation(temp_repo):
     assert any("does not follow snake_case" in e.message for e in result.errors)
 
 
+def test_hyphen_in_filename(temp_repo):
+    # Create a file with hyphen
+    (Path(temp_repo) / "src" / "bad-name.py").touch()
+    result = validate_repository_structure(temp_repo)
+    assert not result.valid
+    assert any("contains hyphens" in e.message for e in result.errors)
+
+
+def test_folder_naming_violation(temp_repo):
+    # Create a folder with bad name
+    (Path(temp_repo) / "src" / "BadFolder").mkdir()
+    result = validate_repository_structure(temp_repo)
+    assert not result.valid
+    assert any("Folder 'BadFolder' does not follow snake_case" in e.message for e in result.errors)
+
+
 def test_space_in_filename(temp_repo):
     (Path(temp_repo) / "src" / "file with space.txt").touch()
     result = validate_repository_structure(temp_repo)

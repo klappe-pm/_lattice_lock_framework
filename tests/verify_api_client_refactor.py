@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from unittest.mock import MagicMock, AsyncMock
-from lattice_lock_orchestrator.api_clients import BaseAPIClient, APIResponse
+from lattice_lock.orchestrator.api_clients import BaseAPIClient, APIResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -11,6 +11,7 @@ Features:
 - Performance timing instrumentation
 """
 
+import asyncio
 import contextvars
 import functools
 import logging
@@ -29,6 +30,11 @@ logger = logging.getLogger(__name__)
 _trace_context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
     "trace_context", default={}
 )
+
+
+def asyncio_iscoroutinefunction(func: Any) -> bool:
+    """Check if a function is a coroutine function safely."""
+    return asyncio.iscoroutinefunction(func)
 
 
 def generate_trace_id() -> str:
@@ -172,7 +178,7 @@ class SpanContext:
                 f"Ended span: {self.name} ({self.span.duration_ms:.2f}ms)",
                 extra={
                     "trace_id": self.trace_id,
-                    "span_id": self.span_id,
+                    "span_id": self.span.span_id,
                     "duration_ms": self.span.duration_ms,
                     "status": self.span.status,
                 },
@@ -234,7 +240,7 @@ class AsyncSpanContext:
                 f"Ended async span: {self.name} ({self.span.duration_ms:.2f}ms)",
                 extra={
                     "trace_id": self.trace_id,
-                    "span_id": self.span_id,
+                    "span_id": self.span.span_id,
                     "duration_ms": self.span.duration_ms,
                     "status": self.span.status,
                 },
@@ -291,18 +297,6 @@ def traced(
             return sync_wrapper
 
     return decorator
-
-
-import asyncio
-import contextvars
-import functools
-import logging
-import time
-import uuid
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, ParamSpec, TypeVar
 
 
 @dataclass

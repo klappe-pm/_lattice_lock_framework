@@ -387,6 +387,7 @@ class ProjectAgentClient:
         self._log_interaction("get_specification_path", "Discovering specification path")
 
         spec_paths = [
+            self.repo_root / "docs" / "reference" / "lattice_lock_framework_specifications.md",
             self.repo_root / "docs" / "specifications" / "lattice_lock_framework_specifications.md",
             self.repo_root / "SPECIFICATION.md",
             self.repo_root / "spec.md",
@@ -409,6 +410,7 @@ class ProjectAgentClient:
         self._log_interaction("get_roadmap_path", "Discovering roadmap path")
 
         roadmap_paths = [
+            self.repo_root / "docs" / "reference" / "lattice_lock_framework_specifications.md",
             self.repo_root / "docs" / "development" / "lattice_lock_work_breakdown_v2_1.md",
             self.repo_root / "project_prompts" / "work_breakdown_structure.md",
             self.repo_root / "ROADMAP.md",

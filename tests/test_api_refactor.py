@@ -3,14 +3,14 @@ import pytest
 import aiohttp
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from lattice_lock_orchestrator.api_clients import (
+from lattice_lock.orchestrator.api_clients import (
     BaseAPIClient,
     GrokAPIClient,
     OpenAIAPIClient,
     ProviderStatus,
     ProviderAvailability,
 )
-from lattice_lock_orchestrator.exceptions import (
+from lattice_lock.orchestrator.exceptions import (
     APIClientError,
     AuthenticationError,
     RateLimitError,

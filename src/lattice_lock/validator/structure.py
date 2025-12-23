@@ -19,7 +19,7 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     """
     result = ValidationResult()
 
-    # Resolve the repo path (don't apply under-root check since users can validate any directory)
+    # Resolve the repo path
     repo_path = Path(repo_path).expanduser().resolve()
 
     if not repo_path.exists():
@@ -39,19 +39,27 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     if not dir_result.valid:
         result.valid = False
 
-    # 2. File Naming
-    # Walk through the repo
+    # 2. File and Folder Naming
     for root, dirs, files in os.walk(repo_path):
-        # Skip .git and other hidden directories if necessary, but prompt says "Required root files: .gitignore"
-        # so we shouldn't skip everything starting with dot, but definitely .git
-        # Skip hidden directories and those starting with underscore (like _archive)
-        dirs[:] = [d for d in dirs if not (d.startswith(".") and d not in [".github"]) and not d.startswith("_") and not d.endswith(".egg-info")]
-        
-        # Also remove existing explicit skips for safety
-        for skip in ["__pycache__", "venv", "build", "dist"]:
-            if skip in dirs:
-                dirs.remove(skip)
+        # Filter directories to skip hidden ones (except .github) and common build artifacts
+        dirs[:] = [
+            d for d in dirs 
+            if not (d.startswith(".") and d not in [".github"]) 
+            and not d.startswith("_") 
+            and not d.endswith(".egg-info")
+            and d not in ["__pycache__", "venv", ".venv", "build", "dist", ".pytest_cache", ".ruff_cache"]
+        ]
 
+        # Validate folder naming
+        for d in dirs:
+            folder_path = os.path.join(root, d)
+            f_result = validate_folder_naming(folder_path, repo_path)
+            result.errors.extend(f_result.errors)
+            result.warnings.extend(f_result.warnings)
+            if not f_result.valid:
+                result.valid = False
+
+        # Validate file naming
         for filename in files:
             if filename == ".DS_Store":
                 continue
@@ -68,7 +76,6 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
 def validate_directory_structure(repo_path: str) -> ValidationResult:
     """Validates the directory structure against requirements."""
     result = ValidationResult()
-    # Resolve the path (don't apply under-root check since users can validate any directory)
     path = Path(repo_path).expanduser().resolve()
 
     if not path.exists():
@@ -88,20 +95,34 @@ def validate_directory_structure(repo_path: str) -> ValidationResult:
             result.add_error(f"Missing required root file: {f}")
 
     # Agent definitions nesting
-    # Agent definitions nesting
     agent_def_path = path / "docs" / "agents" / "agent_definitions"
     if agent_def_path.is_dir():
         for item in agent_def_path.iterdir():
             if item.is_file() and item.name not in [".DS_Store", "README.md"]:
-                # Files shouldn't be directly in agent_definitions, unless it's a template or doc?
-                # Spec says: "agent_definitions/{agent_category}/"
-                # "Definition files reside directly within their category folder."
-                # So files at root of agent_definitions might be wrong unless allowed exceptions.
-                # Prompt says: "Agent definitions must be in category subdirectories"
                 if item.suffix in [".yaml", ".yml"]:
                     result.add_error(
                         f"Agent definition '{item.name}' must be in a category subdirectory, not directly in agent_definitions/"
                     )
+
+    return result
+
+
+def validate_folder_naming(folder_path: str, repo_root: str = "") -> ValidationResult:
+    """Validates folder name conventions (snake_case)."""
+    result = ValidationResult()
+    path = Path(folder_path)
+    foldername = path.name
+
+    # Hidden folders are handled by the walker's filter, but as a secondary check:
+    if foldername.startswith(".") and foldername not in [".github"]:
+        return result
+
+    # snake_case check
+    if foldername == ".github":
+        return result
+
+    if not re.match(r"^[a-z0-9_]+$", foldername):
+        result.add_error(f"Folder '{foldername}' does not follow snake_case naming convention")
 
     return result
 
@@ -116,51 +137,29 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
     if " " in filename:
         result.add_error(f"File name contains spaces: {filename}")
 
-    # Check for special characters (allow alphanumeric, underscore, dot, hyphen)
-    # Prompt says "No special characters except underscore".
-    # Usually dot is needed for extensions. Hyphen is usually allowed in kebab-case but prompt says "snake_case".
-    # Prompt says: "All files must use snake_case (no spaces, hyphens in names)"
-    # So hyphens are PROHIBITED.
-    if "-" in filename and filename not in [
-        "LICENSE.md",
-        "README.md",
-        ".gitignore",
-        ".pre-commit-config.yaml",
-        "pyproject.toml",
-    ]:
-        # Allow standard files that might have hyphens or be exceptions.
-        # But wait, prompt says "Exception: README.md, LICENSE.md".
-        # It doesn't explicitly exempt others, but standard repo files often have hyphens (e.g. pre-commit-config).
-        # Let's be strict but allow known config files if they exist.
-        # Actually, let's look at the prompt again: "Exception: standard files like README.md, LICENSE.md"
-        # "All files must use snake_case"
-        pass
-
     # snake_case check
-    # Allow dot for extension.
-    stem = path.stem
-    # If file starts with dot (like .gitignore), stem might be .gitignore or empty depending on how pathlib handles it.
-    # pathlib: Path('.gitignore').stem is '.gitignore'.
-
     if filename.startswith("."):
-        # Hidden files/configs often don't follow snake_case (e.g. .gitignore, .pre-commit-config.yaml)
-        # Let's assume dotfiles are exempt or have specific rules?
-        # Prompt: "Prohibited patterns: ... temp files (*.tmp, *.bak, .DS_Store)"
+        # Hidden files/configs often don't follow snake_case
         pass
     else:
-        # Check all segments (stem parts) for snake_case: lowercase, numbers, underscores.
-        # Exception: README.md, LICENSE.md (PascalCase/UPPERCASE)
-        if filename in ["README.md", "LICENSE.md", "Dockerfile", "Makefile", "ROADMAP.md", "requirements-dev.lock"]:
+        # Exemptions for standard files
+        exemptions = [
+            "README.md", "LICENSE.md", "Dockerfile", "Makefile", 
+            "ROADMAP.md", "requirements-dev.lock", "requirements.lock",
+            "pyproject.toml"
+        ]
+        if filename in exemptions:
             pass
         elif ".github" in path.parts:
             # Allow hyphens in GitHub workflows/actions
             pass
         else:
-            # For files like cloudbuild.yaml.j2, we want to check 'cloudbuild' and 'yaml'
+            # Check for hyphens
+            if "-" in filename:
+                 result.add_error(f"File '{filename}' contains hyphens (use snake_case instead)")
+
+            # Check all segments (stem parts) for snake_case: lowercase, numbers, underscores.
             segments = filename.split(".")
-            # The last segment is generally the extension, but we should check all but the last
-            # if there are multiple, or just the first if there's only one.
-            # Actually, even the middle ones should be snake_case.
             parts_to_check = segments[:-1] if len(segments) > 1 else segments
             
             for part in parts_to_check:
@@ -168,17 +167,10 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
                     result.add_error(f"File '{filename}' does not follow snake_case naming convention")
                     break
 
-    # Agent definitions pattern
-    # {category}_{name}_definition.yaml
-    # We need to know if it IS an agent definition.
-    # They live in agent_definitions/
-    # Use parts to be safer
+    # Agent definitions pattern: {category}_{name}_definition.yaml
     try:
         parts = path.parts
         if "agent_definitions" in parts:
-            # path parts: .../docs/agent_definitions/{category}/{filename}
-            # We need to find where agent_definitions is.
-            # It's likely parts[idx] = agent_definitions
             idx = parts.index("agent_definitions")
             if filename.endswith(".yaml") or filename.endswith(".yml"):
                 if not filename.endswith("_definition.yaml") and not filename.endswith(
@@ -188,27 +180,19 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
                         f"Agent definition '{filename}' must end with '_definition.yaml'"
                     )
 
-                # Check prefix matches category?
-                # path parts: .../docs/agents/agent_definitions/{category}/{filename}
-                idx = parts.index("agent_definitions")
-                # parts[idx] = agent_definitions
-                # parts[idx+1] = category
-                # parts[idx+2] = filename (if directly in category)
-
-                if len(parts) > idx + 3:  # nested deeper than category/filename
-                    # e.g. agent_definitions/category/subdir/file
-                    pass
-                elif len(parts) == idx + 3:
+                if len(parts) == idx + 3:
                     category = parts[idx + 1]
-                    # filename should start with category
                     if not filename.startswith(category + "_"):
                         result.add_error(
                             f"Agent definition '{filename}' must start with category prefix '{category}_'"
                         )
     except ValueError:
         pass
+
     if filename.endswith(".tmp") or filename.endswith(".bak") or filename == ".DS_Store":
         result.add_error(f"Prohibited file type/name: {filename}")
+
+    return result
 
     return result
 
@@ -247,6 +231,14 @@ def main():
                 dirs.remove(".venv")
             if ".construction" in dirs:
                 dirs.remove(".construction")
+
+            for d in dirs:
+                folder_path = os.path.join(root, d)
+                res = validate_folder_naming(folder_path, repo_path)
+                overall_result.errors.extend(res.errors)
+                overall_result.warnings.extend(res.warnings)
+                if not res.valid:
+                    overall_result.valid = False
 
             for filename in files:
                 file_path = os.path.join(root, filename)

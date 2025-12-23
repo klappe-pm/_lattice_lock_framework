@@ -34,7 +34,7 @@ def _get_version() -> str:
     Looks for version.txt in the same directory as this file.
     Falls back to a default version if the file cannot be found.
     """
-    version_file = Path(__file__).parent / "version.txt"
+    version_file = Path(__file__).parent.parent.parent / "version.txt"
     try:
         return version_file.read_text().strip()
     except FileNotFoundError:
