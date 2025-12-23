@@ -7,6 +7,7 @@ Handles real API calls with error handling and retry logic
 import json
 import logging
 import os
+import re
 import time
 from collections.abc import AsyncIterator
 from enum import Enum
@@ -14,17 +15,33 @@ from enum import Enum
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from .types import APIResponse, FunctionCall
 from .exceptions import (
     APIClientError,
+    AuthenticationError,
+    InvalidRequestError,
     ProviderConnectionError,
     RateLimitError,
     ServerError,
-    AuthenticationError,
-    InvalidRequestError,
 )
+from .types import APIResponse, FunctionCall
 
 logger = logging.getLogger(__name__)
+
+
+def _redact_sensitive_in_message(message: str) -> str:
+    """Redact sensitive data from error messages (URLs with tokens, API keys, etc.)."""
+    # Redact API keys in URLs (e.g., ?key=xxx, &api_key=xxx)
+    message = re.sub(
+        r"([?&](?:key|api_key|token|access_token|apikey)=)[^&\s]+",
+        r"\1[REDACTED]",
+        message,
+        flags=re.IGNORECASE,
+    )
+    # Redact Bearer tokens
+    message = re.sub(r"(Bearer\s+)[^\s]+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
+    # Redact Authorization headers
+    message = re.sub(r"(Authorization:\s*)[^\s]+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
+    return message
 
 
 class ProviderStatus(Enum):
@@ -147,7 +164,9 @@ class BaseAPIClient:
         if self.session:
             await self.session.close()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True)
+    @retry(
+        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True
+    )
     async def _make_request(self, method: str, endpoint: str, headers: dict, payload: dict) -> dict:
         """Make API request with retry logic"""
         if not self.session:
@@ -189,13 +208,15 @@ class BaseAPIClient:
                 return data, latency_ms
 
         except aiohttp.ClientError as e:
-            logger.error(f"Connection failed: {e}")
-            raise ProviderConnectionError(f"Connection failed: {e}") from e
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Connection failed: {redacted_msg}")
+            raise ProviderConnectionError(f"Connection failed: {redacted_msg}") from e
         except APIClientError:
             raise
         except Exception as e:
-            logger.error(f"Request failed: {e}")
-            raise APIClientError(f"Unexpected error: {e}") from e
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Request failed: {redacted_msg}")
+            raise APIClientError(f"Unexpected error: {redacted_msg}") from e
 
     async def chat_completion(
         self,
@@ -223,7 +244,8 @@ class BaseAPIClient:
                 **kwargs,
             )
         except Exception as e:
-            logger.error(f"Chat completion failed for {self.__class__.__name__}: {e}")
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Chat completion failed for {self.__class__.__name__}: {redacted_msg}")
             raise
 
     async def _chat_completion_impl(
@@ -257,7 +279,8 @@ class BaseAPIClient:
         try:
             return await self.validate_credentials()
         except Exception as e:
-            logger.error(f"Health check failed: {e}")
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Health check failed: {redacted_msg}")
             return False
 
 
@@ -476,7 +499,7 @@ class GoogleAPIClient(BaseAPIClient):
                     function_call = FunctionCall(
                         name=part["functionCall"]["name"], arguments=part["functionCall"]["args"]
                     )
-        
+
         # safely handle usage metadata if missing
         usage_meta = data.get("usageMetadata", {})
 

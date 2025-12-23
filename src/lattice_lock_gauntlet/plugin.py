@@ -1,10 +1,13 @@
 import json
+import logging
 import os
 import time
 from pathlib import Path
 from typing import Any
 
 from lattice_lock.utils.safe_path import resolve_under_root
+
+logger = logging.getLogger("lattice_lock.gauntlet")
 
 
 class GauntletPlugin:
@@ -57,6 +60,8 @@ class GauntletPlugin:
                 # pytest report.location lineno is 0-indexed.
 
                 message = str(report.longrepr).replace("\n", "%0A")
+                # Log for internal tracking (GitHub Actions format print is intentional for CI)
+                logger.error(f"Test failed: {domain} in {fpath}:{lineno+1}")
                 print(f"::error file={fpath},line={lineno+1}::Test failed: {domain}%0A{message}")
 
     def pytest_sessionfinish(self, session, exitstatus):

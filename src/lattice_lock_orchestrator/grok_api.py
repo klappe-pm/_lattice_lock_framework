@@ -6,22 +6,27 @@ Supports all Grok models including vision and image generation
 
 import base64
 import json
+import logging
 import os
 import sys
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 import requests
 import yaml
+
 from lattice_lock.utils.safe_path import resolve_under_root
+
+logger = logging.getLogger("lattice_lock.orchestrator.grok")
 
 from .exceptions import (
     APIClientError,
     AuthenticationError,
     InvalidRequestError,
+    ProviderConnectionError,
     RateLimitError,
     ServerError,
-    ProviderConnectionError,
 )
 
 
@@ -63,7 +68,7 @@ class GrokAPI:
             error_msg = response.text
 
         msg = f"API Error: {response.status_code} - {error_msg}"
-        
+
         if response.status_code == 401 or response.status_code == 403:
             raise AuthenticationError(msg, provider="grok", status_code=response.status_code)
         elif response.status_code == 429:
@@ -109,7 +114,9 @@ class GrokAPI:
         payload = {"model": model_id, "messages": messages, **kwargs}
 
         try:
-            response = requests.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+            response = requests.post(
+                f"{self.base_url}/chat/completions", headers=headers, json=payload
+            )
             self._handle_error(response)
             return response.json()
         except requests.RequestException as e:
@@ -155,7 +162,9 @@ class GrokAPI:
         except requests.RequestException as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
-    def stream_completion(self, model_id: str, messages: list[dict[str, str]], **kwargs) -> Iterator[Any]:
+    def stream_completion(
+        self, model_id: str, messages: list[dict[str, str]], **kwargs
+    ) -> Iterator[Any]:
         """Stream chat completion responses"""
         # Resolve aliases
         if model_id in self.config["aliases"]:
@@ -178,7 +187,7 @@ class GrokAPI:
                         data = line_utf8[6:]
                         if data != "[DONE]":
                             yield json.loads(data)
-                            
+
         except requests.RequestException as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
@@ -204,6 +213,7 @@ def main():
 
         if args.command == "list":
             models = api.list_models(args.category)
+            logger.info(f"Listing {len(models)} models")
             print(f"\n{'='*80}")
             print(f"{'Model ID':<30} {'Context':<15} {'Description':<35}")
             print(f"{'-'*80}")
@@ -215,21 +225,22 @@ def main():
 
         elif args.command == "info":
             if not args.model:
-                print("Error: --model required for info command")
+                logger.error("--model required for info command")
                 sys.exit(1)
             info = api.get_model_info(args.model)
             if info:
+                logger.info(f"Retrieving info for model: {info['id']}")
                 print(f"\nModel Information: {info['id']}")
                 print(f"{'-'*40}")
                 for key, value in info.items():
                     if key != "id":
                         print(f"{key:<20}: {value}")
             else:
-                print(f"Model '{args.model}' not found")
+                logger.warning(f"Model '{args.model}' not found")
 
         elif args.command == "chat":
             if not args.model or not args.prompt:
-                print("Error: --model and --prompt required for chat")
+                logger.error("--model and --prompt required for chat")
                 sys.exit(1)
 
             messages = [{"role": "user", "content": args.prompt}]
@@ -246,7 +257,7 @@ def main():
 
         elif args.command == "vision":
             if not args.model or not args.prompt:
-                print("Error: --model and --prompt required for vision")
+                logger.error("--model and --prompt required for vision")
                 sys.exit(1)
 
             messages = [{"role": "user", "content": args.prompt}]
@@ -255,14 +266,14 @@ def main():
 
         elif args.command == "image":
             if not args.prompt:
-                print("Error: --prompt required for image generation")
+                logger.error("--prompt required for image generation")
                 sys.exit(1)
 
             response = api.image_generation(args.prompt)
             print(f"Generated image URL: {response['data'][0]['url']}")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         sys.exit(1)
 
 
