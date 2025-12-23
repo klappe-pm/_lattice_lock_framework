@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+
 from lattice_lock_validator.schema import ValidationResult, validate_lattice_schema
 
 
@@ -81,7 +82,7 @@ def compile_lattice(
         >>> result = compile_lattice("examples/basic/lattice.yaml", output_dir="./generated")
         >>> if result.success:
         ...     for f in result.generated_files:
-        ...         print(f"Generated: {f.path}")
+        ...         logger.info(f"Generated: {f.path}")
     """
     result = CompilationResult()
 
