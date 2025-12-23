@@ -70,7 +70,7 @@ The `lattice.yaml` schema enforces:
 ## Running Tests
 
 ```bash
-cd pilot_projects/data_pipeline
+cd docs/examples/etl_pipeline
 PYTHONPATH=. pytest tests/ -v
 ```
 

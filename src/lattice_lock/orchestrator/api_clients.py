@@ -4,10 +4,12 @@ Unified API Clients for all model providers
 Handles real API calls with error handling and retry logic
 """
 
+import asyncio
 import json
 import logging
 import os
 import re
+import threading
 import time
 from collections.abc import AsyncIterator
 from enum import Enum
@@ -57,6 +59,7 @@ class ProviderAvailability:
     """Tracks provider availability and credential status."""
 
     _instance = None
+    _lock = threading.Lock()
     _checked = False
     _status: dict[str, ProviderStatus] = {}
     _messages: dict[str, str] = {}
@@ -88,7 +91,9 @@ class ProviderAvailability:
     @classmethod
     def get_instance(cls) -> "ProviderAvailability":
         if cls._instance is None:
-            cls._instance = cls()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
         return cls._instance
 
     @classmethod
@@ -162,7 +167,8 @@ class BaseAPIClient:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
-            await self.session.close()
+            # Shield cleanup from cancellation to ensure session is closed
+            await asyncio.shield(self.session.close())
 
     @retry(
         stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True
