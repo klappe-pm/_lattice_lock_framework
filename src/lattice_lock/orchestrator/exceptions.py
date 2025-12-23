@@ -5,13 +5,23 @@ Defines the custom exception hierarchy for API clients and provider interactions
 """
 
 
-class APIClientError(Exception):
+from lattice_lock.errors.types import LatticeError
+
+class APIClientError(LatticeError):
     """Base exception for all API client errors."""
+    
+    error_code = "LL-600"
 
     def __init__(self, message: str, provider: str | None = None, status_code: int | None = None):
+        details = {}
+        if provider:
+            details["provider"] = provider
+        if status_code is not None:
+            details["status_code"] = status_code
+            
+        super().__init__(message, error_code=self.error_code, details=details)
         self.provider = provider
         self.status_code = status_code
-        super().__init__(message)
 
 
 class ProviderConnectionError(APIClientError):

@@ -168,9 +168,6 @@ ignore-patterns = ["test_.*\\.py"]
 
 [tool.pylint.messages_control]
 disable = [
-    "C0114",  # missing-module-docstring (we'll add these in A4)
-    "C0115",  # missing-class-docstring (we'll add these in A4)
-    "C0116",  # missing-function-docstring (we'll add these in A4)
     "R0903",  # too-few-public-methods
     "W1203",  # logging-fstring-interpolation
 ]

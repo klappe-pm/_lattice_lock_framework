@@ -15,17 +15,18 @@ import pytest
 
 @pytest.fixture(scope="session")
 def auth_secrets():
-    """Load test secrets from environment or implementation-safe defaults."""
+    """Load test secrets from environment or generate safe defaults."""
+    import secrets
+    
+    def get_or_generate(key, length=32):
+        return os.getenv(key) or secrets.token_urlsafe(length)
+
     return {
-        "SECRET_KEY": os.getenv(
-            "LATTICE_TEST_SECRET_KEY", "dummy-test-secret-key-must-be-min-32-chars"
-        ),
-        "PASSWORD": os.getenv("LATTICE_TEST_PASSWORD", "dummy_user_password"),
-        "ADMIN_PASSWORD": os.getenv("LATTICE_TEST_ADMIN_PASSWORD", "dummy_admin_password"),
-        "OPERATOR_PASSWORD": os.getenv("LATTICE_TEST_OPERATOR_PASSWORD", "dummy_operator_password"),
-        "CUSTOM_SECRET_KEY": os.getenv(
-            "LATTICE_TEST_CUSTOM_SECRET_KEY", "dummy-custom-secret-key-min-32-chars"
-        ),
+        "SECRET_KEY": get_or_generate("LATTICE_TEST_SECRET_KEY"),
+        "PASSWORD": get_or_generate("LATTICE_TEST_PASSWORD", 16),
+        "ADMIN_PASSWORD": get_or_generate("LATTICE_TEST_ADMIN_PASSWORD", 16),
+        "OPERATOR_PASSWORD": get_or_generate("LATTICE_TEST_OPERATOR_PASSWORD", 16),
+        "CUSTOM_SECRET_KEY": get_or_generate("LATTICE_TEST_CUSTOM_SECRET_KEY"),
     }
 
 

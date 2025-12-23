@@ -36,10 +36,12 @@ class RegistryValidationResult:
     provider_count: int = 0
 
     def add_error(self, error: str):
+        """Add a validation error."""
         self.errors.append(error)
         self.valid = False
 
     def add_warning(self, warning: str):
+        """Add a validation warning."""
         self.warnings.append(warning)
 
 

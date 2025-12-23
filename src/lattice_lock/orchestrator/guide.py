@@ -1,3 +1,6 @@
+"""
+This module provides the ModelGuideParser for parsing model selection rules.
+"""
 import logging
 import re
 from pathlib import Path

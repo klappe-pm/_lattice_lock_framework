@@ -357,9 +357,9 @@ class TestUserManagement:
         user = get_user("nonexistent")
         assert user is None
 
-    def test_authenticate_user_success(self, test_user: User):
+    def test_authenticate_user_success(self, test_user: User, auth_secrets):
         """Test successful user authentication."""
-        password = TEST_PASSWORD_DEFAULT
+        password = auth_secrets["PASSWORD"]
         user = authenticate_user(test_user.username, password)
         assert user is not None
         assert user.username == test_user.username

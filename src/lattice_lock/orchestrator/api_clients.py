@@ -90,6 +90,7 @@ class ProviderAvailability:
 
     @classmethod
     def get_instance(cls) -> "ProviderAvailability":
+        """Get the singleton instance of ProviderAvailability."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:

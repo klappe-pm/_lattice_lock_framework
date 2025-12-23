@@ -116,3 +116,49 @@ class CheckpointStorage:
         ids_to_delete = all_ids[keep_n:]
         for checkpoint_id in ids_to_delete:
             self.delete_state(checkpoint_id)
+
+    def _get_backup_path(self, checkpoint_id: str, filepath: str) -> Path:
+        """Get the full path for a file backup inside a checkpoint."""
+        # Sanitize filepath to avoid tree traversal
+        # We flat-map the directory structure or use a hash of the path
+        # Simple approach: hash the path to use as filename
+        import hashlib
+        path_hash = hashlib.sha256(filepath.encode()).hexdigest()
+        
+        # Use a subdirectory for the checkpoint
+        checkpoint_dir = self.storage_dir / checkpoint_id
+        checkpoint_dir.mkdir(exist_ok=True)
+        
+        return checkpoint_dir / f"{path_hash}.gz"
+
+    def save_file_content(self, checkpoint_id: str, filepath: str, content: str | bytes):
+        """Save a file's content associated with a checkpoint."""
+        backup_path = self._get_backup_path(checkpoint_id, filepath)
+        
+        mode = "wb" if isinstance(content, bytes) else "wt"
+        encoding = None if isinstance(content, bytes) else "utf-8"
+        
+        with gzip.open(backup_path, mode, encoding=encoding) as f:
+            f.write(content)
+
+    def load_file_content(self, checkpoint_id: str, filepath: str) -> str | bytes | None:
+        """Load a file's content from a checkpoint."""
+        backup_path = self._get_backup_path(checkpoint_id, filepath)
+        
+        if not backup_path.exists():
+            return None
+            
+        try:
+            # Try reading as text first, if fails assume bytes? 
+            # Ideally we know the type. For now, let's assume text for code files.
+            # But safer to read as bytes and decode if needed?
+            # Existing save_file_content implies we know. 
+            # Let's try text.
+            with gzip.open(backup_path, "rt", encoding="utf-8") as f:
+                return f.read()
+        except OSError:
+            return None
+        except UnicodeDecodeError:
+             # Fallback to bytes
+             with gzip.open(backup_path, "rb") as f:
+                return f.read()

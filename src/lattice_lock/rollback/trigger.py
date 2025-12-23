@@ -1,3 +1,6 @@
+"""
+This module handles rollback triggers and execution hooks.
+"""
 import logging
 import subprocess
 from collections.abc import Callable

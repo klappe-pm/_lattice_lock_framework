@@ -44,7 +44,43 @@ class CheckpointManager:
             schema_version=schema_version,
             description=description,
         )
-        return self.storage.save_state(state)
+        checkpoint_id = self.storage.save_state(state)
+        
+        # Backup file contents
+        for filepath in files:
+            try:
+                with open(filepath, "rb") as f:
+                    content = f.read()
+                    self.storage.save_file_content(checkpoint_id, filepath, content)
+            except (FileNotFoundError, PermissionError):
+                continue
+                
+        return checkpoint_id
+
+    def restore_file(self, checkpoint_id: str, filepath: str) -> bool:
+        """
+        Restore a file from a checkpoint.
+        Returns True if successful, False if backup not found.
+        """
+        content = self.storage.load_file_content(checkpoint_id, filepath)
+        if content is None:
+            return False
+            
+        try:
+            mode = "wb" if isinstance(content, bytes) else "w"
+            encoding = None if isinstance(content, bytes) else "utf-8"
+            
+            # Ensure directory exists
+            import os
+            dirname = os.path.dirname(filepath)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
+            
+            with open(filepath, mode, encoding=encoding) as f:
+                f.write(content)
+            return True
+        except OSError:
+            return False
 
     def list_checkpoints(self) -> list[str]:
         """
