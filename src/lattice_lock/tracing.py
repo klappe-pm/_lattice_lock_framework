@@ -293,11 +293,16 @@ def traced(
     return decorator
 
 
-def asyncio_iscoroutinefunction(func: Callable) -> bool:
-    """Check if a function is a coroutine function."""
-    import asyncio
-
-    return asyncio.iscoroutinefunction(func)
+import asyncio
+import contextvars
+import functools
+import logging
+import time
+import uuid
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, ParamSpec, TypeVar
 
 
 @dataclass
