@@ -730,24 +730,15 @@ def authenticate_user(username: str, password: str) -> User | None:
     """
     user = get_user(username)
 
-    # Always perform password verification to prevent timing attacks
-    # that could enumerate valid usernames. Use a dummy hash when user
-    # doesn't exist to ensure constant-time behavior.
-    # This dummy hash is a valid bcrypt hash that will never match any password
-    # Reference module constant: _TIMING_ATTACK_DUMMY_HASH (define at top after _BCRYPT_ROUNDS)
-    dummy_hash = _TIMING_ATTACK_DUMMY_HASH
+    # Always verify password to maintain constant execution time
+    # This prevents timing attacks that could enumerate valid usernames
+    # Use a dummy hash when user doesn't exist
+    dummy_hash = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.VTtYA/ICNVu5xO"
+    hash_to_verify = user.hashed_password if user else dummy_hash
 
-    if user is None:
-        # Perform dummy verification to maintain constant time
-        verify_password(password, dummy_hash)
-        return None
+    password_valid = verify_password(password, hash_to_verify)
 
-    if user.disabled:
-        # Still perform verification for disabled users to maintain constant time
-        verify_password(password, user.hashed_password)
-        return None
-
-    if not verify_password(password, user.hashed_password):
+    if user is None or user.disabled or not password_valid:
         return None
 
     return user

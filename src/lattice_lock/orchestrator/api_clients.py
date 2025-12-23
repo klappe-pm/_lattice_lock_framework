@@ -186,9 +186,9 @@ class BaseAPIClient:
                         try:
                             error_json = json.loads(error_text)
                             error_msg = error_json.get("error", {}).get("message", error_text)
-                        except:
+                        except (json.JSONDecodeError, KeyError, TypeError):
                             error_msg = error_text
-                    except:
+                    except (aiohttp.ClientError, UnicodeDecodeError):
                         error_msg = f"Unknown error (status {response.status})"
 
                     msg = f"API Error {response.status}: {error_msg}"

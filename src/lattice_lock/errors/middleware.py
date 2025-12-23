@@ -110,7 +110,7 @@ class RetryConfig:
 
     def get_delay(self, attempt: int) -> float:
         """Calculate delay for a given retry attempt."""
-        import random
+        import secrets
 
         if self.exponential_backoff:
             delay = self.base_delay * (2**attempt)
@@ -120,7 +120,8 @@ class RetryConfig:
         delay = min(delay, self.max_delay)
 
         if self.jitter:
-            delay = delay * (0.5 + random.random())
+            # Use secrets.SystemRandom for cryptographically secure randomness
+            delay = delay * (0.5 + secrets.SystemRandom().random())
 
         return delay
 
