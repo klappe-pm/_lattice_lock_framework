@@ -508,7 +508,6 @@ Examples:
         if result.violations:
             for violation in result.violations:
                 print(violation)
-            print()
 
         status = "PASSED" if result.passed else "FAILED"
         print(f"Sheriff: {status}")
