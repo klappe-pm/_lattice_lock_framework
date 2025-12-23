@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 from lattice_lock.agents.prompt_architect.models import GenerationRequest, GenerationResult
-from lattice_lock.agents.prompt_architect.orchestrator import PromptArchitectOrchestrator
+from lattice_lock.agents.prompt_architect.orchestrator import PromptOrchestrator
 from lattice_lock.logging_config import get_logger, set_trace_id
 from lattice_lock.logging_config import setup_logging as configure_logging
 from lattice_lock.utils.safe_path import resolve_under_root
@@ -138,7 +138,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 def cmd_generate(args: argparse.Namespace) -> int:
     """Handle the generate command."""
-    orchestrator = PromptArchitectOrchestrator(
+    orchestrator = PromptOrchestrator(
         spec_path=args.spec,
         roadmap_dir=args.roadmap_dir,
         output_dir=args.output,
