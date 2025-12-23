@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   pylint:
@@ -16,16 +16,16 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint pyyaml
-        pip install -e .
-    - name: Analysing the code with pylint
-      run: |
-        pylint src/lattice_lock_orchestrator --disable=C0114,C0115,C0116 --max-line-length=120 || true
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint pyyaml
+          pip install -e .
+      - name: Analysing the code with pylint
+        run: |
+          pylint src/lattice_lock --disable=C0114,C0115,C0116 --max-line-length=120 || true

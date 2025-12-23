@@ -30,10 +30,8 @@ steps:
   # Step 2: Run Lattice Lock schema validation
   - name: 'python:{{ python_version | default("3.11") }}'
     id: 'validate-schema'
-    entrypoint: 'python'
+    entrypoint: 'lattice-lock'
     args:
-      - '-m'
-      - 'lattice_lock_cli'
       - 'validate'
     waitFor:
       - 'install-dependencies'
@@ -41,10 +39,8 @@ steps:
   # Step 3: Run Sheriff AST validation
   - name: 'python:{{ python_version | default("3.11") }}'
     id: 'run-sheriff'
-    entrypoint: 'python'
+    entrypoint: 'lattice-lock'
     args:
-      - '-m'
-      - 'lattice_lock_cli'
       - 'sheriff'
     waitFor:
       - 'validate-schema'
@@ -52,10 +48,8 @@ steps:
   # Step 4: Run Gauntlet semantic contracts
   - name: 'python:{{ python_version | default("3.11") }}'
     id: 'run-gauntlet'
-    entrypoint: 'python'
+    entrypoint: 'lattice-lock'
     args:
-      - '-m'
-      - 'lattice_lock_cli'
       - 'gauntlet'
     waitFor:
       - 'run-sheriff'

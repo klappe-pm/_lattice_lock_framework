@@ -75,7 +75,7 @@ def gauntlet_command(
             # Since we can't easily pass plugin instances to pytest.main in all versions,
             # we'll use the -p argument if it's installed, or we might need a conftest.
             # But wait, pytest.main(["-p", "my.plugin"]) works if it's importable.
-            pytest_args.extend(["-p", "lattice_lock_gauntlet.plugin"])
+            pytest_args.extend(["-p", "lattice_lock.gauntlet.plugin"])
 
             # We can pass configuration via environment variables or other means if the plugin needs to know flags
             # But our plugin constructor takes args.
