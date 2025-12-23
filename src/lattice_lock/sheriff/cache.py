@@ -1,9 +1,12 @@
 import hashlib
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 from .config import SheriffConfig
+
+logger = logging.getLogger("lattice_lock.sheriff.cache")
 
 
 class SheriffCache:
@@ -35,7 +38,7 @@ class SheriffCache:
                     self._cache = {Path(k): v for k, v in data.items()}
             except (OSError, json.JSONDecodeError) as e:
                 # Log error and start with empty cache
-                print(f"Warning: Failed to load sheriff cache from {self.cache_file}: {e}")
+                logger.warning(f"Failed to load sheriff cache from {self.cache_file}: {e}")
                 self._cache = {}
         else:
             self._cache = {}
@@ -48,7 +51,7 @@ class SheriffCache:
             with open(self.cache_file, "w", encoding="utf-8") as f:
                 json.dump(serializable_cache, f, indent=2)
         except OSError as e:
-            print(f"Error: Failed to save sheriff cache to {self.cache_file}: {e}")
+            logger.error(f"Failed to save sheriff cache to {self.cache_file}: {e}")
 
     def clear(self) -> None:
         """Clears the current cache and removes the cache file."""
@@ -57,7 +60,7 @@ class SheriffCache:
             try:
                 self.cache_file.unlink()
             except OSError as e:
-                print(f"Error: Failed to delete cache file {self.cache_file}: {e}")
+                logger.error(f"Failed to delete cache file {self.cache_file}: {e}")
 
     def get_cached_violations(self, file_path: Path) -> list[dict[str, Any]] | None:
         """

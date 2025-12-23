@@ -12,8 +12,11 @@ from .ast_visitor import SheriffVisitor
 from .config import SheriffConfig, ViolationSeverity
 from .rules import Violation
 from dataclasses import dataclass, field
+import logging
 import os
 from lattice_lock.utils.safe_path import resolve_under_root
+
+logger = logging.getLogger("lattice_lock.sheriff")
 
 
 @dataclass
@@ -243,7 +246,7 @@ def run_sheriff(
         target_path_resolved = resolve_under_root(os.getcwd(), target_path)
         target = Path(target_path_resolved)
     except ValueError as e:
-        print(f"Error: Invalid path - {e}")
+        logger.error(f"Invalid path: {e}")
         return result
 
     if not target.exists():

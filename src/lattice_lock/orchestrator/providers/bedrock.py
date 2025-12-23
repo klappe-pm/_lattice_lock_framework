@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import asyncio
 
 from ..types import APIResponse
 
@@ -43,7 +44,18 @@ class BedrockClient:
         else:
             logger.warning("Bedrock credentials missing. Client disabled.")
 
-    def generate(
+    def _init_client(self):
+        """Helper to initialize client in thread-safe way if needed"""
+        if not hasattr(self, "_client"):
+            self._client = boto3.client(
+                "bedrock-runtime",
+                region_name=self.region,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+            )
+        return self._client
+
+    async def generate(
         self, model: str, messages: list[dict[str, str]], max_tokens: int = 4096, **kwargs
     ) -> APIResponse:
         """Generate response from Bedrock model."""
@@ -68,20 +80,25 @@ class BedrockClient:
                 }
             )
 
+            # Initialize client if needed (technically this part might blocking briefly on first run)
+            # We can defer it to loop if strictly needed, but client creation is usually fast enough
+            # unless it does heavy auth calls.
             if not hasattr(self, "_client"):
-                self._client = boto3.client(
-                    "bedrock-runtime",
-                    region_name=self.region,
-                    aws_access_key_id=self.access_key,
-                    aws_secret_access_key=self.secret_key,
-                )
+                await asyncio.to_thread(self._init_client)
 
             logger.info(f"Generating with Bedrock model: {model}")
             start_time = time.time()
 
-            response = self._client.invoke_model(
-                body=body, modelId=model, accept="application/json", contentType="application/json"
-            )
+            # Run blocking boto3 call in thread
+            def _invoke():
+                return self._client.invoke_model(
+                    body=body,
+                    modelId=model,
+                    accept="application/json",
+                    contentType="application/json",
+                )
+
+            response = await asyncio.to_thread(_invoke)
 
             latency = (time.time() - start_time) * 1000
 

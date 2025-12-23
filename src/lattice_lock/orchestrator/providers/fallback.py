@@ -1,5 +1,5 @@
+import asyncio
 import logging
-import time
 from collections.abc import Callable
 from typing import Any
 
@@ -20,8 +20,8 @@ class FallbackManager:
     def __init__(self, max_retries: int = 1):
         self.max_retries = max_retries
 
-    def execute_with_fallback(
-        self, func: Callable[..., APIResponse], candidates: list[Any], *args, **kwargs
+    async def execute_with_fallback(
+        self, func: Callable[..., Any], candidates: list[Any], *args, **kwargs
     ) -> APIResponse:
         """
         Execute a function with a list of update candidates (models/clients).
@@ -44,14 +44,22 @@ class FallbackManager:
             # Simple retry logic for the current candidate
             for attempt in range(self.max_retries + 1):
                 try:
-                    return func(candidate, *args, **kwargs)
+                    # Handle both sync and async functions naturally if we can,
+                    # but pure async is preferred. For now we assume the func might be awaitable.
+                    if asyncio.iscoroutinefunction(func):
+                        return await func(candidate, *args, **kwargs)
+                    else:
+                        # If strict async is required, we could wrap this in to_thread
+                        # But typically the func passed here will be an async client method
+                        return func(candidate, *args, **kwargs)
+
                 except Exception as e:
                     logger.warning(
                         f"Candidate {candidate} failed (attempt {attempt+1}/{self.max_retries+1}): {e}"
                     )
                     last_error = e
                     if attempt < self.max_retries:
-                        time.sleep(0.5 * (2**attempt))  # Exponential backoff
+                        await asyncio.sleep(0.5 * (2**attempt))  # Exponential backoff
 
             logger.warning(f"Falling back from candidate {candidate} due to persistent failure.")
 

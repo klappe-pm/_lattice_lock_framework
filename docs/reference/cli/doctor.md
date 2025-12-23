@@ -221,6 +221,6 @@ sudo apt install git
 
 ## See Also
 
-- [CLI Overview](index.md)
+- [CLI Overview](docs/reference/cli/index.md)
 - [validate](validate.md) - Project validation
 - [Getting Started Guide](interactive_onboarding_guide.md)

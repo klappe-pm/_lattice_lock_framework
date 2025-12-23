@@ -9,6 +9,7 @@ import logging
 import click
 
 from lattice_lock import __version__
+from lattice_lock.logging_config import get_logger, set_trace_id, setup_logging
 
 # Import existing commands
 from lattice_lock.cli.commands.compile import compile_command
@@ -24,9 +25,9 @@ from lattice_lock.cli.groups.admin import admin_group
 from lattice_lock.cli.groups.orchestrator import orchestrator_group
 from lattice_lock.cli.utils.console import get_console
 
-# Configuration for logger
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger("lattice_lock")
+# Initialize centralized logging with simple format for CLI
+setup_logging(level=logging.INFO, simple_format=True)
+logger = get_logger("cli")
 
 
 @click.group()
@@ -43,13 +44,17 @@ logger = logging.getLogger("lattice_lock")
 @click.pass_context
 def cli(ctx, verbose: bool, json: bool, project_dir: str):
     """Lattice Lock Framework CLI - Governance for AI Engineering."""
+    # Generate trace ID for this CLI invocation
+    trace_id = set_trace_id()
+
     ctx.ensure_object(dict)
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["JSON"] = json
     ctx.obj["PROJECT_DIR"] = project_dir
+    ctx.obj["TRACE_ID"] = trace_id
 
     if verbose:
-        logger.setLevel(logging.DEBUG)
+        setup_logging(level=logging.DEBUG, simple_format=True)
         get_console().print("[info]Verbose mode enabled[/info]")
 
 

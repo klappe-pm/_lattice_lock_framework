@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from collections.abc import Callable
 
 from .api_clients import ProviderAvailability, ProviderUnavailableError, get_api_client
@@ -37,6 +38,7 @@ class ModelOrchestrator:
         prompt: str,
         model_id: str | None = None,
         task_type: TaskType | None = None,
+        trace_id: str | None = None,
         **kwargs,
     ) -> APIResponse:
         """
@@ -46,8 +48,10 @@ class ModelOrchestrator:
             prompt: The user prompt.
             model_id: Optional specific model ID to force use.
             task_type: Optional manual task type override.
+            trace_id: Optional trace ID for request tracking (auto-generated if not provided).
             **kwargs: Additional arguments passed to the API client.
         """
+        trace_id = trace_id or str(uuid.uuid4())
 
         # 1. Analyze Task
         requirements = self.analyzer.analyze(prompt)
@@ -55,7 +59,8 @@ class ModelOrchestrator:
             requirements.task_type = task_type
 
         logger.info(
-            f"Analyzed task: {requirements.task_type.name}, Priority: {requirements.priority}"
+            f"Analyzed task: {requirements.task_type.name}, Priority: {requirements.priority}",
+            extra={"trace_id": trace_id},
         )
 
         # 2. Select Model
@@ -70,15 +75,20 @@ class ModelOrchestrator:
         if not model_cap:
             raise ValueError(f"Model {selected_model_id} not found in registry")
 
-        logger.info(f"Selected model: {selected_model_id} ({model_cap.provider.value})")
+        logger.info(
+            f"Selected model: {selected_model_id} ({model_cap.provider.value})",
+            extra={"trace_id": trace_id},
+        )
 
         # 3. Execute Request
         try:
-            return await self._call_model(model_cap, prompt, **kwargs)
+            return await self._call_model(model_cap, prompt, trace_id=trace_id, **kwargs)
         except Exception as e:
-            logger.error(f"Primary model failed: {e}. Attempting fallback...")
+            logger.error(
+                f"Primary model failed: {e}. Attempting fallback...", extra={"trace_id": trace_id}
+            )
             return await self._handle_fallback(
-                requirements, prompt, failed_model=selected_model_id, **kwargs
+                requirements, prompt, failed_model=selected_model_id, trace_id=trace_id, **kwargs
             )
 
     def _select_best_model(self, requirements: TaskRequirements) -> str | None:

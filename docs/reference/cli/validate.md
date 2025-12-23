@@ -195,7 +195,7 @@ The validate command is designed for CI/CD pipelines:
 
 ## See Also
 
-- [CLI Overview](index.md)
+- [CLI Overview](docs/reference/cli/index.md)
 - [sheriff](docs/reference/cli/sheriff.md) - AST-based code validation
 - [doctor](doctor.md) - Environment health check
 - [Configuration Reference](docs/reference/configuration.md) - lattice.yaml schema

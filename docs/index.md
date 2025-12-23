@@ -94,7 +94,7 @@ Agent definitions and workflows:
 
 Authoritative specifications:
 
-- [Framework Specifications](framework_specifications.md) - Complete framework spec
+- [Framework Specifications](lattice_lock_framework_specifications.md) - Complete framework spec
 - [Versioning Strategy](versioning_strategy.md) - Version management
 - [Repository Structure](repository_structure.md) - Project structure standards
 
@@ -103,9 +103,9 @@ Authoritative specifications:
 Design decisions and strategies:
 
 - [Provider Strategy](provider_strategy.md) - AI provider integration
-- [Cost Telemetry Strategy](6.3.3_cost_telemetry_strategy.md) - Cost tracking design
-- [Provider Fallback Strategy](6.1.3_provider_fallback_strategy.md) - Fallback handling
-- [Orchestrator Capabilities](6.1.1_orchestrator_capabilities_contract.md) - Capability contracts
+- [Cost Telemetry Strategy](cost_telemetry_strategy.md) - Cost tracking design
+- [Provider Fallback Strategy](provider_fallback_strategy.md) - Fallback handling
+- [Orchestrator Capabilities](orchestrator_capabilities_contract.md) - Capability contracts
 
 ### Development
 
@@ -186,10 +186,6 @@ lattice-lock validate ./my-project
 
 ## Getting Help
 
-<<<<<<< HEAD
 - [Troubleshooting Guide](getting_started/troubleshooting.md) - Common issues
-=======
-- [Troubleshooting Guide](troubleshooting.md) - Common issues
->>>>>>> origin/main
 - [GitHub Issues](https://github.com/klappe-pm/lattice-lock-framework/issues) - Report bugs
 - [Discussions](https://github.com/klappe-pm/lattice-lock-framework/discussions) - Ask questions

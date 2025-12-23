@@ -20,6 +20,7 @@ credentials/
 *_ed25519.pub
 
 # API Keys and Environment Files
+docs/credentials/.env
 .env
 .env.*
 !.env.example

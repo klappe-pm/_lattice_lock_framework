@@ -274,7 +274,7 @@ If no configuration is found, Sheriff uses default rules.
 
 ## See Also
 
-- [CLI Overview](index.md)
+- [CLI Overview](docs/reference/cli/index.md)
 - [validate](validate.md) - Schema and structure validation
 - [gauntlet](docs/reference/cli/gauntlet.md) - Semantic test generation
 - [Configuration Reference](docs/reference/configuration.md) - lattice.yaml schema

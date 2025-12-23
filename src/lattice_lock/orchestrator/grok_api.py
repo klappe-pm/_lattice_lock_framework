@@ -6,8 +6,10 @@ Supports all Grok models including vision and image generation
 
 import base64
 import json
+import logging
 import os
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +17,17 @@ import requests
 import yaml
 
 from lattice_lock.utils.safe_path import resolve_under_root
+
+logger = logging.getLogger("lattice_lock.orchestrator.grok")
+
+from .exceptions import (
+    APIClientError,
+    AuthenticationError,
+    InvalidRequestError,
+    ProviderConnectionError,
+    RateLimitError,
+    ServerError,
+)
 
 
 class GrokAPI:
@@ -42,6 +55,30 @@ class GrokAPI:
 
         with open(self.config_path) as f:
             return yaml.safe_load(f)
+
+    def _handle_error(self, response: requests.Response) -> None:
+        """Map HTTP status codes to specific exceptions"""
+        if response.status_code == 200:
+            return
+
+        try:
+            error_data = response.json()
+            error_msg = error_data.get("error", {}).get("message", response.text)
+        except Exception:
+            error_msg = response.text
+
+        msg = f"API Error: {response.status_code} - {error_msg}"
+
+        if response.status_code == 401 or response.status_code == 403:
+            raise AuthenticationError(msg, provider="grok", status_code=response.status_code)
+        elif response.status_code == 429:
+            raise RateLimitError(msg, provider="grok", status_code=response.status_code)
+        elif response.status_code >= 500:
+            raise ServerError(msg, provider="grok", status_code=response.status_code)
+        elif response.status_code == 400:
+            raise InvalidRequestError(msg, provider="grok", status_code=response.status_code)
+        else:
+            raise APIClientError(msg, provider="grok", status_code=response.status_code)
 
     def list_models(self, category: str | None = None) -> list[dict]:
         """List available models, optionally filtered by category"""
@@ -76,12 +113,14 @@ class GrokAPI:
 
         payload = {"model": model_id, "messages": messages, **kwargs}
 
-        response = requests.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
-
-        if response.status_code != 200:
-            raise Exception(f"API Error: {response.status_code} - {response.text}")
-
-        return response.json()
+        try:
+            response = requests.post(
+                f"{self.base_url}/chat/completions", headers=headers, json=payload
+            )
+            self._handle_error(response)
+            return response.json()
+        except requests.RequestException as e:
+            raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
     def vision_completion(
         self, model_id: str, messages: list[dict], image_path: str | None = None, **kwargs
@@ -114,16 +153,18 @@ class GrokAPI:
 
         payload = {"model": model_id, "prompt": prompt, **kwargs}
 
-        response = requests.post(
-            f"{self.base_url}/images/generations", headers=headers, json=payload
-        )
+        try:
+            response = requests.post(
+                f"{self.base_url}/images/generations", headers=headers, json=payload
+            )
+            self._handle_error(response)
+            return response.json()
+        except requests.RequestException as e:
+            raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
-        if response.status_code != 200:
-            raise Exception(f"API Error: {response.status_code} - {response.text}")
-
-        return response.json()
-
-    def stream_completion(self, model_id: str, messages: list[dict[str, str]], **kwargs) -> Any:
+    def stream_completion(
+        self, model_id: str, messages: list[dict[str, str]], **kwargs
+    ) -> Iterator[Any]:
         """Stream chat completion responses"""
         # Resolve aliases
         if model_id in self.config["aliases"]:
@@ -133,17 +174,22 @@ class GrokAPI:
 
         payload = {"model": model_id, "messages": messages, "stream": True, **kwargs}
 
-        response = requests.post(
-            f"{self.base_url}/chat/completions", headers=headers, json=payload, stream=True
-        )
+        try:
+            response = requests.post(
+                f"{self.base_url}/chat/completions", headers=headers, json=payload, stream=True
+            )
+            self._handle_error(response)
 
-        for line in response.iter_lines():
-            if line:
-                line = line.decode("utf-8")
-                if line.startswith("data: "):
-                    data = line[6:]
-                    if data != "[DONE]":
-                        yield json.loads(data)
+            for line in response.iter_lines():
+                if line:
+                    line_utf8 = line.decode("utf-8")
+                    if line_utf8.startswith("data: "):
+                        data = line_utf8[6:]
+                        if data != "[DONE]":
+                            yield json.loads(data)
+
+        except requests.RequestException as e:
+            raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
 
 def main():
@@ -167,6 +213,7 @@ def main():
 
         if args.command == "list":
             models = api.list_models(args.category)
+            logger.info(f"Listing {len(models)} models")
             print(f"\n{'='*80}")
             print(f"{'Model ID':<30} {'Context':<15} {'Description':<35}")
             print(f"{'-'*80}")
@@ -178,21 +225,22 @@ def main():
 
         elif args.command == "info":
             if not args.model:
-                print("Error: --model required for info command")
+                logger.error("--model required for info command")
                 sys.exit(1)
             info = api.get_model_info(args.model)
             if info:
+                logger.info(f"Retrieving info for model: {info['id']}")
                 print(f"\nModel Information: {info['id']}")
                 print(f"{'-'*40}")
                 for key, value in info.items():
                     if key != "id":
                         print(f"{key:<20}: {value}")
             else:
-                print(f"Model '{args.model}' not found")
+                logger.warning(f"Model '{args.model}' not found")
 
         elif args.command == "chat":
             if not args.model or not args.prompt:
-                print("Error: --model and --prompt required for chat")
+                logger.error("--model and --prompt required for chat")
                 sys.exit(1)
 
             messages = [{"role": "user", "content": args.prompt}]
@@ -205,27 +253,30 @@ def main():
                 print()
             else:
                 response = api.chat_completion(args.model, messages)
+                logger.debug("chat_response", extra={"model": args.model})
                 print(response["choices"][0]["message"]["content"])
 
         elif args.command == "vision":
             if not args.model or not args.prompt:
-                print("Error: --model and --prompt required for vision")
+                logger.error("--model and --prompt required for vision")
                 sys.exit(1)
 
             messages = [{"role": "user", "content": args.prompt}]
             response = api.vision_completion(args.model, messages, args.image)
+            logger.debug("vision_response", extra={"model": args.model})
             print(response["choices"][0]["message"]["content"])
 
         elif args.command == "image":
             if not args.prompt:
-                print("Error: --prompt required for image generation")
+                logger.error("--prompt required for image generation")
                 sys.exit(1)
 
             response = api.image_generation(args.prompt)
+            logger.info("image_generated", extra={"url": response["data"][0]["url"]})
             print(f"Generated image URL: {response['data'][0]['url']}")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         sys.exit(1)
 
 

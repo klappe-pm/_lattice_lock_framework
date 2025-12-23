@@ -7,6 +7,7 @@ Handles real API calls with error handling and retry logic
 import json
 import logging
 import os
+import re
 import time
 from collections.abc import AsyncIterator
 from enum import Enum
@@ -14,9 +15,33 @@ from enum import Enum
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from .exceptions import (
+    APIClientError,
+    AuthenticationError,
+    InvalidRequestError,
+    ProviderConnectionError,
+    RateLimitError,
+    ServerError,
+)
 from .types import APIResponse, FunctionCall
 
 logger = logging.getLogger(__name__)
+
+
+def _redact_sensitive_in_message(message: str) -> str:
+    """Redact sensitive data from error messages (URLs with tokens, API keys, etc.)."""
+    # Redact API keys in URLs (e.g., ?key=xxx, &api_key=xxx)
+    message = re.sub(
+        r"([?&](?:key|api_key|token|access_token|apikey)=)[^&\s]+",
+        r"\1[REDACTED]",
+        message,
+        flags=re.IGNORECASE,
+    )
+    # Redact Bearer tokens
+    message = re.sub(r"(Bearer\s+)[^\s]+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
+    # Redact Authorization headers
+    message = re.sub(r"(Authorization:\s*)[^\s]+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
+    return message
 
 
 class ProviderStatus(Enum):
@@ -139,7 +164,9 @@ class BaseAPIClient:
         if self.session:
             await self.session.close()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    @retry(
+        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True
+    )
     async def _make_request(self, method: str, endpoint: str, headers: dict, payload: dict) -> dict:
         """Make API request with retry logic"""
         if not self.session:
@@ -153,15 +180,89 @@ class BaseAPIClient:
                 latency_ms = int((time.time() - start_time) * 1000)
 
                 if response.status != 200:
-                    error_text = await response.text()
-                    raise Exception(f"API Error {response.status}: {error_text}")
+                    try:
+                        error_text = await response.text()
+                        # try to parse json if possible to get better error message
+                        try:
+                            error_json = json.loads(error_text)
+                            error_msg = error_json.get("error", {}).get("message", error_text)
+                        except:
+                            error_msg = error_text
+                    except:
+                        error_msg = f"Unknown error (status {response.status})"
+
+                    msg = f"API Error {response.status}: {error_msg}"
+
+                    if response.status == 401 or response.status == 403:
+                        raise AuthenticationError(msg, status_code=response.status)
+                    elif response.status == 429:
+                        raise RateLimitError(msg, status_code=response.status)
+                    elif response.status >= 500:
+                        raise ServerError(msg, status_code=response.status)
+                    elif response.status == 400:
+                        raise InvalidRequestError(msg, status_code=response.status)
+                    else:
+                        raise APIClientError(msg, status_code=response.status)
 
                 data = await response.json()
                 return data, latency_ms
 
-        except Exception as e:
-            logger.error(f"Request failed: {e}")
+        except aiohttp.ClientError as e:
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Connection failed: {redacted_msg}")
+            raise ProviderConnectionError(f"Connection failed: {redacted_msg}") from e
+        except APIClientError:
             raise
+        except Exception as e:
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Request failed: {redacted_msg}")
+            raise APIClientError(f"Unexpected error: {redacted_msg}") from e
+
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
+        **kwargs,
+    ) -> APIResponse:
+        """
+        Unified entry point for chat completions.
+        Handles common logic (logging, tracing, error wrapping) and delegates to provider implementation.
+        """
+        try:
+            # Common logging or pre-processing could go here
+            return await self._chat_completion_impl(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                functions=functions,
+                tool_choice=tool_choice,
+                **kwargs,
+            )
+        except Exception as e:
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Chat completion failed for {self.__class__.__name__}: {redacted_msg}")
+            raise
+
+    async def _chat_completion_impl(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float,
+        max_tokens: int | None,
+        functions: list[dict] | None,
+        tool_choice: str | dict | None,
+        **kwargs,
+    ) -> APIResponse:
+        """
+        Provider-specific implementation of chat completion.
+        Must be implemented by subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement _chat_completion_impl")
 
     async def validate_credentials(self) -> bool:
         """
@@ -178,7 +279,8 @@ class BaseAPIClient:
         try:
             return await self.validate_credentials()
         except Exception as e:
-            logger.error(f"Health check failed: {e}")
+            redacted_msg = _redact_sensitive_in_message(str(e))
+            logger.error(f"Health check failed: {redacted_msg}")
             return False
 
 
@@ -191,7 +293,7 @@ class GrokAPIClient(BaseAPIClient):
             raise ValueError("XAI_API_KEY not found")
         super().__init__(api_key, "https://api.x.ai/v1")
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
@@ -224,6 +326,7 @@ class GrokAPIClient(BaseAPIClient):
         if stream:
             return self._stream_completion(headers, payload)
 
+        # Uses the refactored _make_request which handles exceptions
         data, latency_ms = await self._make_request("POST", "chat/completions", headers, payload)
 
         response_content = None
@@ -281,7 +384,7 @@ class OpenAIAPIClient(BaseAPIClient):
             raise ValueError("OPENAI_API_KEY not found")
         super().__init__(api_key, "https://api.openai.com/v1")
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
@@ -342,13 +445,14 @@ class GoogleAPIClient(BaseAPIClient):
             raise ValueError("GOOGLE_API_KEY not found")
         super().__init__(api_key, "https://generativelanguage.googleapis.com/v1beta")
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to Google Gemini"""
@@ -387,7 +491,7 @@ class GoogleAPIClient(BaseAPIClient):
         response_content = None
         function_call = None
 
-        if data["candidates"][0]["content"].get("parts"):
+        if data.get("candidates") and data["candidates"][0]["content"].get("parts"):
             for part in data["candidates"][0]["content"]["parts"]:
                 if part.get("text"):
                     response_content = part["text"]
@@ -396,13 +500,16 @@ class GoogleAPIClient(BaseAPIClient):
                         name=part["functionCall"]["name"], arguments=part["functionCall"]["args"]
                     )
 
+        # safely handle usage metadata if missing
+        usage_meta = data.get("usageMetadata", {})
+
         return APIResponse(
             content=response_content,
             model=model,
             provider="google",
             usage={
-                "input_tokens": data["usageMetadata"]["promptTokenCount"],
-                "output_tokens": data["usageMetadata"]["candidatesTokenCount"],
+                "input_tokens": usage_meta.get("promptTokenCount", 0),
+                "output_tokens": usage_meta.get("candidatesTokenCount", 0),
             },
             latency_ms=latency_ms,
             raw_response=data,
@@ -429,13 +536,14 @@ class AnthropicAPIClient(BaseAPIClient):
         self.use_dial = use_dial
         self.anthropic_version = kwargs.get("api_version", "2023-06-01")
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """Send chat completion request to Anthropic/DIAL"""
@@ -546,7 +654,7 @@ class AzureOpenAIClient(BaseAPIClient):
         self.api_version = kwargs.get("api_version", "2024-02-15-preview")
         super().__init__(api_key, endpoint)
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
@@ -625,13 +733,14 @@ class BedrockAPIClient(BaseAPIClient):
 
         self._bedrock_client = BedrockClient(region_name=region)
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
         """
@@ -661,9 +770,9 @@ class BedrockAPIClient(BaseAPIClient):
                 error=error_msg,
             )
 
-        # Delegate to the actual Bedrock client (sync call)
+        # Delegate to the actual Bedrock client (async call)
         try:
-            response = self._bedrock_client.generate(
+            response = await self._bedrock_client.generate(
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens or 4096,
@@ -690,7 +799,7 @@ class LocalModelClient(BaseAPIClient):
         # No API key needed for local models
         super().__init__("", base_url)
 
-    async def chat_completion(
+    async def _chat_completion_impl(
         self,
         model: str,
         messages: list[dict[str, str]],
