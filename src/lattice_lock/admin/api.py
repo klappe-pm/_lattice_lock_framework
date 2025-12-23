@@ -15,7 +15,9 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
 from lattice_lock.admin.routes import API_VERSION, router
+from lattice_lock.logging_config import set_trace_id
 
 # Configure logging
 logger = logging.getLogger("lattice_lock.admin")
@@ -28,7 +30,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Handles startup and shutdown events for the application.
     """
     # Startup
-    logger.info("Starting Lattice Lock Admin API v%s", API_VERSION)
+    logger.info(f"Starting Lattice Lock Admin API v{API_VERSION}")
     yield
     # Shutdown
     logger.info("Shutting down Lattice Lock Admin API")
@@ -98,31 +100,31 @@ All errors follow the Lattice Lock error code format:
         allow_headers=["*"],
     )
 
-    # Add request logging middleware
+    # Add request logging middleware with trace ID
     @app.middleware("http")
     async def log_requests(request: Request, call_next: Any) -> Any:
-        """Log all incoming requests."""
+        """Log all incoming requests with trace ID."""
+        # Generate trace ID for this request (check header first for distributed tracing)
+        trace_id = request.headers.get("X-Trace-ID") or set_trace_id()
+        if not request.headers.get("X-Trace-ID"):
+            set_trace_id(trace_id)
+
         start_time = time.time()
 
         # Log request
         if debug:
-            logger.debug(
-                "Request: %s %s",
-                request.method,
-                request.url.path,
-            )
+            logger.debug(f"Request: {request.method} {request.url.path} [trace_id={trace_id}]")
 
         # Process request
         response = await call_next(request)
 
+        # Add trace ID to response headers
+        response.headers["X-Trace-ID"] = trace_id
+
         # Log response
         duration = time.time() - start_time
         logger.info(
-            "%s %s - %d (%.3fs)",
-            request.method,
-            request.url.path,
-            response.status_code,
-            duration,
+            f"{request.method} {request.url.path} - {response.status_code} ({duration:.3f}s)"
         )
 
         return response
@@ -239,7 +241,7 @@ def run_server(
     # Configure logging based on debug mode
     log_level = "debug" if debug else "info"
 
-    logger.info("Starting Admin API server on %s:%d", host, port)
+    logger.info(f"Starting Admin API server on {host}:{port}")
 
     uvicorn.run(
         "lattice_lock.admin.api:app",

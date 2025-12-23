@@ -16,8 +16,8 @@ Usage:
         validate_schema(path)
     except SchemaValidationError as e:
         context = classify_error(e)
-        print(f"Severity: {context.severity}")
-        print(f"Remediation: {context.remediation}")
+        logger.info(f"Severity: {context.severity}")
+        logger.info(f"Remediation: {context.remediation}")
 """
 
 from lattice_lock.errors.classification import (

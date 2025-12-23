@@ -15,10 +15,10 @@ from typing import Any
 
 import requests
 import yaml
+
 from lattice_lock.utils.safe_path import resolve_under_root
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger("lattice_lock.orchestrator.grok")
 from .exceptions import (
     APIClientError,
     AuthenticationError,
@@ -212,6 +212,7 @@ def main():
 
         if args.command == "list":
             models = api.list_models(args.category)
+            logger.info(f"Listing {len(models)} models")
             print(f"\n{'='*80}")
             print(f"{'Model ID':<30} {'Context':<15} {'Description':<35}")
             print(f"{'-'*80}")
@@ -227,13 +228,14 @@ def main():
                 sys.exit(1)
             info = api.get_model_info(args.model)
             if info:
+                logger.info(f"Retrieving info for model: {info['id']}")
                 print(f"\nModel Information: {info['id']}")
                 print(f"{'-'*40}")
                 for key, value in info.items():
                     if key != "id":
                         print(f"{key:<20}: {value}")
             else:
-                print(f"Model '{args.model}' not found")
+                logger.warning(f"Model '{args.model}' not found")
 
         elif args.command == "chat":
             if not args.model or not args.prompt:

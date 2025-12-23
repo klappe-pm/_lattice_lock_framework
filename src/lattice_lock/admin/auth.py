@@ -717,6 +717,10 @@ def get_user(username: str) -> User | None:
 def authenticate_user(username: str, password: str) -> User | None:
     """Authenticate a user with username and password.
 
+    Uses constant-time comparison to prevent timing attacks that could
+    enumerate valid usernames. Always performs a password hash comparison
+    even when the user doesn't exist.
+
     Args:
         username: Username to authenticate
         password: Plain text password
@@ -726,10 +730,21 @@ def authenticate_user(username: str, password: str) -> User | None:
     """
     user = get_user(username)
 
+    # Always perform password verification to prevent timing attacks
+    # that could enumerate valid usernames. Use a dummy hash when user
+    # doesn't exist to ensure constant-time behavior.
+    # This dummy hash is a valid bcrypt hash that will never match any password
+    # Reference module constant: _TIMING_ATTACK_DUMMY_HASH (define at top after _BCRYPT_ROUNDS)
+    dummy_hash = _TIMING_ATTACK_DUMMY_HASH
+
     if user is None:
+        # Perform dummy verification to maintain constant time
+        verify_password(password, dummy_hash)
         return None
 
     if user.disabled:
+        # Still perform verification for disabled users to maintain constant time
+        verify_password(password, user.hashed_password)
         return None
 
     if not verify_password(password, user.hashed_password):

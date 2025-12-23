@@ -27,8 +27,14 @@ from pathlib import Path
 
 from lattice_lock.utils.safe_path import resolve_under_root
 
+<<<<<<< HEAD
 logger = logging.getLogger(__name__)
 
+||||||| f7c1ab4
+=======
+logger = logging.getLogger("lattice_lock.sheriff")
+
+>>>>>>> main
 
 class ViolationSeverity(Enum):
     """Severity levels for Sheriff violations."""
@@ -398,7 +404,13 @@ def run_sheriff(
         # But following existing pattern, we might handle it gracefully.
         # Let's just catch and treat as "path not found" type error or similar safest fallback.
         # Actually, let's treat it as invalid input.
+<<<<<<< HEAD
         logger.error(f"Invalid path: {e}")
+||||||| f7c1ab4
+        print(f"Error: Invalid path - {e}")
+=======
+        logger.error(f"Invalid path - {e}")
+>>>>>>> main
         return result
 
     if not target.exists():
@@ -508,7 +520,6 @@ Examples:
         if result.violations:
             for violation in result.violations:
                 print(violation)
-            print()
 
         status = "PASSED" if result.passed else "FAILED"
         print(f"Sheriff: {status}")

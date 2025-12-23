@@ -6,8 +6,7 @@ from typing import Any
 
 from .config import SheriffConfig
 
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger("lattice_lock.sheriff.cache")
 
 class SheriffCache:
     def __init__(self, cache_dir: Path = Path(".sheriff_cache"), config_hash: str = ""):

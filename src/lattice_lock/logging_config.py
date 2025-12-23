@@ -1,28 +1,58 @@
 """
 Centralized Logging Configuration for Lattice Lock Framework.
 
-Provides environment-based logging configuration with support for:
-- JSON structured logging for production
-- Human-readable format for development
-- Log rotation and file handlers
-- Consistent logger naming conventions
+Provides consistent logging setup across all modules with support for:
+- Console and file handlers
+- JSON formatting for production environments
+- Trace ID propagation for request tracking
 - Sensitive data redaction
 """
 
 import json
 import logging
-import logging.handlers
 import os
 import sys
+import uuid
+from contextvars import ContextVar
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
 
+# Context variable for trace ID propagation
+trace_id_var: ContextVar[str] = ContextVar("trace_id", default="")
 
-class JSONFormatter(logging.Formatter):
-    """JSON formatter for structured logging in production environments."""
 
-    SENSITIVE_KEYS = {
+def generate_trace_id() -> str:
+    """Generate a new trace ID for request tracking."""
+    return str(uuid.uuid4())[:8]
+
+
+def get_trace_id() -> str:
+    """Get the current trace ID from context."""
+    return trace_id_var.get() or "unknown"
+
+
+def set_trace_id(trace_id: str | None = None) -> str:
+    """Set the trace ID in context. Generates a new one if not provided."""
+    if trace_id is None:
+        trace_id = generate_trace_id()
+    trace_id_var.set(trace_id)
+    return trace_id
+
+
+class TraceIdFilter(logging.Filter):
+    """Filter that adds trace_id to log records."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.trace_id = get_trace_id()
+        return True
+
+
+class SensitiveDataFilter(logging.Filter):
+    """Filter that redacts sensitive data from log messages."""
+
+    SENSITIVE_PATTERNS = {
         "password",
         "secret",
         "token",
@@ -32,31 +62,59 @@ class JSONFormatter(logging.Formatter):
         "auth",
         "credential",
         "private_key",
+        "bearer",
     }
 
+    def filter(self, record: logging.LogRecord) -> bool:
+        if hasattr(record, "msg") and isinstance(record.msg, str):
+            record.msg = self._redact_message(record.msg)
+        return True
+
+    def _redact_message(self, message: str) -> str:
+        """Redact sensitive patterns from message."""
+        lower_msg = message.lower()
+        for pattern in self.SENSITIVE_PATTERNS:
+            if pattern in lower_msg:
+                # Simple redaction - replace values after sensitive keys
+                import re
+
+                # Match patterns like key=value, key: value, "key": "value"
+                for sep in ["=", ":", ": "]:
+                    regex = rf'({pattern}){sep}([^\s,}}\]"\']+)'
+                    message = re.sub(regex, rf"\1{sep}[REDACTED]", message, flags=re.IGNORECASE)
+        return message
+
+
+class JSONFormatter(logging.Formatter):
+    """JSON formatter for structured logging in production environments."""
+
     def format(self, record: logging.LogRecord) -> str:
-        log_data = {
+        log_data: dict[str, Any] = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
-            "module": record.module,
-            "function": record.funcName,
-            "line": record.lineno,
+            "trace_id": getattr(record, "trace_id", "unknown"),
         }
 
+        # Add location info
+        if record.pathname:
+            log_data["location"] = {
+                "file": record.pathname,
+                "line": record.lineno,
+                "function": record.funcName,
+            }
+
+        # Add exception info if present
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)
 
-        if hasattr(record, "trace_id"):
-            log_data["trace_id"] = record.trace_id
-
-        if hasattr(record, "span_id"):
-            log_data["span_id"] = record.span_id
-
-        extra_fields = {}
-        for key, value in record.__dict__.items():
-            if key not in {
+        # Add extra fields
+        extra_fields = {
+            k: v
+            for k, v in record.__dict__.items()
+            if k
+            not in {
                 "name",
                 "msg",
                 "args",
@@ -77,193 +135,150 @@ class JSONFormatter(logging.Formatter):
                 "exc_text",
                 "thread",
                 "threadName",
-                "message",
                 "trace_id",
-                "span_id",
+                "message",
                 "taskName",
-            }:
-                extra_fields[key] = self._redact_sensitive(key, value)
-
+            }
+        }
         if extra_fields:
             log_data["extra"] = extra_fields
 
-        return json.dumps(log_data, default=str)
-
-    def _redact_sensitive(self, key: str, value: Any) -> Any:
-        """Redact sensitive values based on key names."""
-        if isinstance(value, dict):
-            return {k: self._redact_sensitive(k, v) for k, v in value.items()}
-
-        key_lower = key.lower()
-        if any(sensitive in key_lower for sensitive in self.SENSITIVE_KEYS):
-            return "[REDACTED]"
-
-        if isinstance(value, str) and len(value) > 500:
-            return value[:500] + "...[truncated]"
-
-        return value
+        return json.dumps(log_data)
 
 
-class DevelopmentFormatter(logging.Formatter):
-    """Human-readable formatter for development environments."""
+class ConsoleFormatter(logging.Formatter):
+    """Human-readable formatter for console output."""
 
-    COLORS = {
-        "DEBUG": "\033[36m",
-        "INFO": "\033[32m",
-        "WARNING": "\033[33m",
-        "ERROR": "\033[31m",
-        "CRITICAL": "\033[35m",
-    }
-    RESET = "\033[0m"
-
-    def format(self, record: logging.LogRecord) -> str:
-        color = self.COLORS.get(record.levelname, "")
-        reset = self.RESET if color else ""
-
-        trace_info = ""
-        if hasattr(record, "trace_id"):
-            trace_info = f" [trace:{record.trace_id[:8]}]"
-
-        formatted = (
-            f"{color}{record.levelname:<8}{reset} "
-            f"{record.name}:{record.lineno}{trace_info} - {record.getMessage()}"
-        )
-
-        if record.exc_info:
-            formatted += "\n" + self.formatException(record.exc_info)
-
-        return formatted
+    def __init__(self, include_trace_id: bool = True) -> None:
+        self.include_trace_id = include_trace_id
+        if include_trace_id:
+            fmt = "%(asctime)s - %(name)s - %(levelname)s - [%(trace_id)s] %(message)s"
+        else:
+            fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        super().__init__(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
 
 
-def get_log_level() -> int:
-    """Get log level from environment variable."""
-    level_name = os.getenv("LATTICE_LOG_LEVEL", "INFO").upper()
-    return getattr(logging, level_name, logging.INFO)
+class SimpleFormatter(logging.Formatter):
+    """Simple formatter for CLI output (message only)."""
+
+    def __init__(self) -> None:
+        super().__init__(fmt="%(message)s")
 
 
-def get_log_format() -> str:
-    """Get log format from environment variable."""
-    return os.getenv("LATTICE_LOG_FORMAT", "development")
-
-
-def get_log_file() -> str | None:
-    """Get log file path from environment variable."""
-    return os.getenv("LATTICE_LOG_FILE")
-
-
-def configure_logging(
-    level: int | None = None,
-    format_type: str | None = None,
+def setup_logging(
+    level: int | str = logging.INFO,
+    json_format: bool = False,
     log_file: str | None = None,
-    enable_console: bool = True,
-) -> None:
+    log_file_max_bytes: int = 10 * 1024 * 1024,  # 10MB
+    log_file_backup_count: int = 5,
+    include_trace_id: bool = True,
+    simple_format: bool = False,
+) -> logging.Logger:
     """
-    Configure logging for the Lattice Lock Framework.
+    Configure logging for the Lattice Lock framework.
 
     Args:
-        level: Log level (default: from LATTICE_LOG_LEVEL env var or INFO)
-        format_type: 'json' for structured logging, 'development' for human-readable
-                    (default: from LATTICE_LOG_FORMAT env var or 'development')
-        log_file: Path to log file (default: from LATTICE_LOG_FILE env var)
-        enable_console: Whether to enable console output (default: True)
+        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        json_format: Use JSON formatting for structured logging
+        log_file: Optional file path for file logging
+        log_file_max_bytes: Maximum size of log file before rotation
+        log_file_backup_count: Number of backup files to keep
+        include_trace_id: Include trace ID in log messages
+        simple_format: Use simple message-only format (for CLI)
+
+    Returns:
+        The root lattice_lock logger
     """
-    if level is None:
-        level = get_log_level()
+    # Convert string level to int if needed
+    if isinstance(level, str):
+        level = getattr(logging, level.upper(), logging.INFO)
 
-    if format_type is None:
-        format_type = get_log_format()
-
-    if log_file is None:
-        log_file = get_log_file()
-
-    root_logger = logging.getLogger()
+    # Get the root logger for lattice_lock
+    root_logger = logging.getLogger("lattice_lock")
     root_logger.setLevel(level)
 
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
+    # Clear existing handlers
+    root_logger.handlers.clear()
 
-    if format_type == "json":
-        formatter = JSONFormatter()
+    # Create filters
+    trace_filter = TraceIdFilter()
+    sensitive_filter = SensitiveDataFilter()
+
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setLevel(level)
+
+    if simple_format:
+        console_handler.setFormatter(SimpleFormatter())
+    elif json_format:
+        console_handler.setFormatter(JSONFormatter())
     else:
-        formatter = DevelopmentFormatter()
+        console_handler.setFormatter(ConsoleFormatter(include_trace_id=include_trace_id))
 
-    if enable_console:
-        console_handler = logging.StreamHandler(sys.stderr)
-        console_handler.setLevel(level)
-        console_handler.setFormatter(formatter)
-        root_logger.addHandler(console_handler)
+    console_handler.addFilter(trace_filter)
+    console_handler.addFilter(sensitive_filter)
+    root_logger.addHandler(console_handler)
 
+    # File handler (if specified)
     if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Ensure the log directory exists
+        log_dir = Path(log_file).parent
+        if log_dir != Path('.') and not log_dir.exists():
+            log_dir.mkdir(parents=True, exist_ok=True)
 
-        file_handler = logging.handlers.RotatingFileHandler(
+        file_handler = RotatingFileHandler(
             log_file,
-            maxBytes=10 * 1024 * 1024,
-            backupCount=5,
-            encoding="utf-8",
+            maxBytes=log_file_max_bytes,
+            backupCount=log_file_backup_count,
         )
         file_handler.setLevel(level)
+
+        # Always use JSON format for file logging
         file_handler.setFormatter(JSONFormatter())
+        file_handler.addFilter(trace_filter)
+        file_handler.addFilter(sensitive_filter)
         root_logger.addHandler(file_handler)
 
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("aiohttp").setLevel(logging.WARNING)
-    logging.getLogger("asyncio").setLevel(logging.WARNING)
+    # Prevent propagation to root logger
+    root_logger.propagate = False
+
+    return root_logger
 
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Get a logger with the standard Lattice Lock naming convention.
+    Get a logger with the lattice_lock namespace.
 
     Args:
-        name: Logger name (typically __name__ from the calling module)
+        name: Logger name (will be prefixed with 'lattice_lock.')
 
     Returns:
         Configured logger instance
     """
     if not name.startswith("lattice_lock"):
-        if name.startswith("src."):
-            name = name[4:]
-
+        name = f"lattice_lock.{name}"
     return logging.getLogger(name)
 
 
-class LoggerAdapter(logging.LoggerAdapter):
-    """Logger adapter that adds trace context to log records."""
-
-    def process(
-        self, msg: str, kwargs: dict[str, Any]
-    ) -> tuple[str, dict[str, Any]]:
-        extra = kwargs.get("extra", {})
-
-        if "trace_id" in self.extra:
-            extra["trace_id"] = self.extra["trace_id"]
-        if "span_id" in self.extra:
-            extra["span_id"] = self.extra["span_id"]
-
-        kwargs["extra"] = extra
-        return msg, kwargs
-
-
-def get_traced_logger(
-    name: str, trace_id: str | None = None, span_id: str | None = None
-) -> LoggerAdapter:
+# Environment-based configuration
+def configure_from_environment() -> logging.Logger:
     """
-    Get a logger with trace context attached.
+    Configure logging based on environment variables.
 
-    Args:
-        name: Logger name
-        trace_id: Optional trace ID for distributed tracing
-        span_id: Optional span ID for distributed tracing
-
-    Returns:
-        LoggerAdapter with trace context
+    Environment variables:
+        LATTICE_LOG_LEVEL: Logging level (default: INFO)
+        LATTICE_LOG_JSON: Enable JSON format (default: false)
+        LATTICE_LOG_FILE: Log file path (optional)
+        LATTICE_LOG_SIMPLE: Use simple format for CLI (default: false)
     """
-    logger = get_logger(name)
-    extra = {}
-    if trace_id:
-        extra["trace_id"] = trace_id
-    if span_id:
-        extra["span_id"] = span_id
-    return LoggerAdapter(logger, extra)
+    level = os.environ.get("LATTICE_LOG_LEVEL", "INFO")
+    json_format = os.environ.get("LATTICE_LOG_JSON", "").lower() in ("true", "1", "yes")
+    log_file = os.environ.get("LATTICE_LOG_FILE")
+    simple_format = os.environ.get("LATTICE_LOG_SIMPLE", "").lower() in ("true", "1", "yes")
+
+    return setup_logging(
+        level=level,
+        json_format=json_format,
+        log_file=log_file,
+        simple_format=simple_format,
+    )
