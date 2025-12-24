@@ -16,15 +16,15 @@ class ModelGuideParser:
         if guide_path:
             self.guide_path = Path(guide_path)
         else:
-            # Default to models.md in the project root (if it exists)
+            # Default to MODELS.md in the project root (if it exists)
             project_root = Path(__file__).parent.parent.parent.parent
-            self.guide_path = project_root / "models.md"
+            self.guide_path = project_root / "MODELS.md"
         self.rules = self._parse_guide()
 
     def _parse_guide(self) -> dict[str, Any]:
-        """Parse the models.md file for rules"""
+        """Parse the MODELS.md file for rules"""
         if not self.guide_path.exists():
-            logger.warning(f"models.md not found at {self.guide_path}")
+            logger.warning(f"MODELS.md not found at {self.guide_path}")
             return self._get_default_rules()
 
         try:
