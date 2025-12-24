@@ -29,12 +29,23 @@ class ModelOrchestrator:
 
     def __init__(self, guide_path: str | None = None):
         self.registry = ModelRegistry()
-        self.analyzer = TaskAnalyzer()
+        self.analyzer = TaskAnalyzer()  # Initialized without client first
         self.scorer = ModelScorer()
         self.guide = ModelGuideParser(guide_path)
         self.clients = {}
         self.function_call_handler = FunctionCallHandler()
         self.cost_tracker = CostTracker(self.registry)
+        self._initialize_analyzer_client()
+
+    def _initialize_analyzer_client(self):
+        """Try to initialize TaskAnalyzer with a default client for semantic routing."""
+        try:
+            # We use a fast, cheap model if available
+            client = self._get_client("openai")  # Fallback to openai for routing
+            if client:
+                self.analyzer = TaskAnalyzer(router_client=client)
+        except Exception:
+            logger.debug("Could not initialize Semantic Router client. Fallback to heuristics only.")
 
     def register_function(self, name: str, func: Callable):
         """Registers a function with the internal FunctionCallHandler."""
@@ -67,7 +78,7 @@ class ModelOrchestrator:
             attributes={"model_id": model_id, "task_type": str(task_type)},
         ):
             # 1. Analyze Task
-            requirements = self.analyzer.analyze(prompt)
+            requirements = await self.analyzer.analyze_async(prompt)
             if task_type:
                 requirements.task_type = task_type
 
