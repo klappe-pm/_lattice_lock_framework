@@ -1,11 +1,20 @@
 /**
  * Project Card Component
  * Displays project status with health indicator and actions
+ * @namespace ProjectCard
  */
 
 import { formatTime, escapeHtml } from '../utils.js';
 
 export const ProjectCard = {
+    /**
+     * Creates a project card DOM element.
+     * @param {Object} project - The project data.
+     * @param {Object} callbacks - Callback functions for actions.
+     * @param {Function} [callbacks.onValidate] - Handler for validate action.
+     * @param {Function} [callbacks.onRollback] - Handler for rollback action.
+     * @returns {HTMLElement} The project card element.
+     */
     create(project, callbacks = {}) {
         const card = document.createElement('div');
         card.className = 'project-card';
@@ -62,6 +71,11 @@ export const ProjectCard = {
         return card;
     },
 
+    /**
+     * Gets the SVG icon for a given status.
+     * @param {string} status - The project status.
+     * @returns {string} SVG string.
+     */
     getStatusIcon(status) {
         const icons = {
             healthy: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
@@ -72,22 +86,40 @@ export const ProjectCard = {
         return icons[status] || icons.healthy;
     },
 
+    /**
+     * Capitalizes the first letter of a string.
+     * @param {string} str - Input string.
+     * @returns {string} Capitalized string.
+     */
     capitalizeFirst(str) {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
     },
 
+    /**
+     * Shows project details in an alert (for now).
+     * @param {Object} project - Project object.
+     */
     showDetails(project) {
         console.log('Showing details for project:', project);
         // Using alert for now as per original code, but could be improved
         alert(`Project: ${project.name}\nStatus: ${project.status}\nEntities: ${project.entities}\nConstraints: ${project.constraints}`);
     },
 
+    /**
+     * Temporarily highlights a project card.
+     * @param {HTMLElement} card - The card element.
+     */
     highlight(card) {
         card.classList.add('highlight');
         setTimeout(() => card.classList.remove('highlight'), 1000);
     },
 
+    /**
+     * Updates the status of a project card.
+     * @param {HTMLElement} card - The card element.
+     * @param {string} newStatus - The new status.
+     */
     updateStatus(card, newStatus) {
         card.dataset.status = newStatus;
         const statusEl = card.querySelector('.project-status');

@@ -93,18 +93,25 @@ class ModelOrchestrator:
                 return await self._call_model(
                     model_cap, prompt, trace_id=request_trace_id, **kwargs
                 )
-            except Exception as e:
-                logger.error(
-                    f"Primary model failed: {e}. Attempting fallback...",
+            except (ValueError, APIClientError, ProviderUnavailableError) as e:
+                logger.warning(
+                    f"Primary model {selected_model_id} failed: {e}. Attempting fallback...",
                     extra={"trace_id": request_trace_id},
                 )
-                return await self._handle_fallback(
-                    requirements,
-                    prompt,
-                    failed_model=selected_model_id,
-                    trace_id=request_trace_id,
-                    **kwargs,
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error with primary model {selected_model_id}: {e}. Attempting fallback...",
+                    extra={"trace_id": request_trace_id},
+                    exc_info=True,
                 )
+
+            return await self._handle_fallback(
+                requirements,
+                prompt,
+                failed_model=selected_model_id,
+                trace_id=request_trace_id,
+                **kwargs,
+            )
 
     def _select_best_model(self, requirements: TaskRequirements) -> str | None:
         """Select the best model based on requirements and guide"""

@@ -12,7 +12,21 @@ format:
 test:
 	pytest tests/ -m "not integration" --tb=short
 
-ci: lint test
+type-check:
+	mypy src/lattice_lock
+
+help:
+	@echo "Available commands:"
+	@echo "  make lint        - Run linters (ruff, black)"
+	@echo "  make format      - Format code (black, ruff fix)"
+	@echo "  make test        - Run unit tests"
+	@echo "  make type-check  - Run static type checking"
+	@echo "  make ci          - Run CI checks (lint, test)"
+	@echo "  make deps        - Update dependencies"
+	@echo "  make clean       - Clean build artifacts"
+	@echo "  make git-cleanup - Clean up merged branches"
+
+ci: lint type-check test
 
 deps:
 	./scripts/update_deps.sh

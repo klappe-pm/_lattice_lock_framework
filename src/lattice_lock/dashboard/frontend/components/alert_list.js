@@ -1,11 +1,17 @@
 /**
  * Alert List Component
  * Scrollable list of recent alerts with visual indicators
+ * @namespace AlertList
  */
 
 import { formatTime, escapeHtml } from '../utils.js';
 
 export const AlertList = {
+    /**
+     * Creates an alert DOM element.
+     * @param {Object} alert - Alert data.
+     * @returns {HTMLElement} The alert element.
+     */
     createAlertElement(alert) {
         const element = document.createElement('div');
         element.className = 'alert-item';
@@ -36,6 +42,10 @@ export const AlertList = {
         return element;
     },
 
+    /**
+     * Adds an alert to the list with animation.
+     * @param {Object} alert - Alert data.
+     */
     addAlert(alert) {
         const container = document.getElementById('alerts-list');
         if (!container) return;
@@ -50,6 +60,10 @@ export const AlertList = {
         this.showNotification(alert);
     },
 
+    /**
+     * Dismisses an alert element.
+     * @param {HTMLElement} element - The alert element to dismiss.
+     */
     dismiss(element) {
         element.style.opacity = '0';
         element.style.transform = 'translateX(100%)';
@@ -58,6 +72,11 @@ export const AlertList = {
         setTimeout(() => element.remove(), 300);
     },
 
+    /**
+     * Gets the CSS class for a given alert type.
+     * @param {string} type - Alert type.
+     * @returns {string} CSS class name.
+     */
     getIconClass(type) {
         const classes = {
             error: 'error',
@@ -68,6 +87,11 @@ export const AlertList = {
         return classes[type] || 'info';
     },
 
+    /**
+     * Gets the SVG icon for a given alert type.
+     * @param {string} type - Alert type.
+     * @returns {string} SVG string.
+     */
     getIcon(type) {
         const icons = {
             error: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
@@ -78,6 +102,10 @@ export const AlertList = {
         return icons[type] || icons.info;
     },
 
+    /**
+     * Shows a browser notification for the alert.
+     * @param {Object} alert - Alert data.
+     */
     showNotification(alert) {
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(alert.title, {
@@ -87,12 +115,19 @@ export const AlertList = {
         }
     },
 
+    /**
+     * Requests permission for browser notifications.
+     */
     requestNotificationPermission() {
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
     },
 
+    /**
+     * Filters alerts by type.
+     * @param {string} type - Filter type.
+     */
     filterByType(type) {
         const alerts = document.querySelectorAll('.alert-item');
         alerts.forEach(alert => {
@@ -105,6 +140,9 @@ export const AlertList = {
         });
     },
 
+    /**
+     * Clears all alerts from the list.
+     */
     clearAll() {
         const container = document.getElementById('alerts-list');
         if (container) {
@@ -112,6 +150,10 @@ export const AlertList = {
         }
     },
 
+    /**
+     * Exports alerts to a JSON string.
+     * @returns {string} JSON string of alerts.
+     */
     exportToJson() {
         const alerts = [];
         document.querySelectorAll('.alert-item').forEach(el => {

@@ -70,7 +70,7 @@ show_current_setup() {
 create_env_template() {
     echo "📄 Creating .env template file..."
 
-    cat > .env.example << 'EOF'
+    if cat > .env.example << 'EOF'
 # Power Prompts API Keys Configuration
 # Copy this file to .env and fill in your actual API keys
 # DO NOT commit .env to version control!
@@ -106,11 +106,15 @@ AWS_ACCESS_KEY_ID=your-aws-access-key-here
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key-here
 AWS_REGION=us-east-1
 EOF
-
-    echo "✅ Created .env.example template"
-    echo "   Copy to .env and fill in your API keys:"
-    echo "   cp .env.example .env"
-    echo ""
+    then
+        echo "✅ Created .env.example template"
+        echo "   Copy to .env and fill in your API keys:"
+        echo "   cp .env.example .env"
+        echo ""
+    else
+        echo "❌ Failed to create .env.example template"
+        return 1
+    fi
 }
 
 # Function to load .env file

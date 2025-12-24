@@ -8,12 +8,21 @@ import { MetricsChart } from './components/metrics_chart.js';
 import { ProjectCard } from './components/project_card.js';
 import { AlertList } from './components/alert_list.js';
 
+/**
+ * Main dashboard application class.
+ */
 export class LatticeDashboard {
     constructor() {
         this.ws = null;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = CONSTANTS.MAX_RECONNECT_ATTEMPTS;
         this.reconnectDelay = CONSTANTS.RECONNECT_DELAY_MS;
+
+        // WebSocket Heartbeat configuration
+        this.heartbeatInterval = null;
+        this.missedHeartbeats = 0;
+        this.maxMissedHeartbeats = 3;
+
         this.state = {
             projects: [],
             metrics: {},
@@ -44,11 +53,22 @@ export class LatticeDashboard {
         document.getElementById('time-range').addEventListener('change', (e) => this.updateTimeRange(e.target.value));
     }
 
-    // Optional clean up method if we ever need to destroy this instance
+    /**
+     * Cleans up resources, event listeners, and intervals.
+     */
     destroy() {
-        document.getElementById('refresh-btn').removeEventListener('click', this.boundRefresh);
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.removeEventListener('click', this.boundRefresh);
+        }
+
         if (this.autoRefreshInterval) clearInterval(this.autoRefreshInterval);
-        if (this.ws) this.ws.close();
+        this.stopHeartbeat();
+
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+        }
     }
 
     initNavigation() {
@@ -86,10 +106,22 @@ export class LatticeDashboard {
                 this.state.connected = true;
                 this.reconnectAttempts = 0;
                 this.updateConnectionStatus(true);
+                this.startHeartbeat();
             };
 
             this.ws.onmessage = (event) => {
                 try {
+                    // Reset heartbeat counter on any message
+                    this.missedHeartbeats = 0;
+
+                    if (event.data === 'ping') {
+                        this.ws.send('pong');
+                        return;
+                    }
+                    if (event.data === 'pong') {
+                        return;
+                    }
+
                     const message = JSON.parse(event.data);
                     this.handleMessage(message);
                 } catch (error) {
@@ -99,17 +131,46 @@ export class LatticeDashboard {
 
             this.ws.onclose = () => {
                 console.log('WebSocket disconnected');
-                this.state.connected = false;
-                this.updateConnectionStatus(false);
+                this.cleanupWebSocket();
                 this.attemptReconnect();
             };
 
             this.ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
+                // On error, we rely on onclose to handle reconnection
             };
         } catch (error) {
             console.error('Failed to connect WebSocket:', error);
             this.updateConnectionStatus(false);
+            this.attemptReconnect(); // Ensure we retry even on initial connection failure
+        }
+    }
+
+    cleanupWebSocket() {
+        this.state.connected = false;
+        this.updateConnectionStatus(false);
+        this.stopHeartbeat();
+    }
+
+    startHeartbeat() {
+        this.stopHeartbeat();
+        this.missedHeartbeats = 0;
+        this.heartbeatInterval = setInterval(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send('ping');
+                this.missedHeartbeats++;
+                if (this.missedHeartbeats > this.maxMissedHeartbeats) {
+                    console.warn(`Missed ${this.missedHeartbeats} heartbeats, reconnecting...`);
+                    this.ws.close(); // This will trigger onclose and reconnection
+                }
+            }
+        }, 30000); // 30s heartbeat
+    }
+
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
         }
     }
 
@@ -364,6 +425,10 @@ export class LatticeDashboard {
         this.loadInitialData();
     }
 
+    /**
+     * Refreshes the dashboard data.
+     * @returns {Promise<void>}
+     */
     async refresh() {
         await this.loadInitialData();
     }
@@ -429,6 +494,8 @@ export class LatticeDashboard {
 
     startAutoRefresh() {
         this.autoRefreshInterval = setInterval(() => {
+            // Only auto-refresh if valid WebSocket connection is not active
+            // or as a backup to keep non-realtime data fresh
             if (!this.state.connected) {
                 this.loadInitialData();
             }

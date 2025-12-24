@@ -2,6 +2,10 @@
 # Grok Models Quick Access Wrapper
 # Easy CLI interface for all Grok models
 
+# Exit on error
+set -e
+set -o pipefail
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

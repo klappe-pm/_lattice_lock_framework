@@ -187,14 +187,8 @@ class ModelRegistry:
             # Transform to internal ModelCapabilities
             for model_cfg in config.models:
                 try:
-                    # Calculate default task scores
-                    default_scores = self._calculate_default_scores(
-                        model_cfg.coding_score, model_cfg.reasoning_score, model_cfg.supports_vision
-                    )
-
-                    # Convert to ModelCapabilities
-                    caps = ModelCapabilities(
-                        name=model_cfg.id,
+                    caps = self._create_model_caps(
+                        model_id=model_cfg.id,
                         api_name=model_cfg.api_name or model_cfg.id,
                         provider=model_cfg.provider,
                         context_window=model_cfg.context_window,
@@ -208,7 +202,6 @@ class ModelRegistry:
                         supports_function_calling=model_cfg.supports_function_calling,
                         supports_vision=model_cfg.supports_vision,
                         supports_json_mode=model_cfg.supports_json_mode,
-                        task_scores=default_scores,
                     )
                     self.models[model_cfg.id] = caps
                 except Exception as e:
@@ -219,6 +212,44 @@ class ModelRegistry:
         except Exception as e:
             logger.error(f"Failed to load registry YAML: {e}")
             return False
+
+    def _create_model_caps(
+        self,
+        model_id: str,
+        api_name: str,
+        provider: ModelProvider,
+        context_window: int,
+        input_cost: float,
+        output_cost: float,
+        reasoning_score: float,
+        coding_score: float,
+        speed_rating: float,
+        maturity: ProviderMaturity = ProviderMaturity.PRODUCTION,
+        status: str = "ACTIVE",
+        supports_function_calling: bool = False,
+        supports_vision: bool = False,
+        supports_json_mode: bool = False,
+        name: str | None = None,
+    ) -> ModelCapabilities:
+        """Helper to create ModelCapabilities with calculated task scores."""
+        default_scores = self._calculate_default_scores(coding_score, reasoning_score, supports_vision)
+        return ModelCapabilities(
+            name=name or model_id,
+            api_name=api_name,
+            provider=provider,
+            context_window=context_window,
+            input_cost=input_cost,
+            output_cost=output_cost,
+            reasoning_score=reasoning_score,
+            coding_score=coding_score,
+            speed_rating=speed_rating,
+            maturity=maturity,
+            status=status,
+            supports_function_calling=supports_function_calling,
+            supports_vision=supports_vision,
+            supports_json_mode=supports_json_mode,
+            task_scores=default_scores,
+        )
 
     def _load_defaults(self):
         """Load hardcoded default models"""
@@ -232,28 +263,26 @@ class ModelRegistry:
         """Load xAI Grok models"""
         self.models.update(
             {
-                "grok-4-fast-reasoning": ModelCapabilities(
+                "grok-4-fast-reasoning": self._create_model_caps(
+                    model_id="grok-4-fast-reasoning",
                     name="Grok 4 Fast Reasoning",
                     api_name="grok-4-fast-reasoning",
                     provider=ModelProvider.XAI,
                     context_window=2000000,
                     supports_function_calling=True,
-                    supports_vision=False,  # Assuming false based on previous file
                     input_cost=2.0,
                     output_cost=6.0,
                     reasoning_score=95.0,
                     coding_score=85.0,
                     speed_rating=7.0,
                     maturity=ProviderMaturity.BETA,
-                    task_scores=self._calculate_default_scores(85.0, 95.0, False),
                 ),
-                "grok-code-fast-1": ModelCapabilities(
+                "grok-code-fast-1": self._create_model_caps(
+                    model_id="grok-code-fast-1",
                     name="Grok Code Fast 1",
                     api_name="grok-code-fast-1",
                     provider=ModelProvider.XAI,
                     context_window=256000,
-                    supports_function_calling=False,
-                    supports_vision=False,
                     input_cost=1.5,
                     output_cost=4.5,
                     reasoning_score=85.0,
@@ -261,13 +290,12 @@ class ModelRegistry:
                     speed_rating=8.0,
                     maturity=ProviderMaturity.BETA,
                 ),
-                "grok-3": ModelCapabilities(
+                "grok-3": self._create_model_caps(
+                    model_id="grok-3",
                     name="Grok 3",
                     api_name="grok-3",
                     provider=ModelProvider.XAI,
                     context_window=131072,
-                    supports_function_calling=False,
-                    supports_vision=False,
                     input_cost=1.0,
                     output_cost=3.0,
                     reasoning_score=80.0,
@@ -282,22 +310,21 @@ class ModelRegistry:
         """Load OpenAI models"""
         self.models.update(
             {
-                "o1-pro": ModelCapabilities(
+                "o1-pro": self._create_model_caps(
+                    model_id="o1-pro",
                     name="O1 Pro",
                     api_name="o1-pro",
                     provider=ModelProvider.OPENAI,
                     context_window=200000,
-                    supports_function_calling=False,
-                    supports_vision=False,
                     input_cost=60.0,
                     output_cost=240.0,
                     reasoning_score=99.0,
                     coding_score=98.0,
                     speed_rating=3.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(98.0, 99.0, False),
                 ),
-                "gpt-4o": ModelCapabilities(
+                "gpt-4o": self._create_model_caps(
+                    model_id="gpt-4o",
                     name="GPT-4o",
                     api_name="gpt-4o",
                     provider=ModelProvider.OPENAI,
@@ -310,9 +337,9 @@ class ModelRegistry:
                     coding_score=85.0,
                     speed_rating=8.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(85.0, 90.0, True),
                 ),
-                "gpt-4o-mini": ModelCapabilities(
+                "gpt-4o-mini": self._create_model_caps(
+                    model_id="gpt-4o-mini",
                     name="GPT-4o Mini",
                     api_name="gpt-4o-mini",
                     provider=ModelProvider.OPENAI,
@@ -325,22 +352,19 @@ class ModelRegistry:
                     coding_score=80.0,
                     speed_rating=9.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(80.0, 85.0, True),
                 ),
-                "o1-mini": ModelCapabilities(
+                "o1-mini": self._create_model_caps(
+                    model_id="o1-mini",
                     name="O1 Mini",
                     api_name="o1-mini",
                     provider=ModelProvider.OPENAI,
                     context_window=128000,
-                    supports_function_calling=False,
-                    supports_vision=False,
                     input_cost=3.0,
                     output_cost=12.0,
                     reasoning_score=96.0,
                     coding_score=95.0,
                     speed_rating=5.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(95.0, 96.0, False),
                 ),
             }
         )
@@ -349,22 +373,23 @@ class ModelRegistry:
         """Load Google Gemini models"""
         self.models.update(
             {
-                "gemini-2.5-pro": ModelCapabilities(
+                "gemini-2.5-pro": self._create_model_caps(
+                    model_id="gemini-2.5-pro",
                     name="Gemini 2.5 Pro",
                     api_name="gemini-2.5-pro",
                     provider=ModelProvider.GOOGLE,
                     context_window=1000000,
                     supports_function_calling=True,
-                    supports_vision=True,  # Assuming true for Gemini
+                    supports_vision=True,
                     input_cost=1.25,
                     output_cost=5.0,
                     reasoning_score=85.0,
                     coding_score=85.0,
                     speed_rating=7.0,
                     maturity=ProviderMaturity.BETA,
-                    task_scores=self._calculate_default_scores(85.0, 85.0, True),
                 ),
-                "gemini-2.5-flash": ModelCapabilities(
+                "gemini-2.5-flash": self._create_model_caps(
+                    model_id="gemini-2.5-flash",
                     name="Gemini 2.5 Flash",
                     api_name="gemini-2.5-flash",
                     provider=ModelProvider.GOOGLE,
@@ -377,7 +402,6 @@ class ModelRegistry:
                     coding_score=80.0,
                     speed_rating=9.0,
                     maturity=ProviderMaturity.BETA,
-                    task_scores=self._calculate_default_scores(80.0, 80.0, True),
                 ),
             }
         )
@@ -386,7 +410,8 @@ class ModelRegistry:
         """Load Anthropic Claude models"""
         self.models.update(
             {
-                "claude-3-5-sonnet": ModelCapabilities(
+                "claude-3-5-sonnet": self._create_model_caps(
+                    model_id="claude-3-5-sonnet",
                     name="Claude 3.5 Sonnet",
                     api_name="claude-3-5-sonnet-20240620",
                     provider=ModelProvider.ANTHROPIC,
@@ -399,24 +424,23 @@ class ModelRegistry:
                     coding_score=95.0,
                     speed_rating=7.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(95.0, 95.0, True),
                 ),
-                "claude-3-5-haiku": ModelCapabilities(
+                "claude-3-5-haiku": self._create_model_caps(
+                    model_id="claude-3-5-haiku",
                     name="Claude 3.5 Haiku",
                     api_name="claude-3-5-haiku-20241022",
                     provider=ModelProvider.ANTHROPIC,
                     context_window=200000,
                     supports_function_calling=True,
-                    supports_vision=False,
                     input_cost=0.25,
                     output_cost=1.25,
                     reasoning_score=88.0,
                     coding_score=85.0,
                     speed_rating=9.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(85.0, 88.0, False),
                 ),
-                "claude-3-5-opus": ModelCapabilities(
+                "claude-3-5-opus": self._create_model_caps(
+                    model_id="claude-3-5-opus",
                     name="Claude 3.5 Opus",
                     api_name="claude-3-5-opus-latest",
                     provider=ModelProvider.ANTHROPIC,
@@ -429,9 +453,9 @@ class ModelRegistry:
                     coding_score=97.0,
                     speed_rating=4.0,
                     maturity=ProviderMaturity.BETA,
-                    task_scores=self._calculate_default_scores(97.0, 99.0, True),
                 ),
-                "claude-3-opus": ModelCapabilities(
+                "claude-3-opus": self._create_model_caps(
+                    model_id="claude-3-opus",
                     name="Claude 3 Opus",
                     api_name="claude-3-opus-20240229",
                     provider=ModelProvider.ANTHROPIC,
@@ -444,7 +468,6 @@ class ModelRegistry:
                     coding_score=92.0,
                     speed_rating=5.0,
                     maturity=ProviderMaturity.PRODUCTION,
-                    task_scores=self._calculate_default_scores(92.0, 98.0, True),
                 ),
             }
         )
@@ -454,33 +477,30 @@ class ModelRegistry:
         # These are placeholders, actual available models are detected by LocalManager
         self.models.update(
             {
-                "codellama:34b": ModelCapabilities(
+                "codellama:34b": self._create_model_caps(
+                    model_id="codellama:34b",
                     name="CodeLlama 34B",
                     api_name="codellama:34b",
                     provider=ModelProvider.OLLAMA,
                     context_window=16384,
-                    supports_function_calling=False,
-                    supports_vision=False,
                     input_cost=0.0,
                     output_cost=0.0,
                     reasoning_score=85.0,
                     coding_score=95.0,
                     speed_rating=5.0,
-                    task_scores=self._calculate_default_scores(95.0, 85.0, False),
                 ),
-                "qwen2.5:32b": ModelCapabilities(
+                "qwen2.5:32b": self._create_model_caps(
+                    model_id="qwen2.5:32b",
                     name="Qwen 2.5 32B",
                     api_name="qwen2.5:32b-instruct-q4_K_M",
                     provider=ModelProvider.OLLAMA,
                     context_window=32768,
                     supports_function_calling=True,
-                    supports_vision=False,
                     input_cost=0.0,
                     output_cost=0.0,
                     reasoning_score=88.0,
                     coding_score=85.0,
                     speed_rating=6.0,
-                    task_scores=self._calculate_default_scores(85.0, 88.0, False),
                 ),
             }
         )

@@ -80,12 +80,13 @@ else
 fi
 
 if [ $api_keys_found -eq 0 ]; then
-    echo -e "\n⚠️  No API keys found. Set at least one:"
+    echo -e "\n❌ Error: No API keys found. Set at least one to continue:"
     echo "  export XAI_API_KEY='your-key'"
     echo "  export OPENAI_API_KEY='your-key'"
     echo "  export GOOGLE_API_KEY='your-key'"
     echo "  export ANTHROPIC_API_KEY='your-key'"
     echo "  export DIAL_API_KEY='your-key'"
+    exit 1
 else
     echo -e "\n✓ Found $api_keys_found API key(s)"
     if [ -n "$missing_keys" ]; then

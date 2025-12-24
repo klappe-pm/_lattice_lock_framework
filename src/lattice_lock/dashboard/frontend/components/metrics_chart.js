@@ -1,9 +1,12 @@
 /**
  * Metrics Chart Component
  * Chart.js visualizations for dashboard metrics
+ * @namespace MetricsChart
  */
-
 export const MetricsChart = {
+    /**
+     * Color palette for charts.
+     */
     colors: {
         primary: '#3b82f6',
         success: '#22c55e',
@@ -22,6 +25,12 @@ export const MetricsChart = {
         ]
     },
 
+    /**
+     * Creates a doughnut chart instance.
+     * @param {string} canvasId - The ID of the canvas element.
+     * @param {string} title - Chart title.
+     * @returns {Chart|null} The Chart.js instance or null if canvas not found.
+     */
     createDoughnut(canvasId, title) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
@@ -61,6 +70,12 @@ export const MetricsChart = {
         });
     },
 
+    /**
+     * Creates a bar chart instance.
+     * @param {string} canvasId - The ID of the canvas element.
+     * @param {string} title - Chart title.
+     * @returns {Chart|null} The Chart.js instance or null if canvas not found.
+     */
     createBar(canvasId, title) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
@@ -105,6 +120,12 @@ export const MetricsChart = {
         });
     },
 
+    /**
+     * Creates a line chart instance.
+     * @param {string} canvasId - The ID of the canvas element.
+     * @param {string} title - Chart title.
+     * @returns {Chart|null} The Chart.js instance or null if canvas not found.
+     */
     createLine(canvasId, title) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
@@ -157,6 +178,11 @@ export const MetricsChart = {
         });
     },
 
+    /**
+     * Updates a doughnut chart with new data.
+     * @param {Chart} chart - The Chart.js instance.
+     * @param {Object} data - Data object containing passed, failed, warnings counts.
+     */
     updateDoughnut(chart, data) {
         if (!chart || !data) return;
 
@@ -168,6 +194,11 @@ export const MetricsChart = {
         chart.update('none');
     },
 
+    /**
+     * Updates a bar chart with new data.
+     * @param {Chart} chart - The Chart.js instance.
+     * @param {Object} data - Object where keys are labels and values are data points.
+     */
     updateBar(chart, data) {
         if (!chart || !data || typeof data !== 'object') return;
 
@@ -180,6 +211,12 @@ export const MetricsChart = {
         chart.update('none');
     },
 
+    /**
+     * Updates a line chart with new data.
+     * @param {Chart} chart - The Chart.js instance.
+     * @param {Array<number>} data - Array of data points.
+     * @param {string} [label] - Optional new label for the dataset.
+     */
     updateLine(chart, data, label) {
         if (!chart || !data) return;
 
@@ -197,6 +234,10 @@ export const MetricsChart = {
         chart.update('none');
     },
 
+    /**
+     * Destroys a chart instance.
+     * @param {Chart} chart - The chart to destroy.
+     */
     destroy(chart) {
         if (chart) {
             chart.destroy();
