@@ -102,4 +102,27 @@ class VersionComplianceRule(Rule):
     """Enforces version compliance checks (placeholder)."""
 
     def check(self, node: ast.AST, context: RuleContext) -> list[Violation]:
-        return []
+        violations = []
+        target_version = context.config.target_version
+
+        if target_version == "current":
+            return violations
+
+        # Look for __version__ = "x.y.z"
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "__version__":
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                        version_str = node.value.value
+                        if version_str != target_version:
+                            violations.append(
+                                Violation(
+                                    rule_id="SHERIFF_003",
+                                    message=f"Version mismatch: found '{version_str}', expected '{target_version}'",
+                                    line_number=node.lineno,
+                                    filename=context.filename,
+                                    severity=ViolationSeverity.WARNING,
+                                    suggestion=f"Update __version__ to '{target_version}'",
+                                )
+                            )
+        return violations

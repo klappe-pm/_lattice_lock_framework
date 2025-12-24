@@ -8,12 +8,17 @@ This module provides:
 """
 
 import hashlib
+import logging
 import re
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from .types import ModelCapabilities, TaskRequirements, TaskType
+
+
+logger = logging.getLogger(__name__)
 
 
 def _hash_prompt(prompt: str) -> str:
@@ -238,15 +243,17 @@ class TaskAnalyzer:
         ],
     }
 
-    def __init__(self, cache_size: int = DEFAULT_CACHE_SIZE):
+    def __init__(self, cache_size: int = DEFAULT_CACHE_SIZE, router_client: Any = None):
         self._cache: OrderedDict[str, TaskAnalysis] = OrderedDict()
         self._cache_size = cache_size
         self._cache_hits = 0
         self._cache_misses = 0
+        self._router = SemanticRouter(router_client) if router_client else None
 
     def analyze(self, prompt: str) -> TaskRequirements:
         """
-        Analyzes a user prompt to extract task requirements.
+        Analyzes a user prompt to extract task requirements (Synchronous).
+        Note: This does not engage the semantic router as it requires async.
         """
         analysis = self.analyze_full(prompt)
 
@@ -258,9 +265,24 @@ class TaskAnalyzer:
             priority=analysis.features.get("priority", "balanced"),
         )
 
+    async def analyze_async(self, prompt: str) -> TaskRequirements:
+        """
+        Analyzes a user prompt to extract task requirements (Asynchronous).
+        Can engage the semantic router if heuristics are uncertain.
+        """
+        analysis = await self.analyze_full_async(prompt)
+
+        return TaskRequirements(
+            task_type=analysis.primary_type,
+            min_context=analysis.min_context_window,
+            require_vision=analysis.features.get("requires_vision", False),
+            require_functions=analysis.features.get("requires_function_calling", False),
+            priority=analysis.features.get("priority", "balanced"),
+        )
+
     def analyze_full(self, prompt: str) -> TaskAnalysis:
         """
-        Performs full task analysis with multi-label classification.
+        Performs full task analysis with multi-label classification (Synchronous).
         """
         prompt_hash = _hash_prompt(prompt)
 
@@ -277,6 +299,48 @@ class TaskAnalyzer:
 
         while len(self._cache) > self._cache_size:
             self._cache.popitem(last=False)
+
+        return analysis
+
+    async def analyze_full_async(self, prompt: str) -> TaskAnalysis:
+        """
+        Performs full task analysis with multi-label classification (Asynchronous).
+        """
+        prompt_hash = _hash_prompt(prompt)
+
+        if prompt_hash in self._cache:
+            self._cache_hits += 1
+            self._cache.move_to_end(prompt_hash)
+            return self._cache[prompt_hash]
+
+        self._cache_misses += 1
+        analysis = await self._analyze_uncached_async(prompt)
+
+        self._cache[prompt_hash] = analysis
+        self._cache.move_to_end(prompt_hash)
+
+        while len(self._cache) > self._cache_size:
+            self._cache.popitem(last=False)
+
+        return analysis
+
+    async def _analyze_uncached_async(self, prompt: str) -> TaskAnalysis:
+        """
+        Performs the actual task analysis without caching (Asynchronous).
+        """
+        # Run standard heuristics (re-purposing the sync logic)
+        analysis = self._analyze_uncached(prompt)
+
+        # Stage 2: Semantic Router if heuristics are uncertain
+        max_heuristic_score = max(analysis.scores.values()) if analysis.scores.values() else 0.0
+        if max_heuristic_score < 0.5 and len(prompt) > 10 and self._router:
+            logger.info(f"Heuristics uncertain (score={max_heuristic_score:.2f}). Engaging Semantic Router.")
+            semantic_type = await self._router.route(prompt)
+            if semantic_type != TaskType.GENERAL:
+                # Boost the semantic result
+                analysis.scores[semantic_type] = 0.9
+                analysis.primary_type = semantic_type
+                logger.info(f"Semantic Router classified task as: {semantic_type.name}")
 
         return analysis
 
@@ -338,12 +402,7 @@ class TaskAnalyzer:
 
         # Stage 2: Semantic Router if heuristics are uncertain
         max_heuristic_score = max(scores.values()) if scores.values() else 0.0
-        if max_heuristic_score < 0.5 and len(prompt) > 10:
-             # Engage semantic router if available
-             # ... (logic for async semantic call would go here, 
-             # but TaskAnalyzer is sync. In a real system, we'd 
-             # have an async_analyze or offload to executor).
-             pass
+        # No async semantic call in sync method; return heuristic result as is.
 
         # 5. Determine priority
         if "fast" in prompt_lower or "quick" in prompt_lower or "urgent" in prompt_lower:
@@ -400,49 +459,6 @@ class TaskAnalyzer:
             complexity=complexity,
             min_context_window=min_context,
         )
-
-class SemanticRouter:
-    """
-    Second-stage router that uses LLM-based intent classification.
-    """
-    ROUTER_PROMPT = """
-    Analyze the following user prompt and classify it into one of the TaskTypes:
-    {types}
-
-    Return ONLY the name of the TaskType that best matches the intent.
-    If no type matches well, return GENERAL.
-
-    Prompt: {prompt}
-    """
-
-    def __init__(self, client=None):
-        self.client = client
-
-    async def route(self, prompt: str) -> TaskType:
-        """Routes a prompt to a TaskType using an LLM."""
-        if not self.client:
-            return TaskType.GENERAL
-            
-        types_str = ", ".join([t.name for t in TaskType])
-        full_prompt = self.ROUTER_PROMPT.format(types=types_str, prompt=prompt)
-        
-        try:
-            # Use a fast, cheap model for routing if possible
-            response = await self.client.chat_completion(
-                model="gpt-4o-mini", # Fallback default
-                messages=[{"role": "user", "content": full_prompt}],
-                max_tokens=10,
-                temperature=0.0
-            )
-            
-            result = response.content.strip()
-            for t in TaskType:
-                if t.name in result:
-                    return t
-            return TaskType.GENERAL
-        except Exception as e:
-            logger.warning(f"Semantic routing failed: {e}")
-            return TaskType.GENERAL
 
     def _estimate_complexity(
         self, prompt: str, features: dict[str, Any], scores: dict[TaskType, float]
@@ -551,6 +567,49 @@ class SemanticRouter:
         self._cache_hits = 0
         self._cache_misses = 0
 
+
+class SemanticRouter:
+    """
+    Second-stage router that uses LLM-based intent classification.
+    """
+    ROUTER_PROMPT = """
+    Analyze the following user prompt and classify it into one of the TaskTypes:
+    {types}
+
+    Return ONLY the name of the TaskType that best matches the intent.
+    If no type matches well, return GENERAL.
+
+    Prompt: {prompt}
+    """
+
+    def __init__(self, client=None):
+        self.client = client
+
+    async def route(self, prompt: str) -> TaskType:
+        """Routes a prompt to a TaskType using an LLM."""
+        if not self.client:
+            return TaskType.GENERAL
+            
+        types_str = ", ".join([t.name for t in TaskType])
+        full_prompt = self.ROUTER_PROMPT.format(types=types_str, prompt=prompt)
+        
+        try:
+            # Use a fast, cheap model for routing if possible
+            response = await self.client.chat_completion(
+                model="gpt-4o-mini", # Fallback default
+                messages=[{"role": "user", "content": full_prompt}],
+                max_tokens=10,
+                temperature=0.0
+            )
+            
+            result = response.content.strip()
+            for t in TaskType:
+                if t.name in result:
+                    return t
+            return TaskType.GENERAL
+        except Exception as e:
+            logger.warning(f"Semantic routing failed: {e}")
+            return TaskType.GENERAL
 
 class ModelScorer:
     """

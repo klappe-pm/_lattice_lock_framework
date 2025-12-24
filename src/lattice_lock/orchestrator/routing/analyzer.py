@@ -5,6 +5,15 @@ from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 
+ROUTER_PROMPT = """
+Analyze the following user prompt and classify it into one of these TaskTypes:
+CODE_GENERATION, TESTING, DEBUGGING, ARCHITECTURAL_DESIGN, DOCUMENTATION, GENERAL
+
+Return ONLY the name of the TaskType.
+
+Prompt: {}
+"""
+
 
 def _hash_prompt(prompt: str) -> str:
     """Create a SHA-256 hash of the prompt for cache key."""
@@ -103,10 +112,18 @@ class TaskAnalyzer:
             return "GENERAL"
 
         try:
-            # Placeholder for actual LLM call via orchestrator
-            # in production: response = self.orchestrator.complete(prompt=ROUTER_PROMPT.format(prompt))
-            # parsing response...
-            logger.info("Mocking Semantic Router response (not implemented fully).")
+            # Actual LLM call via orchestrator
+            # Note: We assume the orchestrator has a sync-compatible way to call models
+            # or we try to use the client directly if possible.
+            # For this legacy implementation, we'll try to use a simple 'complete' call if it exists.
+            if hasattr(self.orchestrator, "complete"):
+                response = self.orchestrator.complete(prompt=ROUTER_PROMPT.format(prompt))
+                result = response.strip().upper()
+                if result in self.patterns or result == "GENERAL":
+                    logger.info(f"Semantic Router classified task as {result}")
+                    return result
+            
+            logger.info("Semantic Router response uncertain or not implemented on orchestrator. Defaulting to GENERAL.")
             return "GENERAL"
         except Exception as e:
             logger.error(f"Semantic Router failed: {e}")
