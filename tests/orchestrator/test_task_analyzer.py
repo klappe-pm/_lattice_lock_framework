@@ -25,7 +25,7 @@ from lattice_lock.orchestrator.types import (
     TaskType,
 )
 
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).parents[2].resolve()
 GOLDEN_FILE = PROJECT_ROOT / "tests" / "fixtures" / "task_analyzer_golden.json"
 
 

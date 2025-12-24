@@ -5,7 +5,12 @@ from collections.abc import Callable
 
 from lattice_lock.tracing import AsyncSpanContext, generate_trace_id, get_current_trace_id, timed
 
-from .api_clients import ProviderAvailability, ProviderUnavailableError, get_api_client
+from .api_clients import (
+    APIClientError,
+    ProviderAvailability,
+    ProviderUnavailableError,
+    get_api_client,
+)
 from .cost.tracker import CostTracker
 from .function_calling import FunctionCallHandler
 from .guide import ModelGuideParser

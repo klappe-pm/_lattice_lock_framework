@@ -177,7 +177,7 @@ export class LatticeDashboard {
     getWebSocketUrl() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host || 'localhost:8080';
-        return `${protocol}//${host}/ws/dashboard`;
+        return `${protocol}//${host}/dashboard/live`;
     }
 
     attemptReconnect() {

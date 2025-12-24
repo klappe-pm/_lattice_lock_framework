@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 # Add src to path
 sys.path.append(os.path.abspath("src"))
@@ -12,8 +13,8 @@ def test_registry_load_yaml():
     """Test loading from the actual registry.yaml file."""
     print("\nTesting YAML loading...")
 
-    # Point to the real file we just created
-    registry_path = os.path.abspath("docs/models/registry.yaml")
+    project_root = Path(__file__).parents[2]
+    registry_path = str((project_root / "docs/models/registry.yaml").resolve())
     registry = ModelRegistry(registry_path=registry_path)
 
     # Check if loaded

@@ -5,6 +5,7 @@ Tests all REST endpoints for project management and monitoring.
 """
 
 import time
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,13 +23,25 @@ from lattice_lock.admin import (
     reset_project_store,
     update_validation_status,
 )
+from lattice_lock.admin.auth import Role, TokenData, get_current_user
 
 
 @pytest.fixture
 def client() -> TestClient:
-    """Create a test client with a fresh project store."""
+    """Create a test client with a fresh project store and mock auth."""
     reset_project_store()
     app = create_app(debug=True)
+
+    # Mock authentication to allow all requests
+    async def mock_get_current_user() -> TokenData:
+        return TokenData(
+            sub="test_admin",
+            role=Role.ADMIN,
+            exp=datetime.now(timezone.utc),
+            iat=datetime.now(timezone.utc),
+        )
+
+    app.dependency_overrides[get_current_user] = mock_get_current_user
     return TestClient(app)
 
 

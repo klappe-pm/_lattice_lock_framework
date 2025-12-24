@@ -8,8 +8,9 @@ import time
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from lattice_lock.admin.auth import require_admin, require_operator, require_viewer
 from lattice_lock.admin.models import (
     ProjectError,
     RollbackInfo,
@@ -78,6 +79,7 @@ async def health_check() -> HealthResponse:
     response_model=ProjectListResponse,
     summary="List Projects",
     description="List all registered Lattice Lock projects.",
+    dependencies=[Depends(require_viewer)],
 )
 async def list_projects() -> ProjectListResponse:
     """
@@ -114,6 +116,7 @@ async def list_projects() -> ProjectListResponse:
     status_code=status.HTTP_201_CREATED,
     summary="Register Project",
     description="Register a new Lattice Lock project for monitoring.",
+    dependencies=[Depends(require_admin)],
 )
 async def register_project(
     request: RegisterProjectRequest,
@@ -148,6 +151,7 @@ async def register_project(
     responses={
         404: {"model": ErrorResponse, "description": "Project not found"},
     },
+    dependencies=[Depends(require_viewer)],
 )
 async def get_project_status(project_id: str) -> ProjectStatusResponse:
     """
@@ -193,6 +197,7 @@ async def get_project_status(project_id: str) -> ProjectStatusResponse:
     responses={
         404: {"model": ErrorResponse, "description": "Project not found"},
     },
+    dependencies=[Depends(require_viewer)],
 )
 async def get_project_errors(
     project_id: str,
@@ -262,6 +267,7 @@ async def get_project_errors(
         404: {"model": ErrorResponse, "description": "Project not found"},
         400: {"model": ErrorResponse, "description": "Invalid rollback request"},
     },
+    dependencies=[Depends(require_operator)],
 )
 async def trigger_rollback(
     project_id: str,
@@ -357,6 +363,7 @@ async def trigger_rollback(
     responses={
         404: {"model": ErrorResponse, "description": "Project not found"},
     },
+    dependencies=[Depends(require_viewer)],
 )
 async def list_rollback_checkpoints(
     project_id: str,

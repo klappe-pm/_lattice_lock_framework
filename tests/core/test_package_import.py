@@ -24,7 +24,7 @@ class TestPackageVersion:
         """Version should match the content of version.txt."""
         from lattice_lock import __version__
 
-        version_file = Path(__file__).parent.parent / "version.txt"
+        version_file = Path(__file__).parents[2] / "version.txt"
         expected_version = version_file.read_text().strip()
         assert __version__ == expected_version
 

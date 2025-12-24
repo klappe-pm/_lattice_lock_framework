@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from .types import ModelCapabilities, ModelProvider, ProviderMaturity, TaskType
+from .types import ModelCapabilities, ModelProvider, ProviderMaturity, TaskType, ModelStatus
 from .exceptions import APIClientError
 
 logger = logging.getLogger(__name__)
@@ -225,13 +225,26 @@ class ModelRegistry:
         coding_score: float,
         speed_rating: float,
         maturity: ProviderMaturity = ProviderMaturity.PRODUCTION,
-        status: str = "ACTIVE",
+        status: ModelStatus = ModelStatus.ACTIVE,
         supports_function_calling: bool = False,
         supports_vision: bool = False,
         supports_json_mode: bool = False,
         name: str | None = None,
     ) -> ModelCapabilities:
         """Helper to create ModelCapabilities with calculated task scores."""
+        # Coerce strings to Enums if necessary
+        if isinstance(status, str):
+            try:
+                status = ModelStatus[status.upper()]
+            except KeyError:
+                status = ModelStatus.ACTIVE
+        
+        if isinstance(maturity, str):
+            try:
+                maturity = ProviderMaturity[maturity.upper()]
+            except KeyError:
+                maturity = ProviderMaturity.BETA
+
         default_scores = self._calculate_default_scores(coding_score, reasoning_score, supports_vision)
         return ModelCapabilities(
             name=name or model_id,
