@@ -17,6 +17,7 @@ class TaskType(Enum):
     VISION = auto()
     SECURITY_AUDIT = auto()
     CREATIVE_WRITING = auto()
+    TRANSLATION = auto()
 
 
 class ModelProvider(Enum):
