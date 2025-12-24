@@ -45,18 +45,18 @@ Note: Block list uses exact-match. To block a model family, list each variant.
 When a primary model fails, the orchestrator will attempt these models in order.
 Chains should include models from different providers for resilience.
 
-- code_generation: o1-pro -> claude-sonnet-4.5 -> grok-code-fast-1 -> codellama:34b -> magicoder:7b
-- debugging: o1 -> claude-sonnet-4 -> grok-4-fast-reasoning -> gemini-2.0-pro -> deepseek-r1:70b
-- architectural_design: o1-pro -> claude-opus-4 -> gemini-3.0-pro-high -> grok-4-fast-reasoning -> llama3.1:70b
-- documentation: claude-3-5-sonnet -> gpt-4o -> gemini-2.5-flash -> claude-3-5-haiku -> qwen2.5:32b
-- testing: o1-mini -> claude-sonnet-4 -> gemini-2.0-flash -> grok-code-fast-1 -> codellama:34b
-- data_analysis: o1-pro -> gemini-3.0-pro-low -> gpt-4o -> grok-4-fast-reasoning -> llama3.1:70b
-- general: gpt-4o -> claude-3-5-haiku -> gemini-2.5-flash -> gpt-3.5-turbo -> llama3.1:8b
-- reasoning: o1-pro -> claude-opus-4.5 -> grok-4-fast-reasoning -> gemini-3.0-pro-high -> deepseek-r1:70b
-- vision: gpt-4o -> claude-opus-4 -> gemini-2.0-pro -> grok-2-vision-1212 -> llama3.2:90b
-- security_audit: o1-pro -> claude-sonnet-4.5 -> gpt-4-turbo -> grok-4-fast-reasoning -> codellama:34b
-- creative_writing: claude-opus-4.5 -> gpt-4o -> gemini-1.5-pro -> claude-3-haiku -> llama3.1:70b
-- translation: gemini-2.5-flash -> qwen2.5:32b -> gpt-4o-mini -> qwen2.5:7b-instruct -> qwen3:8b
+- code_generation: o1-pro → claude-sonnet-4.5 → grok-code-fast-1 → codellama:34b → magicoder:7b
+- debugging: o1 → claude-sonnet-4 → grok-4-fast-reasoning → gemini-2.0-pro → deepseek-r1:70b
+- architectural_design: o1-pro → claude-opus-4 → gemini-3.0-pro-high → grok-4-fast-reasoning → llama3.1:70b
+- documentation: claude-3-5-sonnet → gpt-4o → gemini-2.5-flash → claude-3-5-haiku → qwen2.5:32b
+- testing: o1-mini → claude-sonnet-4 → gemini-2.0-flash → grok-code-fast-1 → codellama:34b
+- data_analysis: o1-pro → gemini-3.0-pro-low → gpt-4o → grok-4-fast-reasoning → llama3.1:70b
+- general: gpt-4o → claude-3-5-haiku → gemini-2.5-flash → gpt-3.5-turbo → llama3.1:8b
+- reasoning: o1-pro → claude-opus-4.5 → grok-4-fast-reasoning → gemini-3.0-pro-high → deepseek-r1:70b
+- vision: gpt-4o → claude-opus-4 → gemini-2.0-pro → grok-2-vision-1212 → llama3.2:90b
+- security_audit: o1-pro → claude-sonnet-4.5 → gpt-4-turbo → grok-4-fast-reasoning → codellama:34b
+- creative_writing: claude-opus-4.5 → gpt-4o → gemini-1.5-pro → claude-3-haiku → llama3.1:70b
+- translation: gemini-2.5-flash → qwen2.5:32b → gpt-4o-mini → qwen2.5:7b-instruct → qwen3:8b
 
 ### Provider Reference
 
