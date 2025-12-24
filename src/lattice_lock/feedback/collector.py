@@ -1,9 +1,5 @@
-"""
-Feedback Collector Module
-
-Handles the collection, storage, and retrieval of feedback items.
-"""
-
+import asyncio
+import aiofiles
 import json
 import logging
 from pathlib import Path
@@ -13,7 +9,6 @@ from pydantic import ValidationError
 from .schemas import FeedbackCategory, FeedbackItem, FeedbackPriority
 
 logger = logging.getLogger(__name__)
-
 
 class FeedbackCollector:
     """
@@ -28,30 +23,30 @@ class FeedbackCollector:
             storage_path: Path to the JSON file where feedback will be stored.
         """
         self.storage_path = storage_path
-        self._ensure_storage()
+        # We can't really do async init well, so we preserve sync dir creation 
+        # but the submit/list will handle the file existence.
+        self._ensure_storage_dir()
 
-    def _ensure_storage(self) -> None:
-        """Ensure the storage file and directory exist."""
+    def _ensure_storage_dir(self) -> None:
+        """Ensure the storage directory exists."""
         if not self.storage_path.parent.exists():
             self.storage_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if not self.storage_path.exists():
-            self._save_feedback([])
-
-    def _load_feedback(self) -> list[FeedbackItem]:
-        """Load feedback items from storage."""
+    async def _load_feedback(self) -> list[FeedbackItem]:
+        """Load feedback items from storage asynchronously."""
         try:
             if not self.storage_path.exists():
                 return []
 
-            with open(self.storage_path, encoding="utf-8") as f:
-                data = json.load(f)
+            async with aiofiles.open(self.storage_path, mode="r", encoding="utf-8") as f:
+                content = await f.read()
+                if not content:
+                    return []
+                data = json.loads(content)
 
             items = []
             for item_data in data:
                 try:
-                    # Handle datetime serialization if it was stored as string
-                    # Pydantic handles this automatically for valid ISO strings
                     items.append(FeedbackItem(**item_data))
                 except ValidationError as e:
                     logger.error(f"Failed to parse feedback item: {e}")
@@ -65,17 +60,18 @@ class FeedbackCollector:
             logger.error(f"Error loading feedback: {e}")
             return []
 
-    def _save_feedback(self, items: list[FeedbackItem]) -> None:
-        """Save feedback items to storage."""
+    async def _save_feedback(self, items: list[FeedbackItem]) -> None:
+        """Save feedback items to storage asynchronously."""
         try:
             data = [item.model_dump(mode="json") for item in items]
-            with open(self.storage_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, default=str)
+            json_str = json.dumps(data, indent=2, default=str)
+            async with aiofiles.open(self.storage_path, mode="w", encoding="utf-8") as f:
+                await f.write(json_str)
         except Exception as e:
             logger.error(f"Failed to save feedback: {e}")
             raise
 
-    def submit(
+    async def submit(
         self,
         content: str,
         category: FeedbackCategory = FeedbackCategory.OTHER,
@@ -85,16 +81,6 @@ class FeedbackCollector:
     ) -> str:
         """
         Submit a new piece of feedback.
-
-        Args:
-            content: The feedback message.
-            category: Category of feedback.
-            priority: Priority level.
-            source: Source identifier.
-            metadata: Optional additional data.
-
-        Returns:
-            The ID of the created feedback item.
         """
         item = FeedbackItem(
             content=content,
@@ -104,43 +90,30 @@ class FeedbackCollector:
             metadata=metadata or {},
         )
 
-        items = self._load_feedback()
+        items = await self._load_feedback()
         items.append(item)
-        self._save_feedback(items)
+        await self._save_feedback(items)
 
         logger.info(f"Feedback submitted: {item.id} [{category}]")
         return item.id
 
-    def get(self, feedback_id: str) -> FeedbackItem | None:
+    async def get(self, feedback_id: str) -> FeedbackItem | None:
         """
         Retrieve a specific feedback item by ID.
-
-        Args:
-            feedback_id: The ID to search for.
-
-        Returns:
-            The FeedbackItem if found, else None.
         """
-        items = self._load_feedback()
+        items = await self._load_feedback()
         for item in items:
             if item.id == feedback_id:
                 return item
         return None
 
-    def list_feedback(
+    async def list_feedback(
         self, category: FeedbackCategory | None = None, source: str | None = None
     ) -> list[FeedbackItem]:
         """
         List feedback items, optionally filtered.
-
-        Args:
-            category: Filter by category.
-            source: Filter by source.
-
-        Returns:
-            List of matching feedback items.
         """
-        items = self._load_feedback()
+        items = await self._load_feedback()
         filtered = items
 
         if category:
@@ -151,6 +124,6 @@ class FeedbackCollector:
 
         return filtered
 
-    def clear(self) -> None:
+    async def clear(self) -> None:
         """Clear all feedback (primarily for testing)."""
-        self._save_feedback([])
+        await self._save_feedback([])

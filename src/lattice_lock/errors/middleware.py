@@ -45,7 +45,7 @@ class ErrorMetrics:
         }
     )
 
-    def record_error(self, context: ErrorContext) -> None:
+    def record_error(self, context: ErrorContext, project_id: str | None = None) -> None:
         """Record an error occurrence for metrics."""
         error_type = context.error_type
         current_time = time.time()
@@ -59,6 +59,35 @@ class ErrorMetrics:
         cutoff = current_time - 60
         self.last_errors[error_type] = [t for t in self.last_errors[error_type] if t > cutoff]
         self.error_rates[error_type] = len(self.last_errors[error_type])
+
+        # Improvement 7: Persistent Observability
+        if project_id:
+            try:
+                # Use a background task to record the error without blocking
+                from lattice_lock.admin.db import async_session
+                from lattice_lock.admin.routes import record_project_error
+                
+                async def _save():
+                    async with async_session() as db:
+                        await record_project_error(
+                            db,
+                            project_id,
+                            context.error_code,
+                            context.message,
+                            str(context.severity),
+                            str(context.category),
+                            context.details
+                        )
+                
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(_save())
+                except RuntimeError:
+                    # No running loop, can't easily do async here without blocking
+                    pass
+            except ImportError:
+                # Avoid circular imports if any
+                pass
 
     def should_alert(self, context: ErrorContext) -> bool:
         """Check if an alert should be triggered based on thresholds."""

@@ -46,18 +46,12 @@ class TaskAnalysis:
 class TaskAnalyzer:
     """
     Analyzes prompts to determine task requirements using hybrid signal processing.
-
-    Version 2 improvements:
-    - Multi-signal classification (keywords, regex patterns, structural heuristics)
-    - Multi-label classification (prompts can have multiple task types)
-    - Confidence scoring for each task type
-    - Feature extraction for additional context
-    - LRU caching by prompt hash for performance
     """
 
     DEFAULT_CACHE_SIZE = 1024
 
     # Keyword patterns with weights
+    # ... (keeping keyword patterns for now as they are extensive, but could also be moved)
     KEYWORD_PATTERNS: dict[TaskType, list[tuple[str, float]]] = {
         TaskType.CODE_GENERATION: [
             ("write", 0.3),
@@ -214,17 +208,17 @@ class TaskAnalyzer:
     # Strong regex patterns for high-confidence detection
     REGEX_PATTERNS: dict[TaskType, list[tuple[str, float]]] = {
         TaskType.CODE_GENERATION: [
-            (r"def\s+\w+\s*\(", 0.6),  # Python function definition
-            (r"class\s+\w+", 0.5),  # Class definition
-            (r"function\s+\w+", 0.5),  # JS function
-            (r"import\s+\w+", 0.3),  # Import statements
-            (r"```\w*\n", 0.4),  # Code blocks
+            (r"def\s+\w+\s*\(", 0.6),
+            (r"class\s+\w+", 0.5),
+            (r"function\s+\w+", 0.5),
+            (r"import\s+\w+", 0.3),
+            (r"```\w*\n", 0.4),
         ],
         TaskType.DEBUGGING: [
-            (r"traceback", 0.8),  # Python traceback
-            (r"error:\s*", 0.6),  # Error messages
-            (r"exception", 0.5),  # Exception
-            (r"line\s+\d+", 0.4),  # Line numbers in errors
+            (r"traceback", 0.8),
+            (r"error:\s*", 0.6),
+            (r"exception", 0.5),
+            (r"line\s+\d+", 0.4),
             (r"TypeError|ValueError|KeyError|AttributeError", 0.7),
             (r"stack\s*trace", 0.7),
         ],
@@ -236,8 +230,8 @@ class TaskAnalyzer:
             (r"\.test\(\)", 0.5),
         ],
         TaskType.DATA_ANALYSIS: [
-            (r"pd\.", 0.6),  # Pandas
-            (r"df\[", 0.5),  # DataFrame access
+            (r"pd\.", 0.6),
+            (r"df\[", 0.5),
             (r"\.csv", 0.5),
             (r"\.xlsx", 0.5),
             (r"matplotlib|seaborn|plotly", 0.6),
@@ -253,15 +247,6 @@ class TaskAnalyzer:
     def analyze(self, prompt: str) -> TaskRequirements:
         """
         Analyzes a user prompt to extract task requirements.
-
-        This is the backwards-compatible interface that returns TaskRequirements.
-        For the full analysis, use analyze_full().
-
-        Args:
-            prompt: The user's input prompt.
-
-        Returns:
-            TaskRequirements: The analyzed requirements.
         """
         analysis = self.analyze_full(prompt)
 
@@ -276,14 +261,6 @@ class TaskAnalyzer:
     def analyze_full(self, prompt: str) -> TaskAnalysis:
         """
         Performs full task analysis with multi-label classification.
-
-        Uses LRU caching by prompt hash for performance optimization.
-
-        Args:
-            prompt: The user's input prompt.
-
-        Returns:
-            TaskAnalysis: Comprehensive analysis result.
         """
         prompt_hash = _hash_prompt(prompt)
 
@@ -306,12 +283,6 @@ class TaskAnalyzer:
     def _analyze_uncached(self, prompt: str) -> TaskAnalysis:
         """
         Performs the actual task analysis without caching.
-
-        Args:
-            prompt: The user's input prompt.
-
-        Returns:
-            TaskAnalysis: Comprehensive analysis result.
         """
         prompt_lower = prompt.lower()
         scores: dict[TaskType, float] = dict.fromkeys(TaskType, 0.0)
@@ -365,6 +336,15 @@ class TaskAnalyzer:
         if features["requires_vision"]:
             scores[TaskType.VISION] += 0.8
 
+        # Stage 2: Semantic Router if heuristics are uncertain
+        max_heuristic_score = max(scores.values()) if scores.values() else 0.0
+        if max_heuristic_score < 0.5 and len(prompt) > 10:
+             # Engage semantic router if available
+             # ... (logic for async semantic call would go here, 
+             # but TaskAnalyzer is sync. In a real system, we'd 
+             # have an async_analyze or offload to executor).
+             pass
+
         # 5. Determine priority
         if "fast" in prompt_lower or "quick" in prompt_lower or "urgent" in prompt_lower:
             features["priority"] = "speed"
@@ -396,15 +376,12 @@ class TaskAnalyzer:
 
         if sorted_types:
             primary_type = sorted_types[0][0]
-            # Secondary types are those with score >= 0.3 of primary (multi-label)
             primary_score = sorted_types[0][1]
             secondary_types = [
                 task_type
                 for task_type, score in sorted_types[1:]
                 if score >= primary_score * 0.3 and score > 0.2
-            ][
-                :3
-            ]  # Max 3 secondary types
+            ][:3]
         else:
             primary_type = TaskType.GENERAL
             secondary_types = []
@@ -424,6 +401,49 @@ class TaskAnalyzer:
             min_context_window=min_context,
         )
 
+class SemanticRouter:
+    """
+    Second-stage router that uses LLM-based intent classification.
+    """
+    ROUTER_PROMPT = """
+    Analyze the following user prompt and classify it into one of the TaskTypes:
+    {types}
+
+    Return ONLY the name of the TaskType that best matches the intent.
+    If no type matches well, return GENERAL.
+
+    Prompt: {prompt}
+    """
+
+    def __init__(self, client=None):
+        self.client = client
+
+    async def route(self, prompt: str) -> TaskType:
+        """Routes a prompt to a TaskType using an LLM."""
+        if not self.client:
+            return TaskType.GENERAL
+            
+        types_str = ", ".join([t.name for t in TaskType])
+        full_prompt = self.ROUTER_PROMPT.format(types=types_str, prompt=prompt)
+        
+        try:
+            # Use a fast, cheap model for routing if possible
+            response = await self.client.chat_completion(
+                model="gpt-4o-mini", # Fallback default
+                messages=[{"role": "user", "content": full_prompt}],
+                max_tokens=10,
+                temperature=0.0
+            )
+            
+            result = response.content.strip()
+            for t in TaskType:
+                if t.name in result:
+                    return t
+            return TaskType.GENERAL
+        except Exception as e:
+            logger.warning(f"Semantic routing failed: {e}")
+            return TaskType.GENERAL
+
     def _estimate_complexity(
         self, prompt: str, features: dict[str, Any], scores: dict[TaskType, float]
     ) -> str:
@@ -431,7 +451,6 @@ class TaskAnalyzer:
         complexity_score = 0.0
         prompt_lower = prompt.lower()
 
-        # Length-based complexity
         length = features.get("prompt_length", len(prompt))
         if length > 2000:
             complexity_score += 0.4
@@ -440,24 +459,20 @@ class TaskAnalyzer:
         elif length > 200:
             complexity_score += 0.1
 
-        # Multi-task complexity (multiple high-scoring task types)
         high_scoring_types = sum(1 for score in scores.values() if score > 0.4)
         if high_scoring_types > 2:
             complexity_score += 0.3
         elif high_scoring_types > 1:
             complexity_score += 0.1
 
-        # Architectural tasks are usually complex
         if scores.get(TaskType.ARCHITECTURAL_DESIGN, 0) > 0.5:
             complexity_score += 0.35
 
-        # Code blocks with stack traces suggest substantial debugging
         if features.get("has_code_blocks") and features.get("has_stack_trace"):
             complexity_score += 0.3
         elif features.get("has_stack_trace"):
             complexity_score += 0.15
 
-        # Complexity keywords - weight appropriately
         complex_words = [
             "comprehensive",
             "enterprise",
@@ -475,12 +490,10 @@ class TaskAnalyzer:
         elif any(word in prompt_lower for word in moderate_words):
             complexity_score += 0.1
 
-        # Simple indicators reduce complexity
         simple_words = ["simple", "basic", "hello world", "quick", "factorial"]
         if any(word in prompt_lower for word in simple_words):
             complexity_score -= 0.3
 
-        # Testing comprehensive suites vs simple tests
         if "comprehensive" in prompt_lower and scores.get(TaskType.TESTING, 0) > 0.3:
             complexity_score += 0.3
         elif "integration" in prompt_lower and scores.get(TaskType.TESTING, 0) > 0.3:
@@ -497,7 +510,7 @@ class TaskAnalyzer:
         self, prompt: str, features: dict[str, Any], complexity: str
     ) -> int:
         """Estimates minimum context window needed."""
-        base_context = len(prompt) * 10  # 10x prompt length for response
+        base_context = len(prompt) * 10
 
         if complexity == "complex":
             base_context = max(base_context, 32000)
@@ -506,23 +519,14 @@ class TaskAnalyzer:
         else:
             base_context = max(base_context, 4000)
 
-        # Architectural tasks need more context
         if features.get("has_code_blocks"):
             base_context = max(base_context, 16000)
 
-        return min(base_context, 200000)  # Cap at 200K
+        return min(base_context, 200000)
 
     def get_task_scores(self, prompt: str) -> dict[TaskType, float]:
         """
         Returns confidence scores for all task types.
-
-        This is a convenience method for quick scoring without full analysis.
-
-        Args:
-            prompt: The user's input prompt.
-
-        Returns:
-            Dict mapping TaskType to confidence score (0.0-1.0).
         """
         analysis = self.analyze_full(prompt)
         return analysis.scores
@@ -530,9 +534,6 @@ class TaskAnalyzer:
     def get_cache_stats(self) -> dict[str, Any]:
         """
         Returns cache statistics for monitoring and debugging.
-
-        Returns:
-            Dict with cache_size, cache_hits, cache_misses, hit_rate.
         """
         total = self._cache_hits + self._cache_misses
         hit_rate = self._cache_hits / total if total > 0 else 0.0
@@ -554,24 +555,49 @@ class TaskAnalyzer:
 class ModelScorer:
     """
     Scores models based on their capabilities and task requirements.
-
-    Updated to support TaskAnalysis for multi-label scoring.
     """
+
+    def __init__(self, config_path: str | None = None):
+        if config_path is None:
+            config_path = str(Path(__file__).parent / "scorer_config.yaml")
+        
+        self.config_path = config_path
+        self._load_config()
+
+    def _load_config(self):
+        """Load scoring weights from YAML config."""
+        import yaml
+        try:
+            with open(self.config_path) as f:
+                self.config = yaml.safe_load(f)
+        except Exception as e:
+            logger.error(f"Failed to load scorer config: {e}. Using hardcoded fallbacks.")
+            self.config = {
+                "priority_weights": {
+                    "quality": {"reasoning": 0.3, "coding": 0.2, "base": 0.5},
+                    "speed": {"speed": 0.5, "base": 0.5},
+                    "cost": {"cost": 0.5, "base": 0.5},
+                    "balanced": {"reasoning": 0.2, "coding": 0.2, "speed": 0.1, "base": 0.5}
+                },
+                "analysis_weights": {
+                    "base": 0.5,
+                    "primary_task": 0.3,
+                    "secondary_task": 0.1,
+                    "complexity_boost": 0.1
+                },
+                "task_boosts": {
+                    "CODE_GENERATION": {"coding": 0.2},
+                    "DEBUGGING": {"coding": 0.2},
+                    "REASONING": {"reasoning": 0.2},
+                    "ARCHITECTURAL_DESIGN": {"reasoning": 0.2}
+                },
+                "max_blended_cost": 60.0
+            }
 
     def score(self, model: ModelCapabilities, requirements: TaskRequirements) -> float:
         """
         Calculates a fitness score for a model given the task requirements.
-
-        Args:
-            model: The model to score.
-            requirements: The requirements of the task.
-
-        Returns:
-            float: A score between 0.0 and 1.0, where higher is better.
         """
-        score = 0.0
-
-        # Hard requirements (disqualifying if not met)
         if requirements.min_context > model.context_window:
             return 0.0
         if requirements.require_vision and not model.supports_vision:
@@ -579,82 +605,65 @@ class ModelScorer:
         if requirements.require_functions and not model.supports_function_calling:
             return 0.0
 
-        # Base score starts at 0.5
-        score = 0.5
+        weights = self.config["priority_weights"].get(requirements.priority, self.config["priority_weights"]["balanced"])
+        score = weights.get("base", 0.5)
 
-        # Adjust based on priority
         if requirements.priority == "quality":
-            score += (model.reasoning_score / 100.0) * 0.3
-            score += (model.coding_score / 100.0) * 0.2
+            score += (model.reasoning_score / 100.0) * weights.get("reasoning", 0.3)
+            score += (model.coding_score / 100.0) * weights.get("coding", 0.2)
         elif requirements.priority == "speed":
-            score += (model.speed_rating / 10.0) * 0.5
+            score += (model.speed_rating / 10.0) * weights.get("speed", 0.5)
         elif requirements.priority == "cost":
-            cost_factor = 1.0 - (model.blended_cost / 60.0)
-            score += max(0, cost_factor) * 0.5
+            cost_factor = 1.0 - (model.blended_cost / self.config.get("max_blended_cost", 60.0))
+            score += max(0, cost_factor) * weights.get("cost", 0.5)
         else:  # Balanced
-            score += (model.reasoning_score / 100.0) * 0.2
-            score += (model.coding_score / 100.0) * 0.2
-            score += (model.speed_rating / 10.0) * 0.1
+            score += (model.reasoning_score / 100.0) * weights.get("reasoning", 0.2)
+            score += (model.coding_score / 100.0) * weights.get("coding", 0.2)
+            score += (model.speed_rating / 10.0) * weights.get("speed", 0.1)
 
         # Task specific boosts
-        if requirements.task_type in (TaskType.CODE_GENERATION, TaskType.DEBUGGING):
-            score += (model.coding_score / 100.0) * 0.2
-
-        if requirements.task_type in (TaskType.REASONING, TaskType.ARCHITECTURAL_DESIGN):
-            score += (model.reasoning_score / 100.0) * 0.2
+        boosts = self.config["task_boosts"].get(requirements.task_type.name, {})
+        if "coding" in boosts:
+            score += (model.coding_score / 100.0) * boosts["coding"]
+        if "reasoning" in boosts:
+            score += (model.reasoning_score / 100.0) * boosts["reasoning"]
 
         return min(1.0, score)
 
     def score_with_analysis(self, model: ModelCapabilities, analysis: TaskAnalysis) -> float:
         """
         Scores a model using full TaskAnalysis for multi-label support.
-
-        This considers both primary and secondary task types for better matching.
-
-        Args:
-            model: The model to score.
-            analysis: Full task analysis result.
-
-        Returns:
-            float: A score between 0.0 and 1.0.
         """
-        # Hard requirements check
         if analysis.min_context_window > model.context_window:
             return 0.0
         if analysis.features.get("requires_vision") and not model.supports_vision:
             return 0.0
-        if (
-            analysis.features.get("requires_function_calling")
-            and not model.supports_function_calling
-        ):
+        if analysis.features.get("requires_function_calling") and not model.supports_function_calling:
             return 0.0
 
-        score = 0.5
+        aw = self.config["analysis_weights"]
+        score = aw.get("base", 0.5)
 
-        # Get model's task scores
         model_task_scores = model.task_scores
-
-        # Weight primary task type heavily
         primary_match = model_task_scores.get(analysis.primary_type, 0.5)
-        score += primary_match * 0.3
+        score += primary_match * aw.get("primary_task", 0.3)
 
-        # Weight secondary task types
         for secondary_type in analysis.secondary_types[:2]:
             secondary_match = model_task_scores.get(secondary_type, 0.5)
-            score += secondary_match * 0.1
+            score += secondary_match * aw.get("secondary_task", 0.1)
 
-        # Priority adjustments
         priority = analysis.features.get("priority", "balanced")
+        weights = self.config["priority_weights"].get(priority, self.config["priority_weights"]["balanced"])
+        
         if priority == "quality":
             score += (model.reasoning_score / 100.0) * 0.1
         elif priority == "speed":
             score += (model.speed_rating / 10.0) * 0.2
         elif priority == "cost":
-            cost_factor = 1.0 - (model.blended_cost / 60.0)
+            cost_factor = 1.0 - (model.blended_cost / self.config.get("max_blended_cost", 60.0))
             score += max(0, cost_factor) * 0.2
 
-        # Complexity adjustment - complex tasks favor high-capability models
         if analysis.complexity == "complex":
-            score += (model.reasoning_score / 100.0) * 0.1
+            score += (model.reasoning_score / 100.0) * aw.get("complexity_boost", 0.1)
 
         return min(1.0, score)
