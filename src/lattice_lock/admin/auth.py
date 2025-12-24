@@ -59,8 +59,10 @@ class Role(str, Enum):
             return base_permissions
 
 
-@dataclass
-class AuthConfig:
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
+
+
+class AuthConfig(BaseModel):
     """Configuration for authentication settings.
 
     Attributes:
@@ -72,8 +74,12 @@ class AuthConfig:
         password_min_length: Minimum password length
     """
 
-    secret_key: str = field(
-        default_factory=lambda: os.environ.get("LATTICE_LOCK_SECRET_KEY", secrets.token_urlsafe(32))
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    secret_key: SecretStr = Field(
+        default_factory=lambda: SecretStr(
+            os.environ.get("LATTICE_LOCK_SECRET_KEY", secrets.token_urlsafe(32))
+        )
     )
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
@@ -81,14 +87,27 @@ class AuthConfig:
     api_key_prefix: str = "llk_"
     password_min_length: int = 8
 
-    def __post_init__(self) -> None:
-        """Validate configuration after initialization."""
-        if len(self.secret_key) < 32:
+    @field_validator("secret_key", mode="after")
+    @classmethod
+    def validate_secret_key(cls, v: SecretStr) -> SecretStr:
+        """Validate secret key length."""
+        if len(v.get_secret_value()) < 32:
             raise ValueError("Secret key must be at least 32 characters")
-        if self.access_token_expire_minutes < 1:
+        return v
+
+    @field_validator("access_token_expire_minutes")
+    @classmethod
+    def validate_access_token_expiry(cls, v: int) -> int:
+        if v < 1:
             raise ValueError("Access token expiry must be at least 1 minute")
-        if self.refresh_token_expire_days < 1:
+        return v
+
+    @field_validator("refresh_token_expire_days")
+    @classmethod
+    def validate_refresh_token_expiry(cls, v: int) -> int:
+        if v < 1:
             raise ValueError("Refresh token expiry must be at least 1 day")
+        return v
 
 
 # Global configuration - can be overridden via configure()
@@ -100,6 +119,18 @@ def get_config() -> AuthConfig:
     global _config
     if _config is None:
         _config = AuthConfig()
+        
+        # Security check for production
+        is_prod = os.environ.get("LATTICE_ENV") == "production"
+        secret_val = _config.secret_key.get_secret_value()
+        is_default_key = secret_val == os.environ.get("LATTICE_LOCK_SECRET_KEY") or len(secret_val) < 32
+        
+        if is_prod and is_default_key:
+            # Check if using the default secret from code/defaults rather than env
+            if "LATTICE_LOCK_SECRET_KEY" not in os.environ:
+                 logger.critical("PRODUCTION SECURITY WARNING: Running in production mode without LATTICE_LOCK_SECRET_KEY set!")
+                 raise ValueError("LATTICE_LOCK_SECRET_KEY must be set in production environment")
+                 
     return _config
 
 
@@ -278,7 +309,7 @@ def create_access_token(
 
     return jwt.encode(
         payload,
-        config.secret_key,
+        config.secret_key.get_secret_value(),
         algorithm=config.algorithm,
     )
 
@@ -322,7 +353,7 @@ def create_refresh_token(
 
     return jwt.encode(
         payload,
-        config.secret_key,
+        config.secret_key.get_secret_value(),
         algorithm=config.algorithm,
     )
 
@@ -351,7 +382,7 @@ def verify_token(token: str, expected_type: str = "access") -> TokenData:
     try:
         payload = jwt.decode(
             token,
-            config.secret_key,
+            config.secret_key.get_secret_value(),
             algorithms=[config.algorithm],
         )
 
