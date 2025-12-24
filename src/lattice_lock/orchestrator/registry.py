@@ -48,9 +48,6 @@ class RegistryValidationResult:
 class ModelRegistry:
     """Centralized model registry with all model definitions"""
 
-class ModelRegistry:
-    """Centralized model registry with all model definitions"""
-
     def __init__(self, registry_path: str | None = None):
         if registry_path is None:
             # Default to local models.yaml in the same directory
