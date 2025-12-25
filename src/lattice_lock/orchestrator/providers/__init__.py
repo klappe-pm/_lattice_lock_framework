@@ -25,6 +25,8 @@ from lattice_lock.orchestrator.providers.base import (
 )
 
 # Re-export specialized providers
+# Re-export specialized providers
+# Note: BedrockClient and FallbackManager should be updated to inherit from BaseProviderClient
 from lattice_lock.orchestrator.providers.bedrock import BedrockClient
 from lattice_lock.orchestrator.providers.fallback import FallbackManager
 
