@@ -1,4 +1,4 @@
-from .config import AuthConfig, get_config
+from .config import AuthConfig, get_config, reset_config
 from .models import Role, TokenData, User, APIKeyInfo, TokenResponse
 from .passwords import get_password_hash, verify_password
 from .tokens import (
@@ -45,7 +45,7 @@ hash_password = get_password_hash
 
 __all__ = [
     # Config
-    "AuthConfig", "get_config", "configure",
+    "AuthConfig", "get_config", "reset_config", "configure",
     # Models
     "Role", "TokenData", "User", "APIKeyInfo", "TokenResponse",
     # Passwords
