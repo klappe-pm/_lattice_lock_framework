@@ -59,3 +59,8 @@ def get_config() -> AuthConfig:
     if _config is None:
         _config = AuthConfig.load()
     return _config
+
+def reset_config() -> None:
+    """Reset auth config for testing."""
+    global _config
+    _config = None

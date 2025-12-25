@@ -19,13 +19,12 @@ API Endpoints:
     GET  /api/v1/projects/{id}/status            - Get project status
     GET  /api/v1/projects/{id}/errors            - Get project errors
     POST /api/v1/projects/{id}/rollback          - Trigger rollback
-    GET  /api/v1/projects/{id}/rollback/checkpoints - List rollback checkpoints
 """
 
 # Application exports
 from lattice_lock.admin.api import create_app, run_server
 
-# Authentication exports
+# Authentication exports - from new auth package
 from lattice_lock.admin.auth import (
     AuthConfig,
     Role,
@@ -43,7 +42,9 @@ from lattice_lock.admin.auth import (
     get_user,
     is_token_revoked,
     list_api_keys,
+    login_for_access_token,
     oauth2_scheme,
+    refresh_access_token,
     require_admin,
     require_operator,
     require_permission,
@@ -57,23 +58,17 @@ from lattice_lock.admin.auth import (
 )
 from lattice_lock.admin.auth_routes import router as auth_router
 
-# Model exports
+# Model exports - only items that exist in models.py
 from lattice_lock.admin.models import (
     Project,
     ProjectError,
     ProjectStatus,
-    ProjectStore,
-    ProjectValidation,
-    RollbackInfo,
     ValidationStatus,
-    get_project_store,
-    reset_project_store,
 )
 
-# Route exports
+# Route exports - only items that exist
 from lattice_lock.admin.routes import (
     API_VERSION,
-    add_rollback_checkpoint,
     record_project_error,
     update_validation_status,
 )
@@ -115,6 +110,8 @@ __all__ = [
     "verify_token",
     "revoke_token",
     "is_token_revoked",
+    "login_for_access_token",
+    "refresh_access_token",
     # API key operations
     "verify_api_key",
     "generate_api_key",
@@ -141,12 +138,7 @@ __all__ = [
     "Project",
     "ProjectError",
     "ProjectStatus",
-    "ProjectStore",
-    "ProjectValidation",
-    "RollbackInfo",
     "ValidationStatus",
-    "get_project_store",
-    "reset_project_store",
     # Schemas
     "ErrorDetail",
     "ErrorListResponse",
@@ -163,6 +155,5 @@ __all__ = [
     "ValidationStatusResponse",
     # Helper Functions
     "record_project_error",
-    "add_rollback_checkpoint",
     "update_validation_status",
 ]

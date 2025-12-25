@@ -58,6 +58,12 @@ class MemoryAuthStorage:
     def delete_api_key_metadata(cls, key_id: str) -> None:
          if key_id in cls._api_key_metadata:
              del cls._api_key_metadata[key_id]
+
+    @classmethod
+    def list_api_keys(cls, username: str) -> List[APIKeyInfo]:
+        """List all API keys for a user."""
+        key_ids = [key_id for _, (user, _, key_id) in cls._api_keys.items() if user == username]
+        return [cls._api_key_metadata[kid] for kid in key_ids if kid in cls._api_key_metadata]
              
     @classmethod
     def clear(cls):

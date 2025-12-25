@@ -55,6 +55,21 @@ def require_roles(*allowed_roles: Role):
         return current_user
     return role_checker
 
+
+def require_permission(permission: str):
+    """Create a dependency that requires a specific permission."""
+    async def permission_checker(
+        current_user: Annotated[TokenData, Depends(get_current_user)],
+    ) -> TokenData:
+        if permission not in current_user.role.permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Missing required permission: {permission}",
+            )
+        return current_user
+    return permission_checker
+
+
 # Convenience dependencies
 require_admin = require_roles(Role.ADMIN)
 require_operator = require_roles(Role.ADMIN, Role.OPERATOR)
