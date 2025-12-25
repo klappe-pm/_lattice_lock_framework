@@ -5,6 +5,7 @@ import time
 import asyncio
 
 from ..types import APIResponse
+from .base import BaseAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -133,4 +134,81 @@ class BedrockClient:
                 error=str(e),
                 usage={},
                 latency_ms=0.0,
+            )
+
+
+class BedrockAPIClient(BaseAPIClient):
+    """
+    Amazon Bedrock API client.
+
+    Status: EXPERIMENTAL
+
+    This client wraps the BedrockClient.
+    Bedrock requires AWS credentials and optionally boto3.
+    """
+
+    def __init__(self, region: str = "us-east-1", **kwargs):
+        # Bedrock uses AWS credentials, not API keys
+        super().__init__("", f"https://bedrock-runtime.{region}.amazonaws.com")
+        self.region = region
+        self.anthropic_version = kwargs.get("api_version", "bedrock-2023-05-31")
+        self._warned = False
+
+        self._bedrock_client = BedrockClient(region_name=region)
+
+    async def _chat_completion_impl(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+        functions: list[dict] | None = None,
+        tool_choice: str | dict | None = None,
+        **kwargs,
+    ) -> APIResponse:
+        """
+        Send chat completion request to Amazon Bedrock.
+
+        Note: This is an experimental client.
+        """
+        if not self._warned:
+            logger.warning(
+                "BedrockAPIClient is EXPERIMENTAL. "
+                "Bedrock requires AWS Signature V4 authentication via boto3."
+            )
+            self._warned = True
+
+        # Check if Bedrock client is enabled
+        if not self._bedrock_client.enabled:
+            error_msg = "Bedrock provider is not configured (boto3 not installed or missing AWS credentials)."
+            if functions:
+                error_msg += " Additionally, Bedrock function calling requires model-specific tool definitions."
+            return APIResponse(
+                content=None,
+                model=model,
+                provider="bedrock",
+                usage={"input_tokens": 0, "output_tokens": 0},
+                latency_ms=0,
+                raw_response={"error": error_msg},
+                error=error_msg,
+            )
+
+        # Delegate to the actual Bedrock client (async call)
+        try:
+            response = await self._bedrock_client.generate(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens or 4096,
+                anthropic_version=self.anthropic_version,
+            )
+            return response
+        except Exception as e:
+            logger.error(f"Bedrock generation failed: {e}")
+            return APIResponse(
+                content=None,
+                model=model,
+                provider="bedrock",
+                usage={"input_tokens": 0, "output_tokens": 0},
+                latency_ms=0,
+                error=str(e),
             )
