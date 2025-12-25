@@ -39,12 +39,10 @@ def get_async_session():
         _async_session = async_sessionmaker(get_engine(), expire_on_commit=False, class_=AsyncSession)
     return _async_session
 
-# For backwards compatibility
-@property
+# For backwards compatibility - these are now functions, not direct references
 def engine():
     return get_engine()
 
-@property
 def async_session():
     return get_async_session()
 
