@@ -79,10 +79,10 @@ class ErrorMetrics:
     async def _persist_error(self, context: ErrorContext, project_id: str) -> None:
         """Persist error to database."""
         try:
-            from lattice_lock.admin.db import async_session
-            from lattice_lock.admin.routes import record_project_error
+            from lattice_lock.admin.db import get_async_session
             
-            async with async_session() as db:
+            session_maker = get_async_session()
+            async with session_maker() as db:
                 await record_project_error(
                     db,
                     project_id,
