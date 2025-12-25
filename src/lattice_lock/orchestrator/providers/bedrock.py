@@ -1,10 +1,14 @@
+"""
+AWS Bedrock Provider
+"""
+import asyncio
 import json
 import logging
 import os
 import time
-import asyncio
 
-from ..types import APIResponse
+from lattice_lock.orchestrator.types import APIResponse
+
 from .base import BaseAPIClient
 
 logger = logging.getLogger(__name__)
@@ -145,6 +149,10 @@ class BedrockAPIClient(BaseAPIClient):
 
     This client wraps the BedrockClient.
     Bedrock requires AWS credentials and optionally boto3.
+
+    To use Bedrock models:
+    1. Install boto3: pip install boto3
+    2. Configure AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION)
     """
 
     def __init__(self, region: str = "us-east-1", **kwargs):

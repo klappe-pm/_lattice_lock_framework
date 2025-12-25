@@ -1,7 +1,11 @@
-import os
+"""
+Azure OpenAI Provider
+"""
 import json
 import logging
-from ..types import APIResponse, FunctionCall
+import os
+
+from lattice_lock.orchestrator.types import APIResponse, FunctionCall
 from .base import BaseAPIClient
 
 logger = logging.getLogger(__name__)

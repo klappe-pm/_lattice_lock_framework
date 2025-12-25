@@ -1,22 +1,36 @@
-from .base import BaseAPIClient, ProviderAvailability, ProviderUnavailableError
-from .openai import OpenAIAPIClient
+"""
+Provider Package
+"""
 from .anthropic import AnthropicAPIClient
-from .google import GoogleAPIClient
-from .xai import XAIAPIClient, GrokAPIClient
 from .azure import AzureOpenAIClient
+from .base import (
+    BaseAPIClient,
+    ProviderAvailability,
+    ProviderStatus,
+    ProviderUnavailableError,
+)
 from .bedrock import BedrockAPIClient
 from .factory import get_api_client
+from .google import GoogleAPIClient
+from .local import LocalModelClient
+from .openai import OpenAIAPIClient
+from .xai import GrokAPIClient
+
+# Explicitly export XAI client as GrokAPIClient for clarity if needed, though already imported as such
+XAIAPIClient = GrokAPIClient
 
 __all__ = [
     "BaseAPIClient",
-    "ProviderAvailability",
-    "ProviderUnavailableError",
     "OpenAIAPIClient",
     "AnthropicAPIClient",
     "GoogleAPIClient",
-    "XAIAPIClient",
     "GrokAPIClient",
+    "XAIAPIClient",
     "AzureOpenAIClient",
     "BedrockAPIClient",
+    "LocalModelClient",
+    "ProviderAvailability",
+    "ProviderStatus",
+    "ProviderUnavailableError",
     "get_api_client",
 ]

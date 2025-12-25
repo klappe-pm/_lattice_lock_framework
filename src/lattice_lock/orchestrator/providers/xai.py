@@ -1,13 +1,19 @@
-import os
+"""
+xAI (Grok) API Provider
+"""
 import json
 import logging
+import os
 from collections.abc import AsyncIterator
-from ..types import APIResponse, FunctionCall
+
+from lattice_lock.orchestrator.types import APIResponse, FunctionCall
+
 from .base import BaseAPIClient
 
 logger = logging.getLogger(__name__)
 
-class XAIAPIClient(BaseAPIClient):
+
+class GrokAPIClient(BaseAPIClient):
     """xAI Grok API client with all models support"""
 
     def __init__(self, api_key: str | None = None):
@@ -97,5 +103,3 @@ class XAIAPIClient(BaseAPIClient):
                         except json.JSONDecodeError:
                             continue
 
-# Alias for backward compatibility if needed, though usually handled in __init__
-GrokAPIClient = XAIAPIClient
