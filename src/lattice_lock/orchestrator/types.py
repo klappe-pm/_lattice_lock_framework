@@ -126,7 +126,7 @@ class TokenUsage:
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
-    cost: float | None = 0.0
+    cost: float | None = None
 
 
 @dataclass

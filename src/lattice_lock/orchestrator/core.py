@@ -53,11 +53,7 @@ class ModelOrchestrator:
             # ClientPool lazily loads, so we just get one
             client = self.client_pool.get_client("openai")  # Fallback logic for router
             if client:
-                 # TaskAnalyzer might expect a strict type, but generic BaseAPIClient should work 
-                 # if it supports what router needs.
-                 # Assuming TaskAnalyzer was updated earlier or works with BaseAPIClient.
-                 # Previous code: self.analyzer = TaskAnalyzer(router_client=client)
-                 self.analyzer = TaskAnalyzer(router_client=client)
+                self.analyzer = TaskAnalyzer(router_client=client)
         except Exception:
             logger.debug("Could not initialize Semantic Router client. Fallback to heuristics only.")
 
@@ -205,10 +201,7 @@ class ModelOrchestrator:
             try:
                 client = self.client_pool.get_client(model_cap.provider.value)
                 messages = kwargs.get("messages", [{"role": "user", "content": prompt}])
-                
-                # Clone kwargs to avoid side effects if modified inside execute?
-                # execute doesn't modify kwargs.
-                
+
                 response = await self.executor.execute(
                     model_cap=model_cap,
                     client=client,
@@ -249,10 +242,6 @@ class ModelOrchestrator:
 
     def get_available_providers(self) -> list[str]:
         """Get list of providers that have credentials configured."""
-        # Delegating to registry/types check or implementing wrapper via registry
-        return self.registry.validate_credentials  # No, validate_credentials takes specific provider
-        
-        # We can implement it using registry logic loop
         from .types import ModelProvider
         available = []
         for provider in ModelProvider:
