@@ -12,10 +12,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from lattice_lock.admin.auth import require_admin, require_operator, require_viewer
 from lattice_lock.admin.models import (
+    Project,
     ProjectError,
-    RollbackInfo,
     ValidationStatus,
-    get_project_store,
 )
 from lattice_lock.admin.schemas import (
     ErrorDetail,

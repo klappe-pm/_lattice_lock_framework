@@ -28,12 +28,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan manager.
 
     Handles startup and shutdown events for the application.
+    Ensures graceful shutdown by awaiting all background tasks.
     """
+    from lattice_lock.utils.async_compat import get_background_queue
+    
     # Startup
     logger.info(f"Starting Lattice Lock Admin API v{API_VERSION}")
+    app.state.task_queue = get_background_queue()
     yield
-    # Shutdown
-    logger.info("Shutting down Lattice Lock Admin API")
+    # Shutdown - CRITICAL: await all background tasks
+    logger.info("Shutting down Lattice Lock Admin API - waiting for background tasks...")
+    try:
+        await app.state.task_queue.wait_all(timeout=10.0)
+    except Exception as e:
+        logger.error(f"Error waiting for background tasks: {e}")
+    logger.info("Lattice Lock Admin API shutdown complete")
 
 
 def create_app(

@@ -62,32 +62,40 @@ class ErrorMetrics:
 
         # Improvement 7: Persistent Observability
         if project_id:
-            try:
-                # Use a background task to record the error without blocking
-                from lattice_lock.admin.db import async_session
-                from lattice_lock.admin.routes import record_project_error
-                
-                async def _save():
-                    async with async_session() as db:
-                        await record_project_error(
-                            db,
-                            project_id,
-                            context.error_code,
-                            context.message,
-                            str(context.severity),
-                            str(context.category),
-                            context.details
-                        )
-                
-                try:
-                    loop = asyncio.get_running_loop()
-                    loop.create_task(_save())
-                except RuntimeError:
-                    # No running loop, can't easily do async here without blocking
-                    pass
-            except ImportError:
-                # Avoid circular imports if any
-                pass
+            self._enqueue_persistence(context, project_id)
+    
+    def _enqueue_persistence(self, context: ErrorContext, project_id: str) -> None:
+        """Enqueue error persistence as background task."""
+        from lattice_lock.utils.async_compat import get_background_queue
+        
+        queue = get_background_queue()
+        try:
+            task = queue.enqueue(self._persist_error(context, project_id))
+            if task is None:
+                logger.debug("No event loop for error persistence")
+        except RuntimeError as e:
+            logger.warning(f"Could not enqueue persistence: {e}")
+    
+    async def _persist_error(self, context: ErrorContext, project_id: str) -> None:
+        """Persist error to database."""
+        try:
+            from lattice_lock.admin.db import async_session
+            from lattice_lock.admin.routes import record_project_error
+            
+            async with async_session() as db:
+                await record_project_error(
+                    db,
+                    project_id,
+                    context.error_code,
+                    context.message,
+                    str(context.severity),
+                    str(context.category),
+                    context.details
+                )
+        except ImportError:
+            logger.info("Database module unavailable, skipping error persistence")
+        except Exception as e:
+            logger.warning(f"Error persistence failed: {e}")
 
     def should_alert(self, context: ErrorContext) -> bool:
         """Check if an alert should be triggered based on thresholds."""
