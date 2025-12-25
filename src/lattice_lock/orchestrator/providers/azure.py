@@ -6,11 +6,9 @@ import logging
 import os
 
 from lattice_lock.orchestrator.types import APIResponse, FunctionCall
-
 from .base import BaseAPIClient
 
 logger = logging.getLogger(__name__)
-
 
 class AzureOpenAIClient(BaseAPIClient):
     """Azure OpenAI Service API client"""
@@ -53,22 +51,29 @@ class AzureOpenAIClient(BaseAPIClient):
         response_content = None
         function_call = None
 
-        if data["choices"][0]["message"].get("content"):
-            response_content = data["choices"][0]["message"]["content"]
-        elif data["choices"][0]["message"].get("tool_calls"):
-            tool_call = data["choices"][0]["message"]["tool_calls"][0]
-            function_call = FunctionCall(
-                name=tool_call["function"]["name"],
-                arguments=json.loads(tool_call["function"]["arguments"]),
-            )
+        # Bounds checking for response structure
+        choices = data.get("choices", [])
+        if choices and choices[0].get("message"):
+            message = choices[0]["message"]
+            if message.get("content"):
+                response_content = message["content"]
+            elif message.get("tool_calls"):
+                tool_call = message["tool_calls"][0]
+                try:
+                    function_call = FunctionCall(
+                        name=tool_call["function"]["name"],
+                        arguments=json.loads(tool_call["function"]["arguments"]),
+                    )
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse function arguments: {e}")
 
         return APIResponse(
             content=response_content,
             model=model,
             provider="azure",
             usage={
-                "input_tokens": data["usage"]["prompt_tokens"],
-                "output_tokens": data["usage"]["completion_tokens"],
+                "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+                "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
             },
             latency_ms=latency_ms,
             raw_response=data,

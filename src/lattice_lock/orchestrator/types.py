@@ -120,13 +120,23 @@ class FunctionDefinition:
 
 
 @dataclass
+class TokenUsage:
+    """Token usage statistics."""
+
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    cost: float | None = None
+
+
+@dataclass
 class APIResponse:
     """Standardized API response format."""
 
     content: str
     model: str
     provider: str
-    usage: dict[str, int]  # input_tokens, output_tokens
+    usage: TokenUsage | dict[str, int]  # input_tokens, output_tokens
     latency_ms: int
     raw_response: dict | None = None
     error: str | None = None

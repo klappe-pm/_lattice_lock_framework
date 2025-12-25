@@ -92,7 +92,6 @@ class BedrockClient:
                 await asyncio.to_thread(self._init_client)
 
             logger.info(f"Generating with Bedrock model: {model}")
-            start_time = time.time()
 
             # Run blocking boto3 call in thread
             def _invoke():
