@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from lattice_lock.orchestrator.scorer import TaskAnalyzer, SemanticRouter
+from lattice_lock.orchestrator.analysis import TaskAnalyzer, SemanticRouter
 from lattice_lock.orchestrator.types import TaskType, APIResponse
 
 @pytest.mark.asyncio

@@ -19,7 +19,7 @@ from lattice_lock.agents.prompt_architect.validators import (
     QualityScorer,
     ValidationResult,
 )
-from lattice_lock.orchestrator.api_clients import get_api_client
+from lattice_lock.orchestrator.providers import get_api_client
 
 logger = logging.getLogger(__name__)
 

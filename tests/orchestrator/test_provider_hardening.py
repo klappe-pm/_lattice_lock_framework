@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from lattice_lock.orchestrator.api_clients import (
+from lattice_lock.orchestrator.providers import (
     AnthropicAPIClient,
     BedrockAPIClient,
     GoogleAPIClient,

@@ -3,15 +3,11 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+from lattice_lock.exceptions import ProviderUnavailableError
+
 from ..types import APIResponse
 
 logger = logging.getLogger(__name__)
-
-
-class ProviderUnavailableError(RuntimeError):
-    """Raised when all providers in the fallback chain fail."""
-
-    pass
 
 
 class FallbackManager:

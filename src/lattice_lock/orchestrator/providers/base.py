@@ -151,13 +151,10 @@ class ProviderAvailability:
         cls._messages = {}
 
 
-class ProviderUnavailableError(Exception):
-    """Raised when a provider is unavailable due to missing credentials."""
 
-    def __init__(self, provider: str, message: str):
-        self.provider = provider
-        self.message = message
-        super().__init__(f"Provider '{provider}' unavailable: {message}")
+# ProviderUnavailableError is imported and re-exported from lattice_lock.exceptions
+# to maintain backward compatibility for code importing from this module.
+from lattice_lock.exceptions import ProviderUnavailableError
 
 
 class BaseAPIClient:

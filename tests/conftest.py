@@ -4,13 +4,33 @@ Pytest configuration for Lattice Lock Framework tests.
 This module configures pytest to:
 1. Configure asyncio mode for async tests
 2. Provide common fixtures
+3. Reset singletons between tests for isolation
 """
 
 import os
 
 import pytest
 
+from lattice_lock.admin.auth.storage import MemoryAuthStorage
+from lattice_lock.orchestrator.providers.base import ProviderAvailability
+
+
+@pytest.fixture(autouse=True)
+def reset_singletons():
+    """Reset all singletons before and after each test for isolation."""
+    # Reset before test
+    MemoryAuthStorage.clear()
+    ProviderAvailability.reset()
+    
+    yield
+    
+    # Reset after test (cleanup)
+    MemoryAuthStorage.clear()
+    ProviderAvailability.reset()
+
+
 # ...
+
 
 
 @pytest.fixture(scope="session")

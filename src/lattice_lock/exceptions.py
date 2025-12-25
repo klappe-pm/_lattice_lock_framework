@@ -18,4 +18,7 @@ class BackgroundTaskError(LatticeError):
 
 class ProviderUnavailableError(LatticeError):
     """Provider credentials missing or provider unreachable."""
-    pass
+    def __init__(self, provider: str, reason: str):
+        self.provider = provider
+        self.reason = reason
+        super().__init__(f"Provider '{provider}' unavailable: {reason}")

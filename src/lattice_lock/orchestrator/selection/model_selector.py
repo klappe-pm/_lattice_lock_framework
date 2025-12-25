@@ -99,18 +99,11 @@ class ModelSelector:
 
     def _is_provider_available(self, provider: str) -> bool:
         """Check if a provider is available (has credentials configured)."""
-        # This creates a slight coupling to api_clients/ProviderAvailability 
-        # but is necessary for selection filtering.
-        # Ideally this status should be in registry, but registry is static config.
-        # We can import ProviderAvailability from core/api_clients or pass it in.
-        # For now, we import it from types/api_clients location.
+        # Uses ProviderAvailability from providers package
         try:
-             # Try to import from where core.py got it.
-             # core.py imports from .api_clients
-             from lattice_lock.orchestrator.api_clients import ProviderAvailability
-             return ProviderAvailability.is_available(provider)
+            from lattice_lock.orchestrator.providers import ProviderAvailability
+            return ProviderAvailability.is_available(provider)
         except ImportError:
-             # Fallback if refactor moved it and we didn't catch up, 
-             # logic basically assumes available if we can't check
-             logger.warning(f"Could not check availability for {provider}, assuming True")
-             return True
+            logger.warning(f"Could not check availability for {provider}, assuming True")
+            return True
+
