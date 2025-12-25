@@ -42,11 +42,12 @@ dependencies = [
     "click>=8.0.0",
     "fastapi>=0.100.0",
     "uvicorn>=0.23.0",
-    "python-jose[cryptography]>=3.3.0",
+
     "python-multipart>=0.0.6",
     "defusedxml>=0.7.1",
     "aiofiles>=23.0.0",
     "bcrypt>=4.0.1",
+    "PyJWT>=2.8.0",
 ]
 
 [project.optional-dependencies]

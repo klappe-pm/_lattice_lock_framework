@@ -7,7 +7,7 @@ An intelligent, multi-agent framework for scalable software development.
 - [Getting Started](docs/getting_started/README.md)
 - [Architecture](docs/architecture/README.md)
 - [Agent Definitions](docs/agents/README.md)
-- [Error Codes](docs/error_codes.md)
+- [Error Codes](error_code.md)
 
 ## Development
 

@@ -2,25 +2,14 @@
 **Execution Protocol:**
 
 - **Critical Path:** Chunk 0 → Chunk 1 → Chunk 2 → Chunk 3 → Chunk 4 → Chunk 5 → Chunk 6 → Chunk 7.
-    
 - **Rationale:** Chunk 3 (`ModelOrchestrator` decomposition) depends on `ModelScorer` being migrated in Chunk 2.
-    
-
----
 
 # Lattice Lock Framework - Master Refactoring Plan (v5.1 Final)
 
 ## Initiative 1: Core Framework Refactoring
-
 **Objective:** Decompose the monolithic codebase into a modular, maintainable, and testable architecture.
-
 ### Work Chunk 0: Prerequisites, Configuration & Standards
-
 **Objective:** Establish the foundation for refactoring by securing dependencies, defining logging standards, creating custom exceptions, and finalizing the configuration loader.
-
-#### LLM Prompt
-
-Python
 
 ````
 You are preparing the Lattice Lock Framework for a major refactoring.
@@ -41,8 +30,6 @@ bcrypt >= 4.0.0      # For password hashing (Work Chunk 4)
 ## Task 2: Create Custom Exception Classes
 
 Create `src/lattice_lock/exceptions.py`:
-
-Python
 
 ```
 """Framework-wide custom exceptions."""
@@ -70,9 +57,7 @@ class ProviderUnavailableError(LatticeError):
 
 ## Task 3: Define Logging Standards
 
-Create `src/lattice_lock/utils/logging.py`:
-
-Python
+1. Create `src/lattice_lock/utils/logging.py`:
 
 ```
 """Logging configuration and standards."""
@@ -107,9 +92,7 @@ def get_logger(name: str) -> logging.Logger:
 
 ## Task 4: Central Configuration Loader
 
-Create `src/lattice_lock/config/app_config.py` with expanded fields.
-
-Python
+1. Create `src/lattice_lock/config/app_config.py` with expanded fields.
 
 ```
 """
@@ -197,28 +180,17 @@ class BaseAPIClient(ABC):
 ### Step 3: Extract Providers (Relative Imports & Logging)
 
 For each provider file (e.g., `openai.py`):
-
 1. Move the relevant client class.
-    
 2. **CRITICAL:** Use relative imports: `from .base import BaseAPIClient`.
-    
 3. **STANDARD:** Set up logging: `logger = logging.getLogger(__name__)`.
-    
 
 ### Step 4: Factory & Aliasing
-
-Move `get_api_client` to `factory.py`.
-
-- Ensure "grok" string maps to `XAIAPIClient`.
-    
-- Ensure "gemini" string maps to `GoogleAPIClient`.
-    
+1. Move `get_api_client` to `factory.py`.
+2. Ensure "grok" string maps to `XAIAPIClient`.    
+3. Ensure "gemini" string maps to `GoogleAPIClient`.
 
 ### Step 5: Shim with Explicit Aliasing
-
-Replace `src/lattice_lock/orchestrator/api_clients.py` with:
-
-Python
+1. Replace `src/lattice_lock/orchestrator/api_clients.py` with:
 
 ```
 """
@@ -292,19 +264,14 @@ class TaskAnalyzer:
 ````
 
 ### Step 3: Extract `analysis/semantic_router.py`
-
 Move `SemanticRouter` to its own file.
-
-### Step 4: Extract `ModelScorer`
-
-Create src/lattice_lock/orchestrator/scoring/model_scorer.py.
-
-Move the ModelScorer class from scorer.py to here.
-
-Create src/lattice_lock/orchestrator/scoring/__init__.py exporting it.
+### 
+Step 4: Extract `ModelScorer`
+1. Create src/lattice_lock/orchestrator/scoring/model_scorer.py.
+2. Move the ModelScorer class from scorer.py to here.
+3. Create src/lattice_lock/orchestrator/scoring/__init__.py exporting it.
 
 ### Step 5: Shim `scorer.py`
-
 Replace `scorer.py` with a re-export shim for `TaskAnalyzer`, `SemanticRouter`, and `ModelScorer`.
 
 ````
@@ -361,8 +328,7 @@ class ConversationExecutor:
 Move lazy-loading client logic here. Implement `close_all()` and `reset()`.
 
 ### Step 4: Refactor `ModelOrchestrator` (core.py)
-
-Rewrite the class to coordinate `ClientPool`, `ModelSelector`, and `ConversationExecutor`.
+1. Rewrite the class to coordinate `ClientPool`, `ModelSelector`, and `ConversationExecutor`.
 
 ````
 
@@ -439,14 +405,10 @@ def error_boundary(...):
 ````
 
 ### Step 2: Update Error Middleware
-
-In `ErrorMetrics.record_error`, use `get_background_queue().enqueue(...)`.
+1. In `ErrorMetrics.record_error`, use `get_background_queue().enqueue(...)`.
 
 ### Step 3: Update Application Lifespan
-
-In the main FastAPI app file:
-
-Python
+ 1.In the main FastAPI app file:
 
 ```
 @asynccontextmanager
@@ -528,28 +490,18 @@ Track removal timeline (v2.2 deprecated -> v3.0 removal).
 Verify that all shim files emit `DeprecationWarning`.
 ````
 
----
-
 ## Initiative 2: Test Suite Refactoring
 
 **Objective:** Adapt the existing test suite to the new modular architecture.
-
 ### Work Chunk 2.1: Update Existing Test Imports
-
-- Update `test_api_clients.py` to target `lattice_lock.orchestrator.providers`.
-    
-- Update `test_orchestrator.py` to mock `TaskAnalyzer`, `ModelSelector`, `ConversationExecutor`.
-    
+1. Update `test_api_clients.py` to target `lattice_lock.orchestrator.providers`.
+2. Update `test_orchestrator.py` to mock `TaskAnalyzer`, `ModelSelector`, `ConversationExecutor`.
 
 ### Work Chunk 2.2: Expand Unit Testing
-
 - **Token Aggregation:** Create `tests/execution/test_token_aggregation.py` to verify `ConversationExecutor` sums usage correctly.
-    
 - **Selector:** Create `tests/selection/test_selector.py`.
     
 
 ### Work Chunk 2.3: CI/CD Validation
-
-- Configure CI to run `pytest tests/execution/test_token_aggregation.py -v --strict-markers` as a blocking step.
-    
-- Configure CI to run `pytest tests/ --count=2 -x` to catch state leaks.
+1. Configure CI to run `pytest tests/execution/test_token_aggregation.py -v --strict-markers` as a blocking step.
+2. Configure CI to run `pytest tests/ --count=2 -x` to catch state leaks.
