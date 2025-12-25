@@ -207,6 +207,9 @@ implementation/
 # Construction/development artifacts (non-essential files)
 .construction/
 
+# Documentation TODOs (pre-refactor docs pending cleanup)
+.documentation-todos/
+
 # =============================================================================
 # DEPRECATED PACKAGES (Post-Consolidation)
 # =============================================================================
