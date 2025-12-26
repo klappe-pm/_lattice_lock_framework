@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .models import (
     Project, 
     ProjectError, 
+    ProjectStatus,
     RollbackCheckpoint,
     ValidationStatus
 )
