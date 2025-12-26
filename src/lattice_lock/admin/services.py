@@ -69,7 +69,7 @@ async def record_project_error(
     if severity == "critical":
         project.status = "error"
     elif severity == "high" and project.status != "error":
-         project.status = "warning"
+        project.status = "warning"
         
     project.last_activity = time.time()
     await db.commit()
