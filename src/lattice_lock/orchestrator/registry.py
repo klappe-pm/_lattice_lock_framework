@@ -124,16 +124,49 @@ class ModelRegistry:
         scores[TaskType.VISION] = 1.0 if supports_vision else 0.0
         scores[TaskType.SECURITY_AUDIT] = coding_norm * 0.7 + reasoning_norm * 0.3
         scores[TaskType.CREATIVE_WRITING] = reasoning_norm * 0.8
+        scores[TaskType.TRANSLATION] = reasoning_norm * 0.9
 
         return scores
 
     def _load_all_models(self):
-        """Load all models from YAML config"""
+        """Load all models from YAML config, falling back to defaults if missing."""
         if not self.registry_path or not Path(self.registry_path).exists():
-             logger.error(f"Registry YAML not found: {self.registry_path}")
-             return
+            logger.warning(f"Registry YAML not found: {self.registry_path}, loading defaults")
+            self._load_defaults()
+            return
 
-        self._load_from_yaml()
+        if not self._load_from_yaml():
+            logger.warning("YAML loading failed, falling back to defaults")
+            self._load_defaults()
+
+    def _load_defaults(self):
+        """Load hardcoded default models as fallback."""
+        logger.info("Loading default model definitions")
+        
+        # Minimal set of default models
+        defaults = [
+            ("gpt-4o", ModelProvider.OPENAI, 128000, 5.0, 15.0, 95, 95, 85),
+            ("gpt-4o-mini", ModelProvider.OPENAI, 128000, 0.15, 0.6, 85, 85, 95),
+            ("claude-sonnet-4-20250514", ModelProvider.ANTHROPIC, 200000, 3.0, 15.0, 95, 95, 80),
+            ("claude-3-5-haiku-20241022", ModelProvider.ANTHROPIC, 200000, 0.8, 4.0, 85, 85, 95),
+            ("gemini-2.0-flash", ModelProvider.GOOGLE, 1048576, 0.075, 0.3, 85, 85, 95),
+            ("grok-3", ModelProvider.XAI, 128000, 3.0, 15.0, 90, 90, 85),
+        ]
+        
+        for model_id, provider, ctx, in_cost, out_cost, reason, code, speed in defaults:
+            caps = self._create_model_caps(
+                model_id=model_id,
+                api_name=model_id,
+                provider=provider,
+                context_window=ctx,
+                input_cost=in_cost,
+                output_cost=out_cost,
+                reasoning_score=reason,
+                coding_score=code,
+                speed_rating=speed,
+            )
+            self.models[model_id] = caps
+        logger.info(f"Loaded {len(self.models)} default models")
 
     def _load_from_yaml(self) -> bool:
         """Load models from registry.yaml with Pydantic validation."""

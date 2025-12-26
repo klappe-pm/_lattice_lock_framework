@@ -21,6 +21,13 @@ class AuthConfig(BaseModel):
             raise ValueError("Access token expiry must be at least 1 minute")
         return v
     
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, v: SecretStr) -> SecretStr:
+        if len(v.get_secret_value()) < 32:
+            raise ValueError("Secret key must be at least 32 characters")
+        return v
+    
     @classmethod
     def load(cls) -> "AuthConfig":
         env = os.environ.get("LATTICE_ENV", "dev")

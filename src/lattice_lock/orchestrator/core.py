@@ -242,12 +242,19 @@ class ModelOrchestrator:
 
     def get_available_providers(self) -> list[str]:
         """Get list of providers that have credentials configured."""
-        from .types import ModelProvider
-        available = []
-        for provider in ModelProvider:
-            if self.registry.validate_credentials(provider):
-                available.append(provider.value)
-        return available
+        from .providers import ProviderAvailability
+        return ProviderAvailability.get_available_providers()
+
+    def check_provider_status(self) -> dict[str, str]:
+        """Check and return status of all providers."""
+        from .providers import ProviderAvailability
+        status = ProviderAvailability.check_all_providers()
+        return {provider: s.value for provider, s in status.items()}
+
+    def _is_provider_available(self, provider: str) -> bool:
+        """Check if a specific provider is available."""
+        from .providers import ProviderAvailability
+        return ProviderAvailability.is_available(provider)
 
     def close(self):
         """Shutdown orchestrator resources."""
