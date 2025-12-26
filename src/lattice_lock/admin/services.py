@@ -180,7 +180,7 @@ async def update_validation_status(
     elif has_failures:
         project.status = "error"
     elif project.gauntlet_status == ValidationStatus.FAILED:
-         project.status = "warning"
+        project.status = "warning"
 
     project.last_validated = time.time()
     project.last_activity = time.time()
