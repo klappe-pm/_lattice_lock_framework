@@ -67,6 +67,7 @@ class TestModelCapabilities:
             TaskType.VISION: 1.0,  # supports_vision=True
             TaskType.SECURITY_AUDIT: coding_norm * 0.7 + reasoning_norm * 0.3,
             TaskType.CREATIVE_WRITING: reasoning_norm * 0.8,
+            TaskType.TRANSLATION: reasoning_norm * 0.9,
         }
         return ModelCapabilities(
             name="Test Model",
@@ -101,6 +102,7 @@ class TestModelCapabilities:
             TaskType.VISION: 0.0,  # supports_vision=False
             TaskType.SECURITY_AUDIT: coding_norm * 0.7 + reasoning_norm * 0.3,
             TaskType.CREATIVE_WRITING: reasoning_norm * 0.8,
+            TaskType.TRANSLATION: reasoning_norm * 0.9,
         }
         return ModelCapabilities(
             name="Low Score Model",

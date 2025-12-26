@@ -9,33 +9,30 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from lattice_lock.admin.auth import require_admin, require_operator, require_viewer
-from lattice_lock.admin.models import (
-    Project,
-    ProjectError,
-    ValidationStatus,
-)
+from lattice_lock.admin.db import get_db
+from lattice_lock.admin.models import Project, ProjectError, ValidationStatus
 from lattice_lock.admin.schemas import (
     ErrorDetail,
     ErrorListResponse,
-    ErrorResponse,
     HealthResponse,
     ProjectListResponse,
     ProjectStatusResponse,
     ProjectSummary,
     RegisterProjectRequest,
     RegisterProjectResponse,
-    RollbackCheckpoint,
     RollbackRequest,
     RollbackResponse,
     ValidationStatusResponse,
 )
-
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
-from lattice_lock.admin.db import get_db
-from lattice_lock.admin.models import Project, ProjectError
+from lattice_lock.admin.services import (
+    update_validation_status,
+    record_project_error,
+)
 
 # API version
 API_VERSION = "1.0.0"
@@ -80,7 +77,8 @@ async def health_check(db: AsyncSession = Depends(get_db)) -> HealthResponse:
 )
 async def list_projects(db: AsyncSession = Depends(get_db)) -> ProjectListResponse:
     """List all registered projects."""
-    result = await db.execute(select(Project))
+    # Eager load errors to avoid MissingGreenlet error when accessing p.errors
+    result = await db.execute(select(Project).options(selectinload(Project.errors)))
     projects = result.scalars().all()
 
     summaries = [
@@ -142,7 +140,12 @@ async def register_project(
 )
 async def get_project_status(project_id: str, db: AsyncSession = Depends(get_db)) -> ProjectStatusResponse:
     """Get project status."""
-    result = await db.execute(select(Project).where(Project.id == project_id))
+    # Eager load relationships
+    result = await db.execute(
+        select(Project)
+        .where(Project.id == project_id)
+        .options(selectinload(Project.errors), selectinload(Project.rollback_checkpoints))
+    )
     project = result.scalar_one_or_none()
 
     if not project:
@@ -166,7 +169,7 @@ async def get_project_status(project_id: str, db: AsyncSession = Depends(get_db)
             validation_errors=project.validation_errors,
         ),
         error_count=len([e for e in project.errors if not e.resolved]),
-        rollback_checkpoints_count=0, # Placeholder for now
+        rollback_checkpoints_count=len(project.rollback_checkpoints),
         metadata=project.metadata_json,
     )
 
@@ -250,64 +253,3 @@ async def trigger_rollback(
         dry_run=request.dry_run,
         rollback_diff={},
     )
-
-
-# Helper function to record errors from external sources
-async def record_project_error(
-    db: AsyncSession,
-    project_id: str,
-    error_code: str,
-    message: str,
-    severity: str,
-    category: str,
-    details: dict | None = None,
-) -> bool:
-    """Record an error for a project."""
-    result = await db.execute(select(Project).where(Project.id == project_id))
-    project = result.scalar_one_or_none()
-    if not project:
-        return False
-        
-    error = ProjectError(
-        id=f"err_{uuid.uuid4().hex[:8]}",
-        project_id=project_id,
-        error_code=error_code,
-        message=message,
-        severity=severity,
-        category=category,
-        timestamp=time.time(),
-        details=details or {},
-    )
-    db.add(error)
-    project.last_activity = time.time()
-    await db.commit()
-    return True
-
-
-async def update_validation_status(
-    db: AsyncSession,
-    project_id: str,
-    schema_status: str | None = None,
-    sheriff_status: str | None = None,
-    gauntlet_status: str | None = None,
-    validation_errors: list[str] | None = None,
-) -> bool:
-    """Update validation status for a project."""
-    result = await db.execute(select(Project).where(Project.id == project_id))
-    project = result.scalar_one_or_none()
-    if not project:
-        return False
-
-    if schema_status:
-        project.schema_status = schema_status
-    if sheriff_status:
-        project.sheriff_status = sheriff_status
-    if gauntlet_status:
-        project.gauntlet_status = gauntlet_status
-    if validation_errors is not None:
-        project.validation_errors = validation_errors
-
-    project.last_validated = time.time()
-    project.last_activity = time.time()
-    await db.commit()
-    return True

@@ -22,3 +22,9 @@ class ProviderUnavailableError(LatticeError):
         self.provider = provider
         self.reason = reason
         super().__init__(f"Provider '{provider}' unavailable: {reason}")
+    
+    @property
+    def message(self) -> str:
+        """Alias for reason for backwards compatibility."""
+        return self.reason
+
