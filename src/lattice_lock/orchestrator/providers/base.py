@@ -1,294 +1,201 @@
-"""
-Base classes for API providers.
-"""
-
-import asyncio
-import json
+"""Base classes for all API providers."""
 import logging
 import os
-import re
-import threading
-import time
+from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Any, Optional
 
-import aiohttp
-from tenacity import retry, stop_after_attempt, wait_exponential
-
-from lattice_lock.orchestrator.exceptions import (
-    APIClientError,
-    AuthenticationError,
-    InvalidRequestError,
-    ProviderConnectionError,
-    RateLimitError,
-    ServerError,
-)
-from lattice_lock.orchestrator.types import APIResponse, FunctionCall
+from lattice_lock.config import AppConfig
+from lattice_lock.exceptions import ProviderUnavailableError
 
 logger = logging.getLogger(__name__)
 
 
-def _redact_sensitive_in_message(message: str) -> str:
-    """Redact sensitive data from error messages (URLs with tokens, API keys, etc.)."""
-    # Redact API keys in URLs (e.g., ?key=xxx, &api_key=xxx)
-    message = re.sub(
-        r"([?&](?:key|api_key|token|access_token|apikey)=)[^&\s]+",
-        r"\1[REDACTED]",
-        message,
-        flags=re.IGNORECASE,
-    )
-    # Redact Bearer tokens
-    message = re.sub(r"(Bearer\s+)[^\s]+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
-    # Redact Authorization headers
-    message = re.sub(r"(Authorization:\s*)[^\s]+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
-    return message
-
-
 class ProviderStatus(Enum):
-    """Provider maturity/availability status."""
-
-    PRODUCTION = "production"  # Fully supported, tested, recommended
-    BETA = "beta"  # Working but may have issues
-    EXPERIMENTAL = "experimental"  # Use at own risk, may not work
-    UNAVAILABLE = "unavailable"  # Missing credentials or not configured
+    """Provider availability status."""
+    AVAILABLE = "available"
+    UNAVAILABLE = "unavailable"
+    UNKNOWN = "unknown"
+    ERROR = "error"
 
 
 class ProviderAvailability:
-    """Tracks provider availability and credential status."""
-
-    _instance = None
-    _lock = threading.Lock()
-    _checked = False
+    """
+    Singleton for tracking provider credential availability.
+    
+    Checks environment for required API keys and tracks provider status.
+    """
+    _instance: Optional["ProviderAvailability"] = None
     _status: dict[str, ProviderStatus] = {}
-    _messages: dict[str, str] = {}
-
-    # Required environment variables per provider
-    REQUIRED_CREDENTIALS = {
+    
+    REQUIRED_CREDENTIALS: dict[str, list[str]] = {
         "openai": ["OPENAI_API_KEY"],
         "anthropic": ["ANTHROPIC_API_KEY"],
         "google": ["GOOGLE_API_KEY"],
         "xai": ["XAI_API_KEY"],
         "azure": ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT"],
-        "bedrock": [],  # Uses AWS credentials from environment/config
-        "dial": ["DIAL_API_KEY"],
-        "local": [],  # Local models (Ollama/vLLM), no credentials needed
+        "bedrock": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+        "local": [],  # No credentials required
+        "dial": ["DIAL_URL"], # Assuming DIAL requires a URL
     }
-
-    # Provider maturity classification
-    PROVIDER_MATURITY = {
-        "openai": ProviderStatus.PRODUCTION,
-        "anthropic": ProviderStatus.PRODUCTION,
-        "google": ProviderStatus.PRODUCTION,
-        "xai": ProviderStatus.PRODUCTION,
-        "local": ProviderStatus.PRODUCTION,  # Local models (Ollama/vLLM)
-        "azure": ProviderStatus.BETA,
-        "dial": ProviderStatus.BETA,
-        "bedrock": ProviderStatus.EXPERIMENTAL,
-    }
-
+    
     @classmethod
-    def get_instance(cls) -> "ProviderAvailability":
-        """Get the singleton instance of ProviderAvailability."""
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-    @classmethod
-    def check_all_providers(cls) -> dict[str, ProviderStatus]:
-        """Check availability of all providers. Returns status dict."""
-        instance = cls.get_instance()
-        if instance._checked:
-            return instance._status
-
-        for provider, required_vars in cls.REQUIRED_CREDENTIALS.items():
-            missing = [var for var in required_vars if not os.getenv(var)]
-
-            if missing:
-                instance._status[provider] = ProviderStatus.UNAVAILABLE
-                instance._messages[provider] = f"Missing credentials: {', '.join(missing)}"
-                logger.warning(f"Provider '{provider}' unavailable: {instance._messages[provider]}")
-            else:
-                instance._status[provider] = cls.PROVIDER_MATURITY.get(
-                    provider, ProviderStatus.EXPERIMENTAL
-                )
-                instance._messages[provider] = f"Status: {instance._status[provider].value}"
-
-        instance._checked = True
-        return instance._status
-
+    def reset(cls) -> None:
+        """Reset singleton state for testing."""
+        cls._instance = None
+        cls._status.clear()
+    
     @classmethod
     def is_available(cls, provider: str) -> bool:
-        """Check if a provider is available (has credentials)."""
-        status = cls.check_all_providers()
-        return status.get(provider, ProviderStatus.UNAVAILABLE) != ProviderStatus.UNAVAILABLE
-
+        """Check if provider has required credentials."""
+        required = cls.REQUIRED_CREDENTIALS.get(provider.lower(), [])
+        return all(os.environ.get(key) for key in required)
+    
     @classmethod
     def get_status(cls, provider: str) -> ProviderStatus:
-        """Get the status of a provider."""
-        status = cls.check_all_providers()
-        return status.get(provider, ProviderStatus.UNAVAILABLE)
-
-    @classmethod
-    def get_message(cls, provider: str) -> str:
-        """Get the status message for a provider."""
-        cls.check_all_providers()
-        instance = cls.get_instance()
-        return instance._messages.get(provider, "Unknown provider")
-
+        """Get cached status for provider."""
+        return cls._status.get(provider.lower(), ProviderStatus.UNKNOWN)
+    
     @classmethod
     def get_available_providers(cls) -> list[str]:
-        """Get list of available providers."""
-        status = cls.check_all_providers()
-        return [p for p, s in status.items() if s != ProviderStatus.UNAVAILABLE]
-
-    @classmethod
-    def reset(cls):
-        """Reset the singleton for testing."""
-        cls._instance = None
-        cls._checked = False
-        cls._status = {}
-        cls._messages = {}
+        """Get list of providers with configured credentials."""
+        return [p for p in cls.REQUIRED_CREDENTIALS if cls.is_available(p)]
 
 
+class BaseAPIClient(ABC):
+    """
+    Abstract base class for all API provider clients.
+    
+    All providers must:
+    1. Validate configuration on initialization
+    2. Implement health_check for connectivity verification
+    3. Implement chat_completion for LLM calls
+    """
+    
+    def __init__(self, config: AppConfig):
+        """
+        Initialize client with configuration.
+        
+        Args:
+            config: Application configuration object
+            
+        Raises:
+            ProviderUnavailableError: If required credentials missing
+        """
+        self.config = config
+        self._session: Optional["aiohttp.ClientSession"] = None
+        self._validate_config()
+        logger.info(f"Initialized {self.__class__.__name__}")
+    
+    @abstractmethod
+    def _validate_config(self) -> None:
+        """
+        Provider-specific configuration validation.
+        
+        Must check for required API keys and raise ProviderUnavailableError
+        if any are missing.
+        """
+        pass
 
-# ProviderUnavailableError is imported and re-exported from lattice_lock.exceptions
-# to maintain backward compatibility for code importing from this module.
-from lattice_lock.exceptions import ProviderUnavailableError
+    async def _get_session(self) -> "aiohttp.ClientSession":
+        """Get or create aiohttp session."""
+        import aiohttp
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession()
+        return self._session
 
-
-class BaseAPIClient:
-    """Base class for all API clients"""
-
-    def __init__(self, api_key: str, base_url: str):
-        self.api_key = api_key
-        self.base_url = base_url
-        self.session = None
-
-    async def __aenter__(self):
-        self.session = aiohttp.ClientSession()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.session:
-            # Shield cleanup from cancellation to ensure session is closed
-            await asyncio.shield(self.session.close())
-
-    @retry(
-        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), reraise=True
-    )
-    async def _make_request(self, method: str, endpoint: str, headers: dict, payload: dict) -> dict:
-        """Make API request with retry logic"""
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-
-        url = f"{self.base_url}/{endpoint}"
-        start_time = time.time()
-
+    async def _make_request(
+        self,
+        method: str,
+        url: str,
+        headers: dict[str, str] | None = None,
+        json_data: dict[str, Any] | None = None,
+        timeout: float = 30.0
+    ) -> tuple[dict[str, Any], float]:
+        """
+        Make HTTP request with latency tracking.
+        
+        Returns:
+            Tuple of (response_data, latency_ms)
+        """
+        import time
+        import aiohttp
+        
+        session = await self._get_session()
+        start_time = time.perf_counter()
+        
         try:
-            async with self.session.request(method, url, headers=headers, json=payload) as response:
-                latency_ms = int((time.time() - start_time) * 1000)
-
-                if response.status != 200:
-                    try:
-                        error_text = await response.text()
-                        # try to parse json if possible to get better error message
-                        try:
-                            error_json = json.loads(error_text)
-                            error_msg = error_json.get("error", {}).get("message", error_text)
-                        except (json.JSONDecodeError, KeyError, TypeError):
-                            error_msg = error_text
-                    except (aiohttp.ClientError, UnicodeDecodeError):
-                        error_msg = f"Unknown error (status {response.status})"
-
-                    msg = f"API Error {response.status}: {error_msg}"
-
-                    if response.status == 401 or response.status == 403:
-                        raise AuthenticationError(msg, status_code=response.status)
-                    elif response.status == 429:
-                        raise RateLimitError(msg, status_code=response.status)
-                    elif response.status >= 500:
-                        raise ServerError(msg, status_code=response.status)
-                    elif response.status == 400:
-                        raise InvalidRequestError(msg, status_code=response.status)
-                    else:
-                        raise APIClientError(msg, status_code=response.status)
-
-                data = await response.json()
+            async with session.request(
+                method,
+                url,
+                headers=headers,
+                json=json_data,
+                timeout=aiohttp.ClientTimeout(total=timeout)
+            ) as response:
+                latency_ms = (time.perf_counter() - start_time) * 1000
+                
+                try:
+                    data = await response.json()
+                except Exception:
+                    text = await response.text()
+                    # If not JSON, return text wrapped or raise error depending on status
+                    if response.status >= 400:
+                        raise Exception(f"Request failed {response.status}: {text}")
+                    data = {"content": text} # Fallback
+                
+                if response.status >= 400:
+                     # Attempt to extract error message
+                    error_msg = str(data)
+                    if isinstance(data, dict):
+                         error_msg = data.get("error", {}).get("message", str(data))
+                    raise Exception(f"Provider error {response.status}: {error_msg}")
+                    
                 return data, latency_ms
-
-        except aiohttp.ClientError as e:
-            redacted_msg = _redact_sensitive_in_message(str(e))
-            logger.error(f"Connection failed: {redacted_msg}")
-            raise ProviderConnectionError(f"Connection failed: {redacted_msg}") from e
-        except APIClientError:
-            raise
         except Exception as e:
-            redacted_msg = _redact_sensitive_in_message(str(e))
-            logger.error(f"Request failed: {redacted_msg}")
-            raise APIClientError(f"Unexpected error: {redacted_msg}") from e
+            # Rethrow as specific error types would be better, but generic for now
+            raise e
 
+    @abstractmethod
+    async def health_check(self) -> bool:
+        """
+        Verify provider connectivity and credential validity.
+        
+        Returns:
+            True if provider is healthy and accessible
+            
+        Raises:
+            ProviderUnavailableError: If health check fails
+        """
+        pass
+    
+    @abstractmethod
     async def chat_completion(
         self,
         model: str,
-        messages: list[dict[str, str]],
-        temperature: float = 0.7,
-        max_tokens: int | None = None,
-        functions: list[dict] | None = None,
-        tool_choice: str | dict | None = None,
-        **kwargs,
-    ) -> APIResponse:
+        messages: list[dict[str, Any]],
+        **kwargs
+    ) -> Any:
         """
-        Unified entry point for chat completions.
-        Handles common logic (logging, tracing, error wrapping) and delegates to provider implementation.
+        Execute a chat completion request.
+        
+        Args:
+            model: Model identifier
+            messages: Conversation messages
+            
+        Returns:
+            APIResponse with completion result
         """
-        try:
-            # Common logging or pre-processing could go here
-            return await self._chat_completion_impl(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                functions=functions,
-                tool_choice=tool_choice,
-                **kwargs,
-            )
-        except Exception as e:
-            redacted_msg = _redact_sensitive_in_message(str(e))
-            logger.error(f"Chat completion failed for {self.__class__.__name__}: {redacted_msg}")
-            raise
+        pass
+    
+    async def close(self):
+        """Close underlying session."""
+        if self._session and not self._session.closed:
+            await self._session.close()
 
-    async def _chat_completion_impl(
-        self,
-        model: str,
-        messages: list[dict[str, str]],
-        temperature: float,
-        max_tokens: int | None,
-        functions: list[dict] | None,
-        tool_choice: str | dict | None,
-        **kwargs,
-    ) -> APIResponse:
-        """
-        Provider-specific implementation of chat completion.
-        Must be implemented by subclasses.
-        """
-        raise NotImplementedError("Subclasses must implement _chat_completion_impl")
-
-    async def validate_credentials(self) -> bool:
-        """
-        Validate credentials by making a lightweight API call.
-        Subclasses should implement this with a cheap provider-specific call.
-        """
-        # Default fallback for now
-        return True
-
-    async def health_check(self) -> bool:
-        """
-        Check provider health status.
-        """
-        try:
-            return await self.validate_credentials()
-        except Exception as e:
-            redacted_msg = _redact_sensitive_in_message(str(e))
-            logger.error(f"Health check failed: {redacted_msg}")
-            return False
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - cleanup resources."""
+        await self.close()
