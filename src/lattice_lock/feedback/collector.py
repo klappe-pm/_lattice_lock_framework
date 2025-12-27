@@ -10,21 +10,6 @@ from .schemas import FeedbackCategory, FeedbackItem, FeedbackPriority
 logger = logging.getLogger(__name__)
 
 
-def _run_sync(coro):
-    """Run an async coroutine synchronously."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-    
-    if loop and loop.is_running():
-        # We're in an async context, create a new thread
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            future = pool.submit(asyncio.run, coro)
-            return future.result()
-    else:
-        return asyncio.run(coro)
 
 
 class FeedbackCollector:
