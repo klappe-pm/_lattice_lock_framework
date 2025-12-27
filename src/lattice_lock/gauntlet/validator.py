@@ -4,14 +4,17 @@ Gauntlet Policy Validator
 Provides validation logic for semantic contracts defined in lattice.yaml.
 """
 
-import re
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
+
 class PolicyViolation(Exception):
     """Raised when a Gauntlet policy is violated."""
+
     pass
+
 
 class GauntletValidator:
     """
@@ -38,13 +41,13 @@ class GauntletValidator:
                     logger.warning(f"Policy violation: {policy_name} - Found pattern {pattern}")
                     return False
             return True
-        
+
         if policy_name == "no-pii":
             # Simple regex for email/phone as PII placeholders
             email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
             if re.search(email_pattern, context):
-                 logger.warning(f"Policy violation: {policy_name} - Found email")
-                 return False
+                logger.warning(f"Policy violation: {policy_name} - Found email")
+                return False
             return True
 
         # Default to pass for unknown policies (warning)

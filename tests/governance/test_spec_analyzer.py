@@ -7,12 +7,10 @@ Tests the models, parsers, and SpecAnalyzer class.
 import json
 import tempfile
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-
 from lattice_lock.agents.prompt_architect.subagents.models import (
     Component,
     ComponentLayer,
@@ -723,6 +721,3 @@ Implement features.
         analyzer = SpecAnalyzer()
         with pytest.raises(FileNotFoundError):
             analyzer.analyze("/nonexistent/file.md")
-
-
-

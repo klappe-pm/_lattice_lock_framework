@@ -43,11 +43,13 @@ def validate_repository_structure(repo_path: str) -> ValidationResult:
     for root, dirs, files in os.walk(repo_path):
         # Filter directories to skip hidden ones (except .github) and common build artifacts
         dirs[:] = [
-            d for d in dirs 
-            if not (d.startswith(".") and d not in [".github"]) 
-            and not d.startswith("_") 
+            d
+            for d in dirs
+            if not (d.startswith(".") and d not in [".github"])
+            and not d.startswith("_")
             and not d.endswith(".egg-info")
-            and d not in ["__pycache__", "venv", ".venv", "build", "dist", ".pytest_cache", ".ruff_cache"]
+            and d
+            not in ["__pycache__", "venv", ".venv", "build", "dist", ".pytest_cache", ".ruff_cache"]
         ]
 
         # Validate folder naming
@@ -144,9 +146,14 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
     else:
         # Exemptions for standard files
         exemptions = [
-            "README.md", "LICENSE.md", "Dockerfile", "Makefile", 
-            "ROADMAP.md", "requirements-dev.lock", "requirements.lock",
-            "pyproject.toml"
+            "README.md",
+            "LICENSE.md",
+            "Dockerfile",
+            "Makefile",
+            "ROADMAP.md",
+            "requirements-dev.lock",
+            "requirements.lock",
+            "pyproject.toml",
         ]
         if filename in exemptions:
             pass
@@ -156,15 +163,17 @@ def validate_file_naming(file_path: str, repo_root: str = "") -> ValidationResul
         else:
             # Check for hyphens
             if "-" in filename:
-                 result.add_error(f"File '{filename}' contains hyphens (use snake_case instead)")
+                result.add_error(f"File '{filename}' contains hyphens (use snake_case instead)")
 
             # Check all segments (stem parts) for snake_case: lowercase, numbers, underscores.
             segments = filename.split(".")
             parts_to_check = segments[:-1] if len(segments) > 1 else segments
-            
+
             for part in parts_to_check:
                 if not re.match(r"^[a-z0-9_]+$", part):
-                    result.add_error(f"File '{filename}' does not follow snake_case naming convention")
+                    result.add_error(
+                        f"File '{filename}' does not follow snake_case naming convention"
+                    )
                     break
 
     # Agent definitions pattern: {category}_{name}_definition.yaml

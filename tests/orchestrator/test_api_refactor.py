@@ -1,20 +1,16 @@
-
-import pytest
-import aiohttp
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from lattice_lock.orchestrator.providers import (
-    BaseAPIClient,
-    GrokAPIClient,
-    OpenAIAPIClient,
-    ProviderStatus,
-    ProviderAvailability,
-)
+import pytest
 from lattice_lock.orchestrator.exceptions import (
-    APIClientError,
     AuthenticationError,
     RateLimitError,
     ServerError,
+)
+from lattice_lock.orchestrator.providers import (
+    BaseAPIClient,
+    GrokAPIClient,
+    ProviderAvailability,
+    ProviderStatus,
 )
 
 
@@ -22,21 +18,21 @@ from lattice_lock.orchestrator.exceptions import (
 async def test_base_api_client_exceptions():
     """Test that BaseAPIClient raises correct exceptions"""
     client = BaseAPIClient("fake-key", "http://fake-url")
-    
+
     # Mock aiohttp session
     mock_response = AsyncMock()
     mock_response.status = 401
     mock_response.text.return_value = '{"error": {"message": "Unauthorized"}}'
     mock_response.json.return_value = {"error": {"message": "Unauthorized"}}
-    
+
     mock_session = MagicMock()
     # request() is not a coroutine, it returns an async context manager
     mock_ctx = AsyncMock()
     mock_ctx.__aenter__.return_value = mock_response
     mock_session.request.return_value = mock_ctx
-    
+
     client.session = mock_session
-    
+
     with pytest.raises(AuthenticationError) as exc:
         await client._make_request("GET", "test", {}, {})
     assert "Unauthorized" in str(exc.value)
@@ -69,11 +65,11 @@ async def test_availability_check():
     """Test ProviderAvailability singleton"""
     # Reset for test
     ProviderAvailability.reset()
-    
+
     with patch.dict("os.environ", {"XAI_API_KEY": "test-key"}):
-         status = ProviderAvailability.get_status("xai")
-         assert status == ProviderStatus.PRODUCTION
-         assert ProviderAvailability.is_available("xai")
+        status = ProviderAvailability.get_status("xai")
+        assert status == ProviderStatus.PRODUCTION
+        assert ProviderAvailability.is_available("xai")
 
     # Test unavailable
     with patch.dict("os.environ", {}, clear=True):

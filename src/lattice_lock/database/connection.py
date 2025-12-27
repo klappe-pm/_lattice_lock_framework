@@ -1,34 +1,36 @@
 """
 Database connection management with environment-aware configuration.
 """
+
 import logging
 from contextlib import asynccontextmanager
-from typing import Optional
-
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 from lattice_lock.config import get_config
 from lattice_lock.exceptions import LatticeError
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
 
+
 class DatabaseConnectionError(LatticeError):
     """Error connecting to database."""
+
     pass
+
 
 class DatabaseManager:
     """Singleton database connection manager."""
-    
-    _engine: Optional[AsyncEngine] = None
-    _session_factory: Optional[sessionmaker] = None
-    
+
+    _engine: AsyncEngine | None = None
+    _session_factory: sessionmaker | None = None
+
     @classmethod
     def initialize(cls):
         """Initialize database connection pool."""
         if cls._engine is not None:
             return
-            
+
         config = get_config()
         try:
             cls._engine = create_async_engine(
@@ -40,22 +42,20 @@ class DatabaseManager:
                 isolation_level="SERIALIZABLE",
             )
             cls._session_factory = sessionmaker(
-                cls._engine, 
-                class_=AsyncSession,
-                expire_on_commit=False
+                cls._engine, class_=AsyncSession, expire_on_commit=False
             )
             logger.info(f"Database initialized: {config.database_url.split('://')[0]}")
         except Exception as e:
             logger.critical(f"Database initialization failed: {str(e)}")
             raise DatabaseConnectionError("Database connection failed") from e
-    
+
     @classmethod
     @asynccontextmanager
     async def get_session(cls) -> AsyncSession:
         """Get database session with automatic cleanup."""
         if cls._session_factory is None:
             cls.initialize()
-            
+
         session: AsyncSession = cls._session_factory()
         try:
             yield session
@@ -65,7 +65,7 @@ class DatabaseManager:
             raise
         finally:
             await session.close()
-    
+
     @classmethod
     async def dispose(cls):
         """Dispose database connections for shutdown/testing."""

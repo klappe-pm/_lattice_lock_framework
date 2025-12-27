@@ -223,7 +223,7 @@ def setup_logging(
     if log_file:
         # Ensure the log directory exists
         log_dir = Path(log_file).parent
-        if log_dir != Path('.') and not log_dir.exists():
+        if log_dir != Path(".") and not log_dir.exists():
             log_dir.mkdir(parents=True, exist_ok=True)
 
         file_handler = RotatingFileHandler(

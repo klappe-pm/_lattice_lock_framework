@@ -3,17 +3,18 @@ Tests for rollback state management.
 """
 
 import time
+
 import pytest
-from pathlib import Path
 from lattice_lock.rollback.checkpoint import CheckpointManager
 from lattice_lock.rollback.state import RollbackState
 from lattice_lock.rollback.storage import CheckpointStorage
+
 
 @pytest.fixture
 def sample_state():
     """
     Create a sample RollbackState representing a simple test snapshot.
-    
+
     Returns:
         RollbackState: Instance with the current timestamp, files set to
             {'/path/to/file1': 'hash1', '/path/to/file2': 'hash2'},
@@ -27,18 +28,20 @@ def sample_state():
         description="Test state",
     )
 
+
 @pytest.fixture
 def storage_dir(tmp_path):
     """
     Provide a Path for a temporary "checkpoints" directory inside the pytest tmp_path.
-    
+
     Parameters:
-    	tmp_path (pathlib.Path): Base temporary directory provided by pytest.
-    
+        tmp_path (pathlib.Path): Base temporary directory provided by pytest.
+
     Returns:
-    	path (pathlib.Path): Path to the "checkpoints" subdirectory under `tmp_path`.
+        path (pathlib.Path): Path to the "checkpoints" subdirectory under `tmp_path`.
     """
     return tmp_path / "checkpoints"
+
 
 def test_rollback_state_serialization(sample_state):
     """Test serialization and deserialization of RollbackState."""
@@ -50,6 +53,7 @@ def test_rollback_state_serialization(sample_state):
     assert restored_state.config == sample_state.config
     assert restored_state.schema_version == sample_state.schema_version
     assert restored_state.description == sample_state.description
+
 
 def test_rollback_state_diff():
     """Test state comparison."""
@@ -83,6 +87,7 @@ def test_rollback_state_diff():
     assert "f2" in diff_rem["files_removed"]
     assert "f3" in diff_rem["files_removed"]
 
+
 def test_storage_save_load(storage_dir, sample_state):
     """Test saving and loading states."""
     storage = CheckpointStorage(str(storage_dir))
@@ -93,6 +98,7 @@ def test_storage_save_load(storage_dir, sample_state):
     loaded_state = storage.load_state(checkpoint_id)
     assert loaded_state is not None
     assert loaded_state.files == sample_state.files
+
 
 def test_storage_list_delete(storage_dir, sample_state):
     """Test listing and deleting states."""
@@ -118,6 +124,7 @@ def test_storage_list_delete(storage_dir, sample_state):
     # Delete non-existent
     assert storage.delete_state("non_existent") is False
 
+
 def test_storage_prune(storage_dir, sample_state):
     """Test pruning states."""
     storage = CheckpointStorage(str(storage_dir))
@@ -135,6 +142,7 @@ def test_storage_prune(storage_dir, sample_state):
     remaining = storage.list_states()
     assert len(remaining) == 3
     assert remaining[0] == ids[-1]  # Newest should be kept
+
 
 def test_checkpoint_manager(storage_dir):
     """Test CheckpointManager high-level API."""

@@ -2,7 +2,6 @@ import os
 import tempfile
 
 import pytest
-
 from lattice_lock.validator.agents import validate_agent_manifest
 
 

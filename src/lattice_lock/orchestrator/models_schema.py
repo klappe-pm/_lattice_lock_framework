@@ -85,9 +85,9 @@ class RegistryConfig(BaseModel):
     def flatten_providers_to_models(self):
         """
         Flatten provider-based model definitions into the root models list when applicable.
-        
+
         If `providers` is set and `models` is empty, converts each provider section into ModelConfig instances and assigns the resulting list to `self.models`. Provider names are matched case-insensitively; unknown providers are skipped. For each model entry, capability names ("vision", "function_calling", "json_mode") are translated into the boolean flags `supports_vision`, `supports_function_calling`, and `supports_json_mode`. If no flattening is needed (no providers or `models` already present), the instance is unchanged.
-        
+
         Returns:
             self (RegistryConfig): The same registry instance, with `models` populated when flattening occurred.
         """

@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner
-
 from lattice_lock.cli.__main__ import cli
 from lattice_lock.cli.templates import TEMPLATES_DIR, get_template, render_template
 

@@ -70,13 +70,14 @@ class TestFallbackManager:
     @pytest.mark.asyncio
     async def test_execute_primary_succeeds(self):
         manager = FallbackManager()
-        
+
         # Use simple tracking list
         calls = []
+
         async def mock_coro(model):
-             calls.append(model)
-             return "Success"
-        
+            calls.append(model)
+            return "Success"
+
         result = await manager.execute_with_fallback(mock_coro, ["primary", "backup"])
         assert result == "Success"
         assert calls == ["primary"]
@@ -84,14 +85,15 @@ class TestFallbackManager:
     @pytest.mark.asyncio
     async def test_execute_fallback_succeeds(self):
         manager = FallbackManager()
-        
+
         calls = []
+
         async def fail_then_succeed(model):
             calls.append(model)
             if model == "primary":
                 raise Exception("Fail")
             return "Success"
-            
+
         result = await manager.execute_with_fallback(fail_then_succeed, ["primary", "backup"])
         assert result == "Success"
         # Primary fails twice (initial + 1 retry default), then backup succeeds
@@ -101,11 +103,11 @@ class TestFallbackManager:
     @pytest.mark.asyncio
     async def test_all_fail_raises_exception(self):
         # Set max_retries higher than number of models to ensure we exhaust models first
-        manager = FallbackManager(max_retries=1) 
-        
+        manager = FallbackManager(max_retries=1)
+
         async def fail(model):
-             raise Exception("Fail")
-             
+            raise Exception("Fail")
+
         with pytest.raises(ProviderUnavailableError):
             await manager.execute_with_fallback(fail, ["primary", "backup"])
 

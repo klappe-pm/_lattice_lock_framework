@@ -6,7 +6,6 @@ Tests template loading, rendering, and output validation.
 
 import pytest
 import yaml
-
 from lattice_lock.cli.templates import (
     TEMPLATES_DIR,
     get_template,

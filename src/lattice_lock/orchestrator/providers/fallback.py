@@ -21,16 +21,16 @@ class FallbackManager:
     ) -> APIResponse:
         """
         Attempt execution of `func` against each candidate in order and return the first successful APIResponse.
-        
+
         Args:
             func: Callable that accepts a candidate as its first argument followed by any additional args/kwargs.
             candidates: Ordered list of candidate objects (for example model instances or clients) to try.
             *args: Positional arguments forwarded to `func` after the candidate.
             **kwargs: Keyword arguments forwarded to `func` after the candidate.
-        
+
         Returns:
             APIResponse: The response returned by the first successful `func` invocation.
-        
+
         Raises:
             ProviderUnavailableError: If every candidate (including allowed retries per candidate) fails; the exception includes the last observed error.
         """
@@ -62,4 +62,6 @@ class FallbackManager:
             logger.warning(f"Falling back from candidate {candidate} due to persistent failure.")
 
         logger.error("All candidates exhausted. raising ProviderUnavailableError.")
-        raise ProviderUnavailableError("all_providers", f"All providers failed. Last error: {last_error}")
+        raise ProviderUnavailableError(
+            "all_providers", f"All providers failed. Last error: {last_error}"
+        )

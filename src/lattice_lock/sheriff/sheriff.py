@@ -5,16 +5,16 @@ for import discipline, type hints, and other code quality standards.
 """
 
 import ast
+import logging
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from lattice_lock.utils.safe_path import resolve_under_root
 
 from .ast_visitor import SheriffVisitor
 from .config import SheriffConfig, ViolationSeverity
 from .rules import Violation
-from dataclasses import dataclass, field
-import logging
-import os
-from lattice_lock.utils.safe_path import resolve_under_root
 
 logger = logging.getLogger("lattice_lock.sheriff")
 

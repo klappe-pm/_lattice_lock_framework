@@ -54,7 +54,10 @@ def validate_agent_manifest(file_path: str) -> ValidationResult:
             result.add_error("Missing required section: agent.identity")
         else:
             _validate_identity(agent_section["identity"], result)
-            if isinstance(agent_section["identity"], dict) and "inherits_from" in agent_section["identity"]:
+            if (
+                isinstance(agent_section["identity"], dict)
+                and "inherits_from" in agent_section["identity"]
+            ):
                 has_inheritance = True
 
     # Directive, Responsibilities, and Scope are required UNLESS inheriting
@@ -146,7 +149,7 @@ def _validate_scope(scope: Any, result: ValidationResult):
 
     if "can_access" not in scope:
         result.add_error("Missing required field in scope: can_access")
-    
+
     # cannot_access is optional in some versions but recommended
     if "cannot_access" in scope:
         if not isinstance(scope["cannot_access"], list):

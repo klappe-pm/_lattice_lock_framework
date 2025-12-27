@@ -18,7 +18,6 @@ def test_structure_hook_execution():
 # Actually, let's test the CLI entry point of structure.py which is what the hook uses.
 
 
-
 def test_cli_entry_point_naming_only(tmp_path):
     # Create a bad file
     d = tmp_path / "src"
@@ -29,6 +28,7 @@ def test_cli_entry_point_naming_only(tmp_path):
     # Run structure.py with --naming-only
     # We include src in PYTHONPATH to ensure lattice_lock is found
     import os
+
     env = os.environ.copy()
     env["PYTHONPATH"] = "src"
 
@@ -55,6 +55,7 @@ def test_cli_entry_point_full_check(tmp_path):
     (tmp_path / "README.md").touch()
 
     import os
+
     env = os.environ.copy()
     env["PYTHONPATH"] = "src"
 
@@ -70,6 +71,7 @@ def test_cli_entry_point_missing_dir(tmp_path):
     (tmp_path / "src").mkdir()
 
     import os
+
     env = os.environ.copy()
     env["PYTHONPATH"] = "src"
 
@@ -78,4 +80,3 @@ def test_cli_entry_point_missing_dir(tmp_path):
 
     assert result.returncode == 1
     assert "Missing required root directory: docs/" in result.stdout
-

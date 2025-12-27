@@ -54,13 +54,18 @@ class TaskAnalyzer:
 
     DEFAULT_CACHE_SIZE = 1024
 
-    def __init__(self, cache_size: int = DEFAULT_CACHE_SIZE, router_client: Any = None, patterns_path: Path | None = None):
+    def __init__(
+        self,
+        cache_size: int = DEFAULT_CACHE_SIZE,
+        router_client: Any = None,
+        patterns_path: Path | None = None,
+    ):
         self._cache: OrderedDict[str, TaskAnalysis] = OrderedDict()
         self._cache_size = cache_size
         self._cache_hits = 0
         self._cache_misses = 0
         self._router = SemanticRouter(router_client) if router_client else None
-        
+
         if patterns_path is None:
             patterns_path = Path(__file__).parent / "patterns.yaml"
         self._patterns_path = patterns_path
@@ -70,13 +75,14 @@ class TaskAnalyzer:
         """Load patterns from YAML and compile regexes."""
         keyword_patterns = {}
         regex_patterns = {}
-        
+
         try:
             import yaml
+
             if path.exists():
-                with open(path, "r") as f:
+                with open(path) as f:
                     data = yaml.safe_load(f)
-                    
+
                 # Load keywords
                 raw_keywords = data.get("keyword_patterns", {})
                 for task_name, patterns in raw_keywords.items():
@@ -100,12 +106,12 @@ class TaskAnalyzer:
                                 logger.error(f"Invalid regex pattern '{pattern_str}': {e}")
                     except KeyError:
                         logger.warning(f"Unknown TaskType in patterns.yaml: {task_name}")
-                        
+
         except ImportError:
             logger.warning("PyYAML not installed. TaskAnalyzer functionality will be limited.")
         except Exception as e:
             logger.error(f"Failed to load patterns from {path}: {e}")
-            
+
         return keyword_patterns, regex_patterns
 
     def analyze(self, prompt: str) -> TaskRequirements:
@@ -192,7 +198,9 @@ class TaskAnalyzer:
         # Stage 2: Semantic Router if heuristics are uncertain
         max_heuristic_score = max(analysis.scores.values()) if analysis.scores.values() else 0.0
         if max_heuristic_score < 0.5 and len(prompt) > 10 and self._router:
-            logger.info(f"Heuristics uncertain (score={max_heuristic_score:.2f}). Engaging Semantic Router.")
+            logger.info(
+                f"Heuristics uncertain (score={max_heuristic_score:.2f}). Engaging Semantic Router."
+            )
             semantic_type = await self._router.route(prompt)
             if semantic_type != TaskType.GENERAL:
                 # Boost the semantic result

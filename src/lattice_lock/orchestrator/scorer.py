@@ -1,10 +1,11 @@
 """
 DEPRECATED: Import from lattice_lock.orchestrator.analysis and lattice_lock.orchestrator.scoring instead.
 """
+
 import warnings
 
 # Re-export classes from new locations
-from .analysis import TaskAnalyzer, TaskAnalysis, SemanticRouter
+from .analysis import SemanticRouter, TaskAnalysis, TaskAnalyzer
 from .scoring import ModelScorer
 
 warnings.warn(

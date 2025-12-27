@@ -15,7 +15,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
 from lattice_lock.admin.routes import API_VERSION, router
 from lattice_lock.logging_config import set_trace_id
 
@@ -31,7 +30,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Ensures graceful shutdown by awaiting all background tasks.
     """
     from lattice_lock.utils.async_compat import get_background_queue
-    
+
     # Startup
     logger.info(f"Starting Lattice Lock Admin API v{API_VERSION}")
     app.state.task_queue = get_background_queue()

@@ -1,6 +1,7 @@
 import pytest
 from lattice_lock.gauntlet.validator import GauntletValidator, PolicyViolation
 
+
 def test_policy_no_direct_db_access():
     """Verify policy: no-direct-db-access with real checks."""
     # Test valid scenario
@@ -11,11 +12,13 @@ def test_policy_no_direct_db_access():
     unsafe_data = "SELECT * FROM users"
     assert GauntletValidator.check_policy("no-direct-db-access", unsafe_data) is False
 
+
 def test_policy_violation_raises_error():
     """Verify that policy violations raise the correct exception."""
     unsafe_context = "DROP TABLE metadata;"
     with pytest.raises(PolicyViolation):
-         GauntletValidator.enforce("no-direct-db-access", unsafe_context)
+        GauntletValidator.enforce("no-direct-db-access", unsafe_context)
+
 
 def test_policy_no_pii():
     """Verify policy: no-pii."""

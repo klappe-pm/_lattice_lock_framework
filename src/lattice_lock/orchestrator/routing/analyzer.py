@@ -122,8 +122,10 @@ class TaskAnalyzer:
                 if result in self.patterns or result == "GENERAL":
                     logger.info(f"Semantic Router classified task as {result}")
                     return result
-            
-            logger.info("Semantic Router response uncertain or not implemented on orchestrator. Defaulting to GENERAL.")
+
+            logger.info(
+                "Semantic Router response uncertain or not implemented on orchestrator. Defaulting to GENERAL."
+            )
             return "GENERAL"
         except Exception as e:
             logger.error(f"Semantic Router failed: {e}")

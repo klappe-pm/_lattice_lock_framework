@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from lattice_lock.orchestrator.core import ModelOrchestrator
 from lattice_lock.orchestrator.types import (
     APIResponse,
@@ -95,9 +94,9 @@ async def test_model_orchestrator_function_calling(orchestrator, mock_openai_mod
         usage={"input_tokens": 150, "output_tokens": 20},
         latency_ms=150,
         raw_response={
-             "choices": [{"message": {"content": "The weather in London is Sunny, 20°C."}}],
-             "usage": {"prompt_tokens": 150, "completion_tokens": 20, "total_tokens": 170}
-        }
+            "choices": [{"message": {"content": "The weather in London is Sunny, 20°C."}}],
+            "usage": {"prompt_tokens": 150, "completion_tokens": 20, "total_tokens": 170},
+        },
     )
 
     mock_api_client.chat_completion.side_effect = [first_response, second_response]
@@ -133,18 +132,18 @@ async def test_model_orchestrator_function_calling(orchestrator, mock_openai_mod
     # The final response should contain the answer, not the function call itself
     assert response.content == "The weather in London is Sunny, 20°C."
     assert response.function_call is None
-    
+
     # To verify the function call happened, we check the history passed to the model
     # The second call's messages list contains the assistant's tool call and the tool's response
     history = mock_api_client.chat_completion.call_args_list[1].kwargs["messages"]
-    
+
     # 1. User prompt
     # 2. Assistant tool call
     # 3. Tool output
-    
+
     assistant_msg = history[-2]
     # tool_msg check is covered by lines 121-125
-    
+
     assert assistant_msg["role"] == "assistant"
     assert assistant_msg["tool_calls"][0]["function"]["name"] == "get_weather"
     assert assistant_msg["tool_calls"][0]["function"]["arguments"] == '{"location": "London"}'

@@ -4,8 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from .types import ModelCapabilities, ModelProvider, ProviderMaturity, TaskType, ModelStatus
-from .exceptions import APIClientError
+from .types import ModelCapabilities, ModelProvider, ModelStatus, ProviderMaturity, TaskType
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class ModelRegistry:
         if registry_path is None:
             # Default to local models.yaml in the same directory
             registry_path = str(Path(__file__).parent / "models.yaml")
-            
+
         self.models: dict[str, ModelCapabilities] = {}
         self.registry_path = registry_path
         self._validation_result: RegistryValidationResult | None = None
@@ -66,10 +65,10 @@ class ModelRegistry:
     def validate_registry(self, data: dict) -> RegistryValidationResult:
         """
         Validate the registry data structure and record any errors or warnings found.
-        
+
         Parameters:
             data (dict): Parsed registry data (typically loaded from YAML).
-        
+
         Returns:
             RegistryValidationResult: Validation outcome including `valid`, a list of `errors`, a list of `warnings`, and counts for `model_count` and `provider_count`.
         """
@@ -97,7 +96,7 @@ class ModelRegistry:
                 ModelProvider(provider_name.lower())
             except ValueError:
                 result.add_warning(f"Unknown provider: {provider_name}")
-        
+
         try:
             from .models_schema import RegistryConfig
 
@@ -147,22 +146,21 @@ class ModelRegistry:
     def _load_defaults(self):
         """
         Populate the registry with a built-in set of model capability definitions used as fallbacks.
-        
+
         This method creates ModelCapabilities entries for a predefined list of models and stores them in self.models. It is intended for use when no external registry file is available or when loading the registry fails.
         """
         logger.info("Loading default model definitions")
-        
+
         # Minimal set of default models
         defaults = [
             ("gpt-4o", ModelProvider.OPENAI, 128000, 5.0, 15.0, 95, 95, 85),
             ("gpt-4o-mini", ModelProvider.OPENAI, 128000, 0.15, 0.6, 85, 85, 95),
             ("claude-3-5-sonnet", ModelProvider.ANTHROPIC, 200000, 3.0, 15.0, 95, 95, 80),
-
             ("claude-3-5-haiku-20241022", ModelProvider.ANTHROPIC, 200000, 0.8, 4.0, 85, 85, 95),
             ("gemini-2.0-flash", ModelProvider.GOOGLE, 1048576, 0.075, 0.3, 85, 85, 95),
             ("grok-3", ModelProvider.XAI, 128000, 3.0, 15.0, 90, 90, 85),
         ]
-        
+
         for model_id, provider, ctx, in_cost, out_cost, reason, code, speed in defaults:
             caps = self._create_model_caps(
                 model_id=model_id,
@@ -253,14 +251,16 @@ class ModelRegistry:
                 status = ModelStatus[status.upper()]
             except KeyError:
                 status = ModelStatus.ACTIVE
-        
+
         if isinstance(maturity, str):
             try:
                 maturity = ProviderMaturity[maturity.upper()]
             except KeyError:
                 maturity = ProviderMaturity.BETA
 
-        default_scores = self._calculate_default_scores(coding_score, reasoning_score, supports_vision)
+        default_scores = self._calculate_default_scores(
+            coding_score, reasoning_score, supports_vision
+        )
         return ModelCapabilities(
             name=name or model_id,
             api_name=api_name,
@@ -278,7 +278,6 @@ class ModelRegistry:
             supports_json_mode=supports_json_mode,
             task_scores=default_scores,
         )
-
 
     def get_model(self, model_id: str) -> ModelCapabilities | None:
         """Get model by ID"""

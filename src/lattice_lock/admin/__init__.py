@@ -67,13 +67,6 @@ from lattice_lock.admin.models import (
     ValidationStatus,
 )
 
-# Service exports
-from lattice_lock.admin.services import (
-    add_rollback_checkpoint,
-    record_project_error,
-    update_validation_status,
-)
-
 # Route exports - only items that exist
 from lattice_lock.admin.routes import API_VERSION
 from lattice_lock.admin.routes import router as admin_router
@@ -89,10 +82,19 @@ from lattice_lock.admin.schemas import (
     ProjectSummary,
     RegisterProjectRequest,
     RegisterProjectResponse,
-    RollbackCheckpoint as RollbackCheckpointSchema, # Alias to avoid name collision if needed, though usually distinct
     RollbackRequest,
     RollbackResponse,
     ValidationStatusResponse,
+)
+from lattice_lock.admin.schemas import (
+    RollbackCheckpoint as RollbackCheckpointSchema,  # Alias to avoid name collision if needed, though usually distinct
+)
+
+# Service exports
+from lattice_lock.admin.services import (
+    add_rollback_checkpoint,
+    record_project_error,
+    update_validation_status,
 )
 
 __all__ = [

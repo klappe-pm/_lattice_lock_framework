@@ -7,10 +7,11 @@ This module provides:
 
 import logging
 from pathlib import Path
+
 import yaml
 
-from ..types import ModelCapabilities, TaskRequirements
 from ..analysis.analyzer import TaskAnalysis
+from ..types import ModelCapabilities, TaskRequirements
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class ModelScorer:
             # Look for scorer_config.yaml in the parent directory (orchestrator)
             # assuming this file is in orchestrator/scoring/model_scorer.py
             config_path = str(Path(__file__).parent.parent / "scorer_config.yaml")
-        
+
         self.config_path = config_path
         self._load_config()
 
@@ -35,27 +36,29 @@ class ModelScorer:
             with open(self.config_path) as f:
                 self.config = yaml.safe_load(f)
         except Exception as e:
-            logger.error(f"Failed to load scorer config from {self.config_path}: {e}. Using hardcoded fallbacks.")
+            logger.error(
+                f"Failed to load scorer config from {self.config_path}: {e}. Using hardcoded fallbacks."
+            )
             self.config = {
                 "priority_weights": {
                     "quality": {"reasoning": 0.3, "coding": 0.2, "base": 0.5},
                     "speed": {"speed": 0.5, "base": 0.5},
                     "cost": {"cost": 0.5, "base": 0.5},
-                    "balanced": {"reasoning": 0.2, "coding": 0.2, "speed": 0.1, "base": 0.5}
+                    "balanced": {"reasoning": 0.2, "coding": 0.2, "speed": 0.1, "base": 0.5},
                 },
                 "analysis_weights": {
                     "base": 0.5,
                     "primary_task": 0.3,
                     "secondary_task": 0.1,
-                    "complexity_boost": 0.1
+                    "complexity_boost": 0.1,
                 },
                 "task_boosts": {
                     "CODE_GENERATION": {"coding": 0.2},
                     "DEBUGGING": {"coding": 0.2},
                     "REASONING": {"reasoning": 0.2},
-                    "ARCHITECTURAL_DESIGN": {"reasoning": 0.2}
+                    "ARCHITECTURAL_DESIGN": {"reasoning": 0.2},
                 },
-                "max_blended_cost": 60.0
+                "max_blended_cost": 60.0,
             }
 
     def score(self, model: ModelCapabilities, requirements: TaskRequirements) -> float:
@@ -69,7 +72,9 @@ class ModelScorer:
         if requirements.require_functions and not model.supports_function_calling:
             return 0.0
 
-        weights = self.config["priority_weights"].get(requirements.priority, self.config["priority_weights"]["balanced"])
+        weights = self.config["priority_weights"].get(
+            requirements.priority, self.config["priority_weights"]["balanced"]
+        )
         score = weights.get("base", 0.5)
 
         if requirements.priority == "quality":
@@ -102,7 +107,10 @@ class ModelScorer:
             return 0.0
         if analysis.features.get("requires_vision") and not model.supports_vision:
             return 0.0
-        if analysis.features.get("requires_function_calling") and not model.supports_function_calling:
+        if (
+            analysis.features.get("requires_function_calling")
+            and not model.supports_function_calling
+        ):
             return 0.0
 
         aw = self.config["analysis_weights"]
@@ -117,8 +125,10 @@ class ModelScorer:
             score += secondary_match * aw.get("secondary_task", 0.1)
 
         priority = analysis.features.get("priority", "balanced")
-        weights = self.config["priority_weights"].get(priority, self.config["priority_weights"]["balanced"])
-        
+        weights = self.config["priority_weights"].get(
+            priority, self.config["priority_weights"]["balanced"]
+        )
+
         if priority == "quality":
             score += (model.reasoning_score / 100.0) * 0.1
         elif priority == "speed":

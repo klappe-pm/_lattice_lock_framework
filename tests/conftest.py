@@ -10,7 +10,6 @@ This module configures pytest to:
 import os
 
 import pytest
-
 from lattice_lock.admin.auth.storage import MemoryAuthStorage
 from lattice_lock.orchestrator.providers.base import ProviderAvailability
 
@@ -23,12 +22,13 @@ def reset_singletons():
     ProviderAvailability.reset()
     try:
         from lattice_lock.database import reset_database_state
+
         reset_database_state()
     except ImportError:
         pass
-    
+
     yield
-    
+
     # Reset after test (cleanup)
     MemoryAuthStorage.clear()
     ProviderAvailability.reset()
@@ -37,12 +37,11 @@ def reset_singletons():
 # ...
 
 
-
 @pytest.fixture(scope="session")
 def auth_secrets():
     """Load test secrets from environment or generate safe defaults."""
     import secrets
-    
+
     def get_or_generate(key, length=32):
         return os.getenv(key) or secrets.token_urlsafe(length)
 
@@ -53,8 +52,6 @@ def auth_secrets():
         "OPERATOR_PASSWORD": get_or_generate("LATTICE_TEST_OPERATOR_PASSWORD", 16),
         "CUSTOM_SECRET_KEY": get_or_generate("LATTICE_TEST_CUSTOM_SECRET_KEY"),
     }
-
-
 
 
 @pytest.fixture

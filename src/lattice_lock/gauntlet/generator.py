@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from jinja2 import FileSystemLoader
-
 from lattice_lock.utils.jinja import get_code_environment
 
 from .parser import EnsuresClause, EntityDefinition, LatticeParser

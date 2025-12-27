@@ -1,21 +1,22 @@
 import secrets
-import bcrypt
 from datetime import datetime, timezone
-from typing import Tuple, List, Optional
+
+import bcrypt
 from fastapi import HTTPException, status
 
-from .models import Role, APIKeyInfo
 from .config import get_config
+from .models import APIKeyInfo, Role
 from .storage import MemoryAuthStorage
 
 # Constants
 BCRYPT_ROUNDS = 12
 
+
 def generate_api_key(
     username: str,
     role: Role,
     name: str = "",
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Generate a new API key for a user.
     Returns (api_key, key_id).
@@ -26,10 +27,7 @@ def generate_api_key(
     key_secret = secrets.token_urlsafe(32)
     api_key = f"{config.api_key_prefix}{key_secret}"
 
-    api_key_hash = bcrypt.hashpw(
-        api_key.encode(), 
-        bcrypt.gensalt(rounds=BCRYPT_ROUNDS)
-    ).decode()
+    api_key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt(rounds=BCRYPT_ROUNDS)).decode()
 
     metadata = APIKeyInfo(
         key_id=key_id,
@@ -40,13 +38,14 @@ def generate_api_key(
     MemoryAuthStorage.save_api_key(api_key_hash, username, role, key_id, metadata)
     return api_key, key_id
 
-def verify_api_key(api_key: str) -> Tuple[str, Role]:
+
+def verify_api_key(api_key: str) -> tuple[str, Role]:
     """
     Verify an API key and return associated user info.
     Returns (username, role).
     """
     all_keys = MemoryAuthStorage.get_all_api_keys()
-    
+
     for stored_hash, (username, role, key_id) in all_keys.items():
         try:
             if bcrypt.checkpw(api_key.encode(), stored_hash.encode()):
@@ -63,6 +62,7 @@ def verify_api_key(api_key: str) -> Tuple[str, Role]:
         detail="Invalid API key",
     )
 
+
 def revoke_api_key(key_id: str) -> bool:
     """Revoke an API key by its ID."""
     all_keys = MemoryAuthStorage.get_all_api_keys()
@@ -73,11 +73,12 @@ def revoke_api_key(key_id: str) -> bool:
 
     for k in keys_to_remove:
         MemoryAuthStorage.delete_api_key(k)
-        
+
     MemoryAuthStorage.delete_api_key_metadata(key_id)
     return True
 
-def rotate_api_key(key_id: str, name: str = "") -> Optional[Tuple[str, str]]:
+
+def rotate_api_key(key_id: str, name: str = "") -> tuple[str, str] | None:
     """Rotate an API key."""
     all_keys = MemoryAuthStorage.get_all_api_keys()
     username = None
@@ -101,9 +102,11 @@ def rotate_api_key(key_id: str, name: str = "") -> Optional[Tuple[str, str]]:
     revoke_api_key(key_id)
     return generate_api_key(username, role, name)
 
-def list_api_keys(username: str) -> List[APIKeyInfo]:
+
+def list_api_keys(username: str) -> list[APIKeyInfo]:
     """List all API keys for a user."""
     return MemoryAuthStorage.list_api_keys(username)
+
 
 def clear_api_keys() -> None:
     """Clear all API keys (test utility)."""

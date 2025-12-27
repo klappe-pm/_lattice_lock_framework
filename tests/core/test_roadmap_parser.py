@@ -1,13 +1,12 @@
-import os
 
 import pytest
-
 from lattice_lock.agents.prompt_architect.subagents.parsers.roadmap_parser import (
     Epic,
     Phase,
     RoadmapStructure,
 )
 from lattice_lock.agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
+
 
 @pytest.fixture
 def parser():

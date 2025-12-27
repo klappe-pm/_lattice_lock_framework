@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-
 from lattice_lock.cli.__main__ import cli
 from lattice_lock.cli.commands.init import create_project_structure, validate_project_name
 
