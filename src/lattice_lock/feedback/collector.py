@@ -16,8 +16,8 @@ class FeedbackCollector:
     """
     Collects and manages feedback items, persisting them to a JSON file.
     
-    All public methods are synchronous for ease of use. Async internals
-    are used for I/O operations but wrapped for sync access.
+    All public methods are synchronous for ease of use. File I/O is performed
+    synchronously using Path.read_text/write_text.
     """
 
     def __init__(self, storage_path: Path):

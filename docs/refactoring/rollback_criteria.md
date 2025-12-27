@@ -7,7 +7,7 @@ immediately revert the chunk and investigate.
 
 For each chunk, document:
 
-```
+```markdown
 ## Chunk N Rollback Criteria
 
 REVERT IF ANY OF THE FOLLOWING OCCUR:
