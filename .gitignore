@@ -210,6 +210,12 @@ implementation/
 # Documentation TODOs (pre-refactor docs pending cleanup)
 .documentation-todos/
 
+# Project management artifacts
+.project-management/
+
+# Ruff cache
+.ruff_cache/
+
 # =============================================================================
 # DEPRECATED PACKAGES (Post-Consolidation)
 # =============================================================================
