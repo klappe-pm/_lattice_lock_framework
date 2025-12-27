@@ -100,7 +100,7 @@ async def test_model_orchestrator_function_calling(orchestrator, mock_openai_mod
         }
     )
 
-    mock_api_client = AsyncMock()
+    mock_api_client.chat_completion.side_effect = [first_response, second_response]
     mock_api_client.chat_completion.side_effect = [first_response, second_response]
     # Temporarily replace the orchestrator's client_pool.get_client method to return our mock client
     orchestrator.client_pool.get_client = MagicMock(return_value=mock_api_client)
