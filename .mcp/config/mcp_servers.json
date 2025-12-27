@@ -72,6 +72,19 @@
       "maintainer": "community",
       "auth_method": "Set at least one search API key",
       "documentation": "https://github.com/spences10/mcp-omnisearch"
+    },
+    "github": {
+      "description": "GitHub API access for repositories, issues, PRs, and code search",
+      "package": "@modelcontextprotocol/server-github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      },
+      "env_required": ["GITHUB_PERSONAL_ACCESS_TOKEN"],
+      "maintainer": "modelcontextprotocol",
+      "auth_method": "Set GITHUB_PERSONAL_ACCESS_TOKEN from GitHub settings",
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/github"
     }
   }
 }
