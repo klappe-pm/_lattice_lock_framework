@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -7,6 +6,11 @@ from lattice_lock.orchestrator.types import APIResponse
 
 @pytest.fixture
 def mock_xai_env():
+    """
+    Set the XAI_API_KEY environment variable to "sk-grok-test" for the duration of a test.
+    
+    This pytest fixture patches os.environ to include XAI_API_KEY="sk-grok-test" and yields control back to the test, restoring the environment afterwards.
+    """
     with patch.dict(os.environ, {"XAI_API_KEY": "sk-grok-test"}):
         yield
 

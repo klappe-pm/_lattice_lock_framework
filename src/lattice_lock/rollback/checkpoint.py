@@ -18,6 +18,12 @@ class CheckpointManager:
     """
 
     def __init__(self, storage: CheckpointStorage = None):
+        """
+        Initialize a CheckpointManager with an optional storage backend.
+        
+        Parameters:
+            storage (CheckpointStorage | None): Storage backend used to persist checkpoints. If None, a new CheckpointStorage instance is created.
+        """
         self.storage = storage or CheckpointStorage()
 
     def create_checkpoint(

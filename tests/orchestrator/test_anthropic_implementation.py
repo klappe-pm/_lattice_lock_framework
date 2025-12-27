@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -7,11 +6,21 @@ from lattice_lock.orchestrator.types import APIResponse
 
 @pytest.fixture
 def mock_anthropic_env():
+    """
+    Temporarily sets the ANTHROPIC_API_KEY environment variable to "sk-ant-test" for the duration of a test.
+    
+    This fixture patches os.environ so that callers see ANTHROPIC_API_KEY="sk-ant-test" until the fixture yields control, after which the original environment is restored.
+    """
     with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test"}):
         yield
 
 @pytest.fixture
 def mock_dial_env():
+    """
+    Temporarily sets the DIAL_API_KEY environment variable to "sk-dial-test" for the duration of a test.
+    
+    Yields control while the environment variable is set; the original environment is restored after the fixture completes.
+    """
     with patch.dict(os.environ, {"DIAL_API_KEY": "sk-dial-test"}):
         yield
 

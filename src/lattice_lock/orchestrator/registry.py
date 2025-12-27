@@ -64,13 +64,16 @@ class ModelRegistry:
         return self._validation_result
 
     def validate_registry(self, data: dict) -> RegistryValidationResult:
-        """Validate registry data structure and content.
-
-        Args:
-            data: The parsed YAML registry data
-
+        """
+        Validate registry configuration data and report structural and schema issues.
+        
+        Performs basic structural checks (top-level type, presence of "version", and presence/type of "providers"/"models"), records warnings for unknown provider names, and runs Pydantic schema validation using RegistryConfig to finalize model and provider counts.
+        
+        Parameters:
+            data (dict): Parsed registry mapping (typically loaded from YAML). Expected to contain "models" and/or "providers" keys.
+        
         Returns:
-            RegistryValidationResult with validation status, errors, and warnings
+            RegistryValidationResult: Result object containing `valid`, `errors`, `warnings`, `model_count`, and `provider_count`. Errors are added for structural problems or schema validation failures; warnings are added for missing "version" or unrecognized provider names.
         """
         result = RegistryValidationResult()
 
@@ -144,7 +147,11 @@ class ModelRegistry:
             self._load_defaults()
 
     def _load_defaults(self):
-        """Load hardcoded default models as fallback."""
+        """
+        Populate the registry with a built-in set of model capability definitions used as fallbacks.
+        
+        This method creates ModelCapabilities entries for a predefined list of models and stores them in self.models. It is intended for use when no external registry file is available or when loading the registry fails.
+        """
         logger.info("Loading default model definitions")
         
         # Minimal set of default models

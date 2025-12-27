@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -7,6 +6,11 @@ from lattice_lock.orchestrator.types import APIResponse
 
 @pytest.fixture
 def mock_google_env():
+    """
+    Pytest fixture that temporarily sets the environment variable GOOGLE_API_KEY to "sk-google-test" for the duration of a test.
+    
+    The original environment is restored after the test completes.
+    """
     with patch.dict(os.environ, {"GOOGLE_API_KEY": "sk-google-test"}):
         yield
 
