@@ -2,150 +2,141 @@
 Tests for rollback state management.
 """
 
-import shutil
-import tempfile
 import time
-import unittest
+import pytest
 from pathlib import Path
-
 from lattice_lock.rollback.checkpoint import CheckpointManager
 from lattice_lock.rollback.state import RollbackState
 from lattice_lock.rollback.storage import CheckpointStorage
 
+@pytest.fixture
+def sample_state():
+    return RollbackState(
+        timestamp=time.time(),
+        files={"/path/to/file1": "hash1", "/path/to/file2": "hash2"},
+        config={"key": "value"},
+        schema_version="1.0.0",
+        description="Test state",
+    )
 
-class TestRollbackState(unittest.TestCase):
-    def setUp(self):
-        """Set up test fixtures."""
-        self.test_dir = tempfile.mkdtemp()
-        self.storage_dir = Path(self.test_dir) / "checkpoints"
+@pytest.fixture
+def storage_dir(tmp_path):
+    return tmp_path / "checkpoints"
 
-        self.sample_state = RollbackState(
-            timestamp=time.time(),
-            files={"/path/to/file1": "hash1", "/path/to/file2": "hash2"},
-            config={"key": "value"},
-            schema_version="1.0.0",
-            description="Test state",
-        )
+def test_rollback_state_serialization(sample_state):
+    """Test serialization and deserialization of RollbackState."""
+    json_str = sample_state.to_json()
+    restored_state = RollbackState.from_json(json_str)
 
-    def tearDown(self):
-        """Clean up test fixtures."""
-        shutil.rmtree(self.test_dir)
+    assert restored_state.timestamp == sample_state.timestamp
+    assert restored_state.files == sample_state.files
+    assert restored_state.config == sample_state.config
+    assert restored_state.schema_version == sample_state.schema_version
+    assert restored_state.description == sample_state.description
 
-    def test_rollback_state_serialization(self):
-        """Test serialization and deserialization of RollbackState."""
-        json_str = self.sample_state.to_json()
-        restored_state = RollbackState.from_json(json_str)
+def test_rollback_state_diff():
+    """Test state comparison."""
+    state1 = RollbackState(
+        timestamp=100.0, files={"f1": "h1", "f2": "h2"}, config={"c": 1}, schema_version="1.0"
+    )
+    state2 = RollbackState(
+        timestamp=200.0,
+        files={"f1": "h1", "f2": "h2_new", "f3": "h3"},
+        config={"c": 2},
+        schema_version="1.1",
+    )
 
-        self.assertEqual(restored_state.timestamp, self.sample_state.timestamp)
-        self.assertEqual(restored_state.files, self.sample_state.files)
-        self.assertEqual(restored_state.config, self.sample_state.config)
-        self.assertEqual(restored_state.schema_version, self.sample_state.schema_version)
-        self.assertEqual(restored_state.description, self.sample_state.description)
+    diff = state2.diff(state1)
 
-    def test_rollback_state_diff(self):
-        """Test state comparison."""
-        state1 = RollbackState(
-            timestamp=100.0, files={"f1": "h1", "f2": "h2"}, config={"c": 1}, schema_version="1.0"
-        )
-        state2 = RollbackState(
-            timestamp=200.0,
-            files={"f1": "h1", "f2": "h2_new", "f3": "h3"},
-            config={"c": 2},
-            schema_version="1.1",
-        )
+    assert "f2" in diff["files_changed"]
+    assert "f3" in diff["files_added"]
+    assert diff["config_changed"] is True
+    assert diff["schema_version_changed"] is True
 
-        diff = state2.diff(state1)
+    # Test removal
+    state3 = RollbackState(
+        timestamp=300.0,
+        files={"f1": "h1"},  # f2, f3 removed
+        config={"c": 2},
+        schema_version="1.1",
+    )
 
-        self.assertIn("f2", diff["files_changed"])
-        self.assertIn("f3", diff["files_added"])
-        self.assertTrue(diff["config_changed"])
-        self.assertTrue(diff["schema_version_changed"])
+    # Diff state3 against state2 (changes from state2 to state3)
+    diff_rem = state3.diff(state2)
+    assert "f2" in diff_rem["files_removed"]
+    assert "f3" in diff_rem["files_removed"]
 
-        # Test removal
-        state3 = RollbackState(
-            timestamp=300.0,
-            files={"f1": "h1"},  # f2, f3 removed
-            config={"c": 2},
-            schema_version="1.1",
-        )
+def test_storage_save_load(storage_dir, sample_state):
+    """Test saving and loading states."""
+    storage = CheckpointStorage(str(storage_dir))
+    checkpoint_id = storage.save_state(sample_state)
 
-        # Diff state3 against state2 (changes from state2 to state3)
-        diff_rem = state3.diff(state2)
-        self.assertIn("f2", diff_rem["files_removed"])
-        self.assertIn("f3", diff_rem["files_removed"])
+    assert checkpoint_id is not None
 
-    def test_storage_save_load(self):
-        """Test saving and loading states."""
-        storage = CheckpointStorage(str(self.storage_dir))
-        checkpoint_id = storage.save_state(self.sample_state)
+    loaded_state = storage.load_state(checkpoint_id)
+    assert loaded_state is not None
+    assert loaded_state.files == sample_state.files
 
-        self.assertIsNotNone(checkpoint_id)
+def test_storage_list_delete(storage_dir, sample_state):
+    """Test listing and deleting states."""
+    storage = CheckpointStorage(str(storage_dir))
 
-        loaded_state = storage.load_state(checkpoint_id)
-        self.assertIsNotNone(loaded_state)
-        self.assertEqual(loaded_state.files, self.sample_state.files)
+    # Create two states
+    id1 = storage.save_state(sample_state)
+    time.sleep(0.01)  # Ensure timestamp difference
+    sample_state.timestamp = time.time()
+    id2 = storage.save_state(sample_state)
 
-    def test_storage_list_delete(self):
-        """Test listing and deleting states."""
-        storage = CheckpointStorage(str(self.storage_dir))
+    states = storage.list_states()
+    assert len(states) == 2
+    assert states[0] == id2  # Newest first
+    assert states[1] == id1
 
-        # Create two states
-        id1 = storage.save_state(self.sample_state)
-        time.sleep(0.01)  # Ensure timestamp difference
-        self.sample_state.timestamp = time.time()
-        id2 = storage.save_state(self.sample_state)
+    # Delete one
+    assert storage.delete_state(id1) is True
+    states = storage.list_states()
+    assert len(states) == 1
+    assert states[0] == id2
 
-        states = storage.list_states()
-        self.assertEqual(len(states), 2)
-        self.assertEqual(states[0], id2)  # Newest first
-        self.assertEqual(states[1], id1)
+    # Delete non-existent
+    assert storage.delete_state("non_existent") is False
 
-        # Delete one
-        self.assertTrue(storage.delete_state(id1))
-        states = storage.list_states()
-        self.assertEqual(len(states), 1)
-        self.assertEqual(states[0], id2)
+def test_storage_prune(storage_dir, sample_state):
+    """Test pruning states."""
+    storage = CheckpointStorage(str(storage_dir))
 
-        # Delete non-existent
-        self.assertFalse(storage.delete_state("non_existent"))
+    ids = []
+    for _ in range(5):
+        sample_state.timestamp = time.time()
+        ids.append(storage.save_state(sample_state))
+        time.sleep(0.01)
 
-    def test_storage_prune(self):
-        """Test pruning states."""
-        storage = CheckpointStorage(str(self.storage_dir))
+    states = storage.list_states()
+    assert len(states) == 5
 
-        ids = []
-        for _ in range(5):
-            self.sample_state.timestamp = time.time()
-            ids.append(storage.save_state(self.sample_state))
-            time.sleep(0.01)
+    storage.prune_states(3)
+    remaining = storage.list_states()
+    assert len(remaining) == 3
+    assert remaining[0] == ids[-1]  # Newest should be kept
 
-        self.assertEqual(len(storage.list_states()), 5)
+def test_checkpoint_manager(storage_dir):
+    """Test CheckpointManager high-level API."""
+    storage = CheckpointStorage(str(storage_dir))
+    manager = CheckpointManager(storage)
 
-        storage.prune_states(3)
-        remaining = storage.list_states()
-        self.assertEqual(len(remaining), 3)
-        self.assertEqual(remaining[0], ids[-1])  # Newest should be kept
+    files = {"f1": "h1"}
+    config = {"c": 1}
 
-    def test_checkpoint_manager(self):
-        """Test CheckpointManager high-level API."""
-        storage = CheckpointStorage(str(self.storage_dir))
-        manager = CheckpointManager(storage)
+    cp_id = manager.create_checkpoint(files, config, "1.0", "Initial")
+    assert cp_id is not None
 
-        files = {"f1": "h1"}
-        config = {"c": 1}
+    cp = manager.get_checkpoint(cp_id)
+    assert cp.files == files
+    assert cp.description == "Initial"
 
-        cp_id = manager.create_checkpoint(files, config, "1.0", "Initial")
-        self.assertIsNotNone(cp_id)
+    checkpoints = manager.list_checkpoints()
+    assert len(checkpoints) == 1
 
-        cp = manager.get_checkpoint(cp_id)
-        self.assertEqual(cp.files, files)
-        self.assertEqual(cp.description, "Initial")
-
-        self.assertEqual(len(manager.list_checkpoints()), 1)
-
-        manager.delete_checkpoint(cp_id)
-        self.assertEqual(len(manager.list_checkpoints()), 0)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    manager.delete_checkpoint(cp_id)
+    checkpoints = manager.list_checkpoints()
+    assert len(checkpoints) == 0

@@ -1,5 +1,4 @@
 import asyncio
-import aiofiles
 import json
 import logging
 from pathlib import Path
@@ -10,9 +9,30 @@ from .schemas import FeedbackCategory, FeedbackItem, FeedbackPriority
 
 logger = logging.getLogger(__name__)
 
+
+def _run_sync(coro):
+    """Run an async coroutine synchronously."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    
+    if loop and loop.is_running():
+        # We're in an async context, create a new thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            future = pool.submit(asyncio.run, coro)
+            return future.result()
+    else:
+        return asyncio.run(coro)
+
+
 class FeedbackCollector:
     """
     Collects and manages feedback items, persisting them to a JSON file.
+    
+    All public methods are synchronous for ease of use. Async internals
+    are used for I/O operations but wrapped for sync access.
     """
 
     def __init__(self, storage_path: Path):
@@ -22,27 +42,27 @@ class FeedbackCollector:
         Args:
             storage_path: Path to the JSON file where feedback will be stored.
         """
-        self.storage_path = storage_path
-        # We can't really do async init well, so we preserve sync dir creation 
-        # but the submit/list will handle the file existence.
-        self._ensure_storage_dir()
+        self.storage_path = Path(storage_path)
+        self._ensure_storage_exists()
 
-    def _ensure_storage_dir(self) -> None:
-        """Ensure the storage directory exists."""
+    def _ensure_storage_exists(self) -> None:
+        """Ensure the storage directory and file exist."""
         if not self.storage_path.parent.exists():
             self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        # Create empty file if it doesn't exist
+        if not self.storage_path.exists():
+            self.storage_path.write_text("[]")
 
-    async def _load_feedback(self) -> list[FeedbackItem]:
-        """Load feedback items from storage asynchronously."""
+    def _load_feedback_sync(self) -> list[FeedbackItem]:
+        """Load feedback items from storage synchronously."""
         try:
             if not self.storage_path.exists():
                 return []
 
-            async with aiofiles.open(self.storage_path, mode="r", encoding="utf-8") as f:
-                content = await f.read()
-                if not content:
-                    return []
-                data = json.loads(content)
+            content = self.storage_path.read_text(encoding="utf-8")
+            if not content:
+                return []
+            data = json.loads(content)
 
             items = []
             for item_data in data:
@@ -60,18 +80,17 @@ class FeedbackCollector:
             logger.error(f"Error loading feedback: {e}")
             return []
 
-    async def _save_feedback(self, items: list[FeedbackItem]) -> None:
-        """Save feedback items to storage asynchronously."""
+    def _save_feedback_sync(self, items: list[FeedbackItem]) -> None:
+        """Save feedback items to storage synchronously."""
         try:
             data = [item.model_dump(mode="json") for item in items]
             json_str = json.dumps(data, indent=2, default=str)
-            async with aiofiles.open(self.storage_path, mode="w", encoding="utf-8") as f:
-                await f.write(json_str)
+            self.storage_path.write_text(json_str, encoding="utf-8")
         except Exception as e:
             logger.error(f"Failed to save feedback: {e}")
             raise
 
-    async def submit(
+    def submit(
         self,
         content: str,
         category: FeedbackCategory = FeedbackCategory.OTHER,
@@ -81,6 +100,9 @@ class FeedbackCollector:
     ) -> str:
         """
         Submit a new piece of feedback.
+        
+        Returns:
+            The feedback item ID.
         """
         item = FeedbackItem(
             content=content,
@@ -90,30 +112,30 @@ class FeedbackCollector:
             metadata=metadata or {},
         )
 
-        items = await self._load_feedback()
+        items = self._load_feedback_sync()
         items.append(item)
-        await self._save_feedback(items)
+        self._save_feedback_sync(items)
 
         logger.info(f"Feedback submitted: {item.id} [{category}]")
         return item.id
 
-    async def get(self, feedback_id: str) -> FeedbackItem | None:
+    def get(self, feedback_id: str) -> FeedbackItem | None:
         """
         Retrieve a specific feedback item by ID.
         """
-        items = await self._load_feedback()
+        items = self._load_feedback_sync()
         for item in items:
             if item.id == feedback_id:
                 return item
         return None
 
-    async def list_feedback(
+    def list_feedback(
         self, category: FeedbackCategory | None = None, source: str | None = None
     ) -> list[FeedbackItem]:
         """
         List feedback items, optionally filtered.
         """
-        items = await self._load_feedback()
+        items = self._load_feedback_sync()
         filtered = items
 
         if category:
@@ -124,6 +146,6 @@ class FeedbackCollector:
 
         return filtered
 
-    async def clear(self) -> None:
+    def clear(self) -> None:
         """Clear all feedback (primarily for testing)."""
-        await self._save_feedback([])
+        self._save_feedback_sync([])

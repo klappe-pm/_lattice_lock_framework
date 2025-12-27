@@ -86,6 +86,9 @@ class LocalModelClient(BaseAPIClient):
                     "temperature": temperature,
                 }
 
+                if not self.session:
+                    self.session = aiohttp.ClientSession()
+
                 async with self.session.post(
                     f"{self.base_url}/api/generate", json=ollama_payload
                 ) as response:

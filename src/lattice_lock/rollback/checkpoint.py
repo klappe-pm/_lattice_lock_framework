@@ -13,6 +13,8 @@ from .storage import CheckpointStorage
 class CheckpointManager:
     """
     Manages creation, retrieval, and deletion of checkpoints.
+    
+    All methods are synchronous for ease of use.
     """
 
     def __init__(self, storage: CheckpointStorage = None):

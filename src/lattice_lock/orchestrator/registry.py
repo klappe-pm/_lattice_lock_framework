@@ -91,7 +91,11 @@ class ModelRegistry:
             return result
 
         result.provider_count = len(providers)
-        # ... (rest of validation logic remains similar but simplified)
+        for provider_name in providers.keys():
+            try:
+                ModelProvider(provider_name.lower())
+            except ValueError:
+                result.add_warning(f"Unknown provider: {provider_name}")
         
         try:
             from .models_schema import RegistryConfig
@@ -147,6 +151,7 @@ class ModelRegistry:
         defaults = [
             ("gpt-4o", ModelProvider.OPENAI, 128000, 5.0, 15.0, 95, 95, 85),
             ("gpt-4o-mini", ModelProvider.OPENAI, 128000, 0.15, 0.6, 85, 85, 95),
+            ("claude-3-5-sonnet", ModelProvider.ANTHROPIC, 200000, 3.0, 15.0, 95, 95, 80),
             ("claude-sonnet-4-20250514", ModelProvider.ANTHROPIC, 200000, 3.0, 15.0, 95, 95, 80),
             ("claude-3-5-haiku-20241022", ModelProvider.ANTHROPIC, 200000, 0.8, 4.0, 85, 85, 95),
             ("gemini-2.0-flash", ModelProvider.GOOGLE, 1048576, 0.075, 0.3, 85, 85, 95),
