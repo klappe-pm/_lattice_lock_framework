@@ -125,7 +125,7 @@ class ModelScorer:
             score += secondary_match * aw.get("secondary_task", 0.1)
 
         priority = analysis.features.get("priority", "balanced")
-        weights = self.config["priority_weights"].get(
+        self.config["priority_weights"].get(
             priority, self.config["priority_weights"]["balanced"]
         )
 

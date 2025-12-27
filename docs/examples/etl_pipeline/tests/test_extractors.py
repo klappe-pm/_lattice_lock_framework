@@ -5,7 +5,6 @@ Validates extractor functionality and constraint enforcement.
 """
 
 import pytest
-
 from src.extractors import (
     APIExtractor,
     DatabaseExtractor,

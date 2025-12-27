@@ -13,13 +13,14 @@ from datetime import datetime, timezone
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
 from lattice_lock.admin import API_VERSION, ProjectStatus, ValidationStatus, create_app
 from lattice_lock.admin.auth import Role, TokenData, get_current_user
 from lattice_lock.admin.db import Base, get_db
 from lattice_lock.admin.models import Project, ProjectError, RollbackCheckpoint
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 # --- Fixtures ---
 

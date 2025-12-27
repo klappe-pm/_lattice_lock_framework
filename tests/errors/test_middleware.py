@@ -2,6 +2,7 @@
 
 
 import pytest
+
 from lattice_lock.errors.classification import ErrorContext
 from lattice_lock.errors.middleware import (
     ErrorMetrics,

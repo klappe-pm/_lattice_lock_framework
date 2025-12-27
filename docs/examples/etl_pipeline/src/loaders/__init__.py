@@ -141,7 +141,7 @@ class DatabaseLoader(BaseLoader):
         self._next_job_id += 1
 
         try:
-            for record in records:
+            for _record in records:
                 self._records_loaded += 1
                 job.records_loaded += 1
 
@@ -189,7 +189,7 @@ class DataWarehouseLoader(BaseLoader):
             batch_size = 1000
             for i in range(0, len(records), batch_size):
                 batch = records[i : i + batch_size]
-                for record in batch:
+                for _record in batch:
                     self._records_loaded += 1
                     job.records_loaded += 1
 
@@ -234,7 +234,7 @@ class FileLoader(BaseLoader):
         self._next_job_id += 1
 
         try:
-            for record in records:
+            for _record in records:
                 self._records_loaded += 1
                 job.records_loaded += 1
 

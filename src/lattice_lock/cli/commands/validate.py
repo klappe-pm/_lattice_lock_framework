@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import click
+
 from lattice_lock.validator import (
     ValidationResult,
     validate_agent_manifest,

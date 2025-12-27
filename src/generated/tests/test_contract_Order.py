@@ -1,6 +1,6 @@
+from typing import Any
+
 import pytest
-from decimal import Decimal
-from typing import Any, Dict
 
 # Generated Test Contract for Order
 
@@ -11,22 +11,22 @@ class TestOrderContract:
     """
 
     @pytest.fixture
-    def instance(self) -> Dict[str, Any]:
+    def instance(self) -> dict[str, Any]:
         """
         Fixture to provide an instance of Order.
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-            
+
             "id": None,
-            
+
             "amount": 1,
-            
+
             "status": None,
-            
+
         }
 
-    
+
     def test_amount_gt_0(self, instance: Any):
         """
         Ensure amount > 0
@@ -41,7 +41,7 @@ class TestOrderContract:
 
         # Assertion
         assert value > 0, f'Expected amount > 0, got {value}'
-    
+
     def test_limit_check(self, instance: Any):
         """
         Orders cannot exceed $10,000 without manual review
@@ -56,10 +56,10 @@ class TestOrderContract:
 
         # Assertion
         assert value <= 10000, f'Expected amount <= 10000, got {value}'
-    
+
 
     # Boundary Tests
-    
+
     def test_boundary_amount_gt_0(self):
         """
         Boundary test for amount.
@@ -68,7 +68,7 @@ class TestOrderContract:
         # This test requires a way to instantiate the object with specific values.
         # Since we don't have a factory, we will skip or use a placeholder.
         pytest.skip("Boundary testing requires a factory implementation.")
-    
+
     def test_boundary_limit_check(self):
         """
         Boundary test for amount.
@@ -77,4 +77,3 @@ class TestOrderContract:
         # This test requires a way to instantiate the object with specific values.
         # Since we don't have a factory, we will skip or use a placeholder.
         pytest.skip("Boundary testing requires a factory implementation.")
-    

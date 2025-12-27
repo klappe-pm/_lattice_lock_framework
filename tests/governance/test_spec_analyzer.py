@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+
 from lattice_lock.agents.prompt_architect.subagents.models import (
     Component,
     ComponentLayer,

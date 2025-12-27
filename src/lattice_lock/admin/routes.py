@@ -8,6 +8,10 @@ import time
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from lattice_lock.admin.auth import require_admin, require_operator, require_viewer
 from lattice_lock.admin.db import get_db
 from lattice_lock.admin.models import Project, ProjectError
@@ -24,9 +28,6 @@ from lattice_lock.admin.schemas import (
     RollbackResponse,
     ValidationStatusResponse,
 )
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 # API version
 API_VERSION = "1.0.0"
@@ -185,7 +186,7 @@ async def get_project_errors(
     """Get project errors."""
     query = select(ProjectError).where(ProjectError.project_id == project_id)
     if not include_resolved:
-        query = query.where(ProjectError.resolved == False)
+        query = query.where(not ProjectError.resolved)
 
     query = query.order_by(ProjectError.timestamp.desc()).limit(limit + 1)
     result = await db.execute(query)

@@ -2,6 +2,7 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from lattice_lock.orchestrator.providers.local import LocalModelClient
 
 

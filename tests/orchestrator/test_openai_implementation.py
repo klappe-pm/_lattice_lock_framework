@@ -2,6 +2,7 @@ import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from lattice_lock.orchestrator.providers.openai import OpenAIAPIClient
 from lattice_lock.orchestrator.types import APIResponse
 

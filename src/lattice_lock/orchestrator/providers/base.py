@@ -88,7 +88,7 @@ class BaseAPIClient(ABC):
             ProviderUnavailableError: If required credentials missing
         """
         self.config = config
-        self._session: "aiohttp.ClientSession" | None = None
+        self._session: aiohttp.ClientSession | None = None
         self._validate_config()
         logger.info(f"Initialized {self.__class__.__name__}")
 

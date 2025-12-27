@@ -1,6 +1,6 @@
+from typing import Any
+
 import pytest
-from decimal import Decimal
-from typing import Any, Dict
 
 # Generated Test Contract for Customer
 
@@ -11,22 +11,22 @@ class TestCustomerContract:
     """
 
     @pytest.fixture
-    def instance(self) -> Dict[str, Any]:
+    def instance(self) -> dict[str, Any]:
         """
         Fixture to provide an instance of Customer.
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-            
+
             "id": None,
-            
+
             "email": None,
-            
+
             "rating": 1,
-            
+
         }
 
-    
+
     def test_email_unique(self, instance: Any):
         """
         Ensure email is unique
@@ -42,7 +42,7 @@ class TestCustomerContract:
         # Assertion
         # Uniqueness check requires a collection context.
         # assert is_unique(value, collection)
-    
+
     def test_rating_gte_1(self, instance: Any):
         """
         Ensure rating >= 1
@@ -57,7 +57,7 @@ class TestCustomerContract:
 
         # Assertion
         assert value >= 1, f'Expected rating >= 1, got {value}'
-    
+
     def test_rating_lte_5(self, instance: Any):
         """
         Ensure rating <= 5
@@ -72,10 +72,10 @@ class TestCustomerContract:
 
         # Assertion
         assert value <= 5, f'Expected rating <= 5, got {value}'
-    
+
 
     # Boundary Tests
-    
+
     def test_boundary_rating_gte_1(self):
         """
         Boundary test for rating.
@@ -84,7 +84,7 @@ class TestCustomerContract:
         # This test requires a way to instantiate the object with specific values.
         # Since we don't have a factory, we will skip or use a placeholder.
         pytest.skip("Boundary testing requires a factory implementation.")
-    
+
     def test_boundary_rating_lte_5(self):
         """
         Boundary test for rating.
@@ -93,4 +93,3 @@ class TestCustomerContract:
         # This test requires a way to instantiate the object with specific values.
         # Since we don't have a factory, we will skip or use a placeholder.
         pytest.skip("Boundary testing requires a factory implementation.")
-    
