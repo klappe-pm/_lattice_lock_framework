@@ -152,9 +152,6 @@ class FileBackend:
         
         Parameters:
         	pattern (str): Glob-style pattern to match file paths (as used by the system glob module).
-        
-        Returns:
-        	list[str]: A list of matching file paths.
         """
         return glob.glob(pattern)
 
