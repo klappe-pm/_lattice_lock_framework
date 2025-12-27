@@ -20,17 +20,19 @@ class FallbackManager:
         self, func: Callable[..., Any], candidates: list[Any], *args, **kwargs
     ) -> APIResponse:
         """
-        Execute a function with a list of update candidates (models/clients).
-
+        Attempt execution of `func` against each candidate in order and return the first successful APIResponse.
+        
         Args:
-            func: The function to execute. It must accept a candidate as first arg, then *args, **kwargs.
-            candidates: List of fallback candidates (e.g. model objects or clients).
-
+            func: Callable that accepts a candidate as its first argument followed by any additional args/kwargs.
+            candidates: Ordered list of candidate objects (for example model instances or clients) to try.
+            *args: Positional arguments forwarded to `func` after the candidate.
+            **kwargs: Keyword arguments forwarded to `func` after the candidate.
+        
         Returns:
-            The result of the successful execution.
-
+            APIResponse: The response returned by the first successful `func` invocation.
+        
         Raises:
-            ProviderUnavailableError: If all candidates fail.
+            ProviderUnavailableError: If every candidate (including allowed retries per candidate) fails; the exception includes the last observed error.
         """
         last_error = None
 

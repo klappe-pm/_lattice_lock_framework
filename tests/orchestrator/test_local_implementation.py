@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -7,6 +6,11 @@ from lattice_lock.orchestrator.types import APIResponse
 
 @pytest.fixture
 def mock_local_env():
+    """
+    Temporarily sets the CUSTOM_API_URL environment variable for the duration of a test.
+    
+    Used as a pytest fixture; yields control while CUSTOM_API_URL is set to "http://test-local:8000" and restores the original environment afterwards.
+    """
     with patch.dict(os.environ, {"CUSTOM_API_URL": "http://test-local:8000"}):
         yield
 
