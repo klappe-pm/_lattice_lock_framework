@@ -16,6 +16,9 @@ from .local import LocalModelClient
 from .openai import OpenAIAPIClient
 from .xai import GrokAPIClient
 
+# Alias for backward compatibility (xAI rebranded from Grok)
+XAIAPIClient = GrokAPIClient
+
 __all__ = [
     "AnthropicAPIClient",
     "AzureOpenAIClient",
@@ -28,5 +31,6 @@ __all__ = [
     "ProviderAvailability",
     "ProviderStatus",
     "ProviderUnavailableError",
+    "XAIAPIClient",
     "get_api_client",
 ]
