@@ -220,11 +220,29 @@ class WorkBreakdownParser(BaseRoadmapParser):
 
 class GanttParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
-        # Placeholder for Gantt chart parsing
-        return RoadmapStructure()
+        """
+        Parse Gantt chart format roadmaps.
+
+        Raises:
+            NotImplementedError: Gantt chart parsing is not yet implemented.
+                Use WorkBreakdownParser for WBS markdown format instead.
+        """
+        raise NotImplementedError(
+            "Gantt chart parsing is not yet implemented. "
+            "Use WorkBreakdownParser for WBS markdown format instead."
+        )
 
 
 class KanbanParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
-        # Placeholder for Kanban board parsing
-        return RoadmapStructure()
+        """
+        Parse Kanban board format roadmaps.
+
+        Raises:
+            NotImplementedError: Kanban board parsing is not yet implemented.
+                Use WorkBreakdownParser for WBS markdown format instead.
+        """
+        raise NotImplementedError(
+            "Kanban board parsing is not yet implemented. "
+            "Use WorkBreakdownParser for WBS markdown format instead."
+        )

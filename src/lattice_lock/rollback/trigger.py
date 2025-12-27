@@ -1,6 +1,7 @@
 """
 This module handles rollback triggers and execution hooks.
 """
+
 import logging
 import subprocess
 from collections.abc import Callable
@@ -76,7 +77,11 @@ class RollbackTrigger:
                         state = self.checkpoint_manager.get_checkpoint(latest_id)
 
                 if state:
-                    success = self._restore_state(state)
+                    # Pass checkpoint_id for file restoration
+                    restore_checkpoint_id = checkpoint_id or (
+                        checkpoints[0] if checkpoints else None
+                    )
+                    success = self._restore_state(state, restore_checkpoint_id)
                 else:
                     logger.error("No checkpoint found to restore.")
                     success = False
@@ -100,26 +105,47 @@ class RollbackTrigger:
             self._execute_post_hooks(False)
             return False
 
-    def _restore_state(self, state: RollbackState) -> bool:
+    def _restore_state(self, state: RollbackState, checkpoint_id: str | None = None) -> bool:
         """
         Restore the system state from the given RollbackState.
+
+        Args:
+            state: The RollbackState containing file paths and hashes to restore.
+            checkpoint_id: The checkpoint ID to use for file restoration.
+
+        Returns:
+            True if restoration was successful, False otherwise.
         """
         try:
-            # Restore files
-            # In a real implementation, we would copy files from backup or reverse changes
-            # For now, we'll just log it as we don't have the full file system control here
-            # and the prompt focuses on the trigger system.
-            # However, to be useful, we should at least pretend to do something.
             logger.info(f"Restoring state from timestamp {state.timestamp}")
 
-            # Mock restoration of files
+            if not checkpoint_id:
+                logger.error("No checkpoint_id provided for file restoration")
+                return False
+
+            # Restore files using CheckpointManager
+            restored_count = 0
+            failed_files = []
+
             for file_path, file_hash in state.files.items():
                 logger.debug(f"Restoring file: {file_path} (hash: {file_hash})")
+                if self.checkpoint_manager.restore_file(checkpoint_id, file_path):
+                    restored_count += 1
+                else:
+                    failed_files.append(file_path)
+                    logger.warning(f"Could not restore file: {file_path}")
 
-            # Restore config
-            logger.debug(f"Restoring config: {state.config}")
+            logger.info(f"Restored {restored_count}/{len(state.files)} files")
 
-            return True
+            if failed_files:
+                logger.warning(f"Failed to restore {len(failed_files)} files: {failed_files}")
+
+            # Log config restoration (config is typically handled separately)
+            logger.debug(f"State config: {state.config}")
+
+            # Consider restoration successful if at least some files were restored
+            # or if there were no files to restore
+            return restored_count > 0 or len(state.files) == 0
         except Exception as e:
             logger.error(f"Failed to restore state: {e}")
             return False

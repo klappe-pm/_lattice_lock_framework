@@ -12,7 +12,7 @@ import logging
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, ParamSpec, TypeVar, Union
+from typing import Any, ParamSpec, TypeVar
 
 from lattice_lock.errors.classification import ErrorContext, classify_error
 
@@ -63,11 +63,11 @@ class ErrorMetrics:
         # Improvement 7: Persistent Observability
         if project_id:
             self._enqueue_persistence(context, project_id)
-    
+
     def _enqueue_persistence(self, context: ErrorContext, project_id: str) -> None:
         """Enqueue error persistence as background task."""
         from lattice_lock.utils.async_compat import get_background_queue
-        
+
         queue = get_background_queue()
         try:
             task = queue.enqueue(self._persist_error(context, project_id))
@@ -75,12 +75,13 @@ class ErrorMetrics:
                 logger.debug("No event loop for error persistence")
         except RuntimeError as e:
             logger.warning(f"Could not enqueue persistence: {e}")
-    
+
     async def _persist_error(self, context: ErrorContext, project_id: str) -> None:
         """Persist error to database."""
         try:
             from lattice_lock.admin.db import get_async_session
-            
+            from lattice_lock.admin.services import record_project_error
+
             session_maker = get_async_session()
             async with session_maker() as db:
                 await record_project_error(
@@ -90,7 +91,7 @@ class ErrorMetrics:
                     context.message,
                     str(context.severity),
                     str(context.category),
-                    context.details
+                    context.details,
                 )
         except ImportError:
             logger.info("Database module unavailable, skipping error persistence")
@@ -260,7 +261,7 @@ def error_boundary(
     recoverable_errors = recoverable_errors or []
     retry_config = retry_config or RetryConfig(max_retries=0)
 
-    def decorator(func: Callable[P, Union[R, Awaitable[R]]]) -> Callable[P, Union[R, Awaitable[R]]]:
+    def decorator(func: Callable[P, R | Awaitable[R]]) -> Callable[P, R | Awaitable[R]]:
         @functools.wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             last_error: Exception | None = None
