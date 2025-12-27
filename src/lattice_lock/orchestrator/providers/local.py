@@ -32,7 +32,31 @@ class LocalModelClient(BaseAPIClient):
         tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
-        """Send chat completion request to local model"""
+        """
+        Send a chat completion request to a local model and return a normalized APIResponse.
+        
+        Parameters:
+            model (str): Model identifier to use.
+            messages (list[dict[str, str]]): Conversation messages as a list of dicts; each message should include at least a "content" key (and typically a "role" key).
+            temperature (float): Sampling temperature for the model.
+            max_tokens (int | None): Maximum number of tokens to generate, or None to use the model default.
+            functions (list[dict] | None): Optional list of function descriptors; when provided they are sent as tools in the request.
+            tool_choice (str | dict | None): Optional tool selection hint passed through to the model.
+            **kwargs: Additional provider-specific payload fields to include in the request.
+        
+        Returns:
+            APIResponse: Normalized response containing:
+                - content: Generated text content (or None if a function/tool call was returned).
+                - model: The model identifier used.
+                - provider: "local".
+                - usage: Dict with "input_tokens" and "output_tokens" (integers; 0 when not reported).
+                - latency_ms: Observed request latency in milliseconds (0 for the Ollama fallback).
+                - raw_response: Raw JSON response from the provider.
+                - function_call: FunctionCall object when the model invoked a tool (otherwise None).
+        
+        Raises:
+            Exception: Re-raises the original exception if the primary request fails and the Ollama-format fallback cannot be used or fails. The original exception is also re-raised immediately if the primary request fails while `functions` are provided, because the fallback does not support functions.
+        """
 
         headers = {"Content-Type": "application/json"}
 
@@ -85,6 +109,9 @@ class LocalModelClient(BaseAPIClient):
                     "prompt": messages[-1]["content"],
                     "temperature": temperature,
                 }
+
+                if not self.session:
+                    self.session = aiohttp.ClientSession()
 
                 async with self.session.post(
                     f"{self.base_url}/api/generate", json=ollama_payload
