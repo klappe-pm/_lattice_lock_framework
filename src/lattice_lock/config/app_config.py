@@ -49,3 +49,21 @@ class AppConfig:
         """Load configuration from environment."""
         return cls()
 
+
+# Global config instance
+_config: Optional[AppConfig] = None
+
+
+def get_config() -> AppConfig:
+    """Get the global configuration instance."""
+    global _config
+    if _config is None:
+        _config = AppConfig.load()
+    return _config
+
+
+def reset_config() -> None:
+    """Reset configuration for testing."""
+    global _config
+    _config = None
+
