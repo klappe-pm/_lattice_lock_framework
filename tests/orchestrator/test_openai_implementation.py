@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -7,6 +6,11 @@ from lattice_lock.orchestrator.types import APIResponse, FunctionCall
 
 @pytest.fixture
 def mock_env():
+    """
+    Temporarily sets the OPENAI_API_KEY environment variable to "sk-test-key" for the duration of a test.
+    
+    This pytest fixture patches os.environ to include OPENAI_API_KEY="sk-test-key" and restores the original environment when the test finishes.
+    """
     with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key"}):
         yield
 
