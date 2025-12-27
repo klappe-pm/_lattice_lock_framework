@@ -37,7 +37,7 @@ ROLLBACK PROCEDURE:
 ### Chunk 1 (Provider Architecture)
 - Provider availability tracking returns false positives
 - Credential validation breaks existing integrations
-- Any provider health checks timeout
+- Any provider health checks time out
 
 ### Chunk 2 (Analysis & Scoring)
 - Performance benchmark regression >15%

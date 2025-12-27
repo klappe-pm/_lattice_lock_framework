@@ -29,6 +29,12 @@ class AppConfig:
         if self.env == "production" and not self.secret_key:
              raise ValueError("LATTICE_LOCK_SECRET_KEY must be set in production")
 
+        # Database Configuration (future use)
+        self.database_url: str = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
+        self.database_pool_size: int = self._parse_int("DATABASE_POOL_SIZE", 5)
+        self.database_max_overflow: int = self._parse_int("DATABASE_MAX_OVERFLOW", 10)
+        self.database_echo: bool = os.environ.get("DATABASE_ECHO", "false").lower() == "true"
+
     def _parse_int(self, var: str, default: int) -> int:
         """Safely parse integer environment variables."""
         value = os.environ.get(var)

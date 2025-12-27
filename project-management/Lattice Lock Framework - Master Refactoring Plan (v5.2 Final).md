@@ -3969,3 +3969,76 @@ jobs:
 
 ---
 
+
+## Work Chunk 8: Database Infrastructure Foundation
+
+**Objective:** Establish foundational database patterns, configuration, and abstractions to enable future data persistence without disrupting current refactoring priorities.
+
+**Risk Level:** Low
+
+### Task 8.1: Database Configuration & Connection Management
+
+**Step 1: Add Database Configuration to AppConfig**
+
+In `src/lattice_lock/config/app_config.py`, extend the class with database configuration parameters (`database_url`, `pool_size`, etc.).
+
+**Step 2: Create Database Connection Manager**
+
+Create `src/lattice_lock/database/connection.py` implementing `DatabaseManager` singleton with `SQLAlchemy` async engine.
+
+**Step 3: Create Database Reset Hook**
+
+Add `reset_database_state` to `src/lattice_lock/database/__init__.py`.
+
+**Step 4: Update Global Reset Methods**
+
+Update `docs/testing/reset_methods.md` and `tests/conftest.py` to include database reset.
+
+**Step 5: Update Dependency Verification**
+
+Update `scripts/verify_deps.py` to verify database drivers based on URL.
+
+### Task 8.2: CRUD Repository Pattern Foundation
+
+**Step 1: Create Repository Base Classes**
+
+Create `src/lattice_lock/database/repository.py` defining `RepositoryInterface` and `SQLAlchemyRepository`.
+
+**Step 2: Create Transaction Management Utilities**
+
+Create `src/lattice_lock/database/transaction.py` implementing `transaction_context`.
+
+**Step 3: Create Database Health Check**
+
+Create `src/lattice_lock/database/health.py` with `check_database_health`.
+
+**Step 4: Update Global Health Check**
+
+Modify application health checks to include database status.
+
+**Step 5: Create Repository Testing Patterns**
+
+Create `tests/database/test_repository_pattern.py`.
+
+### Task 8.3: Future Migration Path & Documentation
+
+**Step 1: Create Migration Strategy Document**
+
+Create `docs/database/migration_strategy.md`.
+
+**Step 2: Add Database Readiness Checklist**
+
+Create `docs/database/readiness_checklist.md`.
+
+### Validation Gates
+
+```bash
+# Verify database configuration without actual connection
+python -c "from lattice_lock.config import get_config; config = get_config(); print(f'Database URL configured: {config.database_url}')"
+
+# Verify repository pattern imports
+python -c "from lattice_lock.database.repository import RepositoryInterface, SQLAlchemyRepository; print('✅ Repository patterns available')"
+
+# Run database infrastructure tests
+pytest tests/database/ -v
+```

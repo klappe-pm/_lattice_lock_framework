@@ -21,6 +21,11 @@ def reset_singletons():
     # Reset before test
     MemoryAuthStorage.clear()
     ProviderAvailability.reset()
+    try:
+        from lattice_lock.database import reset_database_state
+        reset_database_state()
+    except ImportError:
+        pass
     
     yield
     

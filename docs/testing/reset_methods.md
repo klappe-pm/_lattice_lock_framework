@@ -14,6 +14,7 @@ All stateful components implement reset functionality to ensure test isolation.
 | `BackgroundTaskQueue` | Reinitialize via global | `utils/async_compat.py` | Clear pending tasks |
 | `ClientPool` | `.close_all()` | `execution/client_pool.py` | Close all connections |
 | `TaskAnalyzer` | `.reset_cache()` | `analysis/analyzer.py` | Clear analysis cache |
+| `DatabaseManager` | `reset_database_state()` | `database/__init__.py` | Close all connections |
 
 ## Implementation Pattern
 
