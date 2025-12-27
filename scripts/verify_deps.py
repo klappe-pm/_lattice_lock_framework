@@ -15,7 +15,14 @@ REQUIRED_PACKAGES = [
 ]
 
 def check_pip_dependencies():
-    """Run pip check to verify installed packages have compatible dependencies."""
+    """
+    Verify that installed packages have compatible dependencies by running `pip check`.
+    
+    Runs `pip check` with the current Python interpreter and prints status messages.
+    
+    Returns:
+        bool: `True` if `pip check` reports no dependency conflicts, `False` otherwise.
+    """
     print("Verifying pip dependencies...")
     try:
         subprocess.run([sys.executable, "-m", "pip", "check"], check=True)
@@ -26,7 +33,14 @@ def check_pip_dependencies():
         return False
 
 def check_imports():
-    """Verify critical packages can be imported."""
+    """
+    Check that each package listed in REQUIRED_PACKAGES can be imported.
+    
+    Attempts to import every package named in REQUIRED_PACKAGES and reports failures.
+    
+    Returns:
+        bool: `True` if all packages imported successfully, `False` otherwise.
+    """
     print("\nVerifying imports...")
     all_passed = True
     for package in REQUIRED_PACKAGES:
@@ -39,6 +53,11 @@ def check_imports():
     return all_passed
 
 def main():
+    """
+    Run dependency verification and exit the process with a success or failure code.
+    
+    Executes pip dependency checks and import checks, prints a success message and exits with status code 0 if both pass, otherwise prints a failure message and exits with status code 1.
+    """
     pip_ok = check_pip_dependencies()
     imports_ok = check_imports()
     

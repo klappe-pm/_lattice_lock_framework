@@ -11,7 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 def _run_sync(coro):
-    """Run an async coroutine synchronously."""
+    """
+    Execute an awaitable coroutine from synchronous code.
+    
+    If an asyncio event loop is already running in the current thread, the coroutine is executed in a new thread; otherwise it is run in the current thread. Exceptions raised by the coroutine propagate to the caller.
+    
+    Parameters:
+        coro: An awaitable or coroutine object to execute.
+    
+    Returns:
+        The value returned by the coroutine.
+    """
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -46,7 +56,11 @@ class FeedbackCollector:
         self._ensure_storage_exists()
 
     def _ensure_storage_exists(self) -> None:
-        """Ensure the storage directory and file exist."""
+        """
+        Ensure the storage directory exists and initialize the storage file with an empty JSON array if missing.
+        
+        If the storage file does not exist, create parent directories as needed and write "[]" to the file.
+        """
         if not self.storage_path.parent.exists():
             self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         # Create empty file if it doesn't exist
@@ -54,7 +68,14 @@ class FeedbackCollector:
             self.storage_path.write_text("[]")
 
     def _load_feedback_sync(self) -> list[FeedbackItem]:
-        """Load feedback items from storage synchronously."""
+        """
+        Load feedback items from the storage file.
+        
+        Invalid or unparseable items are skipped (errors are logged). If the storage file is missing, empty, or contains invalid JSON, an empty list is returned.
+        
+        Returns:
+            list[FeedbackItem]: Parsed feedback items present in storage.
+        """
         try:
             if not self.storage_path.exists():
                 return []
@@ -81,7 +102,15 @@ class FeedbackCollector:
             return []
 
     def _save_feedback_sync(self, items: list[FeedbackItem]) -> None:
-        """Save feedback items to storage synchronously."""
+        """
+        Persist a list of feedback items to the configured storage file as a JSON array.
+        
+        Parameters:
+            items (list[FeedbackItem]): Feedback items to persist; each item will be converted to JSON-compatible data before writing.
+        
+        Raises:
+            Exception: If serialization or writing to the storage file fails.
+        """
         try:
             data = [item.model_dump(mode="json") for item in items]
             json_str = json.dumps(data, indent=2, default=str)
@@ -99,10 +128,17 @@ class FeedbackCollector:
         metadata: dict | None = None,
     ) -> str:
         """
-        Submit a new piece of feedback.
+        Create and persist a new feedback item.
+        
+        Parameters:
+            content (str): Text of the feedback.
+            category (FeedbackCategory): Feedback category; defaults to FeedbackCategory.OTHER.
+            priority (FeedbackPriority): Feedback priority level; defaults to FeedbackPriority.MEDIUM.
+            source (str): Origin of the feedback (for example, "user"); defaults to "user".
+            metadata (dict | None): Optional additional metadata to attach to the item.
         
         Returns:
-            The feedback item ID.
+            str: The newly created feedback item's ID.
         """
         item = FeedbackItem(
             content=content,
@@ -121,7 +157,10 @@ class FeedbackCollector:
 
     def get(self, feedback_id: str) -> FeedbackItem | None:
         """
-        Retrieve a specific feedback item by ID.
+        Retrieve the feedback item with the given ID.
+        
+        Returns:
+            The FeedbackItem with the matching ID, or `None` if no item matches.
         """
         items = self._load_feedback_sync()
         for item in items:
@@ -133,7 +172,14 @@ class FeedbackCollector:
         self, category: FeedbackCategory | None = None, source: str | None = None
     ) -> list[FeedbackItem]:
         """
-        List feedback items, optionally filtered.
+        Return feedback items stored in the collector, optionally filtered by category and source.
+        
+        Parameters:
+            category (FeedbackCategory | None): If provided, only include items whose category equals this value.
+            source (str | None): If provided, only include items whose source equals this value.
+        
+        Returns:
+            list[FeedbackItem]: The list of matching feedback items; empty list if none match.
         """
         items = self._load_feedback_sync()
         filtered = items
