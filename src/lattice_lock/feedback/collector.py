@@ -10,31 +10,7 @@ from .schemas import FeedbackCategory, FeedbackItem, FeedbackPriority
 logger = logging.getLogger(__name__)
 
 
-def _run_sync(coro):
-    """
-    Execute an awaitable coroutine from synchronous code.
-    
-    If an asyncio event loop is already running in the current thread, the coroutine is executed in a new thread; otherwise it is run in the current thread. Exceptions raised by the coroutine propagate to the caller.
-    
-    Parameters:
-        coro: An awaitable or coroutine object to execute.
-    
-    Returns:
-        The value returned by the coroutine.
-    """
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-    
-    if loop and loop.is_running():
-        # We're in an async context, create a new thread
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            future = pool.submit(asyncio.run, coro)
-            return future.result()
-    else:
-        return asyncio.run(coro)
+
 
 
 class FeedbackCollector:
