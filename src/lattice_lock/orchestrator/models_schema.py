@@ -83,7 +83,14 @@ class RegistryConfig(BaseModel):
 
     @model_validator(mode="after")
     def flatten_providers_to_models(self):
-        """Convert provider-based structure to flat model list."""
+        """
+        Flatten provider-based model definitions into the root models list when applicable.
+        
+        If `providers` is set and `models` is empty, converts each provider section into ModelConfig instances and assigns the resulting list to `self.models`. Provider names are matched case-insensitively; unknown providers are skipped. For each model entry, capability names ("vision", "function_calling", "json_mode") are translated into the boolean flags `supports_vision`, `supports_function_calling`, and `supports_json_mode`. If no flattening is needed (no providers or `models` already present), the instance is unchanged.
+        
+        Returns:
+            self (RegistryConfig): The same registry instance, with `models` populated when flattening occurred.
+        """
         if self.providers and not self.models:
             flat_models = []
             for provider_name, provider_config in self.providers.items():
@@ -103,7 +110,7 @@ class RegistryConfig(BaseModel):
                         id=model_id,
                         provider=provider_enum,
                         api_name=model_data.get("api_name", model_id),
-                        context_window=model_data.get("context_window"),
+                        context_window=model_data.get("context_window", 4096),
                         input_cost=model_data.get("input_cost", 0.0),
                         output_cost=model_data.get("output_cost", 0.0),
                         reasoning_score=model_data.get("reasoning_score", 0.0),

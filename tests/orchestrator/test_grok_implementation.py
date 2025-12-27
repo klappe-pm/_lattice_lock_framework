@@ -1,4 +1,3 @@
-
 import os
 import pytest
 from unittest.mock import AsyncMock, patch
@@ -7,6 +6,11 @@ from lattice_lock.orchestrator.types import APIResponse
 
 @pytest.fixture
 def mock_xai_env():
+    """
+    Pytest fixture that temporarily sets the XAI_API_KEY environment variable to "sk-grok-test" for the duration of a test.
+    
+    The original environment is restored after the fixture finishes.
+    """
     with patch.dict(os.environ, {"XAI_API_KEY": "sk-grok-test"}):
         yield
 
@@ -18,6 +22,11 @@ async def test_initialization(mock_xai_env):
 
 @pytest.mark.asyncio
 async def test_chat_completion_success(mock_xai_env):
+    """
+    Verifies that GrokAPIClient.chat_completion correctly parses a simple assistant message and includes the expected authorization header and model in the outgoing request payload.
+    
+    Sets up a client with a mocked _make_request that returns a single assistant message and usage, calls chat_completion with model "grok-beta", and asserts that the returned response has content "I am Grok", provider "xai", and model "grok-beta". Also inspects the mocked request arguments to assert the Authorization header is "Bearer sk-grok-test" and the payload's "model" field is "grok-beta".
+    """
     client = GrokAPIClient()
     mock_response = {
         "choices": [{"message": {"content": "I am Grok"}}],

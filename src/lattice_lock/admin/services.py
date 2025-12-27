@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .models import (
     Project, 
     ProjectError, 
+    ProjectStatus,
     RollbackCheckpoint,
     ValidationStatus
 )
@@ -69,7 +70,7 @@ async def record_project_error(
     if severity == "critical":
         project.status = "error"
     elif severity == "high" and project.status != "error":
-         project.status = "warning"
+        project.status = "warning"
         
     project.last_activity = time.time()
     await db.commit()
@@ -180,7 +181,7 @@ async def update_validation_status(
     elif has_failures:
         project.status = "error"
     elif project.gauntlet_status == ValidationStatus.FAILED:
-         project.status = "warning"
+        project.status = "warning"
 
     project.last_validated = time.time()
     project.last_activity = time.time()

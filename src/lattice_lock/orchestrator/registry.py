@@ -64,13 +64,14 @@ class ModelRegistry:
         return self._validation_result
 
     def validate_registry(self, data: dict) -> RegistryValidationResult:
-        """Validate registry data structure and content.
-
-        Args:
-            data: The parsed YAML registry data
-
+        """
+        Validate the registry data structure and record any errors or warnings found.
+        
+        Parameters:
+            data (dict): Parsed registry data (typically loaded from YAML).
+        
         Returns:
-            RegistryValidationResult with validation status, errors, and warnings
+            RegistryValidationResult: Validation outcome including `valid`, a list of `errors`, a list of `warnings`, and counts for `model_count` and `provider_count`.
         """
         result = RegistryValidationResult()
 
@@ -144,7 +145,11 @@ class ModelRegistry:
             self._load_defaults()
 
     def _load_defaults(self):
-        """Load hardcoded default models as fallback."""
+        """
+        Populate the registry with a built-in set of model capability definitions used as fallbacks.
+        
+        This method creates ModelCapabilities entries for a predefined list of models and stores them in self.models. It is intended for use when no external registry file is available or when loading the registry fails.
+        """
         logger.info("Loading default model definitions")
         
         # Minimal set of default models
