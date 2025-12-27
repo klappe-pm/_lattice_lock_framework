@@ -49,14 +49,16 @@ def test_rollback_restoration_cycle(temp_workspace):
     with open(filename, "w") as f:
         f.write("Modified Content v2")
 
-    assert open(filename).read() != original_content
+    with open(filename) as f:
+        assert f.read() != original_content
 
     # 4. Restore
     success = manager.restore_file(checkpoint_id, filename)
     assert success is True
 
     # 5. Verify
-    restored_content = open(filename).read()
+    with open(filename) as f:
+        restored_content = f.read()
     assert restored_content == original_content
 
 

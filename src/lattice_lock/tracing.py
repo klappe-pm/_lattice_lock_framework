@@ -27,8 +27,8 @@ R = TypeVar("R")
 
 logger = logging.getLogger(__name__)
 
-_trace_context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-    "trace_context", default={}
+_trace_context: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "trace_context", default=None
 )
 
 
@@ -50,12 +50,16 @@ def generate_span_id() -> str:
 def get_current_trace_id() -> str | None:
     """Get the current trace ID from context."""
     ctx = _trace_context.get()
+    if ctx is None:
+        return None
     return ctx.get("trace_id")
 
 
 def get_current_span_id() -> str | None:
     """Get the current span ID from context."""
     ctx = _trace_context.get()
+    if ctx is None:
+        return None
     return ctx.get("span_id")
 
 

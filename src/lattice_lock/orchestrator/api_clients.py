@@ -19,7 +19,6 @@ from .providers import (
     BaseAPIClient,
     BedrockAPIClient,
     GoogleAPIClient,
-    GrokAPIClient,
     LocalModelClient,
     OpenAIAPIClient,
     ProviderAvailability,
@@ -31,6 +30,7 @@ from .providers import (
 from .types import APIResponse, FunctionCall
 
 # Preserve old alias for backward compatibility explicitly
+# Note: GrokAPIClient is an alias for XAIAPIClient (xAI rebranded from Grok)
 GrokAPIClient = XAIAPIClient
 
 warnings.warn(

@@ -86,10 +86,9 @@ from lattice_lock.admin.schemas import (
     RollbackResponse,
     ValidationStatusResponse,
 )
-from lattice_lock.admin.schemas import (
-    RollbackCheckpoint as RollbackCheckpointSchema,  # Alias to avoid name collision if needed, though usually distinct
-)
 
+# Note: RollbackCheckpointSchema alias is available via schemas module if needed
+# from lattice_lock.admin.schemas import RollbackCheckpoint as RollbackCheckpointSchema
 # Service exports
 from lattice_lock.admin.services import (
     add_rollback_checkpoint,

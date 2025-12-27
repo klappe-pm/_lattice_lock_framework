@@ -56,7 +56,7 @@ class UserAPI:
             )
             return self._serialize_user(user)
         except ValueError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(str(e)) from e
 
     def get(self, user_id: int) -> dict[str, Any]:
         """Get a user by ID."""
@@ -117,7 +117,7 @@ class ProductAPI:
             )
             return self._serialize_product(product)
         except ValueError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(str(e)) from e
 
     def get(self, product_id: int) -> dict[str, Any]:
         """Get a product by ID."""
@@ -273,7 +273,7 @@ class PaymentAPI:
             )
             return self._serialize_payment(payment)
         except ValueError as e:
-            raise ValidationError(str(e))
+            raise ValidationError(str(e)) from e
 
     def get(self, payment_id: int) -> dict[str, Any]:
         """Get a payment by ID."""
