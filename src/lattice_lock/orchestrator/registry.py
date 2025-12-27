@@ -64,13 +64,16 @@ class ModelRegistry:
         return self._validation_result
 
     def validate_registry(self, data: dict) -> RegistryValidationResult:
-        """Validate registry data structure and content.
-
-        Args:
-            data: The parsed YAML registry data
-
+        """
+        Validate registry configuration data and report structural and schema issues.
+        
+        Performs basic structural checks (top-level type, presence of "version", and presence/type of "providers"/"models"), records warnings for unknown provider names, and runs Pydantic schema validation using RegistryConfig to finalize model and provider counts.
+        
+        Parameters:
+            data (dict): Parsed registry mapping (typically loaded from YAML). Expected to contain "models" and/or "providers" keys.
+        
         Returns:
-            RegistryValidationResult with validation status, errors, and warnings
+            RegistryValidationResult: Result object containing `valid`, `errors`, `warnings`, `model_count`, and `provider_count`. Errors are added for structural problems or schema validation failures; warnings are added for missing "version" or unrecognized provider names.
         """
         result = RegistryValidationResult()
 
@@ -91,7 +94,11 @@ class ModelRegistry:
             return result
 
         result.provider_count = len(providers)
-        # ... (rest of validation logic remains similar but simplified)
+        for provider_name in providers.keys():
+            try:
+                ModelProvider(provider_name.lower())
+            except ValueError:
+                result.add_warning(f"Unknown provider: {provider_name}")
         
         try:
             from .models_schema import RegistryConfig
@@ -140,13 +147,18 @@ class ModelRegistry:
             self._load_defaults()
 
     def _load_defaults(self):
-        """Load hardcoded default models as fallback."""
+        """
+        Populate the registry with a built-in set of model capability definitions used as fallbacks.
+        
+        This method creates ModelCapabilities entries for a predefined list of models and stores them in self.models. It is intended for use when no external registry file is available or when loading the registry fails.
+        """
         logger.info("Loading default model definitions")
         
         # Minimal set of default models
         defaults = [
             ("gpt-4o", ModelProvider.OPENAI, 128000, 5.0, 15.0, 95, 95, 85),
             ("gpt-4o-mini", ModelProvider.OPENAI, 128000, 0.15, 0.6, 85, 85, 95),
+            ("claude-3-5-sonnet", ModelProvider.ANTHROPIC, 200000, 3.0, 15.0, 95, 95, 80),
             ("claude-sonnet-4-20250514", ModelProvider.ANTHROPIC, 200000, 3.0, 15.0, 95, 95, 80),
             ("claude-3-5-haiku-20241022", ModelProvider.ANTHROPIC, 200000, 0.8, 4.0, 85, 85, 95),
             ("gemini-2.0-flash", ModelProvider.GOOGLE, 1048576, 0.075, 0.3, 85, 85, 95),

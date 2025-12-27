@@ -60,4 +60,4 @@ class FallbackManager:
             logger.warning(f"Falling back from candidate {candidate} due to persistent failure.")
 
         logger.error("All candidates exhausted. raising ProviderUnavailableError.")
-        raise ProviderUnavailableError(f"All providers failed. Last error: {last_error}")
+        raise ProviderUnavailableError("all_providers", f"All providers failed. Last error: {last_error}")
