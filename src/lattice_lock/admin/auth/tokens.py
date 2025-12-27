@@ -9,9 +9,7 @@ from .models import Role, TokenData
 from .storage import MemoryAuthStorage
 
 
-def create_access_token(
-    username: str, role: Role, expires_delta: timedelta | None = None
-) -> str:
+def create_access_token(username: str, role: Role, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token."""
     config = get_config()
     if expires_delta:
@@ -32,9 +30,7 @@ def create_access_token(
     return jwt.encode(payload, config.secret_key.get_secret_value(), algorithm=config.algorithm)
 
 
-def create_refresh_token(
-    username: str, role: Role, expires_delta: timedelta | None = None
-) -> str:
+def create_refresh_token(username: str, role: Role, expires_delta: timedelta | None = None) -> str:
     """Create a JWT refresh token."""
     config = get_config()
     if expires_delta:

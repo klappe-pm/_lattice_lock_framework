@@ -4,6 +4,7 @@ import pytest
 
 # Generated Test Contract for Customer
 
+
 class TestCustomerContract:
     """
     Semantic contract tests for Customer.
@@ -17,15 +18,10 @@ class TestCustomerContract:
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-
             "id": None,
-
             "email": None,
-
             "rating": 1,
-
         }
-
 
     def test_email_unique(self, instance: Any):
         """
@@ -33,7 +29,11 @@ class TestCustomerContract:
         Constraint: unique: True
         """
         # Field value extraction
-        value = instance.get("email") if isinstance(instance, dict) else getattr(instance, "email", None)
+        value = (
+            instance.get("email")
+            if isinstance(instance, dict)
+            else getattr(instance, "email", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
@@ -49,14 +49,18 @@ class TestCustomerContract:
         Constraint: gte: 1
         """
         # Field value extraction
-        value = instance.get("rating") if isinstance(instance, dict) else getattr(instance, "rating", None)
+        value = (
+            instance.get("rating")
+            if isinstance(instance, dict)
+            else getattr(instance, "rating", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'rating' is missing in the instance.")
 
         # Assertion
-        assert value >= 1, f'Expected rating >= 1, got {value}'
+        assert value >= 1, f"Expected rating >= 1, got {value}"
 
     def test_rating_lte_5(self, instance: Any):
         """
@@ -64,15 +68,18 @@ class TestCustomerContract:
         Constraint: lte: 5
         """
         # Field value extraction
-        value = instance.get("rating") if isinstance(instance, dict) else getattr(instance, "rating", None)
+        value = (
+            instance.get("rating")
+            if isinstance(instance, dict)
+            else getattr(instance, "rating", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'rating' is missing in the instance.")
 
         # Assertion
-        assert value <= 5, f'Expected rating <= 5, got {value}'
-
+        assert value <= 5, f"Expected rating <= 5, got {value}"
 
     # Boundary Tests
 

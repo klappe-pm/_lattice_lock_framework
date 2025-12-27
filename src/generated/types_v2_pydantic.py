@@ -31,4 +31,3 @@ class Customer(BaseModel):
     id: UUID
     email: str
     rating: int = Field(ge=1, le=5)
-

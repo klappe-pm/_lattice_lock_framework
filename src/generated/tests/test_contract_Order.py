@@ -4,6 +4,7 @@ import pytest
 
 # Generated Test Contract for Order
 
+
 class TestOrderContract:
     """
     Semantic contract tests for Order.
@@ -17,15 +18,10 @@ class TestOrderContract:
         Override this fixture in a conftest.py or subclass to provide real data.
         """
         return {
-
             "id": None,
-
             "amount": 1,
-
             "status": None,
-
         }
-
 
     def test_amount_gt_0(self, instance: Any):
         """
@@ -33,14 +29,18 @@ class TestOrderContract:
         Constraint: gt: 0
         """
         # Field value extraction
-        value = instance.get("amount") if isinstance(instance, dict) else getattr(instance, "amount", None)
+        value = (
+            instance.get("amount")
+            if isinstance(instance, dict)
+            else getattr(instance, "amount", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'amount' is missing in the instance.")
 
         # Assertion
-        assert value > 0, f'Expected amount > 0, got {value}'
+        assert value > 0, f"Expected amount > 0, got {value}"
 
     def test_limit_check(self, instance: Any):
         """
@@ -48,15 +48,18 @@ class TestOrderContract:
         Constraint: lte: 10000
         """
         # Field value extraction
-        value = instance.get("amount") if isinstance(instance, dict) else getattr(instance, "amount", None)
+        value = (
+            instance.get("amount")
+            if isinstance(instance, dict)
+            else getattr(instance, "amount", None)
+        )
 
         # Skip if value is missing (unless checking for required)
         if value is None:
             pytest.skip("Field 'amount' is missing in the instance.")
 
         # Assertion
-        assert value <= 10000, f'Expected amount <= 10000, got {value}'
-
+        assert value <= 10000, f"Expected amount <= 10000, got {value}"
 
     # Boundary Tests
 

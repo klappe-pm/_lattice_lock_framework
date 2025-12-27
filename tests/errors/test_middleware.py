@@ -1,6 +1,5 @@
 """Tests for error middleware."""
 
-
 import pytest
 
 from lattice_lock.errors.classification import ErrorContext
