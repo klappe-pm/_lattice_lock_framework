@@ -7,9 +7,9 @@ from lattice_lock.orchestrator.types import APIResponse
 @pytest.fixture
 def mock_anthropic_env():
     """
-    Temporarily sets the ANTHROPIC_API_KEY environment variable to "sk-ant-test" for the duration of a test.
+    Temporarily sets ANTHROPIC_API_KEY to "sk-ant-test" in the environment for the duration of the fixture.
     
-    This fixture patches os.environ so that callers see ANTHROPIC_API_KEY="sk-ant-test" until the fixture yields control, after which the original environment is restored.
+    The fixture patches os.environ so code executed while it yields observes ANTHROPIC_API_KEY="sk-ant-test".
     """
     with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test"}):
         yield
@@ -17,9 +17,9 @@ def mock_anthropic_env():
 @pytest.fixture
 def mock_dial_env():
     """
-    Temporarily sets the DIAL_API_KEY environment variable to "sk-dial-test" for the duration of a test.
+    Temporarily set the DIAL_API_KEY environment variable for the duration of a test.
     
-    Yields control while the environment variable is set; the original environment is restored after the fixture completes.
+    Used as a pytest fixture: yields control while DIAL_API_KEY is set to "sk-dial-test", then restores the previous environment.
     """
     with patch.dict(os.environ, {"DIAL_API_KEY": "sk-dial-test"}):
         yield
@@ -71,6 +71,11 @@ async def test_direct_completion_success(mock_anthropic_env):
 
 @pytest.mark.asyncio
 async def test_direct_tool_use(mock_anthropic_env):
+    """
+    Verifies that AnthropicAPIClient correctly extracts tool invocation details from a direct API response.
+    
+    Sets up a mocked Anthropic response that indicates a tool use and asserts the resulting response contains a non-null function_call with the expected name and arguments.
+    """
     client = AnthropicAPIClient()
     mock_response = {
         "content": [{

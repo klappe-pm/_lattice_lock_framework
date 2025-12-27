@@ -65,15 +65,13 @@ class ModelRegistry:
 
     def validate_registry(self, data: dict) -> RegistryValidationResult:
         """
-        Validate registry configuration data and report structural and schema issues.
-        
-        Performs basic structural checks (top-level type, presence of "version", and presence/type of "providers"/"models"), records warnings for unknown provider names, and runs Pydantic schema validation using RegistryConfig to finalize model and provider counts.
+        Validate the registry data structure and record any errors or warnings found.
         
         Parameters:
-            data (dict): Parsed registry mapping (typically loaded from YAML). Expected to contain "models" and/or "providers" keys.
+            data (dict): Parsed registry data (typically loaded from YAML).
         
         Returns:
-            RegistryValidationResult: Result object containing `valid`, `errors`, `warnings`, `model_count`, and `provider_count`. Errors are added for structural problems or schema validation failures; warnings are added for missing "version" or unrecognized provider names.
+            RegistryValidationResult: Validation outcome including `valid`, a list of `errors`, a list of `warnings`, and counts for `model_count` and `provider_count`.
         """
         result = RegistryValidationResult()
 

@@ -84,17 +84,12 @@ class RegistryConfig(BaseModel):
     @model_validator(mode="after")
     def flatten_providers_to_models(self):
         """
-        Convert a provider-centric configuration into a flat list of ModelConfig entries when the `models` list is empty.
+        Flatten provider-based model definitions into the root models list when applicable.
         
-        This method:
-        - When `providers` is present and `models` is empty, transforms each provider's models into ModelConfig instances and assigns them to `self.models`.
-        - Maps provider names case-insensitively to the ModelProvider enum and skips providers that do not match the enum.
-        - Converts a model's "capabilities" list into boolean flags: `supports_vision`, `supports_function_calling`, and `supports_json_mode`.
-        - Reads model fields directly from each provider model entry (e.g., `api_name`, `context_window`, `input_cost`, `output_cost`, `reasoning_score`, `coding_score`, `speed_rating`, `maturity`, `status`) and supplies defaults where appropriate except for `context_window`, which must be present and will cause model validation to fail if missing.
-        - Returns `self` with `models` populated when conversion occurs; otherwise returns `self` unchanged.
+        If `providers` is set and `models` is empty, converts each provider section into ModelConfig instances and assigns the resulting list to `self.models`. Provider names are matched case-insensitively; unknown providers are skipped. For each model entry, capability names ("vision", "function_calling", "json_mode") are translated into the boolean flags `supports_vision`, `supports_function_calling`, and `supports_json_mode`. If no flattening is needed (no providers or `models` already present), the instance is unchanged.
         
         Returns:
-            self: The same RegistryConfig instance, with `models` populated from `providers` when applicable.
+            self (RegistryConfig): The same registry instance, with `models` populated when flattening occurred.
         """
         if self.providers and not self.models:
             flat_models = []
@@ -115,7 +110,7 @@ class RegistryConfig(BaseModel):
                         id=model_id,
                         provider=provider_enum,
                         api_name=model_data.get("api_name", model_id),
-                        context_window=model_data.get("context_window"),
+                        context_window=model_data.get("context_window", 4096),
                         input_cost=model_data.get("input_cost", 0.0),
                         output_cost=model_data.get("output_cost", 0.0),
                         reasoning_score=model_data.get("reasoning_score", 0.0),

@@ -15,63 +15,71 @@ from .state import RollbackState
 @runtime_checkable
 class StorageBackend(Protocol):
     """Protocol for storage backends (Local, S3, etc.)"""
-    def ensure_path(self, path: str): """
-Ensure the filesystem path exists, creating directories as needed.
+    def ensure_path(self, path: str): 
+        """
+        Ensure the filesystem path required for storage exists.
 
-Parameters:
-    path (str): Target filesystem path. If the path appears to include a file suffix it is treated as a file path and the parent directory is created; otherwise the path is treated as a directory and the directory (and any missing parents) is created.
-"""
-...
-    def save(self, path: str, content: str | bytes, compressed: bool = True): """
-Save content to the given filesystem path, optionally using gzip compression.
+        If `path` appears to be a file path (has a suffix), its parent directory is created; otherwise `path` itself is created as a directory. Directories are created as needed.
 
-Parameters:
-    path (str): Destination filesystem path. Parent directories will be created as needed.
-    content (str | bytes): Data to write; str values are encoded as UTF-8.
-    compressed (bool): If True, store the content in gzip-compressed form; if False, store as a regular file.
-"""
-...
-    def load(self, path: str, compressed: bool = True) -> str | bytes | None: """
-Load file content from the storage backend, optionally treating the file as gzip-compressed.
+        Parameters:
+            path (str): File or directory path to prepare for storage.
+        """
+        ...
+    def save(self, path: str, content: str | bytes, compressed: bool = True): 
+        """
+        Save content to the given filesystem path, optionally using gzip compression and ensuring the destination directory exists.
 
-Parameters:
-    path (str): Filesystem path to the file to load.
-    compressed (bool): If True, attempt to read the file as gzip-compressed; otherwise read as a plain file.
+        Parameters:
+        	path (str): Destination file path. If a file path is provided, its parent directory will be created if missing.
+        	content (str | bytes): Data to write; text (str) will be encoded as UTF-8, bytes will be written as-is.
+        	compressed (bool): If True, write the data gzip-compressed; otherwise write uncompressed.
+        """
+        ...
+    def load(self, path: str, compressed: bool = True) -> str | bytes | None: 
+        """
+        Load and return file content from the backend, optionally treating the file as gzip-compressed.
 
-Returns:
-    str | bytes | None: The file content as a UTF-8 decoded string when text decoding succeeds, as raw bytes when decoding fails, or None if the path does not exist or an OS-level read error occurs.
-"""
-...
-    def list_files(self, pattern: str) -> list[str]: """
-List filesystem paths that match the given glob pattern.
+        Parameters:
+            path (str): Filesystem path to read.
+            compressed (bool): If True, interpret the file as gzip-compressed; otherwise read raw file.
 
-Parameters:
-	pattern (str): A glob pattern (e.g., "*.json.gz" or "dir/**/*.txt") used to select files.
+        Returns:
+            str | bytes | None: Decoded UTF-8 `str` if the file is textual, raw `bytes` if binary, or `None` if the file does not exist or an I/O error occurs.
+        """
+        ...
+    def list_files(self, pattern: str) -> list[str]: 
+        """
+        List filesystem paths matching the given glob pattern.
 
-Returns:
-	A list of matching file path strings (may be empty if no files match).
-"""
-...
-    def delete(self, path: str) -> bool: """
-Delete the file at the given path if it exists.
+        Parameters:
+            pattern (str): Glob-style pattern to match files (e.g., '*.json.gz').
 
-Parameters:
-    path (str): File path to remove.
+        Returns:
+            list[str]: Sorted list of matching file paths as strings.
+        """
+        ...
+    def delete(self, path: str) -> bool: 
+        """
+        Delete the file at the given path.
 
-Returns:
-    bool: `True` if the file was removed, `False` if the file did not exist.
-"""
-...
-    def exists(self, path: str) -> bool: """
-Check whether the given filesystem path exists.
+        Parameters:
+            path (str): Filesystem path to remove.
 
-Parameters:
-    path (str): Path to check; may refer to a file or directory.
+        Returns:
+            bool: `True` if the file was removed, `False` if the path did not exist or removal failed.
+        """
+        ...
+    def exists(self, path: str) -> bool: 
+        """
+        Check whether a storage path exists in the backend.
 
-Returns:
-    bool: `True` if the path exists, `False` otherwise.
-"""
-...
+        Parameters:
+            path (str): The storage path (file or directory) to check.
+
+        Returns:
+            bool: True if the path exists, False otherwise.
+        """
+        ...
 
 
 class FileBackend:
@@ -79,13 +87,10 @@ class FileBackend:
     
     def ensure_path(self, path: str):
         """
-        Ensure a filesystem path exists, creating directories as needed.
-        
-        If the given path string appears to reference a file (has a suffix), create its parent directories.
-        Otherwise create the directory at the given path. Existing directories are left unchanged.
+        Ensure the filesystem path exists by creating necessary directories.
         
         Parameters:
-            path (str): Path to a file or directory to ensure exists.
+        	path (str): Target filesystem path. If the path has a suffix it is treated as a file and this creates its parent directories; otherwise the path is treated as a directory and the directory itself is created.
         """
         p = Path(path)
         if p.suffix:  # It's a file
@@ -95,12 +100,12 @@ class FileBackend:
 
     def save(self, path: str, content: str | bytes, compressed: bool = True):
         """
-        Save content to a filesystem path, optionally using gzip compression.
+        Write content to the given filesystem path, ensuring parent directories exist and optionally gzip-compressing the output.
         
         Parameters:
-        	path (str): Target filesystem path where content will be written. Parent directories are created if they do not exist.
-        	content (str | bytes): Data to write; text is encoded as UTF-8 when appropriate.
-        	compressed (bool): If True, write the file using gzip compression; otherwise write a plain file. Default is True.
+            path (str): Filesystem path to write to.
+            content (str | bytes): Data to write; text is encoded as UTF-8.
+            compressed (bool): If True, store the data in gzip-compressed form; otherwise write raw data.
         """
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         
@@ -117,15 +122,14 @@ class FileBackend:
 
     def load(self, path: str, compressed: bool = True) -> str | bytes | None:
         """
-        Load content from a file, attempting UTF-8 text first and falling back to binary.
+        Load file content from the local filesystem, optionally treating the file as gzip-compressed.
         
         Parameters:
-        	path (str): Filesystem path to the file to load.
-        	compressed (bool): If True, treat the file as gzip-compressed; otherwise treat it as a plain file.
+            path (str): Filesystem path to the file to load.
+            compressed (bool): If True, read the file as gzip-compressed data; otherwise read it directly.
         
         Returns:
-        	str | bytes | None: The file content as a UTF-8 decoded string if text decoding succeeds, otherwise as raw bytes;
-        	None if the path does not exist or an I/O error occurs.
+            str | bytes | None: `str` decoded as UTF-8 when the file is valid UTF-8, `bytes` when decoding fails or the file is binary, or `None` if the path does not exist or an I/O error occurs.
         """
         if not Path(path).exists():
             return None
@@ -150,25 +154,19 @@ class FileBackend:
 
     def list_files(self, pattern: str) -> list[str]:
         """
-        Return file paths that match the given glob pattern.
+        List filesystem paths that match a glob pattern.
         
         Parameters:
-        	pattern (str): A glob pattern used to match filesystem paths (e.g., '/tmp/*.txt' or 'dir/**/*.gz').
-        
-        Returns:
-        	list[str]: A list of matching file paths as strings; an empty list if no files match.
+        	pattern (str): Glob-style pattern to match file paths (as used by the system glob module).
         """
         return glob.glob(pattern)
 
     def delete(self, path: str) -> bool:
         """
-        Delete the file at the given path if it exists.
-        
-        Parameters:
-        	path (str): Filesystem path to the file to remove.
+        Delete the file at the given filesystem path if it exists.
         
         Returns:
-        	deleted (bool): `True` if the file existed and was removed, `False` if the file did not exist.
+            bool: `True` if a file was removed, `False` if no file existed at the path.
         """
         if Path(path).exists():
             os.remove(path)
@@ -177,7 +175,10 @@ class FileBackend:
 
     def exists(self, path: str) -> bool:
         """
-        Check whether the given filesystem path exists.
+        Check whether a filesystem path exists.
+        
+        Parameters:
+            path (str): Path to a file or directory.
         
         Returns:
             True if the path exists, False otherwise.
@@ -194,11 +195,15 @@ class CheckpointStorage:
 
     def __init__(self, storage_dir: str = ".lattice-lock/checkpoints", backend: StorageBackend | None = None):
         """
-        Initialize the CheckpointStorage with a base storage directory and storage backend.
+        Initialize the checkpoint storage with a base directory and storage backend.
         
         Parameters:
-            storage_dir (str): Filesystem path where checkpoints will be stored; created if it does not exist.
-            backend (StorageBackend | None): Backend used for storage operations; defaults to a local FileBackend.
+            storage_dir (str): Base directory where checkpoint files and per-checkpoint backups are stored.
+            backend (StorageBackend | None): Storage backend implementation to use for filesystem operations;
+                when omitted a local FileBackend is created and used.
+        
+        Side effects:
+            Ensures the base storage directory exists on disk.
         """
         self.storage_dir = Path(storage_dir)
         self.backend = backend or FileBackend()
@@ -207,10 +212,15 @@ class CheckpointStorage:
 
     def save_state(self, state: RollbackState) -> str:
         """
-        Save the given RollbackState as a new checkpoint.
+        Store the given RollbackState as a gzip-compressed JSON checkpoint file.
+        
+        The state is serialized to JSON and written under the storage directory using a filename of the form "{timestamp}_{checkpoint_id}.json.gz".
+        
+        Parameters:
+            state (RollbackState): The rollback state to persist.
         
         Returns:
-            checkpoint_id (str): The UUID assigned to the newly created checkpoint.
+            checkpoint_id (str): The generated UUID4 identifier for the saved checkpoint.
         """
         checkpoint_id = str(uuid.uuid4())
         filename = f"{state.timestamp}_{checkpoint_id}.json.gz"
@@ -222,10 +232,10 @@ class CheckpointStorage:
 
     def load_state(self, checkpoint_id: str) -> RollbackState | None:
         """
-        Load the RollbackState corresponding to the given checkpoint ID.
+        Load the RollbackState corresponding to the given checkpoint identifier.
         
         Returns:
-            RollbackState if a matching checkpoint file is found and parsed successfully, `None` otherwise.
+            The deserialized `RollbackState` if a matching compressed checkpoint file is found and contains valid JSON; `None` if no matching file exists or the file cannot be parsed.
         """
         pattern = str(self.storage_dir / f"*_{checkpoint_id}.json.gz")
         files = self.backend.list_files(pattern)
@@ -243,12 +253,10 @@ class CheckpointStorage:
 
     def list_states(self) -> list[str]:
         """
-        List all available checkpoint IDs, newest first.
-        
-        Scans the storage directory for files matching "*.json.gz" and extracts the checkpoint ID from filenames of the form "<timestamp>_<checkpoint_id>.json.gz".
+        Return checkpoint IDs available in storage, ordered newest first.
         
         Returns:
-            list[str]: Checkpoint IDs ordered newest first (by filename sort).
+            list[str]: Checkpoint IDs extracted from matching "*.json.gz" filenames, ordered from newest to oldest.
         """
         pattern = str(self.storage_dir / "*.json.gz")
         files = self.backend.list_files(pattern)
@@ -268,12 +276,13 @@ class CheckpointStorage:
 
     def delete_state(self, checkpoint_id: str) -> bool:
         """
-        Delete the checkpoint file identified by the given checkpoint ID.
+        Delete the stored checkpoint file identified by checkpoint_id.
         
-        Attempts to locate a checkpoint file named "*_{checkpoint_id}.json.gz" in the storage directory and deletes the first match found.
+        Parameters:
+            checkpoint_id (str): Checkpoint identifier used in stored filenames (the UUID portion).
         
         Returns:
-            bool: `True` if a matching checkpoint file was deleted, `False` if no match was found.
+            bool: True if a matching checkpoint file was found and deleted, False otherwise.
         """
         pattern = str(self.storage_dir / f"*_{checkpoint_id}.json.gz")
         files = self.backend.list_files(pattern)
@@ -285,12 +294,14 @@ class CheckpointStorage:
 
     def prune_states(self, keep_n: int):
         """
-        Keep only the N most recent checkpoints.
+        Remove older checkpoints so only the most recent `keep_n` remain.
         
-        If there are more than keep_n checkpoints, delete older checkpoints beyond the most recent keep_n. A negative keep_n is treated as no-op.
+        If `keep_n` is less than zero, the function does nothing. If the current number
+        of checkpoints is less than or equal to `keep_n`, no checkpoints are removed.
+        Otherwise, checkpoints older than the newest `keep_n` are deleted.
         
         Parameters:
-            keep_n (int): Number of most-recent checkpoints to retain; older checkpoints are removed.
+            keep_n (int): Number of most recent checkpoints to retain.
         """
         if keep_n < 0:
             return
@@ -305,12 +316,14 @@ class CheckpointStorage:
 
     def save_file_content(self, checkpoint_id: str, filepath: str, content: str | bytes):
         """
-        Save the provided file content as a backup tied to a specific checkpoint.
+        Store file content in the checkpoint's backup area using a deterministic filename.
+        
+        The content is saved under the checkpoint's directory using a SHA-256 hash of `filepath` as the filename (with a ".gz" suffix) and is written with gzip compression via the configured backend.
         
         Parameters:
-            checkpoint_id (str): Identifier of the checkpoint under which the content will be stored.
-            filepath (str): Original file path; a SHA-256 hash of this string is used to derive the stored filename.
-            content (str | bytes): File contents to store; may be text or binary.
+            checkpoint_id (str): Identifier of the checkpoint to associate the file with.
+            filepath (str): Original file path used to derive the storage key (hashed).
+            content (str | bytes): File content to store; may be text or binary.
         """
         import hashlib
         path_hash = hashlib.sha256(filepath.encode()).hexdigest()
@@ -319,16 +332,14 @@ class CheckpointStorage:
 
     def load_file_content(self, checkpoint_id: str, filepath: str) -> str | bytes | None:
         """
-        Load file content associated with a checkpoint.
-        
-        The provided filepath is mapped to the stored backup name using a SHA-256 hash; the matching compressed backup for the given checkpoint is loaded.
+        Retrieve the backed-up content of a file stored under a checkpoint.
         
         Parameters:
-            checkpoint_id (str): Checkpoint identifier.
-            filepath (str): Original file path whose backup was saved.
+        	checkpoint_id (str): Identifier of the checkpoint containing the backup.
+        	filepath (str): Original file path; its SHA-256 digest is used to locate the stored backup.
         
         Returns:
-            str | bytes | None: The file content (decoded text or raw bytes) if present, otherwise `None`.
+        	content (str | bytes | None): The stored file content as a UTF-8 decoded string for text files or raw bytes for binary files; `None` if no backup exists.
         """
         import hashlib
         path_hash = hashlib.sha256(filepath.encode()).hexdigest()

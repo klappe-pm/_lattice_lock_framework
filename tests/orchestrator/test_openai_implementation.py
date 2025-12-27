@@ -7,9 +7,9 @@ from lattice_lock.orchestrator.types import APIResponse, FunctionCall
 @pytest.fixture
 def mock_env():
     """
-    Temporarily sets the OPENAI_API_KEY environment variable to "sk-test-key" for the duration of a test.
+    Pytest fixture that temporarily sets OPENAI_API_KEY to "sk-test-key" in the environment.
     
-    This pytest fixture patches os.environ to include OPENAI_API_KEY="sk-test-key" and restores the original environment when the test finishes.
+    Patches os.environ so tests run with OPENAI_API_KEY="sk-test-key" and restores the original environment after the test completes.
     """
     with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key"}):
         yield

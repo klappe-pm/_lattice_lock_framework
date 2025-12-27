@@ -7,9 +7,9 @@ from lattice_lock.orchestrator.types import APIResponse
 @pytest.fixture
 def mock_google_env():
     """
-    Pytest fixture that temporarily sets the environment variable GOOGLE_API_KEY to "sk-google-test" for the duration of a test.
+    Set the GOOGLE_API_KEY environment variable to "sk-google-test" for the duration of a test.
     
-    The original environment is restored after the test completes.
+    This pytest fixture patches os.environ so code executed within the test sees the test API key value.
     """
     with patch.dict(os.environ, {"GOOGLE_API_KEY": "sk-google-test"}):
         yield

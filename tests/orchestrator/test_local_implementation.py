@@ -7,9 +7,9 @@ from lattice_lock.orchestrator.types import APIResponse
 @pytest.fixture
 def mock_local_env():
     """
-    Temporarily sets the CUSTOM_API_URL environment variable to "http://test-local:8000" for the duration of a test.
+    Temporarily sets the CUSTOM_API_URL environment variable for the duration of a test.
     
-    This fixture patches os.environ so tests run with a predictable local API URL and restores the original environment afterwards.
+    Used as a pytest fixture; yields control while CUSTOM_API_URL is set to "http://test-local:8000" and restores the original environment afterwards.
     """
     with patch.dict(os.environ, {"CUSTOM_API_URL": "http://test-local:8000"}):
         yield

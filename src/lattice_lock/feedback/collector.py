@@ -10,6 +10,31 @@ from .schemas import FeedbackCategory, FeedbackItem, FeedbackPriority
 logger = logging.getLogger(__name__)
 
 
+def _run_sync(coro):
+    """
+    Execute an awaitable coroutine from synchronous code.
+    
+    If an asyncio event loop is already running in the current thread, the coroutine is executed in a new thread; otherwise it is run in the current thread. Exceptions raised by the coroutine propagate to the caller.
+    
+    Parameters:
+        coro: An awaitable or coroutine object to execute.
+    
+    Returns:
+        The value returned by the coroutine.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    
+    if loop and loop.is_running():
+        # We're in an async context, create a new thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            future = pool.submit(asyncio.run, coro)
+            return future.result()
+    else:
+        return asyncio.run(coro)
 
 
 class FeedbackCollector:
@@ -34,11 +59,9 @@ class FeedbackCollector:
 
     def _ensure_storage_exists(self) -> None:
         """
-        Ensure the storage directory exists and initialize the storage file.
+        Ensure the storage directory exists and initialize the storage file with an empty JSON array if missing.
         
-        Creates parent directories for the configured storage path if missing and
-        creates the storage file containing an empty JSON array ("[]") when the file
-        does not already exist.
+        If the storage file does not exist, create parent directories as needed and write "[]" to the file.
         """
         if not self.storage_path.parent.exists():
             self.storage_path.parent.mkdir(parents=True, exist_ok=True)
@@ -48,12 +71,12 @@ class FeedbackCollector:
 
     def _load_feedback_sync(self) -> list[FeedbackItem]:
         """
-        Load stored feedback items from the JSON storage file.
+        Load feedback items from the storage file.
         
-        Invalid feedback entries in the file are skipped; if the storage file is missing, empty, or contains invalid JSON, an empty list is returned.
+        Invalid or unparseable items are skipped (errors are logged). If the storage file is missing, empty, or contains invalid JSON, an empty list is returned.
         
         Returns:
-            list[FeedbackItem]: Parsed feedback items; empty list if none could be loaded.
+            list[FeedbackItem]: Parsed feedback items present in storage.
         """
         try:
             if not self.storage_path.exists():
@@ -82,15 +105,13 @@ class FeedbackCollector:
 
     def _save_feedback_sync(self, items: list[FeedbackItem]) -> None:
         """
-        Persist the given feedback items to the collector's storage file as a JSON array.
-        
-        The items are serialized and written to the configured storage path; any error during serialization or file write is logged and propagated.
+        Persist a list of feedback items to the configured storage file as a JSON array.
         
         Parameters:
-            items (list[FeedbackItem]): Feedback items to persist.
+            items (list[FeedbackItem]): Feedback items to persist; each item will be converted to JSON-compatible data before writing.
         
         Raises:
-            Exception: Propagates any exception that occurs during serialization or file writing.
+            Exception: If serialization or writing to the storage file fails.
         """
         try:
             data = [item.model_dump(mode="json") for item in items]
@@ -109,17 +130,17 @@ class FeedbackCollector:
         metadata: dict | None = None,
     ) -> str:
         """
-        Create and persist a new feedback item and return its identifier.
+        Create and persist a new feedback item.
         
         Parameters:
-            content (str): The textual feedback content.
-            category (FeedbackCategory): Category for the feedback; defaults to FeedbackCategory.OTHER.
-            priority (FeedbackPriority): Priority level for the feedback; defaults to FeedbackPriority.MEDIUM.
-            source (str): Origin of the feedback (e.g., "user"); defaults to "user".
-            metadata (dict | None): Optional additional data to store with the feedback.
+            content (str): Text of the feedback.
+            category (FeedbackCategory): Feedback category; defaults to FeedbackCategory.OTHER.
+            priority (FeedbackPriority): Feedback priority level; defaults to FeedbackPriority.MEDIUM.
+            source (str): Origin of the feedback (for example, "user"); defaults to "user".
+            metadata (dict | None): Optional additional metadata to attach to the item.
         
         Returns:
-            feedback_id (str): ID of the created feedback item.
+            str: The newly created feedback item's ID.
         """
         item = FeedbackItem(
             content=content,
@@ -138,10 +159,10 @@ class FeedbackCollector:
 
     def get(self, feedback_id: str) -> FeedbackItem | None:
         """
-        Retrieve a specific feedback item by ID.
+        Retrieve the feedback item with the given ID.
         
         Returns:
-            The matching FeedbackItem, or None if no item has the given id.
+            The FeedbackItem with the matching ID, or `None` if no item matches.
         """
         items = self._load_feedback_sync()
         for item in items:
@@ -153,16 +174,14 @@ class FeedbackCollector:
         self, category: FeedbackCategory | None = None, source: str | None = None
     ) -> list[FeedbackItem]:
         """
-        Return feedback items, optionally filtered by category and/or source.
-        
-        Both filters are applied together when provided (logical AND). If a filter is None, it is not applied.
+        Return feedback items stored in the collector, optionally filtered by category and source.
         
         Parameters:
-            category (FeedbackCategory | None): If provided, only include items whose `category` equals this value.
-            source (str | None): If provided, only include items whose `source` equals this value.
+            category (FeedbackCategory | None): If provided, only include items whose category equals this value.
+            source (str | None): If provided, only include items whose source equals this value.
         
         Returns:
-            list[FeedbackItem]: Feedback items that match the given filters.
+            list[FeedbackItem]: The list of matching feedback items; empty list if none match.
         """
         items = self._load_feedback_sync()
         filtered = items
@@ -176,9 +195,5 @@ class FeedbackCollector:
         return filtered
 
     def clear(self) -> None:
-        """
-        Remove all stored feedback items and persist an empty collection to storage.
-        
-        Primarily intended for use in tests.
-        """
+        """Clear all feedback (primarily for testing)."""
         self._save_feedback_sync([])

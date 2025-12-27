@@ -12,10 +12,12 @@ from lattice_lock.rollback.storage import CheckpointStorage
 @pytest.fixture
 def sample_state():
     """
-    Create a sample RollbackState pre-populated for use in tests.
+    Create a sample RollbackState representing a simple test snapshot.
     
     Returns:
-        RollbackState: A RollbackState with the current timestamp, two example file entries, a simple config mapping, schema version "1.0.0", and description "Test state".
+        RollbackState: Instance with the current timestamp, files set to
+            {'/path/to/file1': 'hash1', '/path/to/file2': 'hash2'},
+            config {'key': 'value'}, schema_version '1.0.0', and description 'Test state'.
     """
     return RollbackState(
         timestamp=time.time(),
@@ -28,13 +30,13 @@ def sample_state():
 @pytest.fixture
 def storage_dir(tmp_path):
     """
-    Create a path for a "checkpoints" directory inside the given temporary directory.
+    Provide a Path for a temporary "checkpoints" directory inside the pytest tmp_path.
     
     Parameters:
-        tmp_path (pathlib.Path): Base temporary directory path provided by the test harness.
+    	tmp_path (pathlib.Path): Base temporary directory provided by pytest.
     
     Returns:
-        pathlib.Path: Path pointing to the "checkpoints" subdirectory under tmp_path.
+    	path (pathlib.Path): Path to the "checkpoints" subdirectory under `tmp_path`.
     """
     return tmp_path / "checkpoints"
 
