@@ -15,65 +15,152 @@ from .state import RollbackState
 @runtime_checkable
 class StorageBackend(Protocol):
     """Protocol for storage backends (Local, S3, etc.)"""
-    def ensure_path(self, path: str): """
-Ensure the filesystem path required for storage exists.
+    def ensure_path(self, path: str): 
+        """
+        Ensure the filesystem path required for storage exists.
 
-If `path` appears to be a file path (has a suffix), its parent directory is created; otherwise `path` itself is created as a directory. Directories are created as needed.
+        If `path` appears to be a file path (has a suffix), its parent directory is created; otherwise `path` itself is created as a directory. Directories are created as needed.
 
-Parameters:
-    path (str): File or directory path to prepare for storage.
-"""
-...
-    def save(self, path: str, content: str | bytes, compressed: bool = True): """
-Save content to the given filesystem path, optionally using gzip compression and ensuring the destination directory exists.
+        Parameters:
+            path (str): File or directory path to prepare for storage.
+        """
+        ...
+    def save(self, path: str, content: str | bytes, compressed: bool = True): 
+        """
+        Save content to the given filesystem path, optionally using gzip compression and ensuring the destination directory exists.
 
-Parameters:
-	path (str): Destination file path. If a file path is provided, its parent directory will be created if missing.
-	content (str | bytes): Data to write; text (str) will be encoded as UTF-8, bytes will be written as-is.
-	compressed (bool): If True, write the data gzip-compressed; otherwise write uncompressed.
-"""
-...
-    def load(self, path: str, compressed: bool = True) -> str | bytes | None: """
-Load and return file content from the backend, optionally treating the file as gzip-compressed.
+        Parameters:
+        	path (str): Destination file path. If a file path is provided, its parent directory will be created if missing.
+        	content (str | bytes): Data to write; text (str) will be encoded as UTF-8, bytes will be written as-is.
+        	compressed (bool): If True, write the data gzip-compressed; otherwise write uncompressed.
+        """
+        ...
+    def load(self, path: str, compressed: bool = True) -> str | bytes | None: 
+        """
+        Load and return file content from the backend, optionally treating the file as gzip-compressed.
 
-Parameters:
-    path (str): Filesystem path to read.
-    compressed (bool): If True, interpret the file as gzip-compressed; otherwise read raw file.
+        Parameters:
+            path (str): Filesystem path to read.
+            compressed (bool): If True, interpret the file as gzip-compressed; otherwise read raw file.
 
-Returns:
-    str | bytes | None: Decoded UTF-8 `str` if the file is textual, raw `bytes` if binary, or `None` if the file does not exist or an I/O error occurs.
-"""
-...
-    def list_files(self, pattern: str) -> list[str]: """
-List filesystem paths matching the given glob pattern.
+        Returns:
+            str | bytes | None: Decoded UTF-8 `str` if the file is textual, raw `bytes` if binary, or `None` if the file does not exist or an I/O error occurs.
+        """
+        ...
+    def list_files(self, pattern: str) -> list[str]: 
+        """
+        List filesystem paths matching the given glob pattern.
 
-Parameters:
-    pattern (str): Glob-style pattern to match files (e.g., '*.json.gz').
+        Parameters:
+            pattern (str): Glob-style pattern to match files (e.g., '*.json.gz').
 
-Returns:
-    list[str]: Sorted list of matching file paths as strings.
-"""
-...
-    def delete(self, path: str) -> bool: """
-Delete the file at the given path.
+        Returns:
+            list[str]: Sorted list of matching file paths as strings.
+        """
+        ...
+    def delete(self, path: str) -> bool: 
+        """
+        Delete the file at the given path.
 
-Parameters:
-    path (str): Filesystem path to remove.
+        Parameters:
+            path (str): Filesystem path to remove.
 
-Returns:
-    bool: `True` if the file was removed, `False` if the path did not exist or removal failed.
-"""
-...
-    def exists(self, path: str) -> bool: """
-Check whether a storage path exists in the backend.
+        Returns:
+            bool: `True` if the file was removed, `False` if the path did not exist or removal failed.
+        """
+        ...
+    def exists(self, path: str) -&gt; bool: 
+        """
+        Check whether a storage path exists in the backend.
 
-Parameters:
-    path (str): The storage path (file or directory) to check.
+        Parameters:
+            path (str): The storage path (file or directory) to check.
 
-Returns:
-    bool: True if the path exists, False otherwise.
-"""
-...
+        Returns:
+            bool: True if the path exists, False otherwise.
+        """
+        ...
+
+
+<details><summary>Prompt To Fix With AI</summary>
+
+`````markdown
+This is a comment left during a code review.
+Path: src/lattice_lock/rollback/storage.py
+Line: 18:76
+
+Comment:
+**syntax:** Protocol method docstrings cannot be placed inline after the signature in Python. This syntax is invalid and will cause the docstrings to be ignored. They should be triple-quoted strings on the line after the method signature.
+
+```suggestion
+    def ensure_path(self, path: str): 
+        """
+        Ensure the filesystem path required for storage exists.
+
+        If `path` appears to be a file path (has a suffix), its parent directory is created; otherwise `path` itself is created as a directory. Directories are created as needed.
+
+        Parameters:
+            path (str): File or directory path to prepare for storage.
+        """
+        ...
+    def save(self, path: str, content: str | bytes, compressed: bool = True): 
+        """
+        Save content to the given filesystem path, optionally using gzip compression and ensuring the destination directory exists.
+
+        Parameters:
+        	path (str): Destination file path. If a file path is provided, its parent directory will be created if missing.
+        	content (str | bytes): Data to write; text (str) will be encoded as UTF-8, bytes will be written as-is.
+        	compressed (bool): If True, write the data gzip-compressed; otherwise write uncompressed.
+        """
+        ...
+    def load(self, path: str, compressed: bool = True) -> str | bytes | None: 
+        """
+        Load and return file content from the backend, optionally treating the file as gzip-compressed.
+
+        Parameters:
+            path (str): Filesystem path to read.
+            compressed (bool): If True, interpret the file as gzip-compressed; otherwise read raw file.
+
+        Returns:
+            str | bytes | None: Decoded UTF-8 `str` if the file is textual, raw `bytes` if binary, or `None` if the file does not exist or an I/O error occurs.
+        """
+        ...
+    def list_files(self, pattern: str) -> list[str]: 
+        """
+        List filesystem paths matching the given glob pattern.
+
+        Parameters:
+            pattern (str): Glob-style pattern to match files (e.g., '*.json.gz').
+
+        Returns:
+            list[str]: Sorted list of matching file paths as strings.
+        """
+        ...
+    def delete(self, path: str) -> bool: 
+        """
+        Delete the file at the given path.
+
+        Parameters:
+            path (str): Filesystem path to remove.
+
+        Returns:
+            bool: `True` if the file was removed, `False` if the path did not exist or removal failed.
+        """
+        ...
+    def exists(self, path: str) -&gt; bool: 
+        """
+        Check whether a storage path exists in the backend.
+
+        Parameters:
+            path (str): The storage path (file or directory) to check.
+
+        Returns:
+            bool: True if the path exists, False otherwise.
+        """
+        ...
+
+
+How can I resolve this? If you propose a fix, please make it concise.
 
 
 class FileBackend:
