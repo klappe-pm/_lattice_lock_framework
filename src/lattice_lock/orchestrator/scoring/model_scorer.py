@@ -6,11 +6,13 @@ This module provides:
 """
 
 import logging
-from pathlib import Path
 import yaml
+from pathlib import Path
 
-from ..types import ModelCapabilities, TaskRequirements
-from ..analysis.analyzer import TaskAnalysis
+from lattice_lock.config import AppConfig
+
+from ..types import ModelCapabilities, TaskRequirements, TaskType
+from ..analysis.types import TaskAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +22,21 @@ class ModelScorer:
     Scores models based on their capabilities and task requirements.
     """
 
-    def __init__(self, config_path: str | None = None):
+    def __init__(self, config: AppConfig | None = None, config_path: str | None = None):
+        """
+        Initialize ModelScorer.
+        
+        Args:
+            config: AppConfig instance
+            config_path: Optional path to scorer config file
+        """
+        self.app_config = config
+        
         if config_path is None:
             # Look for scorer_config.yaml in the parent directory (orchestrator)
-            # assuming this file is in orchestrator/scoring/model_scorer.py
+            # or in current directory if refactored location differs.
+            # Assuming file is in relevant path.
+            # Original code looked in parent.parent
             config_path = str(Path(__file__).parent.parent / "scorer_config.yaml")
         
         self.config_path = config_path
@@ -32,10 +45,15 @@ class ModelScorer:
     def _load_config(self):
         """Load scoring weights from YAML config."""
         try:
-            with open(self.config_path) as f:
-                self.config = yaml.safe_load(f)
+             # Use safe open
+            if Path(self.config_path).exists():
+                with open(self.config_path) as f:
+                    self.config = yaml.safe_load(f)
+            else:
+                 raise FileNotFoundError(f"{self.config_path} not found")
+
         except Exception as e:
-            logger.error(f"Failed to load scorer config from {self.config_path}: {e}. Using hardcoded fallbacks.")
+            logger.warning(f"Failed to load scorer config from {self.config_path}: {e}. Using hardcoded fallbacks.")
             self.config = {
                 "priority_weights": {
                     "quality": {"reasoning": 0.3, "coding": 0.2, "base": 0.5},
