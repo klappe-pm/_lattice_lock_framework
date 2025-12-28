@@ -14,7 +14,7 @@ REQUIRED_PACKAGES = [
     "lattice_lock.exceptions",
 ]
 
-def check_pip_dependencies():
+def check_pip_dependencies() -> bool:
     """
     Verify that installed packages have compatible dependencies by running `pip check`.
     
@@ -31,8 +31,11 @@ def check_pip_dependencies():
     except subprocess.CalledProcessError:
         print("❌ pip check failed")
         return False
+    except Exception as e:
+        print(f"❌ pip check failed: {e}")
+        return False
 
-def check_imports():
+def check_imports() -> bool:
     """
     Check that each package listed in REQUIRED_PACKAGES can be imported.
     
@@ -52,7 +55,7 @@ def check_imports():
             all_passed = False
     return all_passed
 
-def main():
+def main() -> None:
     """
     Run dependency verification and exit the process with a success or failure code.
     

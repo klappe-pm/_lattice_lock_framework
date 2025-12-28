@@ -10,6 +10,8 @@ from .core import ModelOrchestrator
 from .registry import ModelRegistry
 from .scorer import ModelScorer, TaskAnalyzer
 from .types import APIResponse, ModelProvider, TaskType
+from .consensus import ConsensusOrchestrator
+from .chain import ChainOrchestrator
 
 
 def _get_version() -> str:

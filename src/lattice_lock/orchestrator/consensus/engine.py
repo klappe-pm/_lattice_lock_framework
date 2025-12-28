@@ -1,38 +1,102 @@
+import asyncio
 import logging
-import random
+from typing import Any, Dict, List, Optional
+
+from lattice_lock.orchestrator.core import ModelOrchestrator
+from lattice_lock.orchestrator.types import APIResponse, TaskType
 
 logger = logging.getLogger(__name__)
 
-
-class ConsensusEngine:
+class ConsensusOrchestrator:
     """
-    Executes multi-model consensus strategies.
-    dictating agreement between models.
+    Orchestrates multiple models to reach a consensus or synthesize a better result.
     """
 
-    def execute_voting(self, prompt: str, models: list[str]) -> str:
+    def __init__(self, orchestrator: Optional[ModelOrchestrator] = None):
+        self.orchestrator = orchestrator or ModelOrchestrator()
+
+    async def run_consensus(
+        self, 
+        prompt: str, 
+        num_models: int = 3, 
+        synthesizer_model_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Queries multiple models and returns the majority vote.
-        Simple logic for prototype; relies on mock responses.
+        Execute consensus flow:
+        1. Analyze task.
+        2. Select top N models.
+        3. Execute in parallel.
+        4. Synthesize results using a strong model.
         """
-        logger.info(f"Executing consensus vote with models: {models}")
-        votes = []
+        # 1. Analyze
+        requirements = await self.orchestrator.analyzer.analyze_async(prompt)
+        
+        # 2. Select top N models
+        # Heuristic: get all suitable models and sort by score
+        all_models = []
+        for m_id, m_cap in self.orchestrator.registry.models.items():
+            score = self.orchestrator.scorer.score(m_cap, requirements)
+            if score > 0:
+                all_models.append((m_id, m_cap, score))
+        
+        all_models.sort(key=lambda x: x[2], reverse=True)
+        top_models = all_models[:num_models]
+        
+        if not top_models:
+            raise RuntimeError("No suitable models found for consensus")
 
-        for model in models:
-            # In real system, this calls orchestrator.generate(model=model)
-            logger.debug(f"Querying {model}...")
+        # 3. Execute in parallel
+        logger.info(f"Running parallel consensus with {len(top_models)} models")
+        tasks = []
+        for m_id, m_cap, _ in top_models:
+            tasks.append(self.orchestrator.route_request(prompt, model_id=m_id))
+        
+        raw_responses = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        valid_responses = []
+        for i, resp in enumerate(raw_responses):
+            m_id = top_models[i][0]
+            if isinstance(resp, Exception):
+                logger.error(f"Model {m_id} failed during consensus: {resp}")
+            else:
+                valid_responses.append(resp)
+        
+        if not valid_responses:
+            raise RuntimeError("All models failed during consensus execution")
 
-            # Mock Logic for demonstration
-            # Deterministic hash of prompt + model to simulate consistency
-            seed = hash(prompt + model)
-            random.seed(seed)
-            vote = "Approved" if random.random() > 0.3 else "Rejected"
-            votes.append(vote)
+        # 4. Synthesize
+        # Prompt for synthesis
+        synthesis_prompt = "I have polled multiple AI models with the following prompt:\n\n"
+        synthesis_prompt += f"PROMPT: {prompt}\n\n"
+        synthesis_prompt += "Here are their responses:\n\n"
+        
+        for i, resp in enumerate(valid_responses):
+            synthesis_prompt += f"--- RESPONSE FROM {resp.model} ---\n"
+            synthesis_prompt += f"{resp.content}\n\n"
+            
+        synthesis_prompt += "Please synthesize these responses into a single, high-quality, and comprehensive answer. "
+        synthesis_prompt += "If there are contradictions, call them out and try to find the most accurate perspective."
 
-        tally = {v: votes.count(v) for v in set(votes)}
-        winner = max(tally, key=tally.get) if tally else "Indeterminate"
+        logger.info("Synthesizing results...")
+        # Use a strong model for synthesis if not specified
+        if not synthesizer_model_id:
+            # Re-run selection for the synthesis task
+            synth_requirements = await self.orchestrator.analyzer.analyze_async(synthesis_prompt)
+            synth_requirements.task_type = TaskType.REASONING # Force reasoning for synthesis
+            synthesizer_model_id = self.orchestrator.selector.select_best_model(synth_requirements)
 
-        confidence = tally[winner] / len(votes) if votes else 0.0
-        logger.info(f"Consensus reached: {winner} (Confidence: {confidence:.2f})")
+        synthesis_response = await self.orchestrator.route_request(
+            prompt=synthesis_prompt,
+            model_id=synthesizer_model_id
+        )
 
-        return winner
+        return {
+            "synthesis": synthesis_response.content,
+            "synthesizer_model": synthesis_response.model,
+            "individual_responses": [
+                {"model": r.model, "content": r.content, "usage": r.usage}
+                for r in valid_responses
+            ],
+            "total_cost": sum(r.usage.cost for r in valid_responses if hasattr(r.usage, "cost")) + 
+                         (synthesis_response.usage.cost if hasattr(synthesis_response.usage, "cost") else 0.0)
+        }
