@@ -267,7 +267,6 @@ class TaskAnalyzer:
             scores[TaskType.VISION] += 0.8
 
         # Stage 2: Semantic Router if heuristics are uncertain
-        max(scores.values()) if scores.values() else 0.0
         # No async semantic call in sync method; return heuristic result as is.
 
         # 5. Determine priority
