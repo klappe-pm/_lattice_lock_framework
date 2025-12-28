@@ -222,24 +222,6 @@ Based on the comprehensive code review, the following recommendations are provid
 
 ## Integration Architecture
 
-```
-                                    +-------------------+
-                                    |   CLI Interface   |
-                                    | (lattice-lock)    |
-                                    +--------+----------+
-                                             |
-              +------------------------------+------------------------------+
-              |                              |                              |
-    +---------v---------+         +----------v----------+         +--------v--------+
-    | Model Orchestrator|         | Schema Compiler     |         | Governance      |
-    | (route_request)   |         | (compile_lattice)   |         | (Sheriff/Gauntlet)|
-    +---------+---------+         +----------+----------+         +--------+--------+
-              |                              |                              |
-    +---------v---------+         +----------v----------+         +--------v--------+
-    | Provider Clients  |         | Code Generators     |         | Rollback System |
-    | (8 providers)     |         | (Pydantic/SQLModel) |         | (Checkpoint)    |
-    +-------------------+         +---------------------+         +-----------------+
-```
 
 ## Environment Variables
 
