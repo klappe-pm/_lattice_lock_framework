@@ -16,7 +16,7 @@ from .local import LocalModelClient
 from .openai import OpenAIAPIClient
 from .xai import GrokAPIClient
 
-# Alias for backward compatibility (xAI rebranded from Grok)
+# Backward compatibility alias for legacy imports using XAIAPIClient
 XAIAPIClient = GrokAPIClient
 
 __all__ = [
