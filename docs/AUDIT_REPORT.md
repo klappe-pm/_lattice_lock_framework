@@ -144,11 +144,10 @@ Found 950 errors.
 [*] 780 fixable with the `--fix` option
 ```
 
+Other NotImplementedError references are in tests/docs (expected behavior validation).
+
 ### After PR #118 Changes
-```
-Found 137 errors.
-[*] 110 fixable with the `--fix` option
-```
+
 
 ### Error Categories
 
