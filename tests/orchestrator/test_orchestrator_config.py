@@ -60,23 +60,27 @@ def test_orchestrator_loads_config():
         # Let's see how we can inject it.
         # Agent class has DEFAULT_TOOL_PROFILES_PATH class attribute.
 
+        original_path = PromptArchitectOrchestrator.DEFAULT_TOOL_PROFILES_PATH
         PromptArchitectOrchestrator.DEFAULT_TOOL_PROFILES_PATH = (
             config_path  # Monkeypatch based on local file for test
         )
 
-        orchestrator = PromptArchitectOrchestrator()
-        # Force load
-        _ = orchestrator.tool_matcher
+        try:
+            orchestrator = PromptArchitectOrchestrator()
+            # Force load
+            _ = orchestrator.tool_matcher
 
-        devin_profile = orchestrator.tool_matcher.profiles["devin"]
+            devin_profile = orchestrator.tool_matcher.profiles["devin"]
 
-        has_examples = False
-        for pattern in devin_profile.preferred_files:
-            if "examples/*" in pattern:
-                has_examples = True
-                break
+            has_examples = False
+            for pattern in devin_profile.preferred_files:
+                if "examples/*" in pattern:
+                    has_examples = True
+                    break
 
-        assert has_examples, "Configured orchestrator SHOULD own examples"
+            assert has_examples, "Configured orchestrator SHOULD own examples"
+        finally:
+            PromptArchitectOrchestrator.DEFAULT_TOOL_PROFILES_PATH = original_path
 
     finally:
         Path(config_path).unlink()

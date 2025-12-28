@@ -68,6 +68,11 @@ class MemoryAuthStorage:
         return [cls._api_key_metadata[kid] for kid in key_ids if kid in cls._api_key_metadata]
 
     @classmethod
+    def clear_revoked_tokens(cls):
+        """Clear revoked tokens (test utility)."""
+        cls._revoked_tokens.clear()
+
+    @classmethod
     def clear(cls):
         """Reset all storage."""
         cls._users.clear()

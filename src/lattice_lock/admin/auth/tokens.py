@@ -115,4 +115,4 @@ def is_token_revoked(jti: str) -> bool:
 
 def clear_revoked_tokens() -> None:
     """Clear revoked tokens (test utility)."""
-    MemoryAuthStorage._revoked_tokens.clear()
+    MemoryAuthStorage.clear_revoked_tokens()

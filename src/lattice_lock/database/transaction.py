@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class TransactionError(LatticeError):
     """Error during transaction execution."""
 
-    pass
+    error_code: str = "LL-DB-TX-001"
 
 
 @asynccontextmanager

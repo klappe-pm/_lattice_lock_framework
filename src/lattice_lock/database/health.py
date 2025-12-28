@@ -31,5 +31,9 @@ async def check_database_health() -> dict[str, Any]:
                 "connections_in_pool": 1,  # Placeholder for actual metrics
             }
     except Exception as e:
-        logger.error(f"Database health check failed: {str(e)}")
-        return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
+        logger.error(f"Database health check failed: {str(e)}", exc_info=True)
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": "connection_failed",
+        }

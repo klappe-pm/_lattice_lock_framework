@@ -7,6 +7,12 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
 
 from lattice_lock.config import AppConfig
+from lattice_lock.orchestrator.exceptions import (
+    AuthenticationError,
+    ProviderConnectionError,
+    RateLimitError,
+    ServerError,
+)
 
 if TYPE_CHECKING:
     import aiohttp
@@ -155,12 +161,21 @@ class BaseAPIClient(ABC):
                     error_msg = str(data)
                     if isinstance(data, dict):
                         error_msg = data.get("error", {}).get("message", str(data))
+
+                    if response.status == 401 or response.status == 403:
+                        raise AuthenticationError(error_msg, status_code=response.status)
+                    if response.status == 429:
+                        raise RateLimitError(error_msg, status_code=response.status)
+                    if response.status >= 500:
+                        raise ServerError(error_msg, status_code=response.status)
                     raise Exception(f"Provider error {response.status}: {error_msg}")
 
                 return data, latency_ms
+        except (AuthenticationError, RateLimitError, ServerError) as e:
+            raise e
         except Exception as e:
             # Rethrow as specific error types would be better, but generic for now
-            raise e
+            raise ProviderConnectionError(str(e)) from e
 
     @abstractmethod
     async def health_check(self) -> bool:

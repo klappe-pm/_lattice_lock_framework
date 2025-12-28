@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class DatabaseConnectionError(LatticeError):
     """Error connecting to database."""
 
-    pass
+    error_code: str = "LL-DB-CONN-001"
 
 
 class DatabaseManager:

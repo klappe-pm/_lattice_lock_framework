@@ -125,15 +125,17 @@ class ModelScorer:
             score += secondary_match * aw.get("secondary_task", 0.1)
 
         priority = analysis.features.get("priority", "balanced")
-        self.config["priority_weights"].get(priority, self.config["priority_weights"]["balanced"])
+        weights = self.config["priority_weights"].get(
+            priority, self.config["priority_weights"]["balanced"]
+        )
 
         if priority == "quality":
-            score += (model.reasoning_score / 100.0) * 0.1
+            score += (model.reasoning_score / 100.0) * weights.get("reasoning", 0.3)
         elif priority == "speed":
-            score += (model.speed_rating / 10.0) * 0.2
+            score += (model.speed_rating / 10.0) * weights.get("speed", 0.5)
         elif priority == "cost":
             cost_factor = 1.0 - (model.blended_cost / self.config.get("max_blended_cost", 60.0))
-            score += max(0, cost_factor) * 0.2
+            score += max(0, cost_factor) * weights.get("cost", 0.5)
 
         if analysis.complexity == "complex":
             score += (model.reasoning_score / 100.0) * aw.get("complexity_boost", 0.1)

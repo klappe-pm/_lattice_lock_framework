@@ -2,7 +2,7 @@
 
 import pytest
 
-from lattice_lock.errors.classification import ErrorContext
+from lattice_lock.errors.classification import Category, ErrorContext, Recoverability, Severity
 from lattice_lock.errors.middleware import (
     ErrorMetrics,
     RetryConfig,
@@ -95,7 +95,6 @@ class TestErrorMetrics:
 
     def test_record_error(self):
         """Test error recording."""
-        from lattice_lock.errors.classification import Category, Recoverability, Severity
 
         metrics = ErrorMetrics()
         context = ErrorContext(
@@ -113,7 +112,6 @@ class TestErrorMetrics:
 
     def test_error_rate_calculation(self):
         """Test error rate is calculated correctly."""
-        from lattice_lock.errors.classification import Category, Recoverability, Severity
 
         metrics = ErrorMetrics()
         context = ErrorContext(
@@ -132,7 +130,6 @@ class TestErrorMetrics:
 
     def test_get_summary(self):
         """Test metrics summary."""
-        from lattice_lock.errors.classification import Category, Recoverability, Severity
 
         metrics = ErrorMetrics()
         context = ErrorContext(
