@@ -78,9 +78,7 @@ class RollbackTrigger:
 
                 if state:
                     # Pass checkpoint_id for file restoration
-                    restore_checkpoint_id = checkpoint_id or (
-                        checkpoints[0] if checkpoints else None
-                    )
+                    restore_checkpoint_id = checkpoint_id or latest_id
                     success = self._restore_state(state, restore_checkpoint_id)
                 else:
                     logger.error("No checkpoint found to restore.")
