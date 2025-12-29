@@ -3,19 +3,20 @@ Task Analyzer v2 for the Lattice Lock Orchestrator.
 
 This module provides:
 - TaskAnalyzer: Analyzes prompts using hybrid signal processing
-- TaskAnalysis: Comprehensive analysis result with multi-label support
 """
 
 import hashlib
 import logging
 import re
 from collections import OrderedDict
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from lattice_lock.config import AppConfig
+
 from ..types import TaskRequirements, TaskType
 from .semantic_router import SemanticRouter
+from .types import TaskAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -25,47 +26,36 @@ def _hash_prompt(prompt: str) -> str:
     return hashlib.sha256(prompt.encode()).hexdigest()
 
 
-@dataclass
-class TaskAnalysis:
-    """
-    Comprehensive task analysis result with multi-label support.
-
-    Attributes:
-        primary_type: The most likely task type
-        secondary_types: Additional relevant task types sorted by confidence
-        scores: Raw confidence scores for each task type (0.0-1.0)
-        features: Extracted features from the prompt
-        complexity: Estimated complexity ("simple", "moderate", "complex")
-        min_context_window: Minimum recommended context window
-    """
-
-    primary_type: TaskType
-    secondary_types: list[TaskType] = field(default_factory=list)
-    scores: dict[TaskType, float] = field(default_factory=dict)
-    features: dict[str, Any] = field(default_factory=dict)
-    complexity: str = "moderate"
-    min_context_window: int = 4000
-
-
 class TaskAnalyzer:
     """
     Analyzes prompts to determine task requirements using hybrid signal processing.
     """
 
-    DEFAULT_CACHE_SIZE = 1024
-
     def __init__(
         self,
-        cache_size: int = DEFAULT_CACHE_SIZE,
+        config: AppConfig | None = None,
         router_client: Any = None,
         patterns_path: Path | None = None,
     ):
+        """
+        Initialize the TaskAnalyzer.
+        
+        Args:
+            config: Application configuration (for cache size etc)
+            router_client: Client for semantic router (LLM)
+            patterns_path: Path to patterns.yaml
+        """
+        self.config = config
+        
+        # Configure cache
+        cache_size = config.analyzer_cache_size if config else 1024
+        
         self._cache: OrderedDict[str, TaskAnalysis] = OrderedDict()
         self._cache_size = cache_size
         self._cache_hits = 0
         self._cache_misses = 0
         self._router = SemanticRouter(router_client) if router_client else None
-
+        
         if patterns_path is None:
             patterns_path = Path(__file__).parent / "patterns.yaml"
         self._patterns_path = patterns_path
@@ -75,14 +65,13 @@ class TaskAnalyzer:
         """Load patterns from YAML and compile regexes."""
         keyword_patterns = {}
         regex_patterns = {}
-
+        
         try:
             import yaml
-
             if path.exists():
-                with open(path) as f:
+                with open(path, "r") as f:
                     data = yaml.safe_load(f)
-
+                    
                 # Load keywords
                 raw_keywords = data.get("keyword_patterns", {})
                 for task_name, patterns in raw_keywords.items():
@@ -106,12 +95,12 @@ class TaskAnalyzer:
                                 logger.error(f"Invalid regex pattern '{pattern_str}': {e}")
                     except KeyError:
                         logger.warning(f"Unknown TaskType in patterns.yaml: {task_name}")
-
+                        
         except ImportError:
             logger.warning("PyYAML not installed. TaskAnalyzer functionality will be limited.")
         except Exception as e:
             logger.error(f"Failed to load patterns from {path}: {e}")
-
+            
         return keyword_patterns, regex_patterns
 
     def analyze(self, prompt: str) -> TaskRequirements:
@@ -198,9 +187,7 @@ class TaskAnalyzer:
         # Stage 2: Semantic Router if heuristics are uncertain
         max_heuristic_score = max(analysis.scores.values()) if analysis.scores.values() else 0.0
         if max_heuristic_score < 0.5 and len(prompt) > 10 and self._router:
-            logger.info(
-                f"Heuristics uncertain (score={max_heuristic_score:.2f}). Engaging Semantic Router."
-            )
+            logger.info(f"Heuristics uncertain (score={max_heuristic_score:.2f}). Engaging Semantic Router.")
             semantic_type = await self._router.route(prompt)
             if semantic_type != TaskType.GENERAL:
                 # Boost the semantic result
@@ -265,9 +252,6 @@ class TaskAnalyzer:
 
         if features["requires_vision"]:
             scores[TaskType.VISION] += 0.8
-
-        # Stage 2: Semantic Router if heuristics are uncertain
-        # No async semantic call in sync method; return heuristic result as is.
 
         # 5. Determine priority
         if "fast" in prompt_lower or "quick" in prompt_lower or "urgent" in prompt_lower:
