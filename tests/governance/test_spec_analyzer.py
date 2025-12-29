@@ -32,7 +32,7 @@ from lattice_lock.agents.prompt_architect.subagents.parsers.spec_parser import (
 )
 from lattice_lock.agents.prompt_architect.subagents.spec_analyzer import SpecAnalyzer
 
-# LLMClient is not yet implemented - tests that require it will be skipped
+# LLMClient import for testing
 try:
     from lattice_lock.agents.prompt_architect.subagents.spec_analyzer import LLMClient
 except ImportError:
@@ -561,7 +561,7 @@ class TestDetectParser:
         assert isinstance(parser, MarkdownSpecParser)
 
 
-@pytest.mark.skipif(LLMClient is None, reason="LLMClient not yet implemented")
+# LLMClient is fully implemented - tests run normally
 class TestLLMClient:
     """Tests for LLMClient."""
 

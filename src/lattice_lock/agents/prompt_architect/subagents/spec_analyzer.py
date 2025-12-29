@@ -201,8 +201,8 @@ class SpecAnalyzer:
                     loaded_config = yaml.safe_load(f)
                     if loaded_config:
                         default_config.update(loaded_config)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to load config from {config_path}: {e}")
 
         return default_config
 
