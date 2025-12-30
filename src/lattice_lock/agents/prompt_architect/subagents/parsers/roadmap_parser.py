@@ -1,7 +1,10 @@
+import logging
 import re
 from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class Task(BaseModel):
@@ -220,11 +223,27 @@ class WorkBreakdownParser(BaseRoadmapParser):
 
 class GanttParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
-        # Placeholder for Gantt chart parsing
+        """Parse Gantt chart format content.
+
+        Note: Gantt chart parsing is not yet implemented.
+        Returns an empty RoadmapStructure.
+        """
+        logger.warning(
+            "GanttParser.parse() called but Gantt chart parsing is not yet implemented. "
+            "Returning empty RoadmapStructure."
+        )
         return RoadmapStructure()
 
 
 class KanbanParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
-        # Placeholder for Kanban board parsing
+        """Parse Kanban board format content.
+
+        Note: Kanban board parsing is not yet implemented.
+        Returns an empty RoadmapStructure.
+        """
+        logger.warning(
+            "KanbanParser.parse() called but Kanban board parsing is not yet implemented. "
+            "Returning empty RoadmapStructure."
+        )
         return RoadmapStructure()

@@ -95,8 +95,6 @@ class TypeHintRule(Rule):
                 )
         return violations
 
-        return violations
-
 
 class VersionComplianceRule(Rule):
     """Enforces version compliance checks (placeholder)."""

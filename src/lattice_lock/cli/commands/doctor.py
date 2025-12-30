@@ -224,8 +224,18 @@ def _check_git() -> CheckResult:
                 passed=True,
                 message=version_str,
             )
-    except Exception:
-        pass
+    except subprocess.TimeoutExpired:
+        return CheckResult(
+            name="Git",
+            passed=False,
+            message="Git version check timed out",
+        )
+    except Exception as e:
+        return CheckResult(
+            name="Git",
+            passed=False,
+            message=f"Git version check failed: {str(e)}",
+        )
 
     return CheckResult(
         name="Git",

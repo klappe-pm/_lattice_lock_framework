@@ -1,6 +1,7 @@
 """
 This module handles rollback triggers and execution hooks.
 """
+
 import logging
 import subprocess
 from collections.abc import Callable
@@ -103,23 +104,42 @@ class RollbackTrigger:
     def _restore_state(self, state: RollbackState) -> bool:
         """
         Restore the system state from the given RollbackState.
+
+        Uses CheckpointManager.restore_file() to restore each file from the checkpoint.
         """
         try:
-            # Restore files
-            # In a real implementation, we would copy files from backup or reverse changes
-            # For now, we'll just log it as we don't have the full file system control here
-            # and the prompt focuses on the trigger system.
-            # However, to be useful, we should at least pretend to do something.
             logger.info(f"Restoring state from timestamp {state.timestamp}")
 
-            # Mock restoration of files
-            for file_path, file_hash in state.files.items():
-                logger.debug(f"Restoring file: {file_path} (hash: {file_hash})")
+            # Get the checkpoint ID from the state
+            checkpoint_id = getattr(state, "checkpoint_id", None)
+            if not checkpoint_id:
+                # Try to find checkpoint by timestamp
+                checkpoints = self.checkpoint_manager.list_checkpoints()
+                for cp_id in checkpoints:
+                    cp = self.checkpoint_manager.get_checkpoint(cp_id)
+                    if cp and cp.timestamp == state.timestamp:
+                        checkpoint_id = cp_id
+                        break
 
-            # Restore config
+            if not checkpoint_id:
+                logger.error("Could not determine checkpoint ID for state restoration")
+                return False
+
+            # Restore each file using CheckpointManager
+            restore_failures = []
+            for file_path in state.files:
+                logger.debug(f"Restoring file: {file_path}")
+                if not self.checkpoint_manager.restore_file(checkpoint_id, file_path):
+                    logger.warning(f"Failed to restore file: {file_path}")
+                    restore_failures.append(file_path)
+
+            if restore_failures:
+                logger.warning(f"Some files could not be restored: {restore_failures}")
+
+            # Log config restoration (config is typically in-memory, not file-based)
             logger.debug(f"Restoring config: {state.config}")
 
-            return True
+            return len(restore_failures) == 0
         except Exception as e:
             logger.error(f"Failed to restore state: {e}")
             return False
