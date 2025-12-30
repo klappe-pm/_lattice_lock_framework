@@ -1,10 +1,7 @@
-import logging
 import re
 from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, Field
-
-logger = logging.getLogger(__name__)
 
 
 class Task(BaseModel):
@@ -223,27 +220,29 @@ class WorkBreakdownParser(BaseRoadmapParser):
 
 class GanttParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
-        """Parse Gantt chart format content.
-
-        Note: Gantt chart parsing is not yet implemented.
-        Returns an empty RoadmapStructure.
         """
-        logger.warning(
-            "GanttParser.parse() called but Gantt chart parsing is not yet implemented. "
-            "Returning empty RoadmapStructure."
+        Parse Gantt chart format roadmaps.
+
+        Raises:
+            NotImplementedError: Gantt chart parsing is not yet implemented.
+                Use WorkBreakdownParser for WBS markdown format instead.
+        """
+        raise NotImplementedError(
+            "Gantt chart parsing is not yet implemented. "
+            "Use WorkBreakdownParser for WBS markdown format instead."
         )
-        return RoadmapStructure()
 
 
 class KanbanParser(BaseRoadmapParser):
     def parse(self, content: str) -> RoadmapStructure:
-        """Parse Kanban board format content.
-
-        Note: Kanban board parsing is not yet implemented.
-        Returns an empty RoadmapStructure.
         """
-        logger.warning(
-            "KanbanParser.parse() called but Kanban board parsing is not yet implemented. "
-            "Returning empty RoadmapStructure."
+        Parse Kanban board format roadmaps.
+
+        Raises:
+            NotImplementedError: Kanban board parsing is not yet implemented.
+                Use WorkBreakdownParser for WBS markdown format instead.
+        """
+        raise NotImplementedError(
+            "Kanban board parsing is not yet implemented. "
+            "Use WorkBreakdownParser for WBS markdown format instead."
         )
-        return RoadmapStructure()

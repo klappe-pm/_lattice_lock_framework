@@ -1,10 +1,10 @@
 import logging
-from typing import Dict
 
-from lattice_lock.orchestrator.providers import get_api_client, ProviderUnavailableError
+from lattice_lock.orchestrator.providers import ProviderUnavailableError, get_api_client
 from lattice_lock.orchestrator.providers.base import BaseAPIClient
 
 logger = logging.getLogger(__name__)
+
 
 class ClientPool:
     """
@@ -13,7 +13,7 @@ class ClientPool:
     """
 
     def __init__(self):
-        self._clients: Dict[str, BaseAPIClient] = {}
+        self._clients: dict[str, BaseAPIClient] = {}
 
     def get_client(self, provider: str) -> BaseAPIClient:
         """
@@ -43,14 +43,16 @@ class ClientPool:
         """Close all initialized clients."""
         for name, client in self._clients.items():
             try:
-                # Assuming clients might have a close method in the future, 
+                # Assuming clients might have a close method in the future,
                 # strictly speaking BaseAPIClient doesn't mandate it yet but good practice.
                 if hasattr(client, "close"):
-                    if hasattr(client.close, "__call__") and callable(client.close):
-                         if hasattr(client.close, "__await__") or logging.iscoroutinefunction(client.close):
-                             await client.close()
-                         else:
-                             client.close()
+                    if callable(client.close) and callable(client.close):
+                        if hasattr(client.close, "__await__") or logging.iscoroutinefunction(
+                            client.close
+                        ):
+                            await client.close()
+                        else:
+                            client.close()
             except Exception as e:
                 logger.warning(f"Error closing client {name}: {e}")
         self._clients.clear()

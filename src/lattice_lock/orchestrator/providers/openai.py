@@ -1,6 +1,7 @@
 """
 OpenAI API Provider
 """
+
 import json
 import logging
 import os
@@ -29,8 +30,7 @@ class OpenAIAPIClient(BaseAPIClient):
         """Validate OpenAI API key is present."""
         if not self.api_key:
             raise ProviderUnavailableError(
-                provider=self.PROVIDER_NAME,
-                reason="OPENAI_API_KEY environment variable not set"
+                provider=self.PROVIDER_NAME, reason="OPENAI_API_KEY environment variable not set"
             )
 
     async def health_check(self) -> bool:
@@ -43,10 +43,7 @@ class OpenAIAPIClient(BaseAPIClient):
             return True
         except Exception as e:
             logger.error(f"OpenAI health check failed: {e}")
-            raise ProviderUnavailableError(
-                provider=self.PROVIDER_NAME,
-                reason=str(e)
-            )
+            raise ProviderUnavailableError(provider=self.PROVIDER_NAME, reason=str(e))
 
     async def chat_completion(
         self,
@@ -60,26 +57,15 @@ class OpenAIAPIClient(BaseAPIClient):
     ) -> APIResponse:
         """Send chat completion request to OpenAI"""
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
         # Convert messages to dict if they aren't already (though types says they are)
         # Ensure we pass strings for content
         clean_messages = []
         for msg in messages:
-            clean_messages.append({
-                "role": msg["role"],
-                "content": str(msg["content"])
-            })
+            clean_messages.append({"role": msg["role"], "content": str(msg["content"])})
 
-        payload = {
-            "model": model, 
-            "messages": clean_messages, 
-            "temperature": temperature, 
-            **kwargs
-        }
+        payload = {"model": model, "messages": clean_messages, "temperature": temperature, **kwargs}
 
         if max_tokens:
             payload["max_tokens"] = max_tokens
@@ -89,10 +75,7 @@ class OpenAIAPIClient(BaseAPIClient):
             payload["tool_choice"] = tool_choice
 
         data, latency_ms = await self._make_request(
-            "POST", 
-            f"{self.BASE_URL}/chat/completions", 
-            headers, 
-            payload
+            "POST", f"{self.BASE_URL}/chat/completions", headers, payload
         )
 
         response_content = None

@@ -11,18 +11,18 @@ function App() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host || 'localhost:8080';
     // Use the dev server proxy if on localhost:5173, else use relative
-    const wsUrl = import.meta.env.DEV 
-      ? `ws://localhost:8080/dashboard/live` 
+    const wsUrl = import.meta.env.DEV
+      ? `ws://localhost:8080/dashboard/live`
       : `${protocol}//${host}/dashboard/live`;
 
     const connect = () => {
       ws.current = new WebSocket(wsUrl);
-      
+
       ws.current.onopen = () => {
         console.log('Connected');
         setConnected(true);
       };
-      
+
       ws.current.onclose = () => {
         console.log('Disconnected');
         setConnected(false);
@@ -32,7 +32,7 @@ function App() {
       ws.current.onmessage = (event) => {
         if (event.data === 'ping') { ws.current.send('pong'); return; }
         if (event.data === 'pong') return;
-        
+
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'projects_update') {
@@ -75,7 +75,7 @@ function App() {
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-semibold text-lg">{p.name}</h3>
                 <span className={`px-2 py-0.5 rounded text-xs uppercase ${
-                  p.status === 'healthy' ? 'bg-green-100 text-green-700' : 
+                  p.status === 'healthy' ? 'bg-green-100 text-green-700' :
                   p.status === 'error' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                 }`}>
                   {p.status}

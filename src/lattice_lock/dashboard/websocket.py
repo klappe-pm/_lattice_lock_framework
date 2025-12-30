@@ -356,8 +356,8 @@ class WebSocketManager:
         for info in list(self._connections.values()):
             try:
                 await info.websocket.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error closing WebSocket: {e}")
 
         self._connections.clear()
         logger.info("All WebSocket connections closed")

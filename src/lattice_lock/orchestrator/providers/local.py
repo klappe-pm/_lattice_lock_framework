@@ -1,12 +1,12 @@
 """
 Local Model Provider (Ollama/vLLM)
 """
+
 import json
 import logging
 import os
 from typing import Any
 
-import aiohttp
 from lattice_lock.config import AppConfig
 from lattice_lock.exceptions import ProviderUnavailableError
 from lattice_lock.orchestrator.types import APIResponse, FunctionCall
@@ -44,7 +44,9 @@ class LocalModelClient(BaseAPIClient):
                 await self._make_request("GET", f"{self.base_url.replace('/v1', '')}/api/tags")
                 return True
             except Exception:
-                 raise ProviderUnavailableError("local", f"Could not connect to {self.base_url}: {e}")
+                raise ProviderUnavailableError(
+                    "local", f"Could not connect to {self.base_url}: {e}"
+                )
 
     async def chat_completion(
         self,
@@ -58,7 +60,7 @@ class LocalModelClient(BaseAPIClient):
     ) -> APIResponse:
         """Send chat completion request"""
         header = {"Content-Type": "application/json"}
-        
+
         clean_messages = []
         for msg in messages:
             clean_messages.append({"role": msg["role"], "content": str(msg["content"])})
@@ -76,11 +78,11 @@ class LocalModelClient(BaseAPIClient):
             data, latency_ms = await self._make_request(
                 "POST", f"{self.base_url}/chat/completions", header, payload
             )
-            
+
             # ... process response (same as before) ...
             response_content = None
             function_call = None
-            
+
             if data["choices"][0]["message"].get("content"):
                 response_content = data["choices"][0]["message"]["content"]
             elif data["choices"][0]["message"].get("tool_calls"):
@@ -89,7 +91,7 @@ class LocalModelClient(BaseAPIClient):
                     name=tool_call["function"]["name"],
                     arguments=json.loads(tool_call["function"]["arguments"]),
                 )
-                
+
             return APIResponse(
                 content=response_content,
                 model=model,
@@ -113,9 +115,9 @@ class LocalModelClient(BaseAPIClient):
                     "model": model,
                     "prompt": clean_messages[-1]["content"],
                     "temperature": temperature,
-                    "stream": False 
+                    "stream": False,
                 }
-                
+
                 # Use raw base url without /v1
                 base = self.base_url.replace("/v1", "")
                 data, latency = await self._make_request(

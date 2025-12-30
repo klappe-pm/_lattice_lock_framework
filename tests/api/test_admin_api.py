@@ -1,33 +1,29 @@
 """
 Tests for the Lattice Lock Admin API (Async).
 
-Tests all REST endpoints for project management and monitoring using 
+Tests all REST endpoints for project management and monitoring using
 fully async test clients and in-memory SQLite database.
 """
 
-import uuid
 import time
+import uuid
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import StaticPool
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
-from lattice_lock.admin import (
-    API_VERSION,
-    ProjectStatus,
-    ValidationStatus,
-    create_app,
-)
+from lattice_lock.admin import API_VERSION, ProjectStatus, ValidationStatus, create_app
+from lattice_lock.admin.auth import Role, TokenData, get_current_user
 from lattice_lock.admin.db import Base, get_db
 from lattice_lock.admin.models import Project, ProjectError, RollbackCheckpoint
-from lattice_lock.admin.auth import Role, TokenData, get_current_user
 
 # --- Fixtures ---
+
 
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
@@ -39,16 +35,16 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    
+
     # Create tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        
+
     session_maker = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-    
+
     async with session_maker() as session:
         yield session
-        
+
     await engine.dispose()
 
 
@@ -56,13 +52,13 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client with database override."""
     app = create_app(debug=True)
-    
+
     # Override the database dependency
     async def override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     # Mock authentication to allow all requests by default
     async def mock_get_current_user() -> TokenData:
         return TokenData(
@@ -74,7 +70,7 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         )
 
     app.dependency_overrides[get_current_user] = mock_get_current_user
-    
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
 
@@ -99,6 +95,7 @@ async def sample_project(db_session: AsyncSession) -> Project:
 
 # --- Tests ---
 
+
 @pytest.mark.asyncio
 class TestHealthEndpoint:
     """Tests for GET /api/v1/health."""
@@ -119,7 +116,9 @@ class TestHealthEndpoint:
         assert "projects_count" in data
         assert "uptime_seconds" in data
 
-    async def test_health_check_projects_count(self, client: AsyncClient, sample_project: Project) -> None:
+    async def test_health_check_projects_count(
+        self, client: AsyncClient, sample_project: Project
+    ) -> None:
         """Test that health check returns correct project count."""
         response = await client.get("/api/v1/health")
         data = response.json()
@@ -141,7 +140,9 @@ class TestProjectsListEndpoint:
         assert data["projects"] == []
         assert data["total"] == 0
 
-    async def test_list_projects_with_projects(self, client: AsyncClient, sample_project: Project) -> None:
+    async def test_list_projects_with_projects(
+        self, client: AsyncClient, sample_project: Project
+    ) -> None:
         """Test listing projects when projects exist."""
         response = await client.get("/api/v1/projects")
         assert response.status_code == 200
@@ -208,7 +209,9 @@ class TestProjectStatusEndpoint:
 class TestProjectErrorsEndpoint:
     """Tests for GET /api/v1/projects/{id}/errors."""
 
-    async def test_get_errors_with_errors(self, client: AsyncClient, sample_project: Project, db_session: AsyncSession) -> None:
+    async def test_get_errors_with_errors(
+        self, client: AsyncClient, sample_project: Project, db_session: AsyncSession
+    ) -> None:
         """Test getting errors when errors exist."""
         # Manually verify recording error via service or direct DB insertion
         error = ProjectError(
@@ -253,40 +256,40 @@ class TestHelperServices:
     Tests for internal service helper functions.
     This replaces the 'TestHelperFunctions' from the old sync test.
     """
-    
-    async def test_add_rollback_checkpoint_service(self, db_session: AsyncSession, sample_project: Project):
+
+    async def test_add_rollback_checkpoint_service(
+        self, db_session: AsyncSession, sample_project: Project
+    ):
         """Test add_rollback_checkpoint service function."""
         from lattice_lock.admin.services import add_rollback_checkpoint
-        
+
         result = await add_rollback_checkpoint(
-            db_session,
-            sample_project.id,
-            description="Test Checkpoint",
-            files_count=5
+            db_session, sample_project.id, description="Test Checkpoint", files_count=5
         )
-        
+
         assert result is True
-        
+
         # Verify in DB
         result = await db_session.execute(
             select(RollbackCheckpoint).where(RollbackCheckpoint.project_id == sample_project.id)
         )
         assert len(result.scalars().all()) == 1
 
-    async def test_update_validation_status_service(self, db_session: AsyncSession, sample_project: Project):
+    async def test_update_validation_status_service(
+        self, db_session: AsyncSession, sample_project: Project
+    ):
         """Test update_validation_status service function."""
         from lattice_lock.admin.services import update_validation_status
-        
+
         result = await update_validation_status(
-            db_session,
-            sample_project.id,
-            schema_status="passed",
-            sheriff_status="failed"
+            db_session, sample_project.id, schema_status="passed", sheriff_status="failed"
         )
-        
+
         assert result is True
         await db_session.refresh(sample_project)
-        
+
         assert sample_project.schema_status == ValidationStatus.PASSED
         assert sample_project.sheriff_status == ValidationStatus.FAILED
-        assert sample_project.status == ProjectStatus.ERROR # Failed validation should trigger error status
+        assert (
+            sample_project.status == ProjectStatus.ERROR
+        )  # Failed validation should trigger error status

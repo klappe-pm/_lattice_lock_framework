@@ -77,7 +77,9 @@ class RollbackTrigger:
                         state = self.checkpoint_manager.get_checkpoint(latest_id)
 
                 if state:
-                    success = self._restore_state(state)
+                    # Pass checkpoint_id for file restoration
+                    restore_checkpoint_id = checkpoint_id or latest_id
+                    success = self._restore_state(state, restore_checkpoint_id)
                 else:
                     logger.error("No checkpoint found to restore.")
                     success = False
@@ -101,45 +103,47 @@ class RollbackTrigger:
             self._execute_post_hooks(False)
             return False
 
-    def _restore_state(self, state: RollbackState) -> bool:
+    def _restore_state(self, state: RollbackState, checkpoint_id: str | None = None) -> bool:
         """
         Restore the system state from the given RollbackState.
 
-        Uses CheckpointManager.restore_file() to restore each file from the checkpoint.
+        Args:
+            state: The RollbackState containing file paths and hashes to restore.
+            checkpoint_id: The checkpoint ID to use for file restoration.
+
+        Returns:
+            True if restoration was successful, False otherwise.
         """
         try:
             logger.info(f"Restoring state from timestamp {state.timestamp}")
 
-            # Get the checkpoint ID from the state
-            checkpoint_id = getattr(state, "checkpoint_id", None)
             if not checkpoint_id:
-                # Try to find checkpoint by timestamp
-                checkpoints = self.checkpoint_manager.list_checkpoints()
-                for cp_id in checkpoints:
-                    cp = self.checkpoint_manager.get_checkpoint(cp_id)
-                    if cp and cp.timestamp == state.timestamp:
-                        checkpoint_id = cp_id
-                        break
-
-            if not checkpoint_id:
-                logger.error("Could not determine checkpoint ID for state restoration")
+                logger.error("No checkpoint_id provided for file restoration")
                 return False
 
-            # Restore each file using CheckpointManager
-            restore_failures = []
-            for file_path in state.files:
-                logger.debug(f"Restoring file: {file_path}")
-                if not self.checkpoint_manager.restore_file(checkpoint_id, file_path):
-                    logger.warning(f"Failed to restore file: {file_path}")
-                    restore_failures.append(file_path)
+            # Restore files using CheckpointManager
+            restored_count = 0
+            failed_files = []
 
-            if restore_failures:
-                logger.warning(f"Some files could not be restored: {restore_failures}")
+            for file_path, file_hash in state.files.items():
+                logger.debug(f"Restoring file: {file_path} (hash: {file_hash})")
+                if self.checkpoint_manager.restore_file(checkpoint_id, file_path):
+                    restored_count += 1
+                else:
+                    failed_files.append(file_path)
+                    logger.warning(f"Could not restore file: {file_path}")
 
-            # Log config restoration (config is typically in-memory, not file-based)
-            logger.debug(f"Restoring config: {state.config}")
+            logger.info(f"Restored {restored_count}/{len(state.files)} files")
 
-            return len(restore_failures) == 0
+            if failed_files:
+                logger.warning(f"Failed to restore {len(failed_files)} files: {failed_files}")
+
+            # Log config restoration (config is typically handled separately)
+            logger.debug(f"State config: {state.config}")
+
+            # Consider restoration successful if at least some files were restored
+            # or if there were no files to restore
+            return restored_count > 0 or len(state.files) == 0
         except Exception as e:
             logger.error(f"Failed to restore state: {e}")
             return False

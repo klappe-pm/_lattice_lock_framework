@@ -9,7 +9,6 @@ import logging
 import click
 
 from lattice_lock import __version__
-from lattice_lock.logging_config import get_logger, set_trace_id, setup_logging
 
 # Import existing commands
 from lattice_lock.cli.commands.compile import compile_command
@@ -24,6 +23,7 @@ from lattice_lock.cli.groups.admin import admin_group
 # Import command groups
 from lattice_lock.cli.groups.orchestrator import orchestrator_group
 from lattice_lock.cli.utils.console import get_console
+from lattice_lock.logging_config import get_logger, set_trace_id, setup_logging
 
 # Initialize centralized logging with simple format for CLI
 setup_logging(level=logging.INFO, simple_format=True)

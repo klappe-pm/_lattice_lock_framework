@@ -39,6 +39,7 @@ class SpecificationAnalysis(BaseModel):
 
 class GenerationRequest(BaseModel):
     """Request for prompt generation."""
+
     project_name: str | None = None
     phase: str | None = None
     epic: str | None = None
@@ -50,6 +51,7 @@ class GenerationRequest(BaseModel):
 
 class GenerationResult(BaseModel):
     """Result of a prompt generation run."""
+
     status: str  # success, failure, partial
     prompts_generated: int = 0
     prompts_updated: int = 0

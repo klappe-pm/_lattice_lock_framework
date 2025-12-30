@@ -1,10 +1,12 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
+
 from pydantic import BaseModel, Field
+
 
 class Role(str, Enum):
     """User roles for role-based access control."""
+
     ADMIN = "admin"
     OPERATOR = "operator"
     VIEWER = "viewer"
@@ -27,6 +29,7 @@ class Role(str, Enum):
         else:  # VIEWER
             return base_permissions
 
+
 class TokenData(BaseModel):
     sub: str
     role: Role
@@ -35,26 +38,31 @@ class TokenData(BaseModel):
     jti: str
     token_type: str = "access"
 
+
 class TokenResponse(BaseModel):
     access_token: str
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
     token_type: str = "bearer"
     expires_in: int
+
 
 class APIKeyInfo(BaseModel):
     key_id: str
     created_at: datetime
-    last_used: Optional[datetime] = None
+    last_used: datetime | None = None
     name: str = ""
+
 
 class UserBase(BaseModel):
     username: str
     role: Role = Role.VIEWER
     disabled: bool = False
 
+
 class User(UserBase):
     hashed_password: str
-    api_keys: List[str] = Field(default_factory=list)
+    api_keys: list[str] = Field(default_factory=list)
+
 
 class LoginRequest(BaseModel):
     username: str

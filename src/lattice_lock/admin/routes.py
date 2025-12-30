@@ -6,16 +6,15 @@ Defines the REST API endpoints for project management and monitoring.
 
 import time
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from lattice_lock.admin.auth import require_admin, require_operator, require_viewer
 from lattice_lock.admin.db import get_db
-from lattice_lock.admin.models import Project, ProjectError, ValidationStatus
+from lattice_lock.admin.models import Project, ProjectError
 from lattice_lock.admin.schemas import (
     ErrorDetail,
     ErrorListResponse,
@@ -28,10 +27,6 @@ from lattice_lock.admin.schemas import (
     RollbackRequest,
     RollbackResponse,
     ValidationStatusResponse,
-)
-from lattice_lock.admin.services import (
-    update_validation_status,
-    record_project_error,
 )
 
 # API version
@@ -138,7 +133,9 @@ async def register_project(
     summary="Get Project Status",
     dependencies=[Depends(require_viewer)],
 )
-async def get_project_status(project_id: str, db: AsyncSession = Depends(get_db)) -> ProjectStatusResponse:
+async def get_project_status(
+    project_id: str, db: AsyncSession = Depends(get_db)
+) -> ProjectStatusResponse:
     """Get project status."""
     # Eager load relationships
     result = await db.execute(
@@ -189,8 +186,8 @@ async def get_project_errors(
     """Get project errors."""
     query = select(ProjectError).where(ProjectError.project_id == project_id)
     if not include_resolved:
-        query = query.where(ProjectError.resolved == False)
-    
+        query = query.where(not ProjectError.resolved)
+
     query = query.order_by(ProjectError.timestamp.desc()).limit(limit + 1)
     result = await db.execute(query)
     errors = result.scalars().all()

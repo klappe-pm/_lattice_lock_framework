@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from lattice_lock.agents.prompt_architect.subagents.parsers.roadmap_parser import (
@@ -8,6 +6,7 @@ from lattice_lock.agents.prompt_architect.subagents.parsers.roadmap_parser impor
     RoadmapStructure,
 )
 from lattice_lock.agents.prompt_architect.subagents.roadmap_parser import RoadmapParser
+
 
 @pytest.fixture
 def parser():

@@ -6,7 +6,7 @@ coordinates subagents, and manages the prompt generation workflow.
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -51,9 +51,7 @@ class PromptArchitectAgent:
     """
 
     DEFAULT_DEFINITION_PATH = "docs/agents/agent_definitions/prompt_architect_agent/prompt_architect_agent_definition.yaml"
-    DEFAULT_TOOL_PROFILES_PATH = (
-        "docs/agents/agent_definitions/prompt_architect_agent/subagents/prompt_architect_agent_tool_matcher_definition.yaml"
-    )
+    DEFAULT_TOOL_PROFILES_PATH = "docs/agents/agent_definitions/prompt_architect_agent/subagents/prompt_architect_agent_tool_matcher_definition.yaml"
 
     def __init__(
         self,

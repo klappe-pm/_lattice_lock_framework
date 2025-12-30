@@ -1,16 +1,15 @@
 import logging
-import uuid
 from collections.abc import Callable
 
 from lattice_lock.tracing import AsyncSpanContext, generate_trace_id, get_current_trace_id
 
-from .exceptions import APIClientError
-from .providers import ProviderUnavailableError
-from .cost.tracker import CostTracker
-from .execution import ClientPool, ConversationExecutor
 from .analysis import TaskAnalyzer
+from .cost.tracker import CostTracker
+from .exceptions import APIClientError
+from .execution import ClientPool, ConversationExecutor
 from .function_calling import FunctionCallHandler
 from .guide import ModelGuideParser
+from .providers import ProviderUnavailableError
 from .registry import ModelRegistry
 from .scoring import ModelScorer
 from .selection import ModelSelector
@@ -29,20 +28,17 @@ class ModelOrchestrator:
         # 1. Initialize Registry and Config
         self.registry = ModelRegistry()
         self.guide = ModelGuideParser(guide_path)
-        
+
         # 2. Initialize Support Components
         self.scorer = ModelScorer()  # Used by selector
         self.analyzer = TaskAnalyzer()
         self.cost_tracker = CostTracker(self.registry)
         self.function_call_handler = FunctionCallHandler()
-        
+
         # 3. Initialize Core Modules
         self.selector = ModelSelector(self.registry, self.scorer, self.guide)
         self.client_pool = ClientPool()
-        self.executor = ConversationExecutor(
-            self.function_call_handler, 
-            self.cost_tracker
-        )
+        self.executor = ConversationExecutor(self.function_call_handler, self.cost_tracker)
 
         self._initialize_analyzer_client()
 
@@ -55,7 +51,9 @@ class ModelOrchestrator:
             if client:
                 self.analyzer = TaskAnalyzer(router_client=client)
         except Exception:
-            logger.debug("Could not initialize Semantic Router client. Fallback to heuristics only.")
+            logger.debug(
+                "Could not initialize Semantic Router client. Fallback to heuristics only."
+            )
 
     def register_function(self, name: str, func: Callable):
         """Registers a function with the internal FunctionCallHandler."""
@@ -118,20 +116,20 @@ class ModelOrchestrator:
             try:
                 # Get client from pool
                 client = self.client_pool.get_client(model_cap.provider.value)
-                
+
                 # Execute conversation (single turn logic wrapped in conversation executor for now)
                 # But route_request is often single turn. ConversationExecutor handles tool loops.
                 messages = kwargs.pop("messages", [{"role": "user", "content": prompt}])
-                
+
                 return await self.executor.execute(
                     model_cap=model_cap,
                     client=client,
                     messages=messages,
                     trace_id=request_trace_id,
-                    task_type=requirements.task_type.name, # Pass task type for tracking
-                    **kwargs
+                    task_type=requirements.task_type.name,  # Pass task type for tracking
+                    **kwargs,
                 )
-                
+
             except (ValueError, APIClientError, ProviderUnavailableError) as e:
                 logger.warning(
                     f"Primary model {selected_model_id} failed: {e}. Attempting fallback...",
@@ -163,11 +161,11 @@ class ModelOrchestrator:
     ) -> APIResponse:
         """
         Handle fallback logic when primary model fails.
-        Identical logic to original but delegated to ModelSelector for chain 
+        Identical logic to original but delegated to ModelSelector for chain
         and ClientPool/Executor for execution.
         """
         request_trace_id = trace_id or get_current_trace_id() or "unknown"
-        
+
         # Get fallback chain
         chain = self.selector.get_fallback_chain(requirements, failed_model)
 
@@ -206,9 +204,9 @@ class ModelOrchestrator:
                     model_cap=model_cap,
                     client=client,
                     messages=messages,
-                    trace_id=request_trace_id, 
+                    trace_id=request_trace_id,
                     task_type=requirements.task_type.name,
-                    **kwargs
+                    **kwargs,
                 )
 
                 if response.error:
@@ -243,17 +241,20 @@ class ModelOrchestrator:
     def get_available_providers(self) -> list[str]:
         """Get list of providers that have credentials configured."""
         from .providers import ProviderAvailability
+
         return ProviderAvailability.get_available_providers()
 
     def check_provider_status(self) -> dict[str, str]:
         """Check and return status of all providers."""
         from .providers import ProviderAvailability
+
         status = ProviderAvailability.check_all_providers()
         return {provider: s.value for provider, s in status.items()}
 
     def _is_provider_available(self, provider: str) -> bool:
         """Check if a specific provider is available."""
         from .providers import ProviderAvailability
+
         return ProviderAvailability.is_available(provider)
 
     def close(self):
@@ -266,4 +267,3 @@ class ModelOrchestrator:
     async def shutdown(self):
         """Async shutdown."""
         await self.client_pool.close_all()
-

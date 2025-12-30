@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 from pathlib import Path
@@ -10,13 +9,10 @@ from .schemas import FeedbackCategory, FeedbackItem, FeedbackPriority
 logger = logging.getLogger(__name__)
 
 
-
-
-
 class FeedbackCollector:
     """
     Collects and manages feedback items, persisting them to a JSON file.
-    
+
     All public methods are synchronous for ease of use. File I/O is performed
     synchronously using Path.read_text/write_text.
     """
@@ -24,9 +20,9 @@ class FeedbackCollector:
     def __init__(self, storage_path: Path):
         """
         Create a FeedbackCollector that persists feedback to the specified JSON file.
-        
+
         Ensures the storage file and its parent directories exist, creating them and initializing the file with an empty JSON array if necessary.
-        
+
         Parameters:
             storage_path (Path | str): Path to the JSON file used for storing feedback items.
         """
@@ -36,7 +32,7 @@ class FeedbackCollector:
     def _ensure_storage_exists(self) -> None:
         """
         Ensure the storage directory exists and initialize the storage file with an empty JSON array if missing.
-        
+
         If the storage file does not exist, create parent directories as needed and write "[]" to the file.
         """
         if not self.storage_path.parent.exists():
@@ -48,9 +44,9 @@ class FeedbackCollector:
     def _load_feedback_sync(self) -> list[FeedbackItem]:
         """
         Load feedback items from the storage file.
-        
+
         Invalid or unparseable items are skipped (errors are logged). If the storage file is missing, empty, or contains invalid JSON, an empty list is returned.
-        
+
         Returns:
             list[FeedbackItem]: Parsed feedback items present in storage.
         """
@@ -82,10 +78,10 @@ class FeedbackCollector:
     def _save_feedback_sync(self, items: list[FeedbackItem]) -> None:
         """
         Persist a list of feedback items to the configured storage file as a JSON array.
-        
+
         Parameters:
             items (list[FeedbackItem]): Feedback items to persist; each item will be converted to JSON-compatible data before writing.
-        
+
         Raises:
             Exception: If serialization or writing to the storage file fails.
         """
@@ -107,14 +103,14 @@ class FeedbackCollector:
     ) -> str:
         """
         Create and persist a new feedback item.
-        
+
         Parameters:
             content (str): Text of the feedback.
             category (FeedbackCategory): Feedback category; defaults to FeedbackCategory.OTHER.
             priority (FeedbackPriority): Feedback priority level; defaults to FeedbackPriority.MEDIUM.
             source (str): Origin of the feedback (for example, "user"); defaults to "user".
             metadata (dict | None): Optional additional metadata to attach to the item.
-        
+
         Returns:
             str: The newly created feedback item's ID.
         """
@@ -136,7 +132,7 @@ class FeedbackCollector:
     def get(self, feedback_id: str) -> FeedbackItem | None:
         """
         Retrieve the feedback item with the given ID.
-        
+
         Returns:
             The FeedbackItem with the matching ID, or `None` if no item matches.
         """
@@ -151,11 +147,11 @@ class FeedbackCollector:
     ) -> list[FeedbackItem]:
         """
         Return feedback items stored in the collector, optionally filtered by category and source.
-        
+
         Parameters:
             category (FeedbackCategory | None): If provided, only include items whose category equals this value.
             source (str | None): If provided, only include items whose source equals this value.
-        
+
         Returns:
             list[FeedbackItem]: The list of matching feedback items; empty list if none match.
         """

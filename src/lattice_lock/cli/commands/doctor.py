@@ -70,7 +70,10 @@ def _check_required_dependencies() -> list[CheckResult]:
                     message=f"{description} v{dep_version}",
                 )
             )
-        except Exception:
+        except Exception as e:
+            # Log error but suppress traceback for clean CLI output
+            import logging
+            logging.getLogger(__name__).debug(f"Dependency check failed: {e}")
             results.append(
                 CheckResult(
                     name=f"Dependency: {dep_name}",
@@ -90,7 +93,9 @@ def _check_required_dependencies() -> list[CheckResult]:
                     optional=True,
                 )
             )
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug(f"Optional dependency check failed: {e}")
             results.append(
                 CheckResult(
                     name=f"Dependency: {dep_name}",
@@ -224,18 +229,11 @@ def _check_git() -> CheckResult:
                 passed=True,
                 message=version_str,
             )
-    except subprocess.TimeoutExpired:
-        return CheckResult(
-            name="Git",
-            passed=False,
-            message="Git version check timed out",
-        )
     except Exception as e:
-        return CheckResult(
-            name="Git",
-            passed=False,
-            message=f"Git version check failed: {str(e)}",
-        )
+        # Log git check failure
+        import logging
+        logging.getLogger(__name__).debug(f"Git check failed: {e}")
+        pass
 
     return CheckResult(
         name="Git",

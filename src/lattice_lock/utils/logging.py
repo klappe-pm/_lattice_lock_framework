@@ -1,4 +1,5 @@
 """Logging configuration and standards."""
+
 import logging
 import re
 
@@ -29,7 +30,7 @@ def redact_sensitive(message: str) -> str:
 
 class RedactingFormatter(logging.Formatter):
     """Formatter that automatically redacts sensitive data."""
-    
+
     def format(self, record: logging.LogRecord) -> str:
         original = super().format(record)
         return redact_sensitive(original)
@@ -38,10 +39,8 @@ class RedactingFormatter(logging.Formatter):
 def configure_logging(level: int = logging.INFO) -> None:
     """Configure logging with redaction for the framework."""
     handler = logging.StreamHandler()
-    handler.setFormatter(RedactingFormatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    ))
-    
+    handler.setFormatter(RedactingFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+
     root_logger = logging.getLogger("lattice_lock")
     root_logger.setLevel(level)
     root_logger.addHandler(handler)
@@ -50,4 +49,3 @@ def configure_logging(level: int = logging.INFO) -> None:
 def get_logger(name: str) -> logging.Logger:
     """Get a logger with standard configuration."""
     return logging.getLogger(name)
-

@@ -1,13 +1,12 @@
 import logging
-from typing import List, Tuple, Optional
 
 from lattice_lock.orchestrator.guide import ModelGuideParser
 from lattice_lock.orchestrator.registry import ModelRegistry
 from lattice_lock.orchestrator.scoring import ModelScorer
-from lattice_lock.orchestrator.types import TaskRequirements, ModelCapabilities
-from lattice_lock.orchestrator.providers import ProviderAvailability
+from lattice_lock.orchestrator.types import TaskRequirements
 
 logger = logging.getLogger(__name__)
+
 
 class ModelSelector:
     """
@@ -19,7 +18,7 @@ class ModelSelector:
         self.scorer = scorer
         self.guide = guide
 
-    def select_best_model(self, requirements: TaskRequirements) -> Optional[str]:
+    def select_best_model(self, requirements: TaskRequirements) -> str | None:
         """
         Select the best model based on requirements and guide.
 
@@ -59,7 +58,7 @@ class ModelSelector:
         candidates.sort(key=lambda x: x[1], reverse=True)
         return candidates[0][0]
 
-    def get_fallback_chain(self, requirements: TaskRequirements, failed_model: str) -> List[str]:
+    def get_fallback_chain(self, requirements: TaskRequirements, failed_model: str) -> list[str]:
         """
         Get a list of fallback models.
 
@@ -102,8 +101,8 @@ class ModelSelector:
         # Uses ProviderAvailability from providers package
         try:
             from lattice_lock.orchestrator.providers import ProviderAvailability
+
             return ProviderAvailability.is_available(provider)
         except ImportError:
             logger.warning(f"Could not check availability for {provider}, assuming True")
             return True
-

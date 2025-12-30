@@ -89,9 +89,7 @@ def _apply_fixes(path: Path, verbose: bool = False) -> int:
     elif path.is_dir():
         for root, dirs, files in os.walk(path):
             # Skip common non-source directories
-            dirs[:] = [
-                d for d in dirs if d not in {".git", "__pycache__", "node_modules", ".venv"}
-            ]
+            dirs[:] = [d for d in dirs if d not in {".git", "__pycache__", "node_modules", ".venv"}]
 
             for filename in files:
                 file_path = Path(root) / filename

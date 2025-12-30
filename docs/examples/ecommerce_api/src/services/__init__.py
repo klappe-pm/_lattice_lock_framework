@@ -6,7 +6,6 @@ models and external systems.
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from src.models import (
     Currency,
