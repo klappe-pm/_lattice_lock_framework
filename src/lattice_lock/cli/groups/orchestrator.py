@@ -210,30 +210,38 @@ def consensus_command(prompt, num, synthesizer):
 
 async def _consensus_async(prompt, num, synthesizer):
     from lattice_lock.orchestrator import ConsensusOrchestrator
-    
+
     console = get_console()
     orchestrator = ConsensusOrchestrator()
-    
+
     console.print(f"\n[bold cyan]Starting Consensus Flow ({num} models)[/bold cyan]\n")
-    
+
     try:
-        result = await orchestrator.run_consensus(prompt, num_models=num, synthesizer_model_id=synthesizer)
-        
+        result = await orchestrator.run_consensus(
+            prompt, num_models=num, synthesizer_model_id=synthesizer
+        )
+
         console.print("[bold green]Synthesis Result:[/bold green]")
-        console.print(Panel(result["synthesis"], title=f"Synthesized by {result['synthesizer_model']}", border_style="green"))
-        
+        console.print(
+            Panel(
+                result["synthesis"],
+                title=f"Synthesized by {result['synthesizer_model']}",
+                border_style="green",
+            )
+        )
+
         console.print("\n[bold]Individual Model Contributions:[/bold]")
         table = Table(show_header=True)
         table.add_column("Model", style="cyan")
         table.add_column("Cost", justify="right", style="yellow")
-        
+
         for resp in result["individual_responses"]:
             cost = resp["usage"].cost if hasattr(resp["usage"], "cost") else 0.0
             table.add_row(resp["model"], f"${cost:.4f}")
-            
+
         console.print(table)
         console.print(f"\n[bold]Total Consensus Cost:[/bold] ${result['total_cost']:.4f}\n")
-        
+
     except Exception as e:
         console.print(f"[red]Consensus Failed:[/red] {str(e)}")
 

@@ -14,6 +14,7 @@ REQUIRED_PACKAGES = [
     "lattice_lock.exceptions",
 ]
 
+
 def check_pip_dependencies() -> bool:
     """
     Verify that installed packages have compatible dependencies by running `pip check`.
@@ -35,6 +36,7 @@ def check_pip_dependencies() -> bool:
         print(f"❌ pip check failed: {e}")
         return False
 
+
 def check_imports() -> bool:
     """
     Check that each package listed in REQUIRED_PACKAGES can be imported.
@@ -54,6 +56,7 @@ def check_imports() -> bool:
             print(f"❌ Import failed: {package} - {e}")
             all_passed = False
     return all_passed
+
 
 def main() -> None:
     """

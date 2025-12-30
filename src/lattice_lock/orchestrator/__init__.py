@@ -6,12 +6,12 @@ Intelligent model routing across 63 AI models from 8 providers.
 
 from pathlib import Path
 
+from .chain import ChainOrchestrator
+from .consensus import ConsensusOrchestrator
 from .core import ModelOrchestrator
 from .registry import ModelRegistry
 from .scorer import ModelScorer, TaskAnalyzer
 from .types import APIResponse, ModelProvider, TaskType
-from .consensus import ConsensusOrchestrator
-from .chain import ChainOrchestrator
 
 
 def _get_version() -> str:

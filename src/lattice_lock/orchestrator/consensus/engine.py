@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from collections import Counter
-from typing import Any, Dict, Optional
+from typing import Any
 
 from lattice_lock.orchestrator.core import ModelOrchestrator
 from lattice_lock.orchestrator.types import TaskType
@@ -77,15 +77,12 @@ class ConsensusOrchestrator:
     Best for generating unified artifacts by combining complementary information.
     """
 
-    def __init__(self, orchestrator: Optional[ModelOrchestrator] = None):
+    def __init__(self, orchestrator: ModelOrchestrator | None = None):
         self.orchestrator = orchestrator or ModelOrchestrator()
 
     async def run_consensus(
-        self,
-        prompt: str,
-        num_models: int = 3,
-        synthesizer_model_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, prompt: str, num_models: int = 3, synthesizer_model_id: str | None = None
+    ) -> dict[str, Any]:
         """
         Execute consensus flow:
         1. Analyze task.
@@ -151,17 +148,15 @@ class ConsensusOrchestrator:
             synthesizer_model_id = self.orchestrator.selector.select_best_model(synth_requirements)
 
         synthesis_response = await self.orchestrator.route_request(
-            prompt=synthesis_prompt,
-            model_id=synthesizer_model_id
+            prompt=synthesis_prompt, model_id=synthesizer_model_id
         )
 
         return {
             "synthesis": synthesis_response.content,
             "synthesizer_model": synthesis_response.model,
             "individual_responses": [
-                {"model": r.model, "content": r.content, "usage": r.usage}
-                for r in valid_responses
+                {"model": r.model, "content": r.content, "usage": r.usage} for r in valid_responses
             ],
-            "total_cost": sum(r.usage.cost for r in valid_responses if hasattr(r.usage, "cost")) +
-                         (synthesis_response.usage.cost if hasattr(synthesis_response.usage, "cost") else 0.0)
+            "total_cost": sum(r.usage.cost for r in valid_responses if hasattr(r.usage, "cost"))
+            + (synthesis_response.usage.cost if hasattr(synthesis_response.usage, "cost") else 0.0),
         }
