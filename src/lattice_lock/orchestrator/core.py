@@ -113,14 +113,15 @@ class ModelOrchestrator:
             )
 
             # 3. Execute Request
+            # Prepare messages (moved out of try block for scope availability in fallback)
+            messages = kwargs.pop("messages", [{"role": "user", "content": prompt}])
+
             try:
                 # Get client from pool
                 client = self.client_pool.get_client(model_cap.provider.value)
 
                 # Execute conversation (single turn logic wrapped in conversation executor for now)
                 # But route_request is often single turn. ConversationExecutor handles tool loops.
-                messages = kwargs.pop("messages", [{"role": "user", "content": prompt}])
-
                 return await self.executor.execute(
                     model_cap=model_cap,
                     client=client,
@@ -148,6 +149,7 @@ class ModelOrchestrator:
                 prompt,
                 failed_model=selected_model_id,
                 trace_id=request_trace_id,
+                messages=messages,
                 **kwargs,
             )
 
@@ -198,15 +200,27 @@ class ModelOrchestrator:
 
             try:
                 client = self.client_pool.get_client(model_cap.provider.value)
-                messages = kwargs.get("messages", [{"role": "user", "content": prompt}])
-
+                # Use pop to ensure messages isn't passed twice (once here, once in kwargs)
+                # But be careful: we need messages for subsequent loop iterations if this one fails.
+                # So we should get it, but ensure we don't pass it in **kwargs to execute
+                
+                # Actually, strictly speaking, we are inside a loop. We should NOT pop it from kwargs
+                # if we need it for the next iteration.
+                # BETTER APPROACH: Extract it once outside the loop?
+                # But kwargs differs per call? No, kwargs is fallback args.
+                
+                # Let's check how kwargs is used. It's passed to execute.
+                # If we pass messages explicitly to execute, we must remove it from kwargs passed to execute.
+                pass_kwargs = kwargs.copy()
+                iter_messages = pass_kwargs.pop("messages", [{"role": "user", "content": prompt}])
+                
                 response = await self.executor.execute(
                     model_cap=model_cap,
                     client=client,
-                    messages=messages,
+                    messages=iter_messages,
                     trace_id=request_trace_id,
                     task_type=requirements.task_type.name,
-                    **kwargs,
+                    **pass_kwargs,
                 )
 
                 if response.error:
