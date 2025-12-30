@@ -70,8 +70,8 @@ class BedrockAPIClient(BaseAPIClient):
     def __init__(self, config: AppConfig, region: str = "us-east-1", **kwargs):
         # Bedrock uses AWS credentials
         self.region = region or os.getenv("AWS_REGION", "us-east-1")
-        self.access_key = os.getenv("AWS_ACCESS_KEY_ID")
-        self.secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        self.access_key = kwargs.get("aws_access_key_id") or os.getenv("AWS_ACCESS_KEY_ID")
+        self.secret_key = kwargs.get("aws_secret_access_key") or os.getenv("AWS_SECRET_ACCESS_KEY")
         self.anthropic_version = kwargs.get("api_version", "bedrock-2023-05-31")
         self._bedrock_client = None
 

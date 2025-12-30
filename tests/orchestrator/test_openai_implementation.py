@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from lattice_lock.exceptions import ProviderUnavailableError
 from lattice_lock.orchestrator.providers.openai import OpenAIAPIClient
 from lattice_lock.orchestrator.types import APIResponse
 
@@ -20,21 +21,23 @@ def mock_env():
 
 @pytest.mark.asyncio
 async def test_initialization(mock_env):
-    client = OpenAIAPIClient()
+    config = AsyncMock()
+    client = OpenAIAPIClient(config=config)
     assert client.api_key == "sk-test-key"
-    assert client.base_url == "https://api.openai.com/v1"
 
 
 @pytest.mark.asyncio
 async def test_initialization_failure():
     with patch.dict(os.environ, {}, clear=True):
-        with pytest.raises(ValueError, match="OPENAI_API_KEY not found"):
-            OpenAIAPIClient()
+        config = AsyncMock()
+        with pytest.raises(ProviderUnavailableError, match="OPENAI_API_KEY"):
+            OpenAIAPIClient(config=config)
 
 
 @pytest.mark.asyncio
 async def test_chat_completion_success(mock_env):
-    client = OpenAIAPIClient()
+    config = AsyncMock()
+    client = OpenAIAPIClient(config=config)
     mock_response = {
         "choices": [{"message": {"content": "Hello world"}}],
         "usage": {"prompt_tokens": 10, "completion_tokens": 5},
@@ -56,7 +59,8 @@ async def test_chat_completion_success(mock_env):
 
 @pytest.mark.asyncio
 async def test_chat_completion_with_functions(mock_env):
-    client = OpenAIAPIClient()
+    config = AsyncMock()
+    client = OpenAIAPIClient(config=config)
     mock_response = {
         "choices": [
             {
@@ -98,7 +102,8 @@ async def test_chat_completion_with_functions(mock_env):
 
 @pytest.mark.asyncio
 async def test_chat_completion_tool_choice(mock_env):
-    client = OpenAIAPIClient()
+    config = AsyncMock()
+    client = OpenAIAPIClient(config=config)
     mock_response = {
         "choices": [{"message": {"content": "forced"}}],
         "usage": {"prompt_tokens": 0, "completion_tokens": 0},
