@@ -1,3 +1,3 @@
-from .engine import ConsensusOrchestrator
+from .engine import ConsensusEngine, ConsensusOrchestrator
 
-__all__ = ["ConsensusOrchestrator"]
+__all__ = ["ConsensusEngine", "ConsensusOrchestrator"]
