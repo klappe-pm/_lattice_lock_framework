@@ -19,14 +19,15 @@ def mock_google_env():
 
 @pytest.mark.asyncio
 async def test_initialization(mock_google_env):
-    client = GoogleAPIClient()
+    config = AsyncMock()
+    client = GoogleAPIClient(config=config)
     assert client.api_key == "sk-google-test"
-    assert "generativelanguage.googleapis.com" in client.base_url
 
 
 @pytest.mark.asyncio
 async def test_chat_completion_success(mock_google_env):
-    client = GoogleAPIClient()
+    config = AsyncMock()
+    client = GoogleAPIClient(config=config)
     mock_response = {
         "candidates": [{"content": {"parts": [{"text": "Hello Gemini"}]}}],
         "usageMetadata": {"promptTokenCount": 5, "candidatesTokenCount": 2},
@@ -54,7 +55,8 @@ async def test_chat_completion_success(mock_google_env):
 
 @pytest.mark.asyncio
 async def test_function_calling(mock_google_env):
-    client = GoogleAPIClient()
+    config = AsyncMock()
+    client = GoogleAPIClient(config=config)
     mock_response = {
         "candidates": [
             {

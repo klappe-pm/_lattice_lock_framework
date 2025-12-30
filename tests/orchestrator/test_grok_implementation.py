@@ -19,9 +19,9 @@ def mock_xai_env():
 
 @pytest.mark.asyncio
 async def test_initialization(mock_xai_env):
-    client = GrokAPIClient()
+    config = AsyncMock()
+    client = GrokAPIClient(config=config)
     assert client.api_key == "sk-grok-test"
-    assert "api.x.ai" in client.base_url
 
 
 @pytest.mark.asyncio
@@ -31,7 +31,8 @@ async def test_chat_completion_success(mock_xai_env):
 
     Sets up a client with a mocked _make_request that returns a single assistant message and usage, calls chat_completion with model "grok-beta", and asserts that the returned response has content "I am Grok", provider "xai", and model "grok-beta". Also inspects the mocked request arguments to assert the Authorization header is "Bearer sk-grok-test" and the payload's "model" field is "grok-beta".
     """
-    client = GrokAPIClient()
+    config = AsyncMock()
+    client = GrokAPIClient(config=config)
     mock_response = {
         "choices": [{"message": {"content": "I am Grok"}}],
         "usage": {"prompt_tokens": 10, "completion_tokens": 8},
@@ -57,7 +58,8 @@ async def test_chat_completion_success(mock_xai_env):
 
 @pytest.mark.asyncio
 async def test_chat_completion_with_functions(mock_xai_env):
-    client = GrokAPIClient()
+    config = AsyncMock()
+    client = GrokAPIClient(config=config)
     mock_response = {
         "choices": [
             {

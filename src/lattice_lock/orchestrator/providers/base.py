@@ -24,6 +24,9 @@ class ProviderStatus(Enum):
     """Provider availability status."""
 
     AVAILABLE = "available"
+    PRODUCTION = "production"
+    BETA = "beta"
+    EXPERIMENTAL = "experimental"
     UNAVAILABLE = "unavailable"
     UNKNOWN = "unknown"
     ERROR = "error"
@@ -50,11 +53,57 @@ class ProviderAvailability:
         "dial": ["DIAL_URL"],  # Assuming DIAL requires a URL
     }
 
+    PROVIDER_MATURITY: dict[str, ProviderStatus] = {
+        "openai": ProviderStatus.PRODUCTION,
+        "anthropic": ProviderStatus.PRODUCTION,
+        "google": ProviderStatus.PRODUCTION,
+        "xai": ProviderStatus.PRODUCTION,
+        "azure": ProviderStatus.BETA,
+        "bedrock": ProviderStatus.EXPERIMENTAL,
+        "local": ProviderStatus.PRODUCTION,
+        "dial": ProviderStatus.BETA,
+    }
+
+    _checked = False
+
+    @classmethod
+    def get_instance(cls) -> "ProviderAvailability":
+        """Get singleton instance (simulated class method access)."""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def check_all_providers(cls) -> dict[str, ProviderStatus]:
+        """Check status of all known providers."""
+        if cls._checked and cls._status:
+            return cls._status
+            
+        cls._status = {}
+        for provider in cls.REQUIRED_CREDENTIALS:
+            if cls.is_available(provider):
+                # Use maturity status if available, otherwise generic AVAILABLE
+                cls._status[provider] = cls.PROVIDER_MATURITY.get(provider, ProviderStatus.AVAILABLE)
+            else:
+                cls._status[provider] = ProviderStatus.UNAVAILABLE
+        
+        cls._checked = True
+        return cls._status
+
+    @classmethod
+    def get_message(cls, provider: str) -> str:
+        """Get status message for provider."""
+        if not cls.is_available(provider):
+            required = cls.REQUIRED_CREDENTIALS.get(provider, [])
+            return f"Missing credentials: {', '.join(required)}"
+        return "Available"
+
     @classmethod
     def reset(cls) -> None:
         """Reset singleton state for testing."""
         cls._instance = None
         cls._status.clear()
+        cls._checked = False
 
     @classmethod
     def is_available(cls, provider: str) -> bool:

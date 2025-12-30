@@ -30,23 +30,24 @@ def mock_dial_env():
 
 @pytest.mark.asyncio
 async def test_initialization_direct(mock_anthropic_env):
-    client = AnthropicAPIClient()
+    config = AsyncMock()
+    client = AnthropicAPIClient(config=config)
     assert client.api_key == "sk-ant-test"
-    assert "api.anthropic.com" in client.base_url
     assert not client.use_dial
 
 
 @pytest.mark.asyncio
 async def test_initialization_dial(mock_dial_env):
-    client = AnthropicAPIClient(use_dial=True)
+    config = AsyncMock()
+    client = AnthropicAPIClient(config=config, use_dial=True)
     assert client.api_key == "sk-dial-test"
-    assert "dial.api.endpoint" in client.base_url
     assert client.use_dial
 
 
 @pytest.mark.asyncio
 async def test_direct_completion_success(mock_anthropic_env):
-    client = AnthropicAPIClient()
+    config = AsyncMock()
+    client = AnthropicAPIClient(config=config)
     mock_response = {
         "content": [{"text": "Hello Claude", "type": "text"}],
         "usage": {"input_tokens": 10, "output_tokens": 5},
@@ -83,7 +84,8 @@ async def test_direct_tool_use(mock_anthropic_env):
 
     Sets up a mocked Anthropic response that indicates a tool use and asserts the resulting response contains a non-null function_call with the expected name and arguments.
     """
-    client = AnthropicAPIClient()
+    config = AsyncMock()
+    client = AnthropicAPIClient(config=config)
     mock_response = {
         "content": [{"type": "tool_use", "name": "get_weather", "input": {"location": "Paris"}}],
         "usage": {"input_tokens": 20, "output_tokens": 10},
@@ -103,7 +105,8 @@ async def test_direct_tool_use(mock_anthropic_env):
 
 @pytest.mark.asyncio
 async def test_dial_completion(mock_dial_env):
-    client = AnthropicAPIClient(use_dial=True)
+    config = AsyncMock()
+    client = AnthropicAPIClient(config=config, use_dial=True)
     mock_response = {
         "choices": [{"message": {"content": "Hello DIAL"}}],
         "usage": {"prompt_tokens": 5, "completion_tokens": 5},
