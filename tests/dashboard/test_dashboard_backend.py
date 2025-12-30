@@ -10,7 +10,6 @@ Tests cover:
 
 import pytest
 from fastapi.testclient import TestClient
-
 from lattice_lock.dashboard.aggregator import DataAggregator
 from lattice_lock.dashboard.backend import create_app
 from lattice_lock.dashboard.metrics import MetricsCollector

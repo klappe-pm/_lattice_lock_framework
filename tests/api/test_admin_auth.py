@@ -15,7 +15,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
-
 from lattice_lock.admin.auth import (
     AuthConfig,
     Role,

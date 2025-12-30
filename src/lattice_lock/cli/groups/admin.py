@@ -1,7 +1,6 @@
 import logging
 
 import click
-
 from lattice_lock.cli.utils.console import get_console
 
 logger = logging.getLogger(__name__)
@@ -19,16 +18,18 @@ def run_dashboard(port):
     """Launch the local admin dashboard."""
     console = get_console()
     console.print(f"[info]Starting admin dashboard on port {port}...[/info]")
-    
+
     try:
         import uvicorn
         from lattice_lock.admin.api import create_app
-        
+
         app = create_app()
         console.print(f"[success]Dashboard running at http://localhost:{port}[/success]")
         uvicorn.run(app, host="0.0.0.0", port=port)
     except ImportError:
-        console.print("[error]Missing dependencies. Install with: pip install uvicorn fastapi[/error]")
+        console.print(
+            "[error]Missing dependencies. Install with: pip install uvicorn fastapi[/error]"
+        )
     except Exception as e:
         console.print(f"[error]Failed to start dashboard: {e}[/error]")
 

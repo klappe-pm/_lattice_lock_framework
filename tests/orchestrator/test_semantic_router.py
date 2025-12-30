@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock
 
 import pytest
-
 from lattice_lock.orchestrator.analysis import SemanticRouter, TaskAnalyzer
 from lattice_lock.orchestrator.types import APIResponse, TaskType
 

@@ -203,17 +203,17 @@ class ModelOrchestrator:
                 # Use pop to ensure messages isn't passed twice (once here, once in kwargs)
                 # But be careful: we need messages for subsequent loop iterations if this one fails.
                 # So we should get it, but ensure we don't pass it in **kwargs to execute
-                
+
                 # Actually, strictly speaking, we are inside a loop. We should NOT pop it from kwargs
                 # if we need it for the next iteration.
                 # BETTER APPROACH: Extract it once outside the loop?
                 # But kwargs differs per call? No, kwargs is fallback args.
-                
+
                 # Let's check how kwargs is used. It's passed to execute.
                 # If we pass messages explicitly to execute, we must remove it from kwargs passed to execute.
                 pass_kwargs = kwargs.copy()
                 iter_messages = pass_kwargs.pop("messages", [{"role": "user", "content": prompt}])
-                
+
                 response = await self.executor.execute(
                     model_cap=model_cap,
                     client=client,

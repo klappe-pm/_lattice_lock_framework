@@ -1,20 +1,24 @@
-import sys
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
 REPORT_XML = "e2e_report.xml"
 SUMMARY_MD = "e2e_summary.md"
 
+
 def run_tests():
     print(f"Running E2E tests... Output to {REPORT_XML}")
     cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "tests/e2e_300/test_e2e_matrix.py",
         f"--junitxml={REPORT_XML}",
-        "-v"
+        "-v",
     ]
     subprocess.run(cmd)
+
 
 def generate_report():
     print("Parsing test results...")
@@ -26,25 +30,27 @@ def generate_report():
         return
 
     passed_no_issues = []
-    passed_improvements = [] # Placeholder
+    passed_improvements = []  # Placeholder
     failed_fix = []
     failed_obsolete = []
 
     # Flatten testsuites -> testsuite -> testcase
     testcases = root.findall(".//testcase")
-    
+
     for tc in testcases:
         name = tc.get("name")
         classname = tc.get("classname")
         full_name = f"{classname}::{name}"
-        
+
         failure = tc.find("failure")
         error = tc.find("error")
         skipped = tc.find("skipped")
-        
+
         if failure is not None or error is not None:
-            message = (failure.get("message") if failure is not None else error.get("message")) or "Unknown Error"
-            
+            message = (
+                failure.get("message") if failure is not None else error.get("message")
+            ) or "Unknown Error"
+
             # Heuristic for "obsolete"
             if "ImportError" in message or "ModuleNotFoundError" in message:
                 failed_obsolete.append(f"- [ ] **{full_name}**: {message}")
@@ -87,8 +93,9 @@ def generate_report():
 
     with open(SUMMARY_MD, "w") as f:
         f.write(md_content)
-    
+
     print(f"Summary report generated: {SUMMARY_MD}")
+
 
 if __name__ == "__main__":
     run_tests()

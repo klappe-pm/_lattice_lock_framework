@@ -1,9 +1,8 @@
 import os
 import secrets
 
-from pydantic import BaseModel, Field, SecretStr, field_validator
-
 from lattice_lock.exceptions import SecurityConfigurationError
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 
 class AuthConfig(BaseModel):

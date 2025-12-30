@@ -78,15 +78,17 @@ class ProviderAvailability:
         """Check status of all known providers."""
         if cls._checked and cls._status:
             return cls._status
-            
+
         cls._status = {}
         for provider in cls.REQUIRED_CREDENTIALS:
             if cls.is_available(provider):
                 # Use maturity status if available, otherwise generic AVAILABLE
-                cls._status[provider] = cls.PROVIDER_MATURITY.get(provider, ProviderStatus.AVAILABLE)
+                cls._status[provider] = cls.PROVIDER_MATURITY.get(
+                    provider, ProviderStatus.AVAILABLE
+                )
             else:
                 cls._status[provider] = ProviderStatus.UNAVAILABLE
-        
+
         cls._checked = True
         return cls._status
 

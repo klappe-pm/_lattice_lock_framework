@@ -1,6 +1,6 @@
 # Code Gap Inventory
 
-> **Scope**: 152 Python source files, 77 test files, 91 docs, **139** YAML configs, 38 scripts  
+> **Scope**: 152 Python source files, 77 test files, 91 docs, **139** YAML configs, 38 scripts
 > **Generated**: 2025-12-28 | **Fact-Checked**: ✅
 
 ---
@@ -25,7 +25,7 @@
 
 ### ❌ WITHDRAWN: LLMClient "Not Implemented"
 
-**Original Claim**: LLMClient not yet implemented  
+**Original Claim**: LLMClient not yet implemented
 **ACTUAL**: **Fully implemented** at 
 
 ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
@@ -44,7 +44,7 @@ class LLMClient:
 
 ### ❌ WITHDRAWN: VersionComplianceRule "Placeholder"
 
-**Original Claim**: Placeholder rule  
+**Original Claim**: Placeholder rule
 **ACTUAL**: **Fully functional** at 
 
 ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
@@ -57,7 +57,7 @@ rules.py:101-128
 
 ### ⚠️ CORRECTED: Sheriff Flag Name
 
-**Original Claim**: `--auto-fix` flag  
+**Original Claim**: `--auto-fix` flag
 **ACTUAL**: `--fix` flag at 
 
 ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
@@ -66,12 +66,12 @@ sheriff.py:33-35
 
 ### ⚠️ CORRECTED: YAML Config Count
 
-**Original Claim**: 41 YAML files  
+**Original Claim**: 41 YAML files
 **ACTUAL**: **139 YAML files** (98 more than claimed)
 
 ### ⚠️ UPDATED: RollbackTrigger Status
 
-**Original Claim**: Mock implementation  
+**Original Claim**: Mock implementation
 **ACTUAL**: 
 
 ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
@@ -97,9 +97,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 1.1 GanttParser ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     roadmap_parser.py:221-233
 - **Status**: `raise NotImplementedError("Gantt chart parsing is not yet implemented...")`
 - **Fix**: Implement or remove class
@@ -107,9 +107,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 1.2 KanbanParser ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     roadmap_parser.py:236-248
 - **Status**: `raise NotImplementedError("Kanban board parsing is not yet implemented...")`
 - **Fix**: Implement or remove class
@@ -117,9 +117,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 1.3 Sheriff --fix Flag ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     sheriff.py:33-35
 - **Status**: `help="... (not implemented yet)."`
 - **Line 102-103**: `click.echo(click.style("Warning: --fix is not yet implemented.", fg="yellow"))`
@@ -128,28 +128,28 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 1.4 Admin Dashboard CLI ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     cli/groups/admin.py:22
 - **Status**: Prints messages but doesn't launch uvicorn
 - **Note**: Working implementations exist in 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     admin/api.py and 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     dashboard/backend.py
 - **Fix**: Add uvicorn.run() or redirect to working implementation
 
 ### 1.5 WebSocket Subscribe/Unsubscribe ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     websocket.py:163-164, 192
 - **Status**: Marked as "(future)" - subscribe sends mock ack, unsubscribe absent
 - **Fix**: Implement or remove from message handler
@@ -161,9 +161,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 2.1 Unreachable Code ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     rules.py:98
 - **Issue**: Duplicate `return violations` after line 96 already returns
 - **Severity**: Low (dead code)
@@ -172,9 +172,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 2.2 ConsensusEngine Mock ✅ CONFIRMED CRITICAL
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     engine.py:21-30
 - **Issue**: Uses `random.seed(hash(prompt + model))` for deterministic mock
 - **Comment**: "Mock Logic for demonstration"
@@ -183,9 +183,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 2.3 Database Health Placeholders ✅ CONFIRMED
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     health.py:30-31
 - **Issue**: Hardcoded `latency_ms: 0`, `connections_in_pool: 1`
 - **Fix**: Implement actual timing and pool introspection
@@ -251,9 +251,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 6.1 ConsensusEngine ⚠️ CRITICAL
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     engine.py
 - **Issue**: Uses deterministic random, not actual LLM calls
 - **Priority**: P1 - Production blocker
@@ -261,9 +261,9 @@ exceptions.py are **intentional inheritance patterns**, not bugs.
 ### 6.2 RollbackTrigger ~~✅ FIXED~~
 
 - **File**: 
-    
+
     ![](vscode-file://vscode-app/Applications/Antigravity.app/Contents/Resources/app/extensions/theme-symbols/src/icons/files/python.svg)
-    
+
     trigger.py:130
 - **Status**: Now uses `CheckpointManager.restore_file()` (appears fixed per PR #118)
 - **Note**: Comment at line 12 is legacy; implementation is functional

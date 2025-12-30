@@ -2,10 +2,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-from lattice_lock.agents.prompt_architect.agent import (
-    PromptArchitectAgent,
-)
+from lattice_lock.agents.prompt_architect.agent import PromptArchitectAgent
 
 
 class TestPromptArchitectAgent:

@@ -16,7 +16,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from lattice_lock.orchestrator.analysis import TaskAnalyzer
 from lattice_lock.orchestrator.scoring import ModelScorer
 from lattice_lock.orchestrator.types import (

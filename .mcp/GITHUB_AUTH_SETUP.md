@@ -158,6 +158,6 @@ If your token expires:
 
 ---
 
-**Date:** 2025-12-27  
-**System:** macOS  
+**Date:** 2025-12-27
+**System:** macOS
 **Account:** klappe-pm

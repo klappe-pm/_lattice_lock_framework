@@ -3,7 +3,6 @@
 import asyncio
 
 import pytest
-
 from lattice_lock.exceptions import BackgroundTaskError
 from lattice_lock.utils.async_compat import (
     BackgroundTaskQueue,

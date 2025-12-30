@@ -7,7 +7,7 @@ This document lists deprecated modules and APIs in the Lattice Lock Framework. D
 ## Deprecated Modules
 
 ### `lattice_lock.orchestrator.api_clients`
-**Deprecated since:** v1.x  
+**Deprecated since:** v1.x
 **Use instead:** `lattice_lock.orchestrator.providers`
 
 ```python
@@ -21,7 +21,7 @@ from lattice_lock.orchestrator.providers import OpenAIAPIClient, get_api_client
 ---
 
 ### `lattice_lock.orchestrator.scorer`
-**Deprecated since:** v1.x  
+**Deprecated since:** v1.x
 **Use instead:** `lattice_lock.orchestrator.analysis` and `lattice_lock.orchestrator.scoring`
 
 ```python

@@ -5,11 +5,7 @@ Example tests demonstrating repository pattern testing approach.
 from unittest.mock import MagicMock
 
 import pytest
-
-from lattice_lock.database.repository import (
-    EntityNotFoundError,
-    SQLAlchemyRepository,
-)
+from lattice_lock.database.repository import EntityNotFoundError, SQLAlchemyRepository
 
 
 class MockEntity:

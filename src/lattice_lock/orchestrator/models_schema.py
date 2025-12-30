@@ -110,7 +110,9 @@ class RegistryConfig(BaseModel):
                         id=model_id,
                         provider=provider_enum,
                         api_name=model_data.get("api_name", model_id),
-                        context_window=model_data.get("context_window"),  # No default, required field
+                        context_window=model_data.get(
+                            "context_window"
+                        ),  # No default, required field
                         input_cost=model_data.get("input_cost", 0.0),
                         output_cost=model_data.get("output_cost", 0.0),
                         reasoning_score=model_data.get("reasoning_score", 0.0),

@@ -13,7 +13,6 @@ import sys
 from pathlib import Path
 
 import click
-
 from lattice_lock.sheriff.cache import SheriffCache, get_config_hash
 from lattice_lock.sheriff.config import SheriffConfig
 from lattice_lock.sheriff.formatters import OutputFormatter, get_formatter

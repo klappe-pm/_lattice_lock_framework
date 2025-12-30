@@ -4,7 +4,7 @@ erDiagram
     %% ==========================================
     %% USER & AUTHENTICATION DOMAIN
     %% ==========================================
-    
+
     users {
         uuid id PK
         varchar username UK
@@ -17,7 +17,7 @@ erDiagram
         timestamptz last_login_at
         jsonb metadata
     }
-    
+
     api_keys {
         uuid id PK
         uuid user_id FK
@@ -30,13 +30,13 @@ erDiagram
         boolean is_revoked
         jsonb metadata
     }
-    
+
     revoked_tokens {
         varchar jti PK
         timestamptz revoked_at
         timestamptz expires_at
     }
-    
+
     auth_events {
         uuid id PK
         uuid user_id FK
@@ -51,7 +51,7 @@ erDiagram
     %% ==========================================
     %% SESSION & CONVERSATION DOMAIN
     %% ==========================================
-    
+
     sessions {
         uuid id PK
         uuid user_id FK
@@ -62,7 +62,7 @@ erDiagram
         jsonb client_info
         jsonb metadata
     }
-    
+
     chats {
         uuid id PK
         uuid session_id FK
@@ -79,7 +79,7 @@ erDiagram
         varchar status
         jsonb metadata
     }
-    
+
     chat_turns {
         uuid id PK
         uuid chat_id FK
@@ -95,7 +95,7 @@ erDiagram
     %% ==========================================
     %% LLM MODEL USAGE & COST DOMAIN
     %% ==========================================
-    
+
     model_requests {
         uuid id PK
         uuid session_id FK
@@ -134,7 +134,7 @@ erDiagram
         jsonb raw_response
         jsonb metadata
     }
-    
+
     cost_aggregations {
         uuid id PK
         varchar aggregation_type
@@ -158,7 +158,7 @@ erDiagram
     %% ==========================================
     %% OBSERVABILITY & TRACING DOMAIN
     %% ==========================================
-    
+
     traces {
         uuid id PK
         varchar trace_id UK
@@ -173,7 +173,7 @@ erDiagram
         integer span_count
         jsonb metadata
     }
-    
+
     spans {
         uuid id PK
         varchar trace_id FK
@@ -187,7 +187,7 @@ erDiagram
         text error
         jsonb attributes
     }
-    
+
     app_logs {
         uuid id PK
         timestamptz timestamp
@@ -203,7 +203,7 @@ erDiagram
         text exception_message
         text exception_stacktrace
     }
-    
+
     performance_metrics {
         uuid id PK
         timestamptz recorded_at
@@ -216,7 +216,7 @@ erDiagram
     %% ==========================================
     %% PROJECT & VALIDATION DOMAIN
     %% ==========================================
-    
+
     projects {
         uuid id PK
         varchar external_id UK
@@ -238,7 +238,7 @@ erDiagram
         timestamptz last_activity_at
         jsonb metadata
     }
-    
+
     project_errors {
         uuid id PK
         uuid project_id FK
@@ -255,7 +255,7 @@ erDiagram
         text resolution_notes
         jsonb metadata
     }
-    
+
     validation_runs {
         uuid id PK
         uuid project_id FK
@@ -275,7 +275,7 @@ erDiagram
     %% ==========================================
     %% FEEDBACK DOMAIN
     %% ==========================================
-    
+
     feedback_items {
         uuid id PK
         uuid user_id FK
@@ -297,7 +297,7 @@ erDiagram
     %% ==========================================
     %% CHECKPOINT & ROLLBACK DOMAIN
     %% ==========================================
-    
+
     checkpoints {
         uuid id PK
         uuid project_id FK
@@ -312,7 +312,7 @@ erDiagram
         boolean is_deleted
         jsonb metadata
     }
-    
+
     checkpoint_files {
         uuid id PK
         uuid checkpoint_id FK
@@ -322,7 +322,7 @@ erDiagram
         varchar storage_key
         jsonb metadata
     }
-    
+
     rollback_events {
         uuid id PK
         uuid checkpoint_id FK
@@ -341,7 +341,7 @@ erDiagram
     %% ==========================================
     %% AGENT & WORKFLOW DOMAIN
     %% ==========================================
-    
+
     agent_executions {
         uuid id PK
         varchar agent_type
@@ -359,7 +359,7 @@ erDiagram
         text error_message
         jsonb metadata
     }
-    
+
     workflow_definitions {
         uuid id PK
         varchar name
@@ -371,7 +371,7 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
     }
-    
+
     workflow_runs {
         uuid id PK
         uuid workflow_id FK
@@ -388,7 +388,7 @@ erDiagram
     %% ==========================================
     %% RELATIONSHIPS
     %% ==========================================
-    
+
     users ||--o{ api_keys : "has"
     users ||--o{ auth_events : "generates"
     users ||--o{ sessions : "owns"
@@ -402,7 +402,7 @@ erDiagram
     users ||--o{ agent_executions : "runs"
     users ||--o{ workflow_definitions : "creates"
     users ||--o{ workflow_runs : "executes"
-    
+
     sessions ||--o{ chats : "contains"
     sessions ||--o{ model_requests : "includes"
     sessions ||--o{ traces : "generates"
@@ -410,25 +410,25 @@ erDiagram
     sessions ||--o{ feedback_items : "has"
     sessions ||--o{ agent_executions : "runs"
     sessions ||--o{ workflow_runs : "executes"
-    
+
     chats ||--o{ chat_turns : "contains"
     chats ||--o{ model_requests : "generates"
     chats ||--o{ feedback_items : "receives"
-    
+
     chat_turns ||--o| model_requests : "links to"
-    
+
     traces ||--o{ spans : "contains"
-    
+
     projects ||--o{ project_errors : "has"
     projects ||--o{ validation_runs : "undergoes"
     projects ||--o{ checkpoints : "has"
     projects ||--o{ rollback_events : "experiences"
-    
+
     checkpoints ||--o{ checkpoint_files : "contains"
     checkpoints ||--o{ rollback_events : "triggers"
-    
+
     workflow_definitions ||--o{ workflow_runs : "executes"
-    
+
     model_requests ||--o{ feedback_items : "receives"
-    
+
 ```

@@ -21,4 +21,3 @@ Redis is the recommended backend for production token storage due to:
 - Tokens should be stored with an expiration time matching the JWT expiry.
 - Use Redis SETS or HASHES depending on the metadata required.
 - Implement a cleanup worker or rely on Redis TTL.
-

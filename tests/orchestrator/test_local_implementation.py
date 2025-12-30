@@ -1,8 +1,7 @@
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from lattice_lock.orchestrator.providers.local import LocalModelClient
 
 
@@ -78,10 +77,9 @@ async def test_ollama_fallback(mock_local_env):
     client = LocalModelClient(config=config)
 
     # Mock _make_request to raise exception first, then return valid response
-    client._make_request = AsyncMock(side_effect=[
-        Exception("API Error"),
-        ({"response": "Ollama fallback"}, 45)
-    ])
+    client._make_request = AsyncMock(
+        side_effect=[Exception("API Error"), ({"response": "Ollama fallback"}, 45)]
+    )
 
     # Mock session for fallback call - wait, if _make_request handles it, we don't need to mock session?
     # In my local.py view, _make_request is used for fallback too.
@@ -92,16 +90,16 @@ async def test_ollama_fallback(mock_local_env):
     # The previous test setup mocked client.session.post which suggests old implementation.
     # My "restored" or current local.py uses _make_request.
     # So I remove the session mock stuff.
-    
+
     # But wait, original test had:
     # client.session = MagicMock()
     # ...
     # client.session.post.return_value = mock_session_post
     # client.config.ollama_base_url = "http://localhost:11434"
-    
+
     # If the implementation uses _make_request, I don't need mocking session.post.
     # I verified local.py uses _make_request at line 123.
-    
+
     client.config.ollama_base_url = "http://localhost:11434"
 
     response = await client.chat_completion(
@@ -116,7 +114,7 @@ async def test_ollama_fallback(mock_local_env):
     # The second call succeeded ("Ollama fallback")
     # We check the arguments of _make_request
     assert client._make_request.call_count == 2
-    
+
     # Check the second call arguments (the fallback)
     call_args = client._make_request.call_args_list[1]
     url = call_args[0][1]

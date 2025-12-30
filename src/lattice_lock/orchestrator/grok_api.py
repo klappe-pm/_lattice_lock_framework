@@ -15,7 +15,6 @@ from typing import Any
 
 import requests
 import yaml
-
 from lattice_lock.utils.safe_path import resolve_under_root
 
 logger = logging.getLogger("lattice_lock.orchestrator.grok")

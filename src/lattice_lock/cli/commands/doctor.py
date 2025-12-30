@@ -73,6 +73,7 @@ def _check_required_dependencies() -> list[CheckResult]:
         except Exception as e:
             # Log error but suppress traceback for clean CLI output
             import logging
+
             logging.getLogger(__name__).debug(f"Dependency check failed: {e}")
             results.append(
                 CheckResult(
@@ -95,6 +96,7 @@ def _check_required_dependencies() -> list[CheckResult]:
             )
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).debug(f"Optional dependency check failed: {e}")
             results.append(
                 CheckResult(
@@ -232,6 +234,7 @@ def _check_git() -> CheckResult:
     except Exception as e:
         # Log git check failure
         import logging
+
         logging.getLogger(__name__).debug(f"Git check failed: {e}")
         pass
 

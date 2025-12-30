@@ -1,12 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from lattice_lock.orchestrator.exceptions import (
-    AuthenticationError,
-    RateLimitError,
-    ServerError,
-)
+from lattice_lock.orchestrator.exceptions import AuthenticationError, RateLimitError, ServerError
 from lattice_lock.orchestrator.providers import (
     BaseAPIClient,
     GrokAPIClient,

@@ -21,14 +21,14 @@ All stateful components implement reset functionality to ensure test isolation.
 ```python
 class MyStatefulComponent:
     _instance = None  # If singleton
-    
+
     def __init__(self):
         self._state = {}
-    
+
     def reset(self) -> None:
         """Reset all state for testing."""
         self._state.clear()
-    
+
     @classmethod
     def reset_singleton(cls) -> None:
         """Reset singleton instance for testing."""

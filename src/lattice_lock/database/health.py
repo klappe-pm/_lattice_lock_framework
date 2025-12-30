@@ -6,9 +6,8 @@ import logging
 import time
 from typing import Any
 
-from sqlalchemy import text
-
 from lattice_lock.database.connection import DatabaseManager
+from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ async def check_database_health() -> dict[str, Any]:
             result = await session.execute(text("SELECT 1"))
             latency = (time.time() - start_time) * 1000
             _ = result.scalar()
-            
+
             # Get pool stats if available
             pool_stats = {}
             if DatabaseManager._engine:
@@ -36,7 +35,7 @@ async def check_database_health() -> dict[str, Any]:
                     pool_stats = {
                         "connections_checked_out": pool.checkedout(),
                         "connections_overflow": pool.overflow(),
-                        "pool_size": pool.size()
+                        "pool_size": pool.size(),
                     }
                 except Exception:
                     pass
@@ -46,7 +45,7 @@ async def check_database_health() -> dict[str, Any]:
                 "database": "connected",
                 "latency_ms": round(latency, 2),
                 "connections_in_pool": pool_stats.get("pool_size", 0),
-                **pool_stats
+                **pool_stats,
             }
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}", exc_info=True)

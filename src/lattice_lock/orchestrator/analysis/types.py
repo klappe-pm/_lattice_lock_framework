@@ -1,6 +1,7 @@
 """
 Task Analysis Type Definitions.
 """
+
 from dataclasses import dataclass, field
 from typing import Any
 

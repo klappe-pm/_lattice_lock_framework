@@ -7,7 +7,6 @@ This module provides the main entry point for the CLI.
 import logging
 
 import click
-
 from lattice_lock import __version__
 
 # Import existing commands

@@ -2,7 +2,6 @@ import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from lattice_lock.orchestrator.providers.google import GoogleAPIClient
 
 

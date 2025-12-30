@@ -174,7 +174,7 @@ Auto-generates pytest contracts from `ensures` clauses: post-condition validatio
 #### Scoring Algorithm
 
 ```
-Score = (Task Affinity × 0.40) + (Performance × 0.30) + 
+Score = (Task Affinity × 0.40) + (Performance × 0.30) +
         (Accuracy × 0.20) + (Cost Efficiency × 0.10)
 ```
 

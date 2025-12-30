@@ -71,15 +71,15 @@ def verify_dependencies():
         capture_output=True,
         text=True
     )
-    
+
     if result.returncode != 0:
         print("❌ DEPENDENCY CONFLICT DETECTED:")
         print(result.stdout)
         print(result.stderr)
         sys.exit(1)
-    
+
     print("✅ All dependencies compatible")
-    
+
     # Verify critical packages
     import importlib
     required = ["yaml", "jwt", "bcrypt"]
@@ -110,7 +110,7 @@ class LatticeError(Exception):
 class BillingIntegrityError(LatticeError):
     """
     Token aggregation or billing data corruption detected.
-    
+
     This is a CRITICAL error - billing data integrity has been compromised.
     Requires immediate investigation.
     """
@@ -120,7 +120,7 @@ class BillingIntegrityError(LatticeError):
 class SecurityConfigurationError(LatticeError):
     """
     Security requirements not met for current environment.
-    
+
     Raised when production environment lacks required security configuration
     such as secret keys or secure algorithm settings.
     """
@@ -130,7 +130,7 @@ class SecurityConfigurationError(LatticeError):
 class BackgroundTaskError(LatticeError):
     """
     Background task failed to complete within timeout.
-    
+
     Indicates potential data loss from incomplete async operations.
     """
     pass
@@ -139,7 +139,7 @@ class BackgroundTaskError(LatticeError):
 class ProviderUnavailableError(LatticeError):
     """
     Provider credentials missing or provider unreachable.
-    
+
     Attributes:
         provider: Name of the unavailable provider
         reason: Specific reason for unavailability
@@ -174,33 +174,33 @@ logger = logging.getLogger(__name__)
 class AppConfig:
     """
     Root configuration object with environment validation.
-    
+
     All configuration values are validated on initialization.
     Production environment enforces strict security requirements.
     """
-    
+
     def __init__(self):
         self.env = os.environ.get("LATTICE_ENV", "dev")
-        
+
         # Security Configuration
         self.secret_key: Optional[str] = os.environ.get("LATTICE_LOCK_SECRET_KEY")
         self.jwt_algorithm: str = "HS256"
-        
+
         # Analyzer Configuration
         self.analyzer_cache_size: int = self._parse_int("ANALYZER_CACHE_SIZE", 1024)
-        
+
         # Executor Configuration
         self.max_function_calls: int = self._parse_int("MAX_FUNCTION_CALLS", 10)
         self.background_task_timeout: float = float(
             os.environ.get("BACKGROUND_TASK_TIMEOUT", "5.0")
         )
-        
+
         # Auth Configuration
         self.token_expiry_minutes: int = self._parse_int("TOKEN_EXPIRY_MINUTES", 30)
-        
+
         # Validate after all values loaded
         self._validate_environment()
-    
+
     def _validate_environment(self) -> None:
         """Validate configuration for current environment."""
         if self.env == "production":
@@ -217,7 +217,7 @@ class AppConfig:
             if not self.secret_key:
                 self.secret_key = "dev-secret-do-not-use-in-production"
                 logger.warning("Using default dev secret key - NOT FOR PRODUCTION")
-    
+
     def _parse_int(self, var: str, default: int) -> int:
         """Safely parse integer environment variables."""
         value = os.environ.get(var)
@@ -227,7 +227,7 @@ class AppConfig:
             else:
                 raise ValidationError(f"Environment variable {var} must be an integer, got: {value}")
         return default
-    
+
     @classmethod
     def load(cls) -> "AppConfig":
         """Load and validate configuration."""
@@ -276,21 +276,21 @@ LOG_LEVELS = {
     "cache_hit": logging.DEBUG,
     "cache_miss": logging.DEBUG,
     "internal_state": logging.DEBUG,
-    
+
     # Info level - normal operations
     "model_selection": logging.INFO,
     "request_complete": logging.INFO,
     "provider_initialized": logging.INFO,
-    
+
     # Warning level - recoverable issues
     "provider_failover": logging.WARNING,
     "retry_attempt": logging.WARNING,
     "deprecation": logging.WARNING,
-    
+
     # Error level - failures
     "validation_failure": logging.ERROR,
     "provider_error": logging.ERROR,
-    
+
     # Critical level - immediate attention required
     "security_violation": logging.CRITICAL,
     "billing_integrity": logging.CRITICAL,
@@ -317,7 +317,7 @@ def redact_sensitive(message: str) -> str:
 
 class RedactingFormatter(logging.Formatter):
     """Formatter that automatically redacts sensitive data."""
-    
+
     def format(self, record: logging.LogRecord) -> str:
         original = super().format(record)
         return redact_sensitive(original)
@@ -329,7 +329,7 @@ def configure_logging(level: int = logging.INFO) -> None:
     handler.setFormatter(RedactingFormatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     ))
-    
+
     root_logger = logging.getLogger("lattice_lock")
     root_logger.setLevel(level)
     root_logger.addHandler(handler)
@@ -338,7 +338,7 @@ def configure_logging(level: int = logging.INFO) -> None:
 def get_logger(name: str) -> logging.Logger:
     """
     Get a logger with standard configuration.
-    
+
     Usage:
         logger = get_logger(__name__)
     """
@@ -372,14 +372,14 @@ All stateful components MUST implement reset functionality to ensure test isolat
 ```python
 class MyStatefulComponent:
     _instance = None  # If singleton
-    
+
     def __init__(self):
         self._state = {}
-    
+
     def reset(self) -> None:
         """Reset all state for testing."""
         self._state.clear()
-    
+
     @classmethod
     def reset_singleton(cls) -> None:
         """Reset singleton instance for testing."""
@@ -512,13 +512,13 @@ class ProviderStatus(Enum):
 class ProviderAvailability:
     """
     Singleton for tracking provider credential availability.
-    
+
     Checks environment for required API keys and tracks provider status.
     """
     _instance: Optional["ProviderAvailability"] = None
     _status: dict[str, ProviderStatus] = {}
     _messages: dict[str, str] = {}
-    
+
     REQUIRED_CREDENTIALS: dict[str, list[str]] = {
         "openai": ["OPENAI_API_KEY"],
         "anthropic": ["ANTHROPIC_API_KEY"],
@@ -528,26 +528,26 @@ class ProviderAvailability:
         "bedrock": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
         "local": [],  # No credentials required
     }
-    
+
     @classmethod
     def reset(cls) -> None:
         """Reset singleton state for testing."""
         cls._instance = None
         cls._status.clear()
         cls._messages.clear()
-    
+
     @classmethod
     def is_available(cls, provider: str) -> bool:
         """Check if provider has required credentials."""
         import os
         required = cls.REQUIRED_CREDENTIALS.get(provider.lower(), [])
         return all(os.environ.get(key) for key in required)
-    
+
     @classmethod
     def get_status(cls, provider: str) -> ProviderStatus:
         """Get cached status for provider."""
         return cls._status.get(provider.lower(), ProviderStatus.UNKNOWN)
-    
+
     @classmethod
     def get_available_providers(cls) -> list[str]:
         """Get list of providers with configured credentials."""
@@ -557,57 +557,57 @@ class ProviderAvailability:
 class BaseAPIClient(ABC):
     """
     Abstract base class for all API provider clients.
-    
+
     All providers must:
     1. Validate configuration on initialization
     2. Implement health_check for connectivity verification
     3. Implement chat_completion for LLM calls
     """
-    
+
     def __init__(self, config: AppConfig):
         """
         Initialize client with configuration.
-        
+
         Args:
             config: Application configuration object
-            
+
         Raises:
             ProviderUnavailableError: If required credentials missing
         """
         self.config = config
         self._validate_config()
         logger.info(f"Initialized {self.__class__.__name__}")
-    
+
     @abstractmethod
     def _validate_config(self) -> None:
         """
         Provider-specific configuration validation.
-        
+
         Must check for required API keys and raise ProviderUnavailableError
         if any are missing.
         """
         pass
-    
+
     @abstractmethod
     async def health_check(self) -> bool:
         """
         Verify provider connectivity and credential validity.
-        
+
         Implementation Requirements:
         - Verify API credentials are valid (not just present)
         - Confirm provider endpoint is reachable
         - Execute minimal API call (e.g., list models)
         - Cache results for max 60 seconds
         - Must not consume significant billable quota
-        
+
         Returns:
             True if provider is healthy and accessible
-            
+
         Raises:
             ProviderUnavailableError: If health check fails
         """
         pass
-    
+
     @abstractmethod
     async def chat_completion(
         self,
@@ -617,21 +617,21 @@ class BaseAPIClient(ABC):
     ) -> Any:
         """
         Execute a chat completion request.
-        
+
         Args:
             model: Model identifier
             messages: Conversation messages
             **kwargs: Provider-specific options
-            
+
         Returns:
             APIResponse with completion result
         """
         pass
-    
+
     async def __aenter__(self):
         """Async context manager entry."""
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit - cleanup resources."""
         pass
@@ -657,13 +657,13 @@ logger = logging.getLogger(__name__)
 
 class OpenAIAPIClient(BaseAPIClient):
     """OpenAI API client implementation."""
-    
+
     PROVIDER_NAME = "openai"
-    
+
     def __init__(self, config: AppConfig, api_key: str | None = None):
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         super().__init__(config)
-    
+
     def _validate_config(self) -> None:
         """Validate OpenAI API key is present."""
         if not self.api_key:
@@ -671,7 +671,7 @@ class OpenAIAPIClient(BaseAPIClient):
                 provider=self.PROVIDER_NAME,
                 reason="OPENAI_API_KEY environment variable not set"
             )
-    
+
     async def health_check(self) -> bool:
         """Verify OpenAI API connectivity."""
         try:
@@ -685,7 +685,7 @@ class OpenAIAPIClient(BaseAPIClient):
                 provider=self.PROVIDER_NAME,
                 reason=str(e)
             )
-    
+
     async def chat_completion(
         self,
         model: str,
@@ -749,39 +749,39 @@ def get_api_client(
 ) -> BaseAPIClient:
     """
     Factory function to get the appropriate API client.
-    
+
     Args:
         provider: Provider name (e.g., 'openai', 'anthropic')
         check_availability: Whether to check credentials before creating
         config: Optional config override (uses global if not provided)
         **kwargs: Additional arguments for client initialization
-        
+
     Returns:
         Configured API client instance
-        
+
     Raises:
         ValueError: If provider is unknown
         ProviderUnavailableError: If credentials missing and check_availability=True
     """
     config = config or get_config()
-    
+
     # Resolve aliases
     provider_lower = provider.lower()
     provider_lower = PROVIDER_ALIASES.get(provider_lower, provider_lower)
-    
+
     if provider_lower not in PROVIDER_CLIENTS:
         raise ValueError(f"Unknown provider: {provider}. Available: {list(PROVIDER_CLIENTS.keys())}")
-    
+
     if check_availability and not ProviderAvailability.is_available(provider_lower):
         from lattice_lock.exceptions import ProviderUnavailableError
         raise ProviderUnavailableError(
             provider=provider_lower,
             reason="Required credentials not configured"
         )
-    
+
     client_class = PROVIDER_CLIENTS[provider_lower]
     logger.info(f"Creating {client_class.__name__} for provider '{provider}'")
-    
+
     return client_class(config=config, **kwargs)
 ```
 
@@ -871,7 +871,7 @@ from lattice_lock.orchestrator.providers import (
 
 class TestProviderInitialization:
     """Test provider initialization validates config."""
-    
+
     def test_openai_requires_api_key(self):
         """OpenAI client must validate API key on init."""
         with patch.dict("os.environ", {}, clear=True):
@@ -879,13 +879,13 @@ class TestProviderInitialization:
             with pytest.raises(ProviderUnavailableError) as exc:
                 OpenAIAPIClient(config)
             assert "OPENAI_API_KEY" in str(exc.value)
-    
+
     def test_factory_checks_availability(self):
         """Factory should check credentials by default."""
         with patch.dict("os.environ", {}, clear=True):
             with pytest.raises(ProviderUnavailableError):
                 get_api_client("openai")
-    
+
     def test_factory_skip_availability_check(self):
         """Factory can skip availability check when requested."""
         with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
@@ -895,16 +895,16 @@ class TestProviderInitialization:
 
 class TestProviderAvailability:
     """Test provider availability tracking."""
-    
+
     def setup_method(self):
         ProviderAvailability.reset()
-    
+
     def test_reset_clears_state(self):
         """Reset should clear all cached status."""
         ProviderAvailability._status["test"] = "value"
         ProviderAvailability.reset()
         assert len(ProviderAvailability._status) == 0
-    
+
     def test_available_providers_list(self):
         """Should return only providers with credentials."""
         with patch.dict("os.environ", {"OPENAI_API_KEY": "test"}, clear=True):
@@ -968,26 +968,26 @@ task_patterns:
     - ["\\bcreate\\s+function\\b", 0.95]
     - ["\\bdef\\s+\\w+\\s*\\(", 0.8]
     - ["\\bclass\\s+\\w+", 0.8]
-    
+
   DEBUGGING:
     - ["\\bdebug\\b", 0.9]
     - ["\\bfix\\s+(?:this|the)?\\s*(?:bug|error|issue)", 0.95]
     - ["\\btraceback\\b", 0.85]
     - ["\\bexception\\b", 0.7]
     - ["TypeError|ValueError|KeyError", 0.8]
-    
+
   REASONING:
     - ["\\bexplain\\s+(?:why|how)", 0.85]
     - ["\\banalyze\\b", 0.8]
     - ["\\bcompare\\b", 0.7]
     - ["\\bwhat\\s+(?:is|are)\\s+the\\s+(?:difference|pros|cons)", 0.9]
-    
+
   DATA_ANALYSIS:
     - ["\\bpd\\.", 0.9]
     - ["\\bdf\\[", 0.85]
     - ["\\.csv\\b", 0.7]
     - ["\\b(?:analyze|visualize)\\s+(?:the\\s+)?data", 0.9]
-    
+
   GENERAL:
     - [".*", 0.1]  # Fallback pattern
 ```
@@ -1008,7 +1008,7 @@ from ..types import TaskType
 class TaskAnalysis:
     """
     Comprehensive task analysis result.
-    
+
     Attributes:
         primary_type: Most likely task type
         confidence: Confidence score (0.0-1.0)
@@ -1064,11 +1064,11 @@ def _load_yaml_safe():
 class TaskAnalyzer:
     """
     Analyzes prompts to determine task type using pre-compiled patterns.
-    
+
     Patterns are loaded from YAML and compiled once at initialization.
     Results are cached using LRU strategy.
     """
-    
+
     def __init__(
         self,
         config: AppConfig,
@@ -1076,38 +1076,38 @@ class TaskAnalyzer:
     ):
         """
         Initialize analyzer with configuration.
-        
+
         Args:
             config: Application configuration
             patterns_path: Optional custom patterns file path
         """
         self.config = config
         self._patterns_path = patterns_path or Path(__file__).parent / "patterns.yaml"
-        
+
         # Load and pre-compile patterns
         self._compiled_patterns = self._load_and_compile(self._patterns_path)
-        
+
         # LRU cache for analysis results
         self._cache: OrderedDict[str, TaskAnalysis] = OrderedDict()
         self._cache_size = config.analyzer_cache_size
-        
+
         logger.info(f"TaskAnalyzer initialized with {len(self._compiled_patterns)} task types")
-    
+
     def _load_and_compile(self, path: Path) -> dict[str, list[tuple[re.Pattern, float]]]:
         """
         Load patterns from YAML and PRE-COMPILE all regex.
-        
+
         This is the key performance optimization - patterns are compiled
         once at startup rather than on every analysis.
         """
         yaml = _load_yaml_safe()
-        
+
         with open(path) as f:
             raw = yaml.safe_load(f)
-        
+
         compiled = {}
         pattern_count = 0
-        
+
         for task_type, patterns in raw.get("task_patterns", {}).items():
             compiled[task_type] = []
             for pattern_str, weight in patterns:
@@ -1117,14 +1117,14 @@ class TaskAnalyzer:
                     pattern_count += 1
                 except re.error as e:
                     logger.warning(f"Invalid regex pattern '{pattern_str}': {e}")
-        
+
         logger.debug(f"Compiled {pattern_count} regex patterns")
         return compiled
-    
+
     def analyze(self, prompt: str) -> TaskRequirements:
         """
         Analyze prompt and return task requirements.
-        
+
         Uses cached results when available.
         """
         analysis = self._analyze_with_cache(prompt)
@@ -1132,53 +1132,53 @@ class TaskAnalyzer:
             task_type=analysis.primary_type,
             # Map other fields as needed
         )
-    
+
     def analyze_full(self, prompt: str) -> TaskAnalysis:
         """Return full analysis with all scores."""
         return self._analyze_with_cache(prompt)
-    
+
     def _analyze_with_cache(self, prompt: str) -> TaskAnalysis:
         """Check cache or perform analysis."""
         cache_key = hashlib.sha256(prompt.encode()).hexdigest()[:16]
-        
+
         if cache_key in self._cache:
             # Move to end (most recently used)
             self._cache.move_to_end(cache_key)
             logger.debug(f"Cache hit for prompt hash {cache_key}")
             return self._cache[cache_key]
-        
+
         # Perform analysis
         analysis = self._perform_analysis(prompt)
-        
+
         # Add to cache with LRU eviction
         self._cache[cache_key] = analysis
         if len(self._cache) > self._cache_size:
             self._cache.popitem(last=False)
-        
+
         return analysis
-    
+
     def _perform_analysis(self, prompt: str) -> TaskAnalysis:
         """Execute pattern matching against prompt."""
         scores: dict[str, float] = {}
-        
+
         for task_type, patterns in self._compiled_patterns.items():
             score = 0.0
             for pattern, weight in patterns:
                 if pattern.search(prompt):
                     score = max(score, weight)
             scores[task_type] = score
-        
+
         # Find best match
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         primary = sorted_scores[0][0] if sorted_scores else "GENERAL"
         confidence = sorted_scores[0][1] if sorted_scores else 0.0
-        
+
         return TaskAnalysis(
             primary_type=TaskType[primary],
             confidence=confidence,
             scores={TaskType[k]: v for k, v in scores.items()},
         )
-    
+
     def reset_cache(self) -> None:
         """Clear analysis cache for testing."""
         self._cache.clear()
@@ -1205,7 +1205,7 @@ logger = logging.getLogger(__name__)
 
 class LLMClient(Protocol):
     """Protocol for LLM clients used by SemanticRouter."""
-    
+
     async def chat_completion(
         self, model: str, messages: list[dict], max_tokens: int, temperature: float
     ) -> Any:
@@ -1215,20 +1215,20 @@ class LLMClient(Protocol):
 class SemanticRouter:
     """
     LLM-based task classification for uncertain cases.
-    
+
     Args:
         client: LLM client implementing chat_completion
         model: Model to use for classification
         confidence_threshold: Min pattern confidence to skip LLM routing
     """
-    
+
     CLASSIFICATION_PROMPT = """Classify this prompt into one task type:
 {types}
 
 Prompt: {prompt}
 
 Return ONLY the task type name, nothing else."""
-    
+
     def __init__(
         self,
         client: LLMClient | None = None,
@@ -1238,19 +1238,19 @@ Return ONLY the task type name, nothing else."""
         self.client = client
         self.model = model
         self.confidence_threshold = confidence_threshold
-    
+
     async def route(self, prompt: str) -> TaskType:
         """Route prompt to task type using LLM."""
         if not self.client:
             logger.debug("No LLM client configured, returning GENERAL")
             return TaskType.GENERAL
-        
+
         types_str = ", ".join(t.name for t in TaskType)
         classification_prompt = self.CLASSIFICATION_PROMPT.format(
             types=types_str,
             prompt=prompt[:1000]  # Truncate long prompts
         )
-        
+
         try:
             response = await self.client.chat_completion(
                 model=self.model,
@@ -1258,18 +1258,18 @@ Return ONLY the task type name, nothing else."""
                 max_tokens=20,
                 temperature=0.0,
             )
-            
+
             result = response.content.strip().upper()
             for task_type in TaskType:
                 if task_type.name in result:
                     return task_type
-            
+
             return TaskType.GENERAL
-            
+
         except Exception as e:
             logger.warning(f"Semantic routing failed: {e}")
             return TaskType.GENERAL
-    
+
     def should_route(self, pattern_confidence: float) -> bool:
         """Determine if LLM routing needed based on pattern confidence."""
         return pattern_confidence < self.confidence_threshold
@@ -1312,17 +1312,17 @@ def _load_yaml_safe():
 class ModelScorer:
     """
     Scores models based on capability match to task requirements.
-    
+
     Uses configurable weights loaded from YAML.
     """
-    
+
     DEFAULT_WEIGHTS = {
         "context_window": 0.2,
         "speed": 0.15,
         "cost": 0.15,
         "capability_match": 0.5,
     }
-    
+
     def __init__(
         self,
         config: AppConfig,
@@ -1330,7 +1330,7 @@ class ModelScorer:
     ):
         """
         Initialize scorer with configuration.
-        
+
         Args:
             config: Application configuration
             weights_path: Optional custom weights file
@@ -1338,12 +1338,12 @@ class ModelScorer:
         self.config = config
         self._weights = self._load_weights(weights_path)
         logger.info("ModelScorer initialized")
-    
+
     def _load_weights(self, path: Path | None) -> dict[str, float]:
         """Load scoring weights from configuration."""
         if path is None:
             return self.DEFAULT_WEIGHTS.copy()
-        
+
         yaml = _load_yaml_safe()
         try:
             with open(path) as f:
@@ -1352,7 +1352,7 @@ class ModelScorer:
         except Exception as e:
             logger.warning(f"Failed to load weights from {path}: {e}")
             return self.DEFAULT_WEIGHTS.copy()
-    
+
     def score(
         self,
         model: ModelCapabilities,
@@ -1360,11 +1360,11 @@ class ModelScorer:
     ) -> float:
         """
         Calculate fitness score for model given requirements.
-        
+
         Args:
             model: Model capability information
             requirements: Task requirements to match
-            
+
         Returns:
             Score from 0.0 (poor match) to 1.0 (perfect match)
         """
@@ -1374,31 +1374,31 @@ class ModelScorer:
             "cost": self._score_cost(model, requirements),
             "capability_match": self._score_capabilities(model, requirements),
         }
-        
+
         total = sum(
             scores[k] * self._weights[k]
             for k in scores
         )
-        
+
         logger.debug(f"Model {model.name} scored {total:.3f} for {requirements.task_type}")
         return total
-    
+
     def _score_context(self, model: ModelCapabilities, req: TaskRequirements) -> float:
         """Score based on context window adequacy."""
         if model.context_window >= req.min_context_window:
             return 1.0
         return model.context_window / req.min_context_window
-    
+
     def _score_speed(self, model: ModelCapabilities, req: TaskRequirements) -> float:
         """Score based on latency requirements."""
         # Implementation based on model benchmarks
         return 0.8  # Placeholder
-    
+
     def _score_cost(self, model: ModelCapabilities, req: TaskRequirements) -> float:
         """Score based on cost efficiency."""
         # Implementation based on pricing data
         return 0.7  # Placeholder
-    
+
     def _score_capabilities(self, model: ModelCapabilities, req: TaskRequirements) -> float:
         """Score based on capability match to task type."""
         task_capabilities = {
@@ -1407,13 +1407,13 @@ class ModelScorer:
             TaskType.CREATIVE_WRITING: ["creative", "writing"],
             # ... other task types
         }
-        
+
         required = set(task_capabilities.get(req.task_type, []))
         model_caps = set(model.capabilities)
-        
+
         if not required:
             return 0.5
-        
+
         overlap = len(required & model_caps)
         return overlap / len(required)
 ```
@@ -1473,16 +1473,16 @@ from lattice_lock.orchestrator.analysis import TaskAnalyzer
 
 class TestAnalyzerPerformance:
     """Validate regex pre-compilation performance."""
-    
+
     @pytest.fixture
     def analyzer(self):
         config = AppConfig()
         return TaskAnalyzer(config)
-    
+
     def test_regex_precompilation_performance(self, analyzer):
         """
         Pre-compiled regex must analyze 1000 prompts in under 100ms.
-        
+
         This validates the performance improvement from pre-compilation.
         """
         prompts = [
@@ -1491,28 +1491,28 @@ class TestAnalyzerPerformance:
             "Explain how neural networks work",
             "Analyze the sales data and create a visualization",
         ] * 250  # 1000 prompts
-        
+
         start = time.perf_counter()
         for prompt in prompts:
             analyzer.analyze(prompt)
         elapsed = time.perf_counter() - start
-        
+
         assert elapsed < 0.1, f"Analysis took {elapsed:.3f}s, expected < 0.1s"
-    
+
     def test_cache_improves_repeat_performance(self, analyzer):
         """Cached lookups should be significantly faster."""
         prompt = "Write a function to calculate fibonacci numbers"
-        
+
         # First call (cache miss)
         start = time.perf_counter()
         analyzer.analyze(prompt)
         first_call = time.perf_counter() - start
-        
+
         # Second call (cache hit)
         start = time.perf_counter()
         analyzer.analyze(prompt)
         second_call = time.perf_counter() - start
-        
+
         # Cache hit should be at least 10x faster
         assert second_call < first_call / 10
 ```
@@ -1579,14 +1579,14 @@ logger = logging.getLogger(__name__)
 class ModelSelector:
     """
     Selects optimal model based on task requirements and scoring.
-    
+
     Uses multi-stage selection:
     1. Check guide recommendations
     2. Filter by hard constraints
     3. Score remaining candidates
     4. Return highest-scoring model
     """
-    
+
     def __init__(
         self,
         registry: ModelRegistry,
@@ -1598,14 +1598,14 @@ class ModelSelector:
         self.scorer = scorer
         self.guide = guide
         self.config = config
-    
+
     def select_best_model(self, requirements: TaskRequirements) -> str | None:
         """
         Select highest-scoring model for requirements.
-        
+
         Args:
             requirements: Task requirements to match
-            
+
         Returns:
             Model ID string, or None if no suitable model
         """
@@ -1617,18 +1617,18 @@ class ModelSelector:
                 if valid:
                     logger.info(f"Using guide recommendation: {valid[0]}")
                     return valid[0]
-        
+
         # Score all candidates
         candidates = self._score_candidates(requirements)
-        
+
         if not candidates:
             logger.warning(f"No suitable model for {requirements.task_type}")
             return None
-        
+
         best = candidates[0]
         logger.info(f"Selected model: {best[0]} (score: {best[1]:.3f})")
         return best[0]
-    
+
     def _validate_recommendations(
         self,
         recommendations: list[str],
@@ -1641,25 +1641,25 @@ class ModelSelector:
             if model and self.scorer.score(model, requirements) > 0:
                 valid.append(model_id)
         return valid
-    
+
     def _score_candidates(
         self,
         requirements: TaskRequirements,
     ) -> list[tuple[str, float]]:
         """Score all available models."""
         candidates = []
-        
+
         for model in self.registry.get_all_models():
             # Skip blocked models
             if self.guide and self.guide.is_model_blocked(model.api_name):
                 continue
-            
+
             score = self.scorer.score(model, requirements)
             if score > 0:
                 candidates.append((model.api_name, score))
-        
+
         return sorted(candidates, key=lambda x: x[1], reverse=True)
-    
+
     def get_fallback_chain(
         self,
         requirements: TaskRequirements,
@@ -1668,20 +1668,20 @@ class ModelSelector:
     ) -> list[str]:
         """
         Get ordered list of fallback models.
-        
+
         Args:
             requirements: Task requirements
             exclude: Models to exclude (e.g., already failed)
             max_fallbacks: Maximum number of fallbacks to return
         """
         exclude_set = set(exclude or [])
-        
+
         # Check guide for explicit chain
         if self.guide:
             chain = self.guide.get_fallback_chain(requirements.task_type.name)
             if chain:
                 return [m for m in chain if m not in exclude_set][:max_fallbacks]
-        
+
         # Build from scored candidates
         candidates = self._score_candidates(requirements)
         return [m for m, _ in candidates if m not in exclude_set][:max_fallbacks]
@@ -1724,24 +1724,24 @@ logger = logging.getLogger(__name__)
 class ClientPool:
     """
     Manages API client instances with lazy initialization.
-    
+
     Provides client caching and provider availability checking.
     """
-    
+
     def __init__(self, config: AppConfig):
         self.config = config
         self._clients: Dict[str, BaseAPIClient] = {}
-    
+
     def get_client(self, provider: str) -> BaseAPIClient:
         """
         Get or create client for provider.
-        
+
         Args:
             provider: Provider name
-            
+
         Returns:
             Configured client instance
-            
+
         Raises:
             ProviderUnavailableError: If credentials missing
         """
@@ -1752,17 +1752,17 @@ class ClientPool:
                 check_availability=True,
                 config=self.config,
             )
-        
+
         return self._clients[provider]
-    
+
     def is_available(self, provider: str) -> bool:
         """Check if provider has credentials configured."""
         return ProviderAvailability.is_available(provider)
-    
+
     def get_available_providers(self) -> list[str]:
         """Get list of available providers."""
         return ProviderAvailability.get_available_providers()
-    
+
     async def close_all(self) -> None:
         """Close all client connections."""
         for provider, client in self._clients.items():
@@ -1771,9 +1771,9 @@ class ClientPool:
                 logger.debug(f"Closed client for {provider}")
             except Exception as e:
                 logger.warning(f"Error closing {provider} client: {e}")
-        
+
         self._clients.clear()
-    
+
     def reset(self) -> None:
         """Reset pool state for testing."""
         self._clients.clear()
@@ -1811,11 +1811,11 @@ logger = logging.getLogger(__name__)
 class ConversationExecutor:
     """
     Executes conversations with automatic function call handling.
-    
+
     CRITICAL: Implements billing-accurate token aggregation across
     multi-turn conversations with tool use.
     """
-    
+
     def __init__(
         self,
         function_handler: FunctionCallHandler,
@@ -1824,7 +1824,7 @@ class ConversationExecutor:
         self.function_handler = function_handler
         self.config = config
         self.max_function_calls = config.max_function_calls
-    
+
     async def execute(
         self,
         client: BaseAPIClient,
@@ -1835,22 +1835,22 @@ class ConversationExecutor:
     ) -> APIResponse:
         """
         Execute conversation with token aggregation.
-        
+
         CRITICAL: Token totals MUST be accurately aggregated across
         all iterations for correct billing.
-        
+
         Args:
             client: API client to use
             model: Model identifier
             messages: Conversation messages
             trace_id: Optional trace ID for observability
             **kwargs: Additional API arguments
-            
+
         Returns:
             APIResponse with aggregated token usage
         """
         request_trace_id = trace_id or get_current_trace_id() or str(uuid.uuid4())
-        
+
         async with AsyncSpanContext(
             "conversation_execute",
             trace_id=request_trace_id,
@@ -1862,13 +1862,13 @@ class ConversationExecutor:
                 "completion_tokens": 0,
                 "total_tokens": 0,
             }
-            
+
             conversation = list(messages)  # Copy to avoid mutation
             function_call_count = 0
-            
+
             functions_metadata = self.function_handler.get_registered_functions_metadata()
             functions = list(functions_metadata.values()) if functions_metadata else None
-            
+
             while function_call_count < self.max_function_calls:
                 async with AsyncSpanContext(
                     "llm_call",
@@ -1881,7 +1881,7 @@ class ConversationExecutor:
                         functions=functions,
                         **kwargs,
                     )
-                
+
                 # BILLING CRITICAL: Aggregate usage from EVERY call
                 if response.usage:
                     self._aggregate_usage(total_usage, response.usage)
@@ -1890,21 +1890,21 @@ class ConversationExecutor:
                         f"prompt={total_usage['prompt_tokens']}, "
                         f"completion={total_usage['completion_tokens']}"
                     )
-                
+
                 # Check if conversation is complete
                 if not response.function_call:
                     # BILLING CRITICAL: Validate and assign aggregated totals
                     self._validate_token_totals(total_usage, response)
                     response.usage = total_usage
                     return response
-                
+
                 # Handle function call
                 function_call_count += 1
                 logger.info(
                     f"Function call {function_call_count}/{self.max_function_calls}: "
                     f"{response.function_call.name}"
                 )
-                
+
                 try:
                     result = await self._execute_function(response.function_call)
                     conversation = self._append_function_result(
@@ -1915,16 +1915,16 @@ class ConversationExecutor:
                     response.error = str(e)
                     response.usage = total_usage
                     return response
-            
+
             # Max calls reached
             logger.warning(f"Max function calls ({self.max_function_calls}) reached")
             response.usage = total_usage
             return response
-    
+
     def _aggregate_usage(self, total: Dict[str, int], usage: Any) -> None:
         """
         BILLING CRITICAL: Aggregate token usage from a single call.
-        
+
         Args:
             total: Running total to update
             usage: Usage from current call
@@ -1933,19 +1933,19 @@ class ConversationExecutor:
             total["prompt_tokens"] += usage.prompt_tokens or 0
         elif isinstance(usage, dict):
             total["prompt_tokens"] += usage.get("prompt_tokens", 0)
-        
+
         if hasattr(usage, "completion_tokens"):
             total["completion_tokens"] += usage.completion_tokens or 0
         elif isinstance(usage, dict):
             total["completion_tokens"] += usage.get("completion_tokens", 0)
-        
+
         # Recalculate total (don't trust provider's total)
         total["total_tokens"] = total["prompt_tokens"] + total["completion_tokens"]
-    
+
     def _validate_token_totals(self, aggregated: Dict[str, int], response: APIResponse) -> None:
         """
         BILLING CRITICAL: Validate aggregation integrity.
-        
+
         Raises BillingIntegrityError if token data appears corrupted.
         """
         # Check for zero aggregation when response has usage
@@ -1953,7 +1953,7 @@ class ConversationExecutor:
             response_total = getattr(response.usage, "total_tokens", 0)
             if isinstance(response.usage, dict):
                 response_total = response.usage.get("total_tokens", 0)
-            
+
             if aggregated["total_tokens"] == 0 and response_total > 0:
                 logger.critical(
                     "TOKEN AGGREGATION FAILURE: "
@@ -1962,7 +1962,7 @@ class ConversationExecutor:
                 raise BillingIntegrityError(
                     f"Token aggregation failed: expected >0, got {aggregated['total_tokens']}"
                 )
-        
+
         # Validate arithmetic consistency
         if aggregated["total_tokens"] != (aggregated["prompt_tokens"] + aggregated["completion_tokens"]):
             logger.critical(
@@ -1970,14 +1970,14 @@ class ConversationExecutor:
                 f"prompt+completion={aggregated['prompt_tokens'] + aggregated['completion_tokens']}"
             )
             raise BillingIntegrityError("Token total does not match sum of prompt + completion")
-    
+
     async def _execute_function(self, function_call: FunctionCall) -> Any:
         """Execute a function call."""
         return await self.function_handler.execute_function_call(
             function_call.name,
             **function_call.arguments,
         )
-    
+
     def _append_function_result(
         self,
         conversation: list[dict],
@@ -1986,7 +1986,7 @@ class ConversationExecutor:
     ) -> list[dict]:
         """Append function call and result to conversation."""
         tool_call_id = self._extract_tool_call_id(response)
-        
+
         # Assistant's function call
         conversation.append({
             "role": "assistant",
@@ -2000,16 +2000,16 @@ class ConversationExecutor:
                 },
             }],
         })
-        
+
         # Tool response
         conversation.append({
             "role": "tool",
             "content": str(result),
             "tool_call_id": tool_call_id,
         })
-        
+
         return conversation
-    
+
     def _extract_tool_call_id(self, response: APIResponse) -> str:
         """Extract tool_call_id from response, or generate fallback."""
         try:
@@ -2053,18 +2053,18 @@ def create_mock_response(prompt_tokens: int, completion_tokens: int, has_functio
     response.usage.total_tokens = prompt_tokens + completion_tokens
     response.function_call = MagicMock() if has_function_call else None
     response.raw_response = {"choices": [{"message": {"tool_calls": [{"id": "call_123"}]}}]}
-    
+
     if has_function_call:
         response.function_call.name = "test_function"
         response.function_call.arguments = {}
-    
+
     return response
 
 
 def create_mock_provider(call_sequence: list):
     """
     Create mock provider that returns responses in sequence.
-    
+
     Args:
         call_sequence: List of (prompt_tokens, completion_tokens, has_function_call) tuples
     """
@@ -2076,70 +2076,70 @@ def create_mock_provider(call_sequence: list):
 
 class TestTokenAggregation:
     """Validate billing-critical token aggregation."""
-    
+
     @pytest.fixture
     def config(self):
         return AppConfig()
-    
+
     @pytest.fixture
     def function_handler(self):
         handler = MagicMock(spec=FunctionCallHandler)
         handler.get_registered_functions_metadata.return_value = {"test": {}}
         handler.execute_function_call = AsyncMock(return_value="result")
         return handler
-    
+
     @pytest.fixture
     def executor(self, config, function_handler):
         return ConversationExecutor(function_handler, config)
-    
+
     @pytest.mark.asyncio
     async def test_single_call_token_count(self, executor):
         """Single call should return exact token counts."""
         provider = create_mock_provider([
             (100, 50, False),  # No function call
         ])
-        
+
         response = await executor.execute(
             client=provider,
             model="test-model",
             messages=[{"role": "user", "content": "Hello"}],
         )
-        
+
         assert response.usage["prompt_tokens"] == 100
         assert response.usage["completion_tokens"] == 50
         assert response.usage["total_tokens"] == 150
-    
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize("tool_call_count", [1, 2, 3, 5])
     async def test_multi_tool_token_aggregation(self, executor, tool_call_count):
         """
         CRITICAL: Validate token totals across N sequential tool calls.
-        
+
         Each call adds 100 prompt + 50 completion tokens.
         Total should be (tool_call_count + 1) * (100 + 50)
         """
         # Build call sequence: N function calls + 1 final response
         call_sequence = [(100, 50, True)] * tool_call_count + [(100, 50, False)]
         provider = create_mock_provider(call_sequence)
-        
+
         response = await executor.execute(
             client=provider,
             model="test-model",
             messages=[{"role": "user", "content": "Process data"}],
         )
-        
+
         expected_calls = tool_call_count + 1
         expected_prompt = expected_calls * 100
         expected_completion = expected_calls * 50
         expected_total = expected_prompt + expected_completion
-        
+
         assert response.usage["prompt_tokens"] == expected_prompt, \
             f"Expected {expected_prompt} prompt tokens, got {response.usage['prompt_tokens']}"
         assert response.usage["completion_tokens"] == expected_completion, \
             f"Expected {expected_completion} completion tokens, got {response.usage['completion_tokens']}"
         assert response.usage["total_tokens"] == expected_total, \
             f"Expected {expected_total} total tokens, got {response.usage['total_tokens']}"
-    
+
     @pytest.mark.asyncio
     async def test_zero_aggregation_raises_error(self, executor):
         """Must raise BillingIntegrityError if aggregation fails."""
@@ -2149,27 +2149,27 @@ class TestTokenAggregation:
         response.usage = MagicMock()
         response.usage.total_tokens = 100  # Has usage
         response.function_call = None
-        
+
         # Force aggregation to fail by mocking internal state
         provider.chat_completion = AsyncMock(return_value=response)
-        
+
         # Patch _aggregate_usage to simulate failure
         original_aggregate = executor._aggregate_usage
-        
+
         def broken_aggregate(total, usage):
             pass  # Don't actually aggregate
-        
+
         executor._aggregate_usage = broken_aggregate
-        
+
         with pytest.raises(BillingIntegrityError):
             await executor.execute(
                 client=provider,
                 model="test-model",
                 messages=[{"role": "user", "content": "Test"}],
             )
-        
+
         executor._aggregate_usage = original_aggregate
-    
+
     @pytest.mark.asyncio
     async def test_arithmetic_consistency(self, executor):
         """Total must equal prompt + completion."""
@@ -2177,13 +2177,13 @@ class TestTokenAggregation:
             (100, 50, True),
             (75, 25, False),
         ])
-        
+
         response = await executor.execute(
             client=provider,
             model="test-model",
             messages=[{"role": "user", "content": "Test"}],
         )
-        
+
         assert response.usage["total_tokens"] == (
             response.usage["prompt_tokens"] + response.usage["completion_tokens"]
         ), "Total tokens must equal prompt + completion"
@@ -2192,42 +2192,42 @@ class TestTokenAggregation:
 @pytest.mark.stress
 class TestTokenAggregationStress:
     """Stress tests for billing integrity at scale."""
-    
+
     @pytest.fixture
     def config(self):
         config = AppConfig()
         config.max_function_calls = 1000  # Allow many calls for stress test
         return config
-    
+
     @pytest.fixture
     def function_handler(self):
         handler = MagicMock(spec=FunctionCallHandler)
         handler.get_registered_functions_metadata.return_value = {"test": {}}
         handler.execute_function_call = AsyncMock(return_value="result")
         return handler
-    
+
     @pytest.fixture
     def executor(self, config, function_handler):
         return ConversationExecutor(function_handler, config)
-    
+
     @pytest.mark.asyncio
     async def test_100_tool_calls_aggregation(self, executor):
         """Validate accurate aggregation at 100 tool calls."""
         call_count = 100
         tokens_per_call = (50, 25)  # prompt, completion
-        
+
         call_sequence = [(*tokens_per_call, True)] * call_count + [(*tokens_per_call, False)]
         provider = create_mock_provider(call_sequence)
-        
+
         response = await executor.execute(
             client=provider,
             model="stress-test",
             messages=[{"role": "user", "content": "Heavy workload"}],
         )
-        
+
         expected_calls = call_count + 1
         expected_total = expected_calls * sum(tokens_per_call)
-        
+
         assert response.usage["total_tokens"] == expected_total, \
             f"At {call_count} tool calls: expected {expected_total}, got {response.usage['total_tokens']}"
 ````
@@ -2275,27 +2275,27 @@ logger = logging.getLogger(__name__)
 class ModelOrchestrator:
     """
     Intelligent model orchestration system.
-    
+
     Routes requests to optimal models based on task analysis,
     capability scoring, and availability. Coordinates specialized
     components for selection, execution, and fallback handling.
     """
-    
+
     def __init__(
         self,
         guide_path: str | None = None,
         config: AppConfig | None = None,
     ):
         self.config = config or get_config()
-        
+
         # Core components
         self.registry = ModelRegistry()
         self.guide = ModelGuideParser(guide_path)
         self.scorer = ModelScorer(self.config)
-        
+
         # Analysis
         self.analyzer = TaskAnalyzer(self.config)
-        
+
         # Selection
         self.selector = ModelSelector(
             registry=self.registry,
@@ -2303,7 +2303,7 @@ class ModelOrchestrator:
             guide=self.guide,
             config=self.config,
         )
-        
+
         # Execution
         self.client_pool = ClientPool(self.config)
         self.function_handler = FunctionCallHandler()
@@ -2311,19 +2311,19 @@ class ModelOrchestrator:
             function_handler=self.function_handler,
             config=self.config,
         )
-        
+
         # Resilience
         self.fallback_manager = FallbackManager(max_retries=1)
-        
+
         # Cost tracking
         self.cost_tracker = CostTracker(self.registry)
-        
+
         logger.info("ModelOrchestrator initialized")
-    
+
     def register_function(self, name: str, func) -> None:
         """Register a function for model tool use."""
         self.function_handler.register_function(name, func)
-    
+
     async def route_request(
         self,
         prompt: str,
@@ -2334,19 +2334,19 @@ class ModelOrchestrator:
     ) -> APIResponse:
         """
         Route a request to the appropriate model.
-        
+
         Args:
             prompt: User prompt
             model_id: Optional specific model override
             task_type: Optional task type override
             trace_id: Optional trace ID for distributed tracing
             **kwargs: Additional API arguments
-            
+
         Returns:
             APIResponse with model completion
         """
         request_trace_id = trace_id or get_current_trace_id() or generate_trace_id()
-        
+
         async with AsyncSpanContext(
             "route_request",
             trace_id=request_trace_id,
@@ -2356,23 +2356,23 @@ class ModelOrchestrator:
             requirements = self.analyzer.analyze(prompt)
             if task_type:
                 requirements.task_type = task_type
-            
+
             logger.info(f"Task: {requirements.task_type.name}")
-            
+
             # 2. Select model
             selected_model_id = model_id or self.selector.select_best_model(requirements)
             if not selected_model_id:
                 raise ValueError("No suitable model found")
-            
+
             model = self.registry.get_model(selected_model_id)
             if not model:
                 raise ValueError(f"Model {selected_model_id} not in registry")
-            
+
             logger.info(f"Selected: {selected_model_id} ({model.provider.value})")
-            
+
             # 3. Execute with fallback
             messages = kwargs.pop("messages", None) or [{"role": "user", "content": prompt}]
-            
+
             return await self._execute_with_fallback(
                 model_id=selected_model_id,
                 messages=messages,
@@ -2380,7 +2380,7 @@ class ModelOrchestrator:
                 trace_id=request_trace_id,
                 **kwargs,
             )
-    
+
     async def _execute_with_fallback(
         self,
         model_id: str,
@@ -2395,22 +2395,22 @@ class ModelOrchestrator:
             requirements, exclude=[model_id]
         )
         candidates = [model_id] + fallback_chain
-        
+
         # Filter to available providers
         available = []
         for mid in candidates:
             model = self.registry.get_model(mid)
             if model and self.client_pool.is_available(model.provider.value):
                 available.append(mid)
-        
+
         if not available:
             providers = self.client_pool.get_available_providers()
             raise RuntimeError(f"No available providers. Configured: {providers or 'None'}")
-        
+
         async def try_model(candidate_id: str) -> APIResponse:
             model = self.registry.get_model(candidate_id)
             client = self.client_pool.get_client(model.provider.value)
-            
+
             response = await self.executor.execute(
                 client=client,
                 model=model.api_name,
@@ -2418,25 +2418,25 @@ class ModelOrchestrator:
                 trace_id=trace_id,
                 **kwargs,
             )
-            
+
             # Track cost with AGGREGATED token counts
             self.cost_tracker.record_transaction(
                 response,
                 task_type=str(requirements.task_type),
                 trace_id=trace_id,
             )
-            
+
             return response
-        
+
         return await self.fallback_manager.execute_with_fallback(
             func=try_model,
             candidates=available,
         )
-    
+
     def get_available_providers(self) -> list[str]:
         """Get list of available providers."""
         return self.client_pool.get_available_providers()
-    
+
     async def close(self) -> None:
         """Clean up resources."""
         await self.client_pool.close_all()
@@ -2507,30 +2507,30 @@ logger = logging.getLogger(__name__)
 class AuthConfig(BaseModel):
     """
     Authentication configuration with production security enforcement.
-    
+
     In production, strict security requirements are enforced:
     - Secret key must be set via environment variable
     - Secret key must be at least 32 characters
     """
-    
+
     secret_key: Optional[SecretStr] = Field(default=None)
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     api_key_prefix: str = "llk_"
     password_min_length: int = 8
-    
+
     @model_validator(mode="after")
     def enforce_security(self) -> "AuthConfig":
         """Enforce security requirements based on environment."""
         env = os.environ.get("LATTICE_ENV", "dev")
-        
+
         # Try to load from environment if not set
         if self.secret_key is None:
             env_key = os.environ.get("LATTICE_LOCK_SECRET_KEY")
             if env_key:
                 self.secret_key = SecretStr(env_key)
-        
+
         if env == "production":
             if self.secret_key is None:
                 raise SecurityConfigurationError(
@@ -2548,7 +2548,7 @@ class AuthConfig(BaseModel):
                     "Using default dev secret key. "
                     "Set LATTICE_LOCK_SECRET_KEY for production."
                 )
-        
+
         return self
 
 
@@ -2596,20 +2596,20 @@ from .models import User, Role, APIKeyInfo
 class AuthStorage(Protocol):
     """
     Protocol for authentication storage backends.
-    
+
     Implement this protocol for custom storage (e.g., database).
     """
-    
+
     # User operations
     def get_user(self, username: str) -> Optional[User]: ...
     def create_user(self, user: User) -> None: ...
     def delete_user(self, username: str) -> bool: ...
     def list_users(self) -> List[User]: ...
-    
+
     # Token revocation
     def revoke_token(self, jti: str) -> None: ...
     def is_token_revoked(self, jti: str) -> bool: ...
-    
+
     # API keys
     def store_api_key(
         self, key_hash: str, username: str, role: Role, key_id: str, name: str
@@ -2617,7 +2617,7 @@ class AuthStorage(Protocol):
     def get_api_key_info(self, key_hash: str) -> Optional[Tuple[str, Role, str]]: ...
     def delete_api_key(self, key_id: str) -> bool: ...
     def list_api_keys(self, username: str) -> List[APIKeyInfo]: ...
-    
+
     # Cleanup
     def clear_all(self) -> None: ...
 
@@ -2625,38 +2625,38 @@ class AuthStorage(Protocol):
 class InMemoryAuthStorage:
     """
     In-memory implementation of AuthStorage.
-    
+
     Suitable for development and testing. For production, implement
     a database-backed storage class.
     """
-    
+
     def __init__(self):
         self._users: Dict[str, User] = {}
         self._revoked_tokens: Set[str] = set()
         self._api_keys: Dict[str, Tuple[str, Role, str]] = {}  # hash -> (user, role, key_id)
         self._api_key_metadata: Dict[str, APIKeyInfo] = {}  # key_id -> metadata
-    
+
     def get_user(self, username: str) -> Optional[User]:
         return self._users.get(username)
-    
+
     def create_user(self, user: User) -> None:
         self._users[user.username] = user
-    
+
     def delete_user(self, username: str) -> bool:
         if username in self._users:
             del self._users[username]
             return True
         return False
-    
+
     def list_users(self) -> List[User]:
         return list(self._users.values())
-    
+
     def revoke_token(self, jti: str) -> None:
         self._revoked_tokens.add(jti)
-    
+
     def is_token_revoked(self, jti: str) -> bool:
         return jti in self._revoked_tokens
-    
+
     def store_api_key(
         self, key_hash: str, username: str, role: Role, key_id: str, name: str
     ) -> None:
@@ -2666,10 +2666,10 @@ class InMemoryAuthStorage:
             created_at=datetime.now(timezone.utc),
             name=name,
         )
-    
+
     def get_api_key_info(self, key_hash: str) -> Optional[Tuple[str, Role, str]]:
         return self._api_keys.get(key_hash)
-    
+
     def delete_api_key(self, key_id: str) -> bool:
         # Find and remove the key
         for key_hash, (_, _, kid) in list(self._api_keys.items()):
@@ -2678,7 +2678,7 @@ class InMemoryAuthStorage:
                 self._api_key_metadata.pop(key_id, None)
                 return True
         return False
-    
+
     def list_api_keys(self, username: str) -> List[APIKeyInfo]:
         result = []
         for key_hash, (user, _, key_id) in self._api_keys.items():
@@ -2686,7 +2686,7 @@ class InMemoryAuthStorage:
                 if key_id in self._api_key_metadata:
                     result.append(self._api_key_metadata[key_id])
         return result
-    
+
     def clear_all(self) -> None:
         """Reset all storage for testing."""
         self._users.clear()
@@ -2751,14 +2751,14 @@ def create_access_token(
 ) -> str:
     """Create a JWT access token."""
     config = get_auth_config()
-    
+
     if expires_delta is None:
         expires_delta = timedelta(minutes=config.access_token_expire_minutes)
-    
+
     now = datetime.now(timezone.utc)
     expire = now + expires_delta
     jti = secrets.token_urlsafe(16)
-    
+
     payload = {
         "sub": username,
         "role": role.value,
@@ -2767,7 +2767,7 @@ def create_access_token(
         "jti": jti,
         "token_type": "access",
     }
-    
+
     return jwt.encode(
         payload,
         config.secret_key.get_secret_value(),
@@ -2782,14 +2782,14 @@ def create_refresh_token(
 ) -> str:
     """Create a JWT refresh token."""
     config = get_auth_config()
-    
+
     if expires_delta is None:
         expires_delta = timedelta(days=config.refresh_token_expire_days)
-    
+
     now = datetime.now(timezone.utc)
     expire = now + expires_delta
     jti = secrets.token_urlsafe(16)
-    
+
     payload = {
         "sub": username,
         "role": role.value,
@@ -2798,7 +2798,7 @@ def create_refresh_token(
         "jti": jti,
         "token_type": "refresh",
     }
-    
+
     return jwt.encode(
         payload,
         config.secret_key.get_secret_value(),
@@ -2809,53 +2809,53 @@ def create_refresh_token(
 def verify_token(token: str, expected_type: str = "access") -> TokenData:
     """
     Verify and decode a JWT token.
-    
+
     Args:
         token: JWT token string
         expected_type: Expected token type ("access" or "refresh")
-        
+
     Returns:
         Decoded TokenData
-        
+
     Raises:
         HTTPException: If token is invalid, expired, or revoked
     """
     config = get_auth_config()
     storage = get_storage()
-    
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         payload = jwt.decode(
             token,
             config.secret_key.get_secret_value(),
             algorithms=[config.algorithm],
         )
-        
+
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        
+
         jti: str = payload.get("jti", "")
         if storage.is_token_revoked(jti):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has been revoked",
             )
-        
+
         token_type: str = payload.get("token_type", "access")
         if token_type != expected_type:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Invalid token type: expected {expected_type}",
             )
-        
+
         role = Role(payload.get("role"))
-        
+
         return TokenData(
             sub=username,
             role=role,
@@ -2864,7 +2864,7 @@ def verify_token(token: str, expected_type: str = "access") -> TokenData:
             jti=jti,
             token_type=token_type,
         )
-        
+
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -2962,13 +2962,13 @@ from lattice_lock.admin.auth import AuthConfig, reset_auth_config
 
 class TestProductionSecurityEnforcement:
     """Test production security requirements."""
-    
+
     def setup_method(self):
         reset_auth_config()
-    
+
     def teardown_method(self):
         reset_auth_config()
-    
+
     def test_production_requires_secret_key(self):
         """Production must have LATTICE_LOCK_SECRET_KEY set."""
         with patch.dict("os.environ", {
@@ -2977,7 +2977,7 @@ class TestProductionSecurityEnforcement:
             with pytest.raises(SecurityConfigurationError) as exc:
                 AuthConfig()
             assert "must be set in production" in str(exc.value)
-    
+
     def test_production_rejects_short_key(self):
         """Production must reject keys under 32 characters."""
         with patch.dict("os.environ", {
@@ -2987,7 +2987,7 @@ class TestProductionSecurityEnforcement:
             with pytest.raises(SecurityConfigurationError) as exc:
                 AuthConfig()
             assert "at least 32 characters" in str(exc.value)
-    
+
     def test_production_accepts_valid_key(self):
         """Production accepts keys of 32+ characters."""
         with patch.dict("os.environ", {
@@ -2996,7 +2996,7 @@ class TestProductionSecurityEnforcement:
         }):
             config = AuthConfig()
             assert config.secret_key is not None
-    
+
     def test_dev_uses_default_key(self):
         """Development environment uses default key if not set."""
         with patch.dict("os.environ", {
@@ -3055,42 +3055,42 @@ logger = logging.getLogger(__name__)
 class BackgroundTaskQueue:
     """
     Background task queue with lifecycle management.
-    
+
     Ensures tasks are tracked and can be awaited during shutdown.
     Prevents task submission after shutdown initiated.
     """
-    
+
     def __init__(self):
         self._tasks: Set[asyncio.Task] = set()
         self._shutdown = False
-    
+
     def enqueue(self, coro: Awaitable[Any]) -> asyncio.Task | None:
         """
         Enqueue a coroutine for background execution.
-        
+
         Args:
             coro: Coroutine to execute
-            
+
         Returns:
             Task if enqueued, None if no event loop
-            
+
         Raises:
             RuntimeError: If called after shutdown initiated
         """
         if self._shutdown:
             logger.error(f"Task rejected after shutdown: {coro}")
             raise RuntimeError("Cannot enqueue tasks after shutdown initiated")
-        
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             logger.debug("No event loop available for background task")
             return None
-        
+
         task = loop.create_task(self._run_with_cleanup(coro))
         self._tasks.add(task)
         return task
-    
+
     async def _run_with_cleanup(self, coro: Awaitable[Any]) -> Any:
         """Run coroutine and remove from tracking on completion."""
         try:
@@ -3099,30 +3099,30 @@ class BackgroundTaskQueue:
             current = asyncio.current_task()
             if current:
                 self._tasks.discard(current)
-    
+
     async def wait_all(self, timeout: float = 5.0) -> None:
         """
         Wait for all pending tasks to complete.
-        
+
         Args:
             timeout: Maximum seconds to wait
-            
+
         Raises:
             BackgroundTaskError: If tasks don't complete within timeout
         """
         self._shutdown = True
-        
+
         if not self._tasks:
             return
-        
+
         logger.info(f"Waiting for {len(self._tasks)} background tasks...")
-        
+
         done, pending = await asyncio.wait(
             self._tasks,
             timeout=timeout,
             return_when=asyncio.ALL_COMPLETED,
         )
-        
+
         if pending:
             logger.critical(f"UNFINISHED TASKS: {len(pending)} tasks did not complete")
             for task in pending:
@@ -3130,13 +3130,13 @@ class BackgroundTaskQueue:
             raise BackgroundTaskError(
                 f"{len(pending)} background tasks failed to complete within {timeout}s"
             )
-        
+
         logger.info("All background tasks completed")
-    
+
     def pending_count(self) -> int:
         """Get count of pending tasks."""
         return len(self._tasks)
-    
+
     def reset(self) -> None:
         """Reset queue state for testing."""
         self._tasks.clear()
@@ -3191,7 +3191,7 @@ class RetryConfig:
     base_delay: float = 1.0
     max_delay: float = 60.0
     exponential_base: float = 2.0
-    
+
     def get_delay(self, attempt: int) -> float:
         """Calculate delay for attempt using exponential backoff."""
         delay = self.base_delay * (self.exponential_base ** attempt)
@@ -3228,28 +3228,28 @@ def _build_error_handler(
 ):
     """
     Build shared error handling logic for sync and async wrappers.
-    
+
     This eliminates duplication between sync_wrapper and async_wrapper.
     """
-    
+
     def handle_error(e: Exception, attempt: int) -> tuple[bool, float]:
         """
         Handle an error and determine retry behavior.
-        
+
         Returns:
             (should_retry, delay_seconds)
         """
         context = classify_error(e)
-        
+
         if track_metrics:
             _global_metrics.record_error(context)
-        
+
         if log_errors:
             logger.error(f"{func_name} failed: {context.message}")
-        
+
         if on_error:
             on_error(context)
-        
+
         # Determine if we should retry
         is_recoverable = any(isinstance(e, t) for t in recoverable_errors)
         can_retry = (
@@ -3257,10 +3257,10 @@ def _build_error_handler(
             getattr(context.recoverability, "should_retry", False) and
             attempt < retry_config.max_retries
         )
-        
+
         delay = retry_config.get_delay(attempt) if can_retry else 0
         return can_retry, delay
-    
+
     return handle_error
 
 
@@ -3274,7 +3274,7 @@ def error_boundary(
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator providing error boundary protection with unified sync/async handling.
-    
+
     Args:
         recoverable_errors: Exception types that can be retried
         on_error: Callback when error occurs
@@ -3285,12 +3285,12 @@ def error_boundary(
     """
     recoverable = recoverable_errors or []
     config = retry_config or RetryConfig(max_retries=0)
-    
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         handle_error = _build_error_handler(
             func.__name__, config, recoverable, on_error, log_errors, track_metrics
         )
-        
+
         if asyncio.iscoroutinefunction(func):
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs) -> T:
@@ -3337,44 +3337,44 @@ def error_boundary(
                         else:
                             raise
             return sync_wrapper
-    
+
     return decorator
 
 
 @dataclass
 class ErrorMetrics:
     """Tracks error metrics for telemetry."""
-    
+
     error_counts: dict[str, int] = field(default_factory=dict)
     error_rates: dict[str, float] = field(default_factory=dict)
     last_errors: dict[str, list[float]] = field(default_factory=list)
     _persistence_enabled: bool = True
     _persistence_errors: int = 0
     _max_persistence_errors: int = 10
-    
+
     def record_error(self, context: ErrorContext, project_id: str | None = None) -> None:
         """Record an error occurrence."""
         error_type = context.error_type
         current_time = time.time()
-        
+
         # Sync metric updates
         self.error_counts[error_type] = self.error_counts.get(error_type, 0) + 1
-        
+
         if error_type not in self.last_errors:
             self.last_errors[error_type] = []
         self.last_errors[error_type].append(current_time)
-        
+
         # Rate calculation (last 60 seconds)
         cutoff = current_time - 60
         self.last_errors[error_type] = [
             t for t in self.last_errors[error_type] if t > cutoff
         ]
         self.error_rates[error_type] = len(self.last_errors[error_type])
-        
+
         # Async persistence via background queue
         if project_id and self._persistence_enabled:
             self._enqueue_persistence(context, project_id)
-    
+
     def _enqueue_persistence(self, context: ErrorContext, project_id: str) -> None:
         """Enqueue error persistence as background task."""
         queue = get_background_queue()
@@ -3384,32 +3384,32 @@ class ErrorMetrics:
                 logger.debug("No event loop for error persistence")
         except RuntimeError as e:
             logger.warning(f"Could not enqueue persistence: {e}")
-    
+
     async def _persist_error(self, context: ErrorContext, project_id: str) -> None:
         """Persist error to database."""
         try:
             from lattice_lock.admin.db import async_session
             from lattice_lock.admin.routes import record_project_error
-            
+
             async with async_session() as db:
                 await record_project_error(
                     db, project_id, context.error_type, context.message,
                     context.severity, context.category, context.details
                 )
-            
+
             self._persistence_errors = 0
-            
+
         except ImportError:
             logger.info("Database module unavailable, disabling error persistence")
             self._persistence_enabled = False
         except Exception as e:
             self._persistence_errors += 1
             logger.warning(f"Error persistence failed ({self._persistence_errors}): {e}")
-            
+
             if self._persistence_errors >= self._max_persistence_errors:
                 logger.error("Too many persistence failures, disabling")
                 self._persistence_enabled = False
-    
+
     def reset(self) -> None:
         """Reset metrics for testing."""
         self.error_counts.clear()
@@ -3451,7 +3451,7 @@ from lattice_lock.utils.async_compat import get_background_queue
 async def lifespan(app: FastAPI):
     """
     Application lifespan handler.
-    
+
     Ensures graceful shutdown of background tasks.
     """
     # Startup
@@ -3503,30 +3503,30 @@ from typing import Dict, Any
 def _capture_global_state() -> Dict[str, Any]:
     """
     Capture snapshot of all global state for isolation validation.
-    
+
     Returns dict with counts of various stateful components.
     """
     state = {}
-    
+
     try:
         from lattice_lock.orchestrator.providers.base import ProviderAvailability
         state["provider_status_count"] = len(getattr(ProviderAvailability, "_status", {}))
     except ImportError:
         state["provider_status_count"] = 0
-    
+
     try:
         from lattice_lock.errors.middleware import get_metrics
         metrics = get_metrics()
         state["error_count"] = sum(metrics.error_counts.values())
     except ImportError:
         state["error_count"] = 0
-    
+
     try:
         from lattice_lock.admin.auth import get_storage
         state["user_count"] = len(get_storage().list_users())
     except ImportError:
         state["user_count"] = 0
-    
+
     return state
 
 
@@ -3538,28 +3538,28 @@ def _reset_all_globals() -> None:
         reset_config()
     except ImportError:
         pass
-    
+
     # Providers
     try:
         from lattice_lock.orchestrator.providers.base import ProviderAvailability
         ProviderAvailability.reset()
     except ImportError:
         pass
-    
+
     # Error metrics
     try:
         from lattice_lock.errors.middleware import reset_metrics
         reset_metrics()
     except ImportError:
         pass
-    
+
     # Performance metrics
     try:
         from lattice_lock.tracing import reset_performance_metrics
         reset_performance_metrics()
     except ImportError:
         pass
-    
+
     # Auth storage
     try:
         from lattice_lock.admin.auth import reset_storage, reset_auth_config
@@ -3567,7 +3567,7 @@ def _reset_all_globals() -> None:
         reset_auth_config()
     except ImportError:
         pass
-    
+
     # Background queue
     try:
         from lattice_lock.utils.async_compat import reset_background_queue
@@ -3580,7 +3580,7 @@ def _reset_all_globals() -> None:
 def reset_global_state():
     """
     Reset all global state before and after each test.
-    
+
     This fixture runs automatically for every test.
     """
     _reset_all_globals()
@@ -3592,14 +3592,14 @@ def reset_global_state():
 def validate_test_isolation():
     """
     Validate no global state leaks between tests.
-    
+
     Captures state before test, verifies reset after test.
     """
     initial = _capture_global_state()
     yield
     _reset_all_globals()
     final = _capture_global_state()
-    
+
     # Verify state was properly reset
     assert final["provider_status_count"] == 0, "Provider state leaked"
     assert final["error_count"] == 0, "Error metrics leaked"
@@ -3617,7 +3617,7 @@ def config():
 def mock_openai_client():
     """Mock OpenAI client for tests."""
     from unittest.mock import AsyncMock, MagicMock
-    
+
     client = MagicMock()
     client.chat_completion = AsyncMock(return_value=MagicMock(
         content="Test response",
@@ -3654,52 +3654,52 @@ import pytest
 
 class TestStateIsolation:
     """Verify test isolation works correctly."""
-    
+
     def test_state_reset_between_tests_1(self):
         """First test that modifies global state."""
         from lattice_lock.errors.middleware import get_metrics, ErrorContext
-        
+
         metrics = get_metrics()
         metrics.record_error(ErrorContext(
             error_type="TestError",
             message="Test message",
         ))
-        
+
         assert metrics.error_counts.get("TestError") == 1
-    
+
     def test_state_reset_between_tests_2(self):
         """Second test verifying state was reset."""
         from lattice_lock.errors.middleware import get_metrics
-        
+
         metrics = get_metrics()
         # Should be 0 because fixture reset state
         assert metrics.error_counts.get("TestError", 0) == 0
-    
+
     def test_provider_state_isolation(self):
         """Verify provider state resets."""
         from lattice_lock.orchestrator.providers.base import ProviderAvailability
-        
+
         # Modify state
         ProviderAvailability._status["test"] = "modified"
-        
+
         # Should be present
         assert "test" in ProviderAvailability._status
-    
+
     def test_provider_state_was_reset(self):
         """Verify previous test's state was reset."""
         from lattice_lock.orchestrator.providers.base import ProviderAvailability
-        
+
         # Should be empty due to fixture
         assert "test" not in ProviderAvailability._status
 
 
 class TestFixtureAvailability:
     """Verify all fixtures are available."""
-    
+
     def test_config_fixture(self, config):
         assert config is not None
         assert hasattr(config, "analyzer_cache_size")
-    
+
     def test_mock_client_fixture(self, mock_openai_client):
         assert mock_openai_client is not None
         assert hasattr(mock_openai_client, "chat_completion")
@@ -3803,12 +3803,12 @@ from unittest.mock import patch, AsyncMock, MagicMock
 
 class TestFullRequestLifecycle:
     """Test complete request flow through orchestrator."""
-    
+
     @pytest.mark.asyncio
     async def test_end_to_end_request(self, config):
         """Validate complete request with token aggregation."""
         from lattice_lock.orchestrator import ModelOrchestrator
-        
+
         # Create mock provider response
         mock_response = MagicMock()
         mock_response.content = "Test response"
@@ -3818,24 +3818,24 @@ class TestFullRequestLifecycle:
             total_tokens=150,
         )
         mock_response.function_call = None
-        
+
         with patch(
             "lattice_lock.orchestrator.providers.get_api_client"
         ) as mock_get_client:
             mock_client = AsyncMock()
             mock_client.chat_completion = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
-            
+
             orchestrator = ModelOrchestrator(config=config)
-            
+
             # This would need actual model registry setup
             # Simplified for example
-    
+
     def test_security_production_gate(self):
         """System must fail with insecure production config."""
         from lattice_lock.exceptions import SecurityConfigurationError
         from lattice_lock.admin.auth import AuthConfig
-        
+
         with patch.dict("os.environ", {
             "LATTICE_ENV": "production",
             "LATTICE_LOCK_SECRET_KEY": "",
@@ -3846,18 +3846,18 @@ class TestFullRequestLifecycle:
 
 class TestComponentInteraction:
     """Test component collaboration."""
-    
+
     def test_analyzer_to_scorer_flow(self, config):
         """TaskAnalyzer output works with ModelScorer."""
         from lattice_lock.orchestrator.analysis import TaskAnalyzer
         from lattice_lock.orchestrator.scoring import ModelScorer
-        
+
         analyzer = TaskAnalyzer(config)
         scorer = ModelScorer(config)
-        
+
         # Analyze a prompt
         requirements = analyzer.analyze("Write a Python function to sort a list")
-        
+
         # Should be compatible with scorer
         assert hasattr(requirements, "task_type")
 ```
@@ -3928,41 +3928,41 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      
+
       - name: Install dependencies
         run: |
           pip install -e ".[dev]"
           pip check
-      
+
       - name: Dependency verification
         run: python scripts/verify_deps.py
-      
+
       - name: Type checking
         run: mypy src/
-      
+
       - name: Linting
         run: ruff check src/ --exit-non-zero-on-fix
-      
+
       - name: Unit tests
         run: pytest tests/ -v --cov=src --cov-fail-under=80
-      
+
       - name: Token aggregation tests (BLOCKING)
         run: pytest tests/execution/test_token_aggregation.py -v --strict-markers
-      
+
       - name: Security tests (BLOCKING)
         run: pytest tests/auth/test_security.py -v --strict-markers
-      
+
       - name: Test isolation validation
         run: pytest tests/ --count=2 -x
-      
+
       - name: Integration tests
         run: pytest tests/integration/ -v
 ```

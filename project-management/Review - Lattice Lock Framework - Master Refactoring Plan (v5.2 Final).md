@@ -54,7 +54,7 @@
 `0 → 1 → 2 → 3 → 4 → 5 → 6 → 7`
 
 **Critical Execution Notes:**
-1. **Chunk 3 requires special handling**: 
+1. **Chunk 3 requires special handling**:
    - Implement token aggregation tests BEFORE refactoring code
    - Require second engineer sign-off on billing-critical logic
    - Treat any `BillingIntegrityError` as critical failure
@@ -69,7 +69,7 @@
 
 This plan demonstrates exceptional engineering discipline with proper attention to billing integrity, security hardening, and test reliability. The validation gates and rollback criteria provide clear decision points at each stage. **This is ready for production implementation.**
 
-# 
+#
 
 Database Infrastructure Foundation - Input to Refactoring Plan
 
@@ -90,10 +90,10 @@ In `src/lattice_lock/config/app_config.py`, extend the class with:
 ```python
 class AppConfig:
     # ... existing code ...
-    
+
     def __init__(self):
         # ... existing initialization ...
-        
+
         # Database Configuration (future use)
         self.database_url: str = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
         self.database_pool_size: int = self._parse_int("DATABASE_POOL_SIZE", 5)
@@ -125,16 +125,16 @@ class DatabaseConnectionError(LatticeError):
 
 class DatabaseManager:
     """Singleton database connection manager."""
-    
+
     _engine: Optional[AsyncEngine] = None
     _session_factory: Optional[sessionmaker] = None
-    
+
     @classmethod
     def initialize(cls):
         """Initialize database connection pool."""
         if cls._engine is not None:
             return
-            
+
         config = get_config()
         try:
             cls._engine = create_async_engine(
@@ -146,7 +146,7 @@ class DatabaseManager:
                 isolation_level="SERIALIZABLE",
             )
             cls._session_factory = sessionmaker(
-                cls._engine, 
+                cls._engine,
                 class_=AsyncSession,
                 expire_on_commit=False
             )
@@ -154,14 +154,14 @@ class DatabaseManager:
         except Exception as e:
             logger.critical(f"Database initialization failed: {str(e)}")
             raise DatabaseConnectionError("Database connection failed") from e
-    
+
     @classmethod
     @asynccontextmanager
     async def get_session(cls) -> AsyncSession:
         """Get database session with automatic cleanup."""
         if cls._session_factory is None:
             cls.initialize()
-            
+
         session: AsyncSession = cls._session_factory()
         try:
             yield session
@@ -171,7 +171,7 @@ class DatabaseManager:
             raise
         finally:
             await session.close()
-    
+
     @classmethod
     async def dispose(cls):
         """Dispose database connections for shutdown/testing."""
@@ -249,30 +249,30 @@ class EntityNotFoundError(LatticeError):
 class RepositoryInterface(ABC, Generic[T]):
     """
     Abstract repository interface defining standard CRUD operations.
-    
+
     Provides consistent patterns for all data access objects.
     """
-    
+
     @abstractmethod
     async def create(self, session: AsyncSession, entity: T) -> T:
         """Create a new entity."""
         pass
-    
+
     @abstractmethod
     async def get_by_id(self, session: AsyncSession, entity_id: str) -> Optional[T]:
         """Retrieve entity by ID."""
         pass
-    
+
     @abstractmethod
     async def update(self, session: AsyncSession, entity: T) -> T:
         """Update an existing entity."""
         pass
-    
+
     @abstractmethod
     async def delete(self, session: AsyncSession, entity_id: str) -> bool:
         """Delete entity by ID. Returns True if deleted."""
         pass
-    
+
     @abstractmethod
     async def list_all(self, session: AsyncSession) -> List[T]:
         """List all entities."""
@@ -282,17 +282,17 @@ class RepositoryInterface(ABC, Generic[T]):
 class SQLAlchemyRepository(RepositoryInterface[T], ABC):
     """
     Base class for SQLAlchemy repository implementations.
-    
+
     Provides common functionality for SQLAlchemy-based repositories.
     """
-    
+
     def __init__(self, model_class):
         self._model_class = model_class
-    
+
     async def _get_or_raise(self, session: AsyncSession, entity_id: str) -> T:
         """
         Get entity or raise EntityNotFoundError.
-        
+
         Common utility for get operations that require existence.
         """
         entity = await self.get_by_id(session, entity_id)
@@ -326,7 +326,7 @@ class TransactionError(LatticeError):
 async def transaction_context() -> AsyncGenerator[AsyncSession, None]:
     """
     Context manager for transaction management.
-    
+
     Provides a session that automatically commits on success or rolls back on exception.
     """
     async with DatabaseManager.get_session() as session:
@@ -355,7 +355,7 @@ logger = logging.getLogger(__name__)
 async def check_database_health() -> Dict[str, Any]:
     """
     Perform database health check.
-    
+
     Returns health status suitable for health endpoints and monitoring.
     """
     try:
@@ -363,7 +363,7 @@ async def check_database_health() -> Dict[str, Any]:
             # Simple query to verify connectivity
             result = await session.execute(text("SELECT 1"))
             _ = result.scalar()
-            
+
             return {
                 "status": "healthy",
                 "database": "connected",
@@ -388,7 +388,7 @@ async def health_check():
         "status": "healthy",
         "components": {}
     }
-    
+
     # Add database status only when database_url is configured
     config = get_config()
     if config.database_url and not config.database_url.startswith("sqlite:///:memory:"):
@@ -397,7 +397,7 @@ async def health_check():
         health["components"]["database"] = db_health
         if db_health["status"] != "healthy":
             health["status"] = "degraded"
-    
+
     return health
 ```
 
@@ -420,14 +420,14 @@ class MockEntity:
 class MockRepository(RepositoryInterface[MockEntity]):
     def __init__(self):
         self._storage = {}
-    
+
     async def create(self, session, entity):
         self._storage[entity.id] = entity
         return entity
-    
+
     async def get_by_id(self, session, entity_id):
         return self._storage.get(entity_id)
-    
+
     # ... implement other methods ...
 
 @pytest.mark.asyncio
@@ -435,16 +435,16 @@ async def test_repository_pattern_example():
     """Example test showing repository pattern usage."""
     repo = MockRepository()
     mock_session = MagicMock()
-    
+
     # Create entity
     entity = MockEntity("1", "Test")
     result = await repo.create(mock_session, entity)
     assert result.id == "1"
-    
+
     # Get by ID
     retrieved = await repo.get_by_id(mock_session, "1")
     assert retrieved.name == "Test"
-    
+
     # Entity not found
     with pytest.raises(EntityNotFoundError):
         await repo._get_or_raise(mock_session, "nonexistent")

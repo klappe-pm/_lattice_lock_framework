@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-
 from lattice_lock.admin.auth import passwords, tokens
 from lattice_lock.admin.auth.config import AuthConfig
 from lattice_lock.admin.auth.models import Role
