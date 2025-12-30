@@ -1,6 +1,7 @@
 """
 Azure OpenAI Provider
 """
+
 import json
 import logging
 import os
@@ -14,12 +15,15 @@ from .base import BaseAPIClient
 
 logger = logging.getLogger(__name__)
 
+
 class AzureOpenAIClient(BaseAPIClient):
     """Azure OpenAI Service API client"""
-    
-    BASE_URL = None # Dynamic based on endpoint
 
-    def __init__(self, config: AppConfig, api_key: str | None = None, endpoint: str | None = None, **kwargs):
+    BASE_URL = None  # Dynamic based on endpoint
+
+    def __init__(
+        self, config: AppConfig, api_key: str | None = None, endpoint: str | None = None, **kwargs
+    ):
         self.api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
         self.endpoint = endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
         self.api_version = kwargs.get("api_version", "2024-02-15-preview")
@@ -27,21 +31,20 @@ class AzureOpenAIClient(BaseAPIClient):
 
     def _validate_config(self) -> None:
         if not self.api_key or not self.endpoint:
-             raise ProviderUnavailableError(
-                provider="azure",
-                reason="AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT required"
+            raise ProviderUnavailableError(
+                provider="azure", reason="AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT required"
             )
-            
+
     async def health_check(self) -> bool:
         """Verify Azure OpenAI connectivity."""
         try:
-             # Azure doesn't have a simple global "list models" without a deployment typically, 
-             # but we can try a harmless call or just assume config is valid if we can't easily ping.
-             # Ideally we would list deployments.
-             # For now, simplistic check:
-             return True
+            # Azure doesn't have a simple global "list models" without a deployment typically,
+            # but we can try a harmless call or just assume config is valid if we can't easily ping.
+            # Ideally we would list deployments.
+            # For now, simplistic check:
+            return True
         except Exception as e:
-             raise ProviderUnavailableError(provider="azure", reason=str(e))
+            raise ProviderUnavailableError(provider="azure", reason=str(e))
 
     async def chat_completion(
         self,
@@ -56,7 +59,7 @@ class AzureOpenAIClient(BaseAPIClient):
         """Send chat completion request to Azure OpenAI"""
 
         headers = {"api-key": self.api_key, "Content-Type": "application/json"}
-        
+
         # Ensure clean messages
         clean_messages = []
         for msg in messages:
@@ -75,8 +78,8 @@ class AzureOpenAIClient(BaseAPIClient):
         url_endpoint = f"{self.endpoint}/openai/deployments/{model}/chat/completions?api-version={self.api_version}"
         # Make sure endpoint doesn't double slash
         if not self.endpoint.endswith("/"):
-             # Simple heuristic, full URL construction
-             pass 
+            # Simple heuristic, full URL construction
+            pass
 
         data, latency_ms = await self._make_request("POST", url_endpoint, headers, payload)
 

@@ -1,6 +1,7 @@
 """
 This module provides the ModelGuideParser for parsing model selection rules.
 """
+
 import logging
 import re
 from pathlib import Path
@@ -53,7 +54,9 @@ class ModelGuideParser:
                         rules["task_mappings"][task] = models
 
         # Parse blocked models
-        blocked_section = re.search(r"^### Blocked Models(.*?)^##", content, re.DOTALL | re.MULTILINE)
+        blocked_section = re.search(
+            r"^### Blocked Models(.*?)^##", content, re.DOTALL | re.MULTILINE
+        )
         if blocked_section:
             lines = blocked_section.group(1).strip().split("\n")
             for line in lines:

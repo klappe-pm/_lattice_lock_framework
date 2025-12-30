@@ -1,11 +1,12 @@
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
+
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
-from datetime import datetime, timezone, timedelta
 
-from .models import TokenData, Role
-from .tokens import verify_token
 from .api_keys import verify_api_key
+from .models import Role, TokenData
+from .tokens import verify_token
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/v1/auth/token",
@@ -16,6 +17,7 @@ api_key_header = APIKeyHeader(
     name="X-API-Key",
     auto_error=False,
 )
+
 
 async def get_current_user(
     token: Annotated[str | None, Depends(oauth2_scheme)] = None,
@@ -42,8 +44,10 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+
 def require_roles(*allowed_roles: Role):
     """Create a dependency that requires specific roles."""
+
     async def role_checker(
         current_user: Annotated[TokenData, Depends(get_current_user)],
     ) -> TokenData:
@@ -53,11 +57,13 @@ def require_roles(*allowed_roles: Role):
                 detail=f"Insufficient permissions. Required roles: {[r.value for r in allowed_roles]}",
             )
         return current_user
+
     return role_checker
 
 
 def require_permission(permission: str):
     """Create a dependency that requires a specific permission."""
+
     async def permission_checker(
         current_user: Annotated[TokenData, Depends(get_current_user)],
     ) -> TokenData:
@@ -67,6 +73,7 @@ def require_permission(permission: str):
                 detail=f"Missing required permission: {permission}",
             )
         return current_user
+
     return permission_checker
 
 

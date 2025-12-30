@@ -13,14 +13,14 @@ from .storage import CheckpointStorage
 class CheckpointManager:
     """
     Manages creation, retrieval, and deletion of checkpoints.
-    
+
     All methods are synchronous for ease of use.
     """
 
     def __init__(self, storage: CheckpointStorage = None):
         """
         Initialize the CheckpointManager with a checkpoint storage backend.
-        
+
             storage (CheckpointStorage | None): Storage backend used for persisting checkpoints. If None, a default CheckpointStorage instance is created.
         """
         self.storage = storage or CheckpointStorage()
@@ -52,7 +52,7 @@ class CheckpointManager:
             description=description,
         )
         checkpoint_id = self.storage.save_state(state)
-        
+
         # Backup file contents
         for filepath in files:
             try:
@@ -61,7 +61,7 @@ class CheckpointManager:
                     self.storage.save_file_content(checkpoint_id, filepath, content)
             except (FileNotFoundError, PermissionError):
                 continue
-                
+
         return checkpoint_id
 
     def restore_file(self, checkpoint_id: str, filepath: str) -> bool:
@@ -72,17 +72,18 @@ class CheckpointManager:
         content = self.storage.load_file_content(checkpoint_id, filepath)
         if content is None:
             return False
-            
+
         try:
             mode = "wb" if isinstance(content, bytes) else "w"
             encoding = None if isinstance(content, bytes) else "utf-8"
-            
+
             # Ensure directory exists
             import os
+
             dirname = os.path.dirname(filepath)
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
-            
+
             with open(filepath, mode, encoding=encoding) as f:
                 f.write(content)
             return True

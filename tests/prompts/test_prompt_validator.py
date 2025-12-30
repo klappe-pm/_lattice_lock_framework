@@ -442,8 +442,6 @@ class TestQualityScorer(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any("not found" in f.lower() for f in score.feedback))
 
 
-
-
 class TestValidatorIntegration(unittest.IsolatedAsyncioTestCase):
     """Integration tests for validators working together."""
 

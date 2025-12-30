@@ -2,32 +2,34 @@
 Central Application Configuration.
 Aggregates specific configs from Auth, Analysis, and Execution modules.
 """
+
 import os
 import re
-from typing import Optional
 
 
 class AppConfig:
     def __init__(self):
         self.env = os.environ.get("LATTICE_ENV", "dev")
-        
+
         # Analyzer Configuration
         self.analyzer_cache_size: int = self._parse_int("ANALYZER_CACHE_SIZE", 1024)
-        
+
         # Executor Configuration
         self.max_function_calls: int = self._parse_int("MAX_FUNCTION_CALLS", 10)
-        self.background_task_timeout: float = float(os.environ.get("BACKGROUND_TASK_TIMEOUT", "5.0"))
-        
+        self.background_task_timeout: float = float(
+            os.environ.get("BACKGROUND_TASK_TIMEOUT", "5.0")
+        )
+
         # Auth Configuration
         self.token_expiry_minutes: int = self._parse_int("TOKEN_EXPIRY_MINUTES", 30)
-        
+
         # Security Configuration
         self.jwt_algorithm = "HS256"
         self.secret_key = os.environ.get("LATTICE_LOCK_SECRET_KEY")
 
         # Validation logic for production security
         if self.env == "production" and not self.secret_key:
-             raise ValueError("LATTICE_LOCK_SECRET_KEY must be set in production")
+            raise ValueError("LATTICE_LOCK_SECRET_KEY must be set in production")
 
         # Database Configuration (future use)
         self.database_url: str = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
@@ -51,7 +53,7 @@ class AppConfig:
 
 
 # Global config instance
-_config: Optional[AppConfig] = None
+_config: AppConfig | None = None
 
 
 def get_config() -> AppConfig:
@@ -66,4 +68,3 @@ def reset_config() -> None:
     """Reset configuration for testing."""
     global _config
     _config = None
-

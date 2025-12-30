@@ -16,6 +16,7 @@ class SemanticRouter:
     """
     Second-stage router that uses LLM-based intent classification.
     """
+
     ROUTER_PROMPT = """
     Analyze the following user prompt and classify it into one of the TaskTypes:
     {types}
@@ -33,19 +34,19 @@ class SemanticRouter:
         """Routes a prompt to a TaskType using an LLM."""
         if not self.client:
             return TaskType.GENERAL
-            
+
         types_str = ", ".join([t.name for t in TaskType])
         full_prompt = self.ROUTER_PROMPT.format(types=types_str, prompt=prompt)
-        
+
         try:
             # Use a fast, cheap model for routing if possible
             response = await self.client.chat_completion(
-                model="gpt-4o-mini", # Fallback default
+                model="gpt-4o-mini",  # Fallback default
                 messages=[{"role": "user", "content": full_prompt}],
                 max_tokens=10,
-                temperature=0.0
+                temperature=0.0,
             )
-            
+
             result = response.content.strip()
             for t in TaskType:
                 if t.name in result:

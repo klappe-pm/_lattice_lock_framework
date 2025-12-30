@@ -1,10 +1,10 @@
 """
 xAI (Grok) API Provider
 """
+
 import json
 import logging
 import os
-from collections.abc import AsyncIterator
 from typing import Any
 
 from lattice_lock.config import AppConfig
@@ -18,31 +18,27 @@ logger = logging.getLogger(__name__)
 
 class GrokAPIClient(BaseAPIClient):
     """xAI Grok API client with all models support"""
-    
+
     BASE_URL = "https://api.x.ai/v1"
 
     def __init__(self, config: AppConfig, api_key: str | None = None):
         self.api_key = api_key or os.getenv("XAI_API_KEY")
         super().__init__(config)
-        
+
     def _validate_config(self) -> None:
         if not self.api_key:
             raise ProviderUnavailableError(
-                provider="xai",
-                reason="XAI_API_KEY environment variable not set"
+                provider="xai", reason="XAI_API_KEY environment variable not set"
             )
 
     async def health_check(self) -> bool:
         """Verify Grok API connectivity."""
         try:
-             headers = {"Authorization": f"Bearer {self.api_key}"}
-             await self._make_request("GET", f"{self.BASE_URL}/models", headers=headers)
-             return True
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            await self._make_request("GET", f"{self.BASE_URL}/models", headers=headers)
+            return True
         except Exception as e:
-            raise ProviderUnavailableError(
-                provider="xai",
-                reason=str(e)
-            )
+            raise ProviderUnavailableError(provider="xai", reason=str(e))
 
     async def chat_completion(
         self,
@@ -58,7 +54,7 @@ class GrokAPIClient(BaseAPIClient):
         """Send chat completion request to Grok"""
 
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        
+
         # Ensure clean messages
         clean_messages = []
         for msg in messages:

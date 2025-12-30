@@ -1,6 +1,7 @@
 """
 Google Gemini API Provider
 """
+
 import logging
 import os
 from typing import Any
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class GoogleAPIClient(BaseAPIClient):
     """Google Gemini API client"""
-    
+
     BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
     def __init__(self, config: AppConfig, api_key: str | None = None):
@@ -26,23 +27,19 @@ class GoogleAPIClient(BaseAPIClient):
     def _validate_config(self) -> None:
         if not self.api_key:
             raise ProviderUnavailableError(
-                provider="google",
-                reason="GOOGLE_API_KEY environment variable not set"
+                provider="google", reason="GOOGLE_API_KEY environment variable not set"
             )
 
     async def health_check(self) -> bool:
         """Verify Gemini API connectivity."""
         try:
-             # Minimal API call to verify credentials
-             # Calling models.list equivalent
-             endpoint = f"models?key={self.api_key}"
-             await self._make_request("GET", f"{self.BASE_URL}/{endpoint}")
-             return True
+            # Minimal API call to verify credentials
+            # Calling models.list equivalent
+            endpoint = f"models?key={self.api_key}"
+            await self._make_request("GET", f"{self.BASE_URL}/{endpoint}")
+            return True
         except Exception as e:
-            raise ProviderUnavailableError(
-                provider="google",
-                reason=str(e)
-            )
+            raise ProviderUnavailableError(provider="google", reason=str(e))
 
     async def chat_completion(
         self,
@@ -85,7 +82,9 @@ class GoogleAPIClient(BaseAPIClient):
             payload["tools"] = [{"functionDeclarations": functions}]
 
         endpoint = f"models/{model}:generateContent?key={self.api_key}"
-        data, latency_ms = await self._make_request("POST", f"{self.BASE_URL}/{endpoint}", headers, payload)
+        data, latency_ms = await self._make_request(
+            "POST", f"{self.BASE_URL}/{endpoint}", headers, payload
+        )
 
         response_content = None
         function_call = None

@@ -27,8 +27,8 @@ R = TypeVar("R")
 
 logger = logging.getLogger(__name__)
 
-_trace_context: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-    "trace_context", default={}
+_trace_context: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "trace_context", default=None
 )
 
 
@@ -50,12 +50,16 @@ def generate_span_id() -> str:
 def get_current_trace_id() -> str | None:
     """Get the current trace ID from context."""
     ctx = _trace_context.get()
+    if ctx is None:
+        return None
     return ctx.get("trace_id")
 
 
 def get_current_span_id() -> str | None:
     """Get the current span ID from context."""
     ctx = _trace_context.get()
+    if ctx is None:
+        return None
     return ctx.get("span_id")
 
 
@@ -117,9 +121,7 @@ class Span:
             "parent_span_id": self.parent_span_id,
             "start_time": datetime.fromtimestamp(self.start_time).isoformat(),
             "end_time": (
-                datetime.fromtimestamp(self.end_time).isoformat()
-                if self.end_time
-                else None
+                datetime.fromtimestamp(self.end_time).isoformat() if self.end_time else None
             ),
             "duration_ms": self.duration_ms,
             "attributes": self.attributes,
@@ -307,9 +309,7 @@ class PerformanceMetrics:
     operation_counts: dict[str, int] = field(default_factory=dict)
     error_counts: dict[str, int] = field(default_factory=dict)
 
-    def record_operation(
-        self, operation: str, duration_ms: float, success: bool = True
-    ) -> None:
+    def record_operation(self, operation: str, duration_ms: float, success: bool = True) -> None:
         """Record an operation's performance."""
         if operation not in self.operation_times:
             self.operation_times[operation] = []

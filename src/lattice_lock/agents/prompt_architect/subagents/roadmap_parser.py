@@ -58,7 +58,7 @@ class RoadmapParser:
     def parse_content(self, content: str, format_hint: str = "wbs") -> RoadmapStructure:
         """Parse roadmap structure directly from string content."""
         parser = self.parsers.get(format_hint, self.parsers["wbs"])
-        
+
         structure = parser.parse(content)
 
         # Post-processing: Validate and Analyze

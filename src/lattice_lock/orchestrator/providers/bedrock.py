@@ -1,6 +1,7 @@
 """
 AWS Bedrock Provider
 """
+
 import asyncio
 import json
 import logging
@@ -29,11 +30,12 @@ except ImportError:
 
 class BedrockClient:
     """Helper class for Bedrock logic"""
+
     def __init__(self, region: str, access_key: str | None, secret_key: str | None):
         self.region = region
         self.access_key = access_key
         self.secret_key = secret_key
-        
+
     def _init_client(self):
         """Helper to initialize client in thread-safe way if needed"""
         if not hasattr(self, "_client"):
@@ -44,19 +46,21 @@ class BedrockClient:
                 aws_secret_access_key=self.secret_key,
             )
         return self._client
-        
+
     async def generate(self, model: str, body: str) -> dict:
         if not hasattr(self, "_client"):
             await asyncio.to_thread(self._init_client)
-            
+
         def _invoke():
-             return self._client.invoke_model(
+            return self._client.invoke_model(
                 body=body,
                 modelId=model,
                 accept="application/json",
                 contentType="application/json",
             )
+
         return await asyncio.to_thread(_invoke)
+
 
 class BedrockAPIClient(BaseAPIClient):
     """
@@ -64,30 +68,32 @@ class BedrockAPIClient(BaseAPIClient):
     """
 
     def __init__(self, config: AppConfig, region: str = "us-east-1", **kwargs):
-         # Bedrock uses AWS credentials
+        # Bedrock uses AWS credentials
         self.region = region or os.getenv("AWS_REGION", "us-east-1")
-        self.access_key = os.getenv("AWS_ACCESS_KEY_ID")
-        self.secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        self.access_key = kwargs.get("aws_access_key_id") or os.getenv("AWS_ACCESS_KEY_ID")
+        self.secret_key = kwargs.get("aws_secret_access_key") or os.getenv("AWS_SECRET_ACCESS_KEY")
         self.anthropic_version = kwargs.get("api_version", "bedrock-2023-05-31")
         self._bedrock_client = None
-        
+
         super().__init__(config)
-        
+
     def _validate_config(self) -> None:
         if not _BOTO3_AVAILABLE:
-             raise ProviderUnavailableError("bedrock", "boto3 library not installed")
+            raise ProviderUnavailableError("bedrock", "boto3 library not installed")
         if not self.access_key or not self.secret_key:
-             raise ProviderUnavailableError("bedrock", "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY required")
-             
+            raise ProviderUnavailableError(
+                "bedrock", "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY required"
+            )
+
     async def health_check(self) -> bool:
-         # Check if we can initialize client
-         try:
-             self._bedrock_client = BedrockClient(self.region, self.access_key, self.secret_key)
-             # Could try to list foundation models if we had 'bedrock' (control plane) client, 
-             # but we only have 'bedrock-runtime'. Runtime doesn't have simple ping.
-             return True
-         except Exception as e:
-             raise ProviderUnavailableError("bedrock", str(e))
+        # Check if we can initialize client
+        try:
+            self._bedrock_client = BedrockClient(self.region, self.access_key, self.secret_key)
+            # Could try to list foundation models if we had 'bedrock' (control plane) client,
+            # but we only have 'bedrock-runtime'. Runtime doesn't have simple ping.
+            return True
+        except Exception as e:
+            raise ProviderUnavailableError("bedrock", str(e))
 
     async def chat_completion(
         self,
@@ -99,19 +105,19 @@ class BedrockAPIClient(BaseAPIClient):
         tool_choice: str | dict | None = None,
         **kwargs,
     ) -> APIResponse:
-        
+
         if not self._bedrock_client:
-             self._bedrock_client = BedrockClient(self.region, self.access_key, self.secret_key)
+            self._bedrock_client = BedrockClient(self.region, self.access_key, self.secret_key)
 
         start_time = time.time()
-        
+
         # Simple body construction for Claude (most common Bedrock model for this project)
         # Note: This assumes Claude models. For modularity, we might need model-specific formatters later.
-        
+
         # Clean messages
         clean_messages = []
         for msg in messages:
-             clean_messages.append({"role": msg["role"], "content": str(msg["content"])})
+            clean_messages.append({"role": msg["role"], "content": str(msg["content"])})
 
         body = json.dumps(
             {
@@ -125,17 +131,17 @@ class BedrockAPIClient(BaseAPIClient):
         try:
             response = await self._bedrock_client.generate(model, body)
             latency = (time.time() - start_time) * 1000
-            
+
             response_body = json.loads(response.get("body").read())
-            
+
             content_text = ""
             if "content" in response_body:
                 for block in response_body["content"]:
                     if block["type"] == "text":
                         content_text += block["text"]
-                        
+
             usage = response_body.get("usage", {})
-            
+
             return APIResponse(
                 content=content_text,
                 model=model,
@@ -146,10 +152,10 @@ class BedrockAPIClient(BaseAPIClient):
                 },
                 latency_ms=latency,
             )
-            
+
         except Exception as e:
-             logger.error(f"Bedrock generation failed: {e}")
-             return APIResponse(
+            logger.error(f"Bedrock generation failed: {e}")
+            return APIResponse(
                 content=None,
                 model=model,
                 provider="bedrock",
