@@ -215,6 +215,11 @@ class ModelRegistry:
                         supports_function_calling=model_cfg.supports_function_calling,
                         supports_vision=model_cfg.supports_vision,
                         supports_json_mode=model_cfg.supports_json_mode,
+                        version=model_cfg.version,
+                        release_date=model_cfg.release_date,
+                        best_for=model_cfg.best_for,
+                        limitations=model_cfg.limitations,
+                        api_base=model_cfg.api_base,
                     )
                     self.models[model_cfg.id] = caps
                 except Exception as e:
@@ -243,6 +248,11 @@ class ModelRegistry:
         supports_vision: bool = False,
         supports_json_mode: bool = False,
         name: str | None = None,
+        version: str | None = None,
+        release_date: str | None = None,
+        best_for: list[str] | None = None,
+        limitations: list[str] | None = None,
+        api_base: str | None = None,
     ) -> ModelCapabilities:
         """Helper to create ModelCapabilities with calculated task scores."""
         # Coerce strings to Enums if necessary
@@ -277,6 +287,11 @@ class ModelRegistry:
             supports_vision=supports_vision,
             supports_json_mode=supports_json_mode,
             task_scores=default_scores,
+            version=version,
+            release_date=release_date,
+            best_for=best_for or [],
+            limitations=limitations or [],
+            api_base=api_base,
         )
 
     def get_model(self, model_id: str) -> ModelCapabilities | None:
@@ -303,6 +318,7 @@ class ModelRegistry:
             ModelProvider.AZURE: ["AZURE_OPENAI_KEY", "AZURE_ENDPOINT"],
             ModelProvider.BEDROCK: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
             ModelProvider.OLLAMA: [],  # Local, always valid or checks OLLAMA_HOST
+            ModelProvider.VLLM: [],  # Configured via api_base in model config
         }
 
         vars_to_check = required_vars.get(provider, [])

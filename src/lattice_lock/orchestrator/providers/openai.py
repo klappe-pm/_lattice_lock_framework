@@ -20,10 +20,12 @@ class OpenAIAPIClient(BaseAPIClient):
     """OpenAI API client"""
 
     PROVIDER_NAME = "openai"
-    BASE_URL = "https://api.openai.com/v1"
+    PROVIDER_NAME = "openai"
+    DEFAULT_BASE_URL = "https://api.openai.com/v1"
 
-    def __init__(self, config: AppConfig, api_key: str | None = None):
+    def __init__(self, config: AppConfig, api_key: str | None = None, base_url: str | None = None):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.base_url = base_url or self.DEFAULT_BASE_URL
         super().__init__(config)
 
     def _validate_config(self) -> None:
@@ -38,7 +40,7 @@ class OpenAIAPIClient(BaseAPIClient):
         try:
             # Minimal API call to verify credentials
             headers = {"Authorization": f"Bearer {self.api_key}"}
-            await self._make_request("GET", f"{self.BASE_URL}/models", headers=headers)
+            await self._make_request("GET", f"{self.base_url}/models", headers=headers)
             logger.debug("OpenAI health check passed")
             return True
         except Exception as e:
@@ -74,8 +76,13 @@ class OpenAIAPIClient(BaseAPIClient):
         if tool_choice:
             payload["tool_choice"] = tool_choice
 
+        # Allow per-request base_url override (e.g. for specific VLLM models)
+        request_url = kwargs.get("api_base", self.base_url)
+        # Strip trailing slash if present to avoid double slashes
+        request_url = request_url.rstrip("/")
+
         data, latency_ms = await self._make_request(
-            "POST", f"{self.BASE_URL}/chat/completions", headers, payload
+            "POST", f"{request_url}/chat/completions", headers, payload
         )
 
         response_content = None

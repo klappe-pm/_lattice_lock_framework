@@ -30,6 +30,7 @@ class ModelProvider(Enum):
     OLLAMA = "ollama"
     AZURE = "azure"
     BEDROCK = "bedrock"
+    VLLM = "vllm"
 
 
 class ModelStatus(Enum):
@@ -61,8 +62,16 @@ class ModelCapabilities:
     reasoning_score: float  # 0-100
     coding_score: float  # 0-100
     speed_rating: float  # 0-10
+    speed_rating: float  # 0-10
     maturity: ProviderMaturity = ProviderMaturity.BETA
     status: ModelStatus = ModelStatus.ACTIVE
+
+    # Metadata
+    version: str | None = None
+    release_date: str | None = None
+    best_for: list[str] = field(default_factory=list)
+    limitations: list[str] = field(default_factory=list)
+    api_base: str | None = None
 
     # Feature Flags
     supports_vision: bool = False
