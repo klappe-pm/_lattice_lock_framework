@@ -1,0 +1,107 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.hint {
+  font-weight: 400;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.85em;
+}
+
+/* Password Input */
+.password-input {
+  display: flex;
+  position: relative;
+}
+
+.password-input input {
+  flex: 1;
+  padding-right: 48px;
+}
+
+.toggle-visibility {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+}
+
+.test-btn {
+  margin-top: var(--spacing-sm);
+}
+
+.test-result {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--md-sys-shape-corner-small);
+  font: var(--md-sys-typescale-body-medium);
+}
+
+.test-result.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: var(--color-success);
+}
+
+.test-result.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--color-error);
+}
+
+/* Capabilities Grid */
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.capability-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--md-sys-shape-corner-small);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.capability-checkbox:hover {
+  background-color: rgba(208, 188, 255, 0.08);
+}
+
+.capability-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--md-sys-color-primary);
+}
+
+.capability-checkbox span {
+  font: var(--md-sys-typescale-body-medium);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Dialog animation */
+.dialog {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
