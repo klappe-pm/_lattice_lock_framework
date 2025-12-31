@@ -1,0 +1,183 @@
+.task-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: var(--spacing-md);
+  height: 100%;
+}
+
+.task-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.header-left h3 {
+  font: var(--md-sys-typescale-title-medium);
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+}
+
+.task-count {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.header-right {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-small);
+}
+
+.stat-badge .label {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.stat-badge .value {
+  font: var(--md-sys-typescale-body-medium);
+  color: var(--md-sys-color-primary);
+  font-weight: 500;
+}
+
+/* Overall Progress */
+.overall-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.overall-progress .progress-linear {
+  flex: 1;
+}
+
+.progress-label {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Tasks */
+.tasks {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.empty-tasks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: var(--md-sys-color-on-surface-variant);
+  font: var(--md-sys-typescale-body-medium);
+}
+
+/* Task Item */
+.task-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  padding-left: calc(var(--spacing-sm) + calc(var(--depth, 0) * 20px));
+  border-radius: var(--md-sys-shape-corner-small);
+  transition: background-color 0.2s ease;
+}
+
+.task-row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.task-row.status-running {
+  background-color: rgba(255, 183, 77, 0.08);
+}
+
+.task-row.status-completed {
+  opacity: 0.8;
+}
+
+.task-row.status-failed {
+  background-color: rgba(229, 115, 115, 0.08);
+}
+
+/* Status Icons */
+.status-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-icon.pending {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.status-icon.running {
+  color: var(--color-warning);
+  animation: spin 1s linear infinite;
+}
+
+.status-icon.completed {
+  color: var(--color-success);
+  font-weight: bold;
+}
+
+.status-icon.failed {
+  color: var(--color-error);
+  font-weight: bold;
+}
+
+.task-name {
+  flex: 1;
+  font: var(--md-sys-typescale-body-medium);
+  color: var(--md-sys-color-on-surface);
+}
+
+.task-model {
+  font-size: 0.7rem;
+}
+
+.task-duration {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.task-progress {
+  width: 60px;
+}
+
+/* Subtasks */
+.subtasks {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--md-sys-color-outline-variant);
+  margin-left: calc(var(--spacing-sm) + 10px);
+}
