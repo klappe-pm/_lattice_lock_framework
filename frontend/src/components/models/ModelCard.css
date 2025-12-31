@@ -1,0 +1,101 @@
+.model-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.model-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.model-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.provider-indicator {
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+}
+
+.model-name {
+  font: var(--md-sys-typescale-title-medium);
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+}
+
+.api-name {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+/* Card Body */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.model-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.model-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.model-stats .stat-label {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.model-stats .stat-value {
+  font: var(--md-sys-typescale-body-medium);
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+/* Card Actions */
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+  margin-top: auto;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.card-actions .btn-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.card-actions .btn-icon:hover {
+  color: var(--md-sys-color-primary);
+  background-color: rgba(208, 188, 255, 0.08);
+}
