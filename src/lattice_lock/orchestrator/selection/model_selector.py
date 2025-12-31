@@ -49,7 +49,7 @@ class ModelSelector:
 
             score = self.scorer.score(model, requirements)
             if score > 0:
-                candidates.append((model.api_name, score))
+                candidates.append((model.name, score))
 
         if not candidates:
             return None
@@ -76,7 +76,7 @@ class ModelSelector:
         if not chain:
             candidates = []
             for model in self.registry.get_all_models():
-                if model.api_name == failed_model:
+                if model.name == failed_model:
                     continue
 
                 # Skip models from unavailable providers
@@ -89,7 +89,7 @@ class ModelSelector:
 
                 score = self.scorer.score(model, requirements)
                 if score > 0:
-                    candidates.append((model.api_name, score))
+                    candidates.append((model.name, score))
 
             candidates.sort(key=lambda x: x[1], reverse=True)
             chain = [c[0] for c in candidates[:5]]  # Try top 5 available models

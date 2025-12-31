@@ -11,10 +11,13 @@ import click
 from lattice_lock import __version__
 
 # Import existing commands
+from lattice_lock.cli.commands.ask import ask_command
+from lattice_lock.cli.commands.chain import chain_command
 from lattice_lock.cli.commands.compile import compile_command
 from lattice_lock.cli.commands.doctor import doctor_command
 from lattice_lock.cli.commands.feedback import feedback
 from lattice_lock.cli.commands.gauntlet import gauntlet_command
+from lattice_lock.cli.commands.handoff import handoff_group
 from lattice_lock.cli.commands.init import init_command
 from lattice_lock.cli.commands.sheriff import sheriff_command
 from lattice_lock.cli.commands.validate import validate_command
@@ -60,6 +63,8 @@ def cli(ctx, verbose: bool, json: bool, project_dir: str):
 
 # Register Core Commands
 cli.add_command(init_command, name="init")
+cli.add_command(ask_command, name="ask")
+cli.add_command(chain_command, name="chain")
 cli.add_command(validate_command, name="validate")
 cli.add_command(compile_command, name="compile")
 cli.add_command(doctor_command, name="doctor")
@@ -75,6 +80,7 @@ cli.add_command(
 # Register Groups
 cli.add_command(orchestrator_group)
 cli.add_command(admin_group)
+cli.add_command(handoff_group, name="handoff")
 
 
 def main():
