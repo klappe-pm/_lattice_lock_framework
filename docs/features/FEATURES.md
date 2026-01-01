@@ -282,7 +282,7 @@ The framework includes GitHub Actions workflows for:
 
 ## Related Documentation
 
-- [README.md](../README.md) - Project overview and quick start
+- [README.md](scripts/README.md) - Project overview and quick start
 - [AGENT_SPECIFICATION_v2.1.md](../AGENT_SPECIFICATION_v2.1.md) - Agent specification details
 - [docs/getting_started/](getting_started/) - Quick start guides
 - [docs/design/](design/) - Design documents

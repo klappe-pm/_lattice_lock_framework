@@ -415,7 +415,7 @@ You've completed the onboarding! Here are your next steps:
 
 - **GitHub Issues**: Report bugs or request features
 - **GitHub Discussions**: Ask questions and share ideas
-- **Project README**: [README.md](README.md)
+- **Project README**: [README.md](scripts/README.md)
 
 ### Feedback
 
