@@ -325,7 +325,7 @@ done
 
 - [PEP 8 - Style Guide for Python Code](https://pep8.org/)
 - [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Single source of truth for all contribution standards
+- [contributing.md](../contributing.md) - Single source of truth for all contribution standards
 
 ## Questions or Exceptions?
 

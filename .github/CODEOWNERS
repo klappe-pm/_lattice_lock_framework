@@ -1,7 +1,7 @@
 # CODEOWNERS - Code Review Requirements
 #
 # This file defines automatic review assignments for all pull requests.
-# For complete contribution guidelines, see CONTRIBUTING.md (single source of truth)
+# For complete contribution guidelines, see contributing.md (single source of truth)
 #
 # All files in this repository require review from @greptileai
 # Additional human review is recommended for non-trivial changes

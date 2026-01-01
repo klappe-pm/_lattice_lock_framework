@@ -24,4 +24,4 @@ Describe the change and why it's needed.
 - [ ] Targets `main`
 - [ ] Labels applied (one from Type, one from Source)
 - [ ] @greptileai tagged for review
-- [ ] Follows [CONTRIBUTING.md](../CONTRIBUTING.md) standards
+- [ ] Follows [contributing.md](../contributing.md) standards
