@@ -207,7 +207,7 @@ jobs:
 
       - name: Upload coverage report
         if: ${{ inputs.coverage-enabled && !inputs.generate-only }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: gauntlet-coverage-report
           path: coverage.xml
@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload generated tests
         if: ${{ inputs.generate-only }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: gauntlet-generated-tests
           path: ${{ inputs.test-directory }}
