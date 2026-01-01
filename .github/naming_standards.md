@@ -36,7 +36,7 @@ This document defines the mandatory naming conventions for all files and folders
 - `naming_standards.md`
 - `labels.md`
 - `pull_request_template.md`
-- `repository_structure.md`
+- `contributing.md`
 - `agent_glossary.md`
 
 ❌ **Incorrect:**
@@ -325,8 +325,7 @@ done
 
 - [PEP 8 - Style Guide for Python Code](https://pep8.org/)
 - [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
-- [Repository Structure Standards](../docs/reference/repository_structure.md)
-- [Contributing Guide](../CONTRIBUTING.md)
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Single source of truth for all contribution standards
 
 ## Questions or Exceptions?
 
