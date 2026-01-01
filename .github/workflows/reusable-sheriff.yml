@@ -106,7 +106,7 @@ jobs:
 
       - name: Restore Sheriff cache
         if: ${{ inputs.enable-cache }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ inputs.cache-directory }}
           key: sheriff-cache-${{ hashFiles('**/*.py') }}
@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload JUnit Report
         if: ${{ inputs.format == 'junit' && always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sheriff-junit-report
           path: sheriff-report.xml
@@ -200,7 +200,7 @@ jobs:
 
       - name: Save Sheriff cache
         if: ${{ inputs.enable-cache && always() }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ inputs.cache-directory }}
           key: sheriff-cache-${{ hashFiles('**/*.py') }}

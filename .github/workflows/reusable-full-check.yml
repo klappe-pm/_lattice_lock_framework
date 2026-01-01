@@ -171,7 +171,7 @@ jobs:
           fi
 
       - name: Restore Sheriff cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .sheriff_cache
           key: sheriff-cache-${{ hashFiles('**/*.py') }}
@@ -289,7 +289,7 @@ jobs:
 
       - name: Upload coverage report
         if: ${{ inputs.coverage-enabled }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-report
           path: coverage.xml
