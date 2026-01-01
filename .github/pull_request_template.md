@@ -1,5 +1,7 @@
+<!-- For complete contribution guidelines, see CONTRIBUTING.md -->
+
 # Summary
-Describe the change and why it’s needed.
+Describe the change and why it's needed.
 
 # Type
 - [ ] feat
@@ -21,3 +23,5 @@ Describe the change and why it’s needed.
 # Checklist
 - [ ] Targets `main`
 - [ ] Labels applied (one from Type, one from Source)
+- [ ] @greptileai tagged for review
+- [ ] Follows [CONTRIBUTING.md](../CONTRIBUTING.md) standards
