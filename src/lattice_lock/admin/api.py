@@ -15,6 +15,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
 from lattice_lock.admin.routes import API_VERSION, router
 from lattice_lock.logging_config import set_trace_id
 

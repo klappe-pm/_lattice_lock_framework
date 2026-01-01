@@ -5,6 +5,7 @@ Tests for Task Analyzer.
 from unittest.mock import Mock
 
 import pytest
+
 from lattice_lock.config import AppConfig
 from lattice_lock.orchestrator.analysis.analyzer import TaskAnalyzer
 from lattice_lock.orchestrator.types import TaskType

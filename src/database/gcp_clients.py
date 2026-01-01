@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 _firestore_client = None
 
 
-def get_firestore_client() -> "firestore.AsyncClient":
+def get_firestore_client() -> firestore.AsyncClient:
     """Get the Firestore async client.
     
     Returns:
@@ -28,15 +28,15 @@ def get_firestore_client() -> "firestore.AsyncClient":
         Uses GOOGLE_CLOUD_PROJECT environment variable or default credentials.
     """
     global _firestore_client
-    
+
     if _firestore_client is None:
         from google.cloud.firestore import AsyncClient
-        
+
         project = os.getenv("GOOGLE_CLOUD_PROJECT")
         database = os.getenv("FIRESTORE_DATABASE", "(default)")
-        
+
         _firestore_client = AsyncClient(project=project, database=database)
-    
+
     return _firestore_client
 
 
@@ -44,20 +44,20 @@ def get_firestore_client() -> "firestore.AsyncClient":
 _bigquery_client = None
 
 
-def get_bigquery_client() -> "bigquery.Client":
+def get_bigquery_client() -> bigquery.Client:
     """Get the BigQuery client.
     
     Returns:
         bigquery.Client: BigQuery client instance.
     """
     global _bigquery_client
-    
+
     if _bigquery_client is None:
         from google.cloud import bigquery
-        
+
         project = os.getenv("GOOGLE_CLOUD_PROJECT")
         _bigquery_client = bigquery.Client(project=project)
-    
+
     return _bigquery_client
 
 
@@ -72,10 +72,10 @@ def get_bigquery_dataset() -> str:
 
 
 # Redis Client
-_redis_client: "Redis | None" = None
+_redis_client: Redis | None = None
 
 
-async def get_redis_client() -> "Redis":
+async def get_redis_client() -> Redis:
     """Get the Redis async client.
     
     Returns:
@@ -85,14 +85,14 @@ async def get_redis_client() -> "Redis":
         Uses REDIS_HOST and REDIS_PORT environment variables.
     """
     global _redis_client
-    
+
     if _redis_client is None:
         from redis.asyncio import Redis
-        
+
         host = os.getenv("REDIS_HOST", "localhost")
         port = int(os.getenv("REDIS_PORT", "6379"))
         password = os.getenv("REDIS_PASSWORD")
-        
+
         _redis_client = Redis(
             host=host,
             port=port,
@@ -101,14 +101,14 @@ async def get_redis_client() -> "Redis":
             socket_timeout=5.0,
             socket_connect_timeout=5.0,
         )
-    
+
     return _redis_client
 
 
 async def close_redis_client() -> None:
     """Close the Redis connection."""
     global _redis_client
-    
+
     if _redis_client:
         await _redis_client.close()
         _redis_client = None

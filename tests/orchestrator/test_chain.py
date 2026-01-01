@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
+
 from lattice_lock.orchestrator.chain import ChainOrchestrator, Pipeline, PipelineStep
 from lattice_lock.orchestrator.types import APIResponse, TokenUsage
 

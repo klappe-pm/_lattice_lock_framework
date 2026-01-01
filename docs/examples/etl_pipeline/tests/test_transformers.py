@@ -5,7 +5,6 @@ Validates transformer functionality and rule application.
 """
 
 import pytest
-
 from src.transformers import (
     AggregateTransformer,
     FilterTransformer,

@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
+
 from lattice_lock.cli.__main__ import cli
 
 

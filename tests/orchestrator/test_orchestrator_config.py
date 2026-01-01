@@ -2,6 +2,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import yaml
+
 from lattice_lock.agents.prompt_architect.agent import (
     PromptArchitectAgent as PromptArchitectOrchestrator,
 )

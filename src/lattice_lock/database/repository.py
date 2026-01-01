@@ -5,8 +5,9 @@ Repository pattern base classes for data access abstractions.
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from lattice_lock.exceptions import LatticeError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from lattice_lock.exceptions import LatticeError
 
 T = TypeVar("T")
 

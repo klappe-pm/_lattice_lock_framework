@@ -82,7 +82,7 @@ def get_api_client(
     if check_availability:
         # For 'dial', we check DIAL requirements
         check_provider = "dial" if provider_lower == "dial" else provider_lower
-        
+
         # Skip credential check for VLLM as it uses per-model config or optional env vars
         if check_provider != "vllm":
             if not ProviderAvailability.is_available(check_provider):

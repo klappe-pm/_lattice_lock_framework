@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from lattice_lock.orchestrator.consensus import ConsensusOrchestrator
 from lattice_lock.orchestrator.types import APIResponse, TaskType, TokenUsage
 

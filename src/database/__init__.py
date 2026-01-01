@@ -8,15 +8,16 @@ using a multi-tier GCP architecture:
 - Memorystore (Redis) for caching
 """
 
+from lattice_lock.database.gcp_clients import (
+    get_bigquery_client,
+    get_firestore_client,
+    get_redis_client,
+)
+
 from lattice_lock.database.connection import (
     get_async_session,
     get_sync_session,
     init_database,
-)
-from lattice_lock.database.gcp_clients import (
-    get_firestore_client,
-    get_bigquery_client,
-    get_redis_client,
 )
 
 __all__ = [

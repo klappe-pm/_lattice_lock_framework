@@ -2,11 +2,12 @@ import asyncio
 import logging
 
 import click
-from lattice_lock import ModelOrchestrator, TaskType
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+
+from lattice_lock import ModelOrchestrator, TaskType
 
 logger = logging.getLogger(__name__)
 

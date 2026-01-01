@@ -1,6 +1,7 @@
 """Tests for error middleware."""
 
 import pytest
+
 from lattice_lock.errors.classification import Category, ErrorContext, Recoverability, Severity
 from lattice_lock.errors.middleware import (
     ErrorMetrics,

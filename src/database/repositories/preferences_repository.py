@@ -6,10 +6,9 @@ This module provides access to user preferences stored in Firestore.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from lattice_lock.database.gcp_clients import get_firestore_client
-
 
 # Default user preferences
 DEFAULT_PREFERENCES = {
@@ -50,22 +49,22 @@ DEFAULT_PREFERENCES = {
 
 class PreferencesRepository:
     """Repository for user preferences in Firestore."""
-    
+
     def __init__(self):
         """Initialize the repository."""
         self._client = None
-    
+
     @property
     def client(self):
         """Lazy-load the Firestore client."""
         if self._client is None:
             self._client = get_firestore_client()
         return self._client
-    
+
     def _user_prefs_ref(self, user_id: str):
         """Get the preferences document reference for a user."""
         return self.client.collection("users").document(user_id).collection("preferences").document("settings")
-    
+
     async def get(self, user_id: str) -> dict[str, Any]:
         """Get user preferences, returning defaults if not set.
         
@@ -76,14 +75,14 @@ class PreferencesRepository:
             User preferences dictionary.
         """
         doc = await self._user_prefs_ref(user_id).get()
-        
+
         if doc.exists:
             prefs = doc.to_dict()
             # Merge with defaults for any missing keys
             return self._merge_with_defaults(prefs)
-        
+
         return DEFAULT_PREFERENCES.copy()
-    
+
     async def update(
         self,
         user_id: str,
@@ -104,11 +103,11 @@ class PreferencesRepository:
             **preferences,
             "updatedAt": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         await self._user_prefs_ref(user_id).set(prefs, merge=merge)
-        
+
         return await self.get(user_id)
-    
+
     async def update_nested(
         self,
         user_id: str,
@@ -127,7 +126,7 @@ class PreferencesRepository:
             path: value,
             "updatedAt": datetime.now(timezone.utc).isoformat(),
         })
-    
+
     async def reset_to_defaults(self, user_id: str) -> dict[str, Any]:
         """Reset user preferences to defaults.
         
@@ -143,7 +142,7 @@ class PreferencesRepository:
         }
         await self._user_prefs_ref(user_id).set(prefs)
         return prefs
-    
+
     async def delete(self, user_id: str) -> None:
         """Delete user preferences.
         
@@ -151,11 +150,11 @@ class PreferencesRepository:
             user_id: User ID.
         """
         await self._user_prefs_ref(user_id).delete()
-    
+
     def _merge_with_defaults(self, prefs: dict[str, Any]) -> dict[str, Any]:
         """Deep merge preferences with defaults."""
         result = DEFAULT_PREFERENCES.copy()
-        
+
         def deep_merge(base: dict, override: dict) -> dict:
             for key, value in override.items():
                 if key in base and isinstance(base[key], dict) and isinstance(value, dict):
@@ -163,28 +162,28 @@ class PreferencesRepository:
                 else:
                     base[key] = value
             return base
-        
+
         return deep_merge(result, prefs)
 
 
 class OrganizationSettingsRepository:
     """Repository for organization settings in Firestore."""
-    
+
     def __init__(self):
         """Initialize the repository."""
         self._client = None
-    
+
     @property
     def client(self):
         """Lazy-load the Firestore client."""
         if self._client is None:
             self._client = get_firestore_client()
         return self._client
-    
+
     def _org_settings_ref(self, org_id: str):
         """Get the settings document reference for an organization."""
         return self.client.collection("organizations").document(org_id).collection("settings").document("config")
-    
+
     async def get(self, org_id: str) -> dict[str, Any]:
         """Get organization settings.
         
@@ -195,12 +194,12 @@ class OrganizationSettingsRepository:
             Organization settings dictionary.
         """
         doc = await self._org_settings_ref(org_id).get()
-        
+
         if doc.exists:
             return doc.to_dict()
-        
+
         return self._default_settings()
-    
+
     async def update(
         self,
         org_id: str,
@@ -221,10 +220,10 @@ class OrganizationSettingsRepository:
             **settings,
             "updatedAt": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         await self._org_settings_ref(org_id).set(data, merge=merge)
         return await self.get(org_id)
-    
+
     def _default_settings(self) -> dict[str, Any]:
         """Return default organization settings."""
         return {

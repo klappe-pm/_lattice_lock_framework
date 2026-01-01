@@ -6,8 +6,9 @@ import logging
 import time
 from typing import Any
 
-from lattice_lock.database.connection import DatabaseManager
 from sqlalchemy import text
+
+from lattice_lock.database.connection import DatabaseManager
 
 logger = logging.getLogger(__name__)
 

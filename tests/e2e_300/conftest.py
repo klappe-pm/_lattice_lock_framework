@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from aiohttp import ClientResponse
+
 from lattice_lock.orchestrator.registry import ModelRegistry
 from lattice_lock.orchestrator.types import ModelCapabilities, ModelProvider
 
