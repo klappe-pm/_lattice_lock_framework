@@ -10,7 +10,38 @@ permissions:
   contents: read
 
 jobs:
+  policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR targets main and has required labels
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          set -euo pipefail
+          base_ref=$(jq -r '.pull_request.base.ref' "$GITHUB_EVENT_PATH")
+          if [ "$base_ref" != "main" ]; then
+            echo "::error::PRs must target base branch 'main' (found '$base_ref')"; exit 1
+          fi
+          mapfile -t labels < <(jq -r '.pull_request.labels[].name' "$GITHUB_EVENT_PATH")
+          has_scope=false
+          has_source=false
+          shopt -s nocasematch
+          for l in "${labels[@]:-}"; do
+            [[ "$l" =~ ^(feat|fix|chore|docs|refactor)$ || "$l" =~ ^scope:\ *(feat|fix|chore|docs|refactor)$ ]] && has_scope=true
+            [[ "$l" =~ ^(human|llm|devin)$ || "$l" =~ ^source:\ *(human|llm|devin)$ ]] && has_source=true
+          done
+          shopt -u nocasematch
+          if [ "$has_scope" != true ]; then
+            echo "::error::Missing scope label. Add one of: feat, fix, chore, docs, refactor (or 'scope: ...')."; exit 1
+          fi
+          if [ "$has_source" != true ]; then
+            echo "::error::Missing source label. Add one of: human, llm, devin (or 'source: ...')."; exit 1
+          fi
+          echo "::notice::PR policy checks passed"
+
   quality:
+    needs: [policy]
     runs-on: ubuntu-latest
     strategy:
       matrix:
