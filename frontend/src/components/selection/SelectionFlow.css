@@ -1,0 +1,174 @@
+.selection-flow-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  height: 100%;
+}
+
+.flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flow-header h3 {
+  font: var(--md-sys-typescale-title-medium);
+  color: var(--md-sys-color-on-surface);
+}
+
+.flow-diagram {
+  flex: 1;
+  min-height: 300px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-large);
+  overflow: hidden;
+}
+
+/* React Flow overrides */
+.react-flow__background {
+  background-color: var(--md-sys-color-surface-container-low);
+}
+
+.react-flow__controls {
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-medium);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.react-flow__controls-button {
+  background-color: var(--md-sys-color-surface-container);
+  border-color: var(--md-sys-color-outline-variant);
+  fill: var(--md-sys-color-on-surface);
+}
+
+.react-flow__controls-button:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+}
+
+/* Custom Flow Nodes */
+.flow-node {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--md-sys-color-surface-container);
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-medium);
+  min-width: 140px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.flow-node.node-input {
+  border-color: var(--md-sys-color-tertiary);
+  background-color: var(--md-sys-color-tertiary-container);
+}
+
+.flow-node.node-process {
+  border-color: var(--md-sys-color-primary);
+}
+
+.flow-node.node-output,
+.flow-node.node-candidate {
+  border-color: var(--md-sys-color-outline);
+}
+
+.flow-node.node-selected {
+  border-color: var(--md-sys-color-secondary);
+  background-color: var(--md-sys-color-secondary-container);
+  box-shadow: 0 0 20px rgba(79, 216, 235, 0.3);
+}
+
+.flow-node.status-active {
+  border-color: var(--color-warning);
+  animation: nodeGlow 1.5s infinite;
+}
+
+@keyframes nodeGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 183, 77, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 183, 77, 0.6);
+  }
+}
+
+.node-icon {
+  font-size: 1.5rem;
+}
+
+.node-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.node-label {
+  font: var(--md-sys-typescale-label-large);
+  color: var(--md-sys-color-on-surface);
+}
+
+.node-details {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.node-pulse {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-warning);
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+/* Selection Summary */
+.selection-summary {
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-medium);
+  padding: var(--spacing-md);
+}
+
+.selection-summary h4 {
+  font: var(--md-sys-typescale-title-medium);
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: var(--spacing-sm);
+}
+
+.summary-items {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.summary-item.selected {
+  border-color: var(--md-sys-color-secondary);
+  background-color: var(--md-sys-color-secondary-container);
+}
+
+.summary-item .model-name {
+  font: var(--md-sys-typescale-label-large);
+  color: var(--md-sys-color-on-surface);
+}
+
+.summary-item .model-score {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.summary-item.selected .model-name,
+.summary-item.selected .model-score {
+  color: var(--md-sys-color-on-secondary-container);
+}
