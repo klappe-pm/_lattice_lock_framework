@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Block pushes to non-main branches on origin to enforce single-branch policy.
+# Allows pushes to forks, tags, and branch deletions. Bypass with SKIP_BRANCH_POLICY=1 or --no-verify.
+set -euo pipefail
+
+# Allow bypass
+if [[ "${SKIP_BRANCH_POLICY:-}" == "1" ]]; then
+  exit 0
+fi
+
+remote_name="${1:-}"
+remote_url="${2:-}"
+
+# Determine canonical remote (default: origin)
+canonical_remote="origin"
+
+# Read updates from stdin: <local_ref> <local_sha> <remote_ref> <remote_sha>
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Always allow tags
+  if [[ "$remote_ref" == refs/tags/* ]]; then
+    continue
+  fi
+
+  # Allow deleting branches (local_sha all zeros)
+  if [[ "$local_sha" == 0000000000000000000000000000000000000000 ]]; then
+    continue
+  fi
+
+  # Only enforce for canonical remote
+  if [[ "$remote_name" == "$canonical_remote" ]]; then
+    if [[ "$remote_ref" != "refs/heads/main" ]]; then
+      echo "Push blocked by policy: only refs/heads/main can be pushed to on '$canonical_remote'. Got: $remote_ref" >&2
+      echo "Use a fork + PR, or set SKIP_BRANCH_POLICY=1 to override (not recommended)." >&2
+      exit 1
+    fi
+  fi
+
+done
+
+exit 0
