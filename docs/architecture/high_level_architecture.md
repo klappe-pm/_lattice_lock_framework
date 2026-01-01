@@ -5,7 +5,7 @@
 ### Core Components
 
 - **[[Model Orchestrator]]** (`model-orchestrator.py`, `model_orchestrator_v2.py`): Main orchestration engine with task analysis, model capability scoring, cost tracking, and performance history
-- **[[Zen MCP Bridge]]** (`zen_mcp_bridge.py`): Extends Zen MCP tools with multi-model capabilities and intelligent routing
+- **[[PAL MCP Bridge]]** (`pal_mcp_bridge.py`): Extends PAL MCP Server tools with multi-model capabilities and intelligent routing
 - **[[API Clients]]** (`api_clients.py`, `grok_api.py`): Unified interface to all AI model providers
 - **[[CLI Interface]]** (`orchestrator-cli.py`): Command-line interface for model operations and testing
 - **[[Testing Suite]]** (`test_integration.py`, `test_real_world.py`): Comprehensive testing framework

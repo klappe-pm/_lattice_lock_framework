@@ -38,7 +38,7 @@
 
 ```python
 from model_orchestrator import ModelOrchestrator
-from zen_mcp_bridge import ModelRouter
+from pal_mcp_bridge import ModelRouter
 ```
 
 ```python

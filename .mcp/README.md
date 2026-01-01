@@ -147,7 +147,7 @@ The Python orchestrator uses its own credential system. See `src/lattice_lock_or
 - `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT` - Azure OpenAI (optional)
 - `DIAL_API_KEY` - DIAL proxy for Anthropic (optional, enterprise)
 
-**Note:** The Zen MCP Bridge component for runtime MCP integration is planned but not yet implemented.
+**Note:** The PAL MCP Bridge component for runtime MCP integration is planned but not yet implemented. PAL MCP Server is available at https://github.com/BeehiveInnovations/pal-mcp-server
 
 ## Troubleshooting
 

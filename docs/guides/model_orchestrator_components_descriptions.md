@@ -10,7 +10,7 @@
 
 **API Clients Factory**: Unified interface for all providers
 **Provider Clients:** Specialized clients for each API provider
-**Zen MCP Bridge:** Integration with Model Context Protocol
+**PAL MCP Bridge:** Integration with Model Context Protocol
 
 ## Core Orchestrator
 
@@ -45,7 +45,7 @@
 - XAI
 - Local
 - DIAL
-- Zen MCP
+- PAL MCP
 - Azure
 - Bedrock
 **Performance History:** Tracks actual performance for continuous improvement
