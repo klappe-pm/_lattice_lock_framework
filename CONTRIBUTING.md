@@ -25,6 +25,7 @@ This repository uses a trunk-based, single-branch workflow. The only persistent 
 - Open a PR for every change.
 - At least one approving human review is recommended.
 - All required checks must pass (tests, lint, typecheck). Add new checks as needed.
+- Required PR labels: one scope label (`feat`, `fix`, `chore`, `docs`, `refactor`) and one source label (`human`, `llm`, `devin`). The CI policy job will fail if these are missing.
 
 ## Local safeguards
 - A repo-scoped pre-push hook (in `.githooks/pre-push`) blocks pushing any branch except `main` to the canonical remote `origin`. It:
