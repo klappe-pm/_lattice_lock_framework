@@ -1,5 +1,7 @@
 # Lattice Lock Governance Guide
 
+> **Note:** For complete contribution standards including file naming, PR process, and commit standards, see [CONTRIBUTING.md](../../CONTRIBUTING.md) (single source of truth).
+
 This guide walks you through the end-to-end governance workflow using the Lattice Lock Framework.
 
 ## Objective
