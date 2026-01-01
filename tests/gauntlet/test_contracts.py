@@ -1,4 +1,5 @@
 import pytest
+
 from lattice_lock.gauntlet.validator import GauntletValidator, PolicyViolation
 
 

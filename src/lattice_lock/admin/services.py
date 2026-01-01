@@ -138,19 +138,22 @@ async def update_validation_status(
     if schema_status:
         try:
             project.schema_status = ValidationStatus(schema_status)
-        except ValueError:
-            pass  # Keep existing logic or log warning
+        except ValueError as e:
+            logger.warning(f"Invalid schema status '{schema_status}' for project {project_id}: {e}")
+            pass
 
     if sheriff_status:
         try:
             project.sheriff_status = ValidationStatus(sheriff_status)
-        except ValueError:
+        except ValueError as e:
+            logger.warning(f"Invalid sheriff status '{sheriff_status}' for project {project_id}: {e}")
             pass
 
     if gauntlet_status:
         try:
             project.gauntlet_status = ValidationStatus(gauntlet_status)
-        except ValueError:
+        except ValueError as e:
+            logger.warning(f"Invalid gauntlet status '{gauntlet_status}' for project {project_id}: {e}")
             pass
 
     if validation_errors is not None:

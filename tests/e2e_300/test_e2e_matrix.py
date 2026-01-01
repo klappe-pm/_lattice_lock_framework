@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import MagicMock
 
 import pytest
+
 from lattice_lock.orchestrator.core import ModelOrchestrator
 from lattice_lock.orchestrator.types import APIResponse
 

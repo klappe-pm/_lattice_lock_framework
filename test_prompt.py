@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 from lattice_lock import ModelOrchestrator
 from lattice_lock.logging_config import setup_logging
 
+
 async def main():
     # Setup logging to see what's happening
     setup_logging(level=logging.INFO, simple_format=True)
@@ -33,7 +34,7 @@ async def main():
         response = await orchestrator.route_request(
             prompt=prompt,
             # You can force a model if you want, e.g., model_id="gpt-4o"
-            # model_id="gpt-4o" 
+            # model_id="gpt-4o"
         )
 
         print("\n✅ Response Received:\n")
@@ -42,7 +43,7 @@ async def main():
         print(response.content)
         print("-" * 40)
         print(f"Usage: {response.usage}")
-        
+
     except Exception as e:
         print(f"\n❌ Error during request: {e}")
     finally:

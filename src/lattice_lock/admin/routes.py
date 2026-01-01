@@ -8,6 +8,10 @@ import time
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from lattice_lock.admin.auth import require_admin, require_operator, require_viewer
 from lattice_lock.admin.db import get_db
 from lattice_lock.admin.models import Project, ProjectError
@@ -24,9 +28,6 @@ from lattice_lock.admin.schemas import (
     RollbackResponse,
     ValidationStatusResponse,
 )
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 # API version
 API_VERSION = "1.0.0"

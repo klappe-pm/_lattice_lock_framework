@@ -3,6 +3,7 @@ Tests for Provider Architecture Structure
 """
 
 import pytest
+
 from lattice_lock.config import AppConfig
 from lattice_lock.exceptions import ProviderUnavailableError
 from lattice_lock.orchestrator.providers import BaseAPIClient, ProviderAvailability, get_api_client

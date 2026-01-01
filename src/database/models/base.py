@@ -6,13 +6,11 @@ This module provides the declarative base and common mixins for all models.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
 
 # Naming convention for constraints (helps with migrations)
 NAMING_CONVENTION = {
@@ -26,9 +24,9 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
-    
+
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
-    
+
     # Type annotations for common columns
     type_annotation_map = {
         datetime: DateTime(timezone=True),
@@ -37,7 +35,7 @@ class Base(DeclarativeBase):
 
 class TimestampMixin:
     """Mixin that adds created_at and updated_at timestamps."""
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -53,7 +51,7 @@ class TimestampMixin:
 
 class UUIDMixin:
     """Mixin that adds a UUID primary key."""
-    
+
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
         primary_key=True,

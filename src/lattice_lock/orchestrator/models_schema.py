@@ -15,11 +15,11 @@ class ModelConfig(BaseModel):
     api_name: str | None = Field(None, description="Actual API model name (defaults to id)")
     provider: ModelProvider
     context_window: int = Field(..., gt=0)
-    
+
     # Model Metadata
     version: str | None = Field(None, description="Model version string (e.g. 2024-05-13)")
     release_date: str | None = Field(None, description="ISO date of model release")
-    
+
     # Cost per 1M tokens
     input_cost: float = Field(0.0, ge=0.0)
     output_cost: float = Field(0.0, ge=0.0)
@@ -32,7 +32,7 @@ class ModelConfig(BaseModel):
     # Metadata
     maturity: ProviderMaturity = ProviderMaturity.BETA
     status: ModelStatus = ModelStatus.ACTIVE
-    
+
     # Qualitative Capabilities
     best_for: list[str] = Field(default_factory=list, description="List of tasks this model excels at")
     limitations: list[str] = Field(default_factory=list, description="List of known limitations")

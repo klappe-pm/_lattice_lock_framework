@@ -5,11 +5,7 @@ This module provides the data access layer for user management.
 
 from __future__ import annotations
 
-from typing import Optional, Sequence
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from collections.abc import Sequence
 
 from lattice_lock.database.models.user import (
     APIKey,
@@ -18,14 +14,17 @@ from lattice_lock.database.models.user import (
     User,
 )
 from lattice_lock.database.repositories.base import BaseRepository
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 
 class UserRepository(BaseRepository[User]):
     """Repository for User operations."""
-    
+
     def __init__(self, session: AsyncSession):
         super().__init__(User, session)
-    
+
     async def find_by_email(self, email: str) -> User | None:
         """Find a user by email address.
         
@@ -38,7 +37,7 @@ class UserRepository(BaseRepository[User]):
         stmt = select(User).where(User.email.ilike(email))
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
-    
+
     async def find_by_external_id(
         self,
         provider: str,
@@ -54,7 +53,7 @@ class UserRepository(BaseRepository[User]):
             User or None if not found.
         """
         return await self.find_one(auth_provider=provider, external_id=external_id)
-    
+
     async def find_with_organizations(self, user_id: str) -> User | None:
         """Find a user with their organization memberships eagerly loaded.
         
@@ -71,7 +70,7 @@ class UserRepository(BaseRepository[User]):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
-    
+
     async def get_user_organizations(self, user_id: str) -> Sequence[Organization]:
         """Get all organizations a user belongs to.
         
@@ -92,10 +91,10 @@ class UserRepository(BaseRepository[User]):
 
 class OrganizationRepository(BaseRepository[Organization]):
     """Repository for Organization operations."""
-    
+
     def __init__(self, session: AsyncSession):
         super().__init__(Organization, session)
-    
+
     async def find_by_slug(self, slug: str) -> Organization | None:
         """Find an organization by slug.
         
@@ -106,11 +105,11 @@ class OrganizationRepository(BaseRepository[Organization]):
             Organization or None.
         """
         return await self.find_one(slug=slug)
-    
+
     async def get_members(
         self,
         organization_id: str,
-        role: Optional[str] = None,
+        role: str | None = None,
     ) -> Sequence[OrganizationMember]:
         """Get organization members, optionally filtered by role.
         
@@ -126,19 +125,19 @@ class OrganizationRepository(BaseRepository[Organization]):
             .where(OrganizationMember.organization_id == organization_id)
             .options(selectinload(OrganizationMember.user))
         )
-        
+
         if role:
             stmt = stmt.where(OrganizationMember.role == role)
-        
+
         result = await self.session.execute(stmt)
         return result.scalars().all()
-    
+
     async def add_member(
         self,
         organization_id: str,
         user_id: str,
         role: str = "member",
-        invited_by: Optional[str] = None,
+        invited_by: str | None = None,
     ) -> OrganizationMember:
         """Add a user to an organization.
         
@@ -160,7 +159,7 @@ class OrganizationRepository(BaseRepository[Organization]):
         self.session.add(member)
         await self.session.flush()
         return member
-    
+
     async def is_member(self, organization_id: str, user_id: str) -> bool:
         """Check if a user is a member of an organization.
         
@@ -182,10 +181,10 @@ class OrganizationRepository(BaseRepository[Organization]):
 
 class APIKeyRepository(BaseRepository[APIKey]):
     """Repository for API key operations."""
-    
+
     def __init__(self, session: AsyncSession):
         super().__init__(APIKey, session)
-    
+
     async def find_by_prefix(self, prefix: str) -> APIKey | None:
         """Find an API key by its prefix.
         
@@ -196,7 +195,7 @@ class APIKeyRepository(BaseRepository[APIKey]):
             APIKey or None.
         """
         return await self.find_one(key_prefix=prefix)
-    
+
     async def find_valid_keys_for_user(self, user_id: str) -> Sequence[APIKey]:
         """Find all valid (non-expired, non-revoked) API keys for a user.
         
@@ -207,9 +206,9 @@ class APIKeyRepository(BaseRepository[APIKey]):
             Sequence of valid API keys.
         """
         from datetime import datetime, timezone
-        
+
         now = datetime.now(timezone.utc)
-        
+
         stmt = (
             select(APIKey)
             .where(APIKey.user_id == user_id)
@@ -220,7 +219,7 @@ class APIKeyRepository(BaseRepository[APIKey]):
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()
-    
+
     async def revoke(self, key_id: str) -> bool:
         """Revoke an API key.
         
@@ -231,15 +230,15 @@ class APIKeyRepository(BaseRepository[APIKey]):
             True if revoked, False if not found.
         """
         from datetime import datetime, timezone
-        
+
         key = await self.get(key_id)
         if key is None:
             return False
-        
+
         key.revoked_at = datetime.now(timezone.utc)
         await self.session.flush()
         return True
-    
+
     async def update_last_used(self, key_id: str) -> None:
         """Update the last_used_at timestamp.
         
@@ -247,7 +246,7 @@ class APIKeyRepository(BaseRepository[APIKey]):
             key_id: API key ID.
         """
         from datetime import datetime, timezone
-        
+
         key = await self.get(key_id)
         if key:
             key.last_used_at = datetime.now(timezone.utc)

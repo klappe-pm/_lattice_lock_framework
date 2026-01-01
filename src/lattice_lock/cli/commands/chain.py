@@ -3,10 +3,11 @@ import json
 import logging
 
 import click
-from lattice_lock.orchestrator.chain import ChainOrchestrator
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
+from lattice_lock.orchestrator.chain import ChainOrchestrator
 
 logger = logging.getLogger(__name__)
 

@@ -7,9 +7,10 @@ optimized for Cloud SQL with connection pooling and health checks.
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
-from typing import AsyncGenerator, Generator
 
+from lattice_lock.database.models.base import Base
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -19,8 +20,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
-
-from lattice_lock.database.models.base import Base
 
 
 # Environment-based configuration
@@ -40,23 +39,23 @@ def _get_database_url(async_mode: bool = True) -> str:
         if async_mode and "postgresql://" in direct_url:
             return direct_url.replace("postgresql://", "postgresql+asyncpg://")
         return direct_url
-    
+
     # Build from components
     user = os.getenv("DB_USER", "lattice_lock_app")
     password = os.getenv("DB_PASSWORD", "")
     database = os.getenv("DB_NAME", "lattice_lock")
-    
+
     # Cloud SQL Unix socket (for Cloud Run)
     if instance_connection := os.getenv("CLOUD_SQL_CONNECTION_NAME"):
         socket_path = f"/cloudsql/{instance_connection}"
         if async_mode:
             return f"postgresql+asyncpg://{user}:{password}@/{database}?host={socket_path}"
         return f"postgresql+psycopg2://{user}:{password}@/{database}?host={socket_path}"
-    
+
     # Direct TCP connection
     host = os.getenv("DB_HOST", "localhost")
     port = os.getenv("DB_PORT", "5432")
-    
+
     if async_mode:
         return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}"
     return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
@@ -77,7 +76,7 @@ _async_session_factory: async_sessionmaker[AsyncSession] | None = None
 def _get_async_engine() -> AsyncEngine:
     """Get or create the async database engine."""
     global _async_engine
-    
+
     if _async_engine is None:
         _async_engine = create_async_engine(
             _get_database_url(async_mode=True),
@@ -89,14 +88,14 @@ def _get_async_engine() -> AsyncEngine:
             pool_pre_ping=True,  # Health check before each connection
             echo=os.getenv("DB_ECHO", "false").lower() == "true",
         )
-    
+
     return _async_engine
 
 
 def _get_async_session_factory() -> async_sessionmaker[AsyncSession]:
     """Get or create the async session factory."""
     global _async_session_factory
-    
+
     if _async_session_factory is None:
         _async_session_factory = async_sessionmaker(
             bind=_get_async_engine(),
@@ -104,7 +103,7 @@ def _get_async_session_factory() -> async_sessionmaker[AsyncSession]:
             expire_on_commit=False,
             autoflush=False,
         )
-    
+
     return _async_session_factory
 
 
@@ -116,7 +115,7 @@ _sync_session_factory = None
 def _get_sync_engine():
     """Get or create the sync database engine."""
     global _sync_engine
-    
+
     if _sync_engine is None:
         _sync_engine = create_engine(
             _get_database_url(async_mode=False),
@@ -128,28 +127,28 @@ def _get_sync_engine():
             pool_pre_ping=True,
             echo=os.getenv("DB_ECHO", "false").lower() == "true",
         )
-        
+
         # Add event listener for connection setup
         @event.listens_for(_sync_engine, "connect")
         def set_search_path(dbapi_conn, connection_record):
             cursor = dbapi_conn.cursor()
             cursor.execute("SET search_path TO public")
             cursor.close()
-    
+
     return _sync_engine
 
 
 def _get_sync_session_factory():
     """Get or create the sync session factory."""
     global _sync_session_factory
-    
+
     if _sync_session_factory is None:
         _sync_session_factory = sessionmaker(
             bind=_get_sync_engine(),
             expire_on_commit=False,
             autoflush=False,
         )
-    
+
     return _sync_session_factory
 
 
@@ -209,7 +208,7 @@ async def init_database(drop_existing: bool = False) -> None:
                       USE WITH CAUTION in production!
     """
     engine = _get_async_engine()
-    
+
     async with engine.begin() as conn:
         if drop_existing:
             await conn.run_sync(Base.metadata.drop_all)
@@ -245,11 +244,11 @@ async def close_database() -> None:
     Call this during application shutdown.
     """
     global _async_engine, _sync_engine
-    
+
     if _async_engine:
         await _async_engine.dispose()
         _async_engine = None
-    
+
     if _sync_engine:
         _sync_engine.dispose()
         _sync_engine = None

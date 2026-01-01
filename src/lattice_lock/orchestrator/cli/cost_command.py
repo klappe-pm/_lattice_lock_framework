@@ -1,8 +1,9 @@
 import logging
 
-from lattice_lock.orchestrator.core import ModelOrchestrator
 from rich.console import Console
 from rich.table import Table
+
+from lattice_lock.orchestrator.core import ModelOrchestrator
 
 logger = logging.getLogger(__name__)
 

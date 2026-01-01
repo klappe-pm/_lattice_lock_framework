@@ -10,6 +10,7 @@ This module configures pytest to:
 import os
 
 import pytest
+
 from lattice_lock.admin.auth.storage import MemoryAuthStorage
 from lattice_lock.orchestrator.providers.base import ProviderAvailability
 

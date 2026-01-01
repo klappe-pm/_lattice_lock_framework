@@ -5,6 +5,7 @@ Tests for Model Scorer.
 from unittest.mock import Mock
 
 import pytest
+
 from lattice_lock.config import AppConfig
 from lattice_lock.orchestrator.scoring.model_scorer import ModelScorer
 from lattice_lock.orchestrator.types import (

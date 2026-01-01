@@ -1,6 +1,7 @@
 import logging
 
 import click
+
 from lattice_lock.cli.utils.console import get_console
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def run_dashboard(port):
 
     try:
         import uvicorn
+
         from lattice_lock.admin.api import create_app
 
         app = create_app()

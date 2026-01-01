@@ -2,9 +2,10 @@ import json
 import logging
 
 import click
-from lattice_lock.context.serialization import ContextHandoff
 from rich.console import Console
 from rich.table import Table
+
+from lattice_lock.context.serialization import ContextHandoff
 
 logger = logging.getLogger(__name__)
 

@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 
 import yaml
+
 from lattice_lock.config import AppConfig
 
 from ..analysis.types import TaskAnalysis
