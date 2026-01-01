@@ -1,0 +1,11 @@
+environment: dev
+region: us-west-2
+services:
+  database:
+    tier: db.t3.medium
+    storage_gb: 20
+  cache:
+    node_type: cache.t3.micro
+    replicas: 1
+  analytics:
+    enabled: true
