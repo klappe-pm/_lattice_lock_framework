@@ -62,7 +62,7 @@ graph TB
         XAI[XAI Grok Client]
         LOCAL[Local Ollama Client]
         DIAL[DIAL Client]
-        ZEN[Zen MCP Bridge]
+        PAL[PAL MCP Bridge]
     end
     subgraph "Local Model Management"
         LOCAL_MGR[LocalModelManager<br/>local_model_manager.py]
@@ -122,7 +122,7 @@ graph TB
     API_CLIENTS --> XAI
     API_CLIENTS --> LOCAL
     API_CLIENTS --> DIAL
-    API_CLIENTS --> ZEN
+    API_CLIENTS --> PAL
     LOCAL --> LOCAL_MGR
     LOCAL_MGR --> KEEP_ALIVE
     LOCAL_MGR --> RAM_MON
