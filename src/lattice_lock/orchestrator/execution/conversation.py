@@ -58,6 +58,9 @@ class ConversationExecutor:
         current_messages = messages.copy()
         final_response = None
 
+        # Extract task_type for tracking but don't pass to client
+        task_type = kwargs.pop("task_type", "general")
+
         for turn in range(self.max_turns):
             logger.debug(
                 f"Turn {turn+1}/{self.max_turns} for model {model_cap.api_name}",
@@ -90,7 +93,7 @@ class ConversationExecutor:
             # Note: We record each step, but we return the aggregated usage on the final response object
             self.cost_tracker.record_transaction(
                 response,
-                task_type=kwargs.get("task_type", "general"),
+                task_type=task_type,
                 trace_id=request_trace_id,
             )
 

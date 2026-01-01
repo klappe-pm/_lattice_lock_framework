@@ -46,13 +46,11 @@ class ClientPool:
                 # Assuming clients might have a close method in the future,
                 # strictly speaking BaseAPIClient doesn't mandate it yet but good practice.
                 if hasattr(client, "close"):
-                    if callable(client.close) and callable(client.close):
-                        if hasattr(client.close, "__await__") or logging.iscoroutinefunction(
-                            client.close
-                        ):
-                            await client.close()
-                        else:
-                            client.close()
+                    import inspect
+                    if inspect.iscoroutinefunction(client.close):
+                        await client.close()
+                    else:
+                        client.close()
             except Exception as e:
                 logger.warning(f"Error closing client {name}: {e}")
         self._clients.clear()
