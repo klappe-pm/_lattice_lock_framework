@@ -23,7 +23,7 @@ This document contains all identified issues prioritized from P0 (blocker) to P4
 **Impact:** CI pipeline fails on coverage check
 
 **Description:**
-Current test coverage is 67.31%, failing the 70% minimum requirement configured in `pyproject.toml:96`.
+Current test coverage is 67.31%, failing the 70% minimum requirement configured in `pyproject.toml` (coverage section).
 
 **Remediation Steps:**
 1. Run `pytest --cov=src/lattice_lock --cov-report=html` to generate coverage report
