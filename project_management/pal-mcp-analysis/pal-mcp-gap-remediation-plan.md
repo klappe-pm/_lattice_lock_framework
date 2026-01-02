@@ -1,6 +1,6 @@
 # PAL MCP Gap Remediation Implementation Plan
 
-> **Based on:** [PAL MCP Analysis](./pal-mcp-analysis/00_executive_summary.md)  
+> **Based on:** [PAL MCP Analysis](00_executive_summary.md)  
 > **Created:** 2026-01-01  
 > **Status:** In Progress
 

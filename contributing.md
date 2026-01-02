@@ -143,7 +143,7 @@ lattice-lock-framework/
 ├── .githooks/                     # Git hooks
 ├── .gitignore                     # VCS ignore patterns (MANDATORY)
 ├── contributing.md                # This file - single source of truth (MANDATORY)
-├── license.md                     # Project license (MANDATORY)
+├── LICENSE.md                     # Project license (MANDATORY)
 ├── Makefile                       # Build automation
 ├── Dockerfile                     # Container definition
 ├── docker-compose.yml             # Container orchestration
@@ -393,7 +393,11 @@ All Markdown documentation must include:
 
 **Root-Level Configs (Allowed):**
 - `.gitignore`
+<<<<<<< HEAD
 - `license.md`
+=======
+- `LICENSE.md` (exception: GitHub/legal convention)
+>>>>>>> origin/warp/consolidate-contribution-standards
 - `contributing.md` (this file)
 - `pyproject.toml`
 - `Makefile`, `Dockerfile`, `docker-compose.yml`

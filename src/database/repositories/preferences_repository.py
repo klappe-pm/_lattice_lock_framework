@@ -63,14 +63,19 @@ class PreferencesRepository:
 
     def _user_prefs_ref(self, user_id: str):
         """Get the preferences document reference for a user."""
-        return self.client.collection("users").document(user_id).collection("preferences").document("settings")
+        return (
+            self.client.collection("users")
+            .document(user_id)
+            .collection("preferences")
+            .document("settings")
+        )
 
     async def get(self, user_id: str) -> dict[str, Any]:
         """Get user preferences, returning defaults if not set.
-        
+
         Args:
             user_id: User ID.
-            
+
         Returns:
             User preferences dictionary.
         """
@@ -90,12 +95,12 @@ class PreferencesRepository:
         merge: bool = True,
     ) -> dict[str, Any]:
         """Update user preferences.
-        
+
         Args:
             user_id: User ID.
             preferences: Preferences to set/update.
             merge: If True, merge with existing; if False, replace entirely.
-            
+
         Returns:
             Updated preferences.
         """
@@ -115,24 +120,26 @@ class PreferencesRepository:
         value: Any,
     ) -> None:
         """Update a nested preference value using dot notation.
-        
+
         Args:
             user_id: User ID.
             path: Dot-notation path (e.g., 'editor.fontSize').
             value: New value.
         """
         # Firestore supports dot notation for nested updates
-        await self._user_prefs_ref(user_id).update({
-            path: value,
-            "updatedAt": datetime.now(timezone.utc).isoformat(),
-        })
+        await self._user_prefs_ref(user_id).update(
+            {
+                path: value,
+                "updatedAt": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
     async def reset_to_defaults(self, user_id: str) -> dict[str, Any]:
         """Reset user preferences to defaults.
-        
+
         Args:
             user_id: User ID.
-            
+
         Returns:
             Default preferences.
         """
@@ -145,7 +152,7 @@ class PreferencesRepository:
 
     async def delete(self, user_id: str) -> None:
         """Delete user preferences.
-        
+
         Args:
             user_id: User ID.
         """
@@ -182,14 +189,19 @@ class OrganizationSettingsRepository:
 
     def _org_settings_ref(self, org_id: str):
         """Get the settings document reference for an organization."""
-        return self.client.collection("organizations").document(org_id).collection("settings").document("config")
+        return (
+            self.client.collection("organizations")
+            .document(org_id)
+            .collection("settings")
+            .document("config")
+        )
 
     async def get(self, org_id: str) -> dict[str, Any]:
         """Get organization settings.
-        
+
         Args:
             org_id: Organization ID.
-            
+
         Returns:
             Organization settings dictionary.
         """
@@ -207,12 +219,12 @@ class OrganizationSettingsRepository:
         merge: bool = True,
     ) -> dict[str, Any]:
         """Update organization settings.
-        
+
         Args:
             org_id: Organization ID.
             settings: Settings to set/update.
             merge: If True, merge with existing.
-            
+
         Returns:
             Updated settings.
         """

@@ -27,10 +27,10 @@ class UserRepository(BaseRepository[User]):
 
     async def find_by_email(self, email: str) -> User | None:
         """Find a user by email address.
-        
+
         Args:
             email: User email (case-insensitive).
-            
+
         Returns:
             User or None if not found.
         """
@@ -44,11 +44,11 @@ class UserRepository(BaseRepository[User]):
         external_id: str,
     ) -> User | None:
         """Find a user by OAuth provider ID.
-        
+
         Args:
             provider: Auth provider name (e.g., 'google', 'github').
             external_id: Provider's user ID.
-            
+
         Returns:
             User or None if not found.
         """
@@ -56,10 +56,10 @@ class UserRepository(BaseRepository[User]):
 
     async def find_with_organizations(self, user_id: str) -> User | None:
         """Find a user with their organization memberships eagerly loaded.
-        
+
         Args:
             user_id: User ID.
-            
+
         Returns:
             User with organizations loaded.
         """
@@ -73,10 +73,10 @@ class UserRepository(BaseRepository[User]):
 
     async def get_user_organizations(self, user_id: str) -> Sequence[Organization]:
         """Get all organizations a user belongs to.
-        
+
         Args:
             user_id: User ID.
-            
+
         Returns:
             Sequence of organizations.
         """
@@ -97,10 +97,10 @@ class OrganizationRepository(BaseRepository[Organization]):
 
     async def find_by_slug(self, slug: str) -> Organization | None:
         """Find an organization by slug.
-        
+
         Args:
             slug: Organization URL slug.
-            
+
         Returns:
             Organization or None.
         """
@@ -112,11 +112,11 @@ class OrganizationRepository(BaseRepository[Organization]):
         role: str | None = None,
     ) -> Sequence[OrganizationMember]:
         """Get organization members, optionally filtered by role.
-        
+
         Args:
             organization_id: Organization ID.
             role: Optional role filter.
-            
+
         Returns:
             Sequence of organization members.
         """
@@ -140,13 +140,13 @@ class OrganizationRepository(BaseRepository[Organization]):
         invited_by: str | None = None,
     ) -> OrganizationMember:
         """Add a user to an organization.
-        
+
         Args:
             organization_id: Organization ID.
             user_id: User ID.
             role: Member role (default: 'member').
             invited_by: User ID of the inviter.
-            
+
         Returns:
             The created membership.
         """
@@ -162,11 +162,11 @@ class OrganizationRepository(BaseRepository[Organization]):
 
     async def is_member(self, organization_id: str, user_id: str) -> bool:
         """Check if a user is a member of an organization.
-        
+
         Args:
             organization_id: Organization ID.
             user_id: User ID.
-            
+
         Returns:
             True if user is a member.
         """
@@ -187,10 +187,10 @@ class APIKeyRepository(BaseRepository[APIKey]):
 
     async def find_by_prefix(self, prefix: str) -> APIKey | None:
         """Find an API key by its prefix.
-        
+
         Args:
             prefix: First 10 characters of the API key.
-            
+
         Returns:
             APIKey or None.
         """
@@ -198,10 +198,10 @@ class APIKeyRepository(BaseRepository[APIKey]):
 
     async def find_valid_keys_for_user(self, user_id: str) -> Sequence[APIKey]:
         """Find all valid (non-expired, non-revoked) API keys for a user.
-        
+
         Args:
             user_id: User ID.
-            
+
         Returns:
             Sequence of valid API keys.
         """
@@ -213,19 +213,17 @@ class APIKeyRepository(BaseRepository[APIKey]):
             select(APIKey)
             .where(APIKey.user_id == user_id)
             .where(APIKey.revoked_at.is_(None))
-            .where(
-                (APIKey.expires_at.is_(None)) | (APIKey.expires_at > now)
-            )
+            .where((APIKey.expires_at.is_(None)) | (APIKey.expires_at > now))
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
     async def revoke(self, key_id: str) -> bool:
         """Revoke an API key.
-        
+
         Args:
             key_id: API key ID.
-            
+
         Returns:
             True if revoked, False if not found.
         """
@@ -241,7 +239,7 @@ class APIKeyRepository(BaseRepository[APIKey]):
 
     async def update_last_used(self, key_id: str) -> None:
         """Update the last_used_at timestamp.
-        
+
         Args:
             key_id: API key ID.
         """

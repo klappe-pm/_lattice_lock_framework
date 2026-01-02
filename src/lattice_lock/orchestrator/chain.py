@@ -3,6 +3,7 @@ import uuid
 from typing import Any
 
 import yaml
+from jinja2 import Template
 
 from lattice_lock.orchestrator.core import ModelOrchestrator
 
@@ -102,10 +103,8 @@ class ChainOrchestrator:
             step_id = str(uuid.uuid4())
             logger.info(f"Running step: {step.name} (ID: {step_id})")
 
-            # Simple template rendering
-            rendered_prompt = step.prompt
-            for key, value in context.items():
-                rendered_prompt = rendered_prompt.replace(f"{{{{{key}}}}}", str(value))
+            # Robust template rendering with Jinja2
+            rendered_prompt = Template(step.prompt).render(**context)
 
             try:
                 response = await self.orchestrator.route_request(

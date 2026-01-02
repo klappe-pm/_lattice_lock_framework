@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-import requests
+import httpx
 import yaml
 
 from lattice_lock.utils.safe_path import resolve_under_root
@@ -55,7 +55,7 @@ class GrokAPI:
         with open(self.config_path) as f:
             return yaml.safe_load(f)
 
-    def _handle_error(self, response: requests.Response) -> None:
+    def _handle_error(self, response: httpx.Response) -> None:
         """Map HTTP status codes to specific exceptions"""
         if response.status_code == 200:
             return
@@ -113,12 +113,13 @@ class GrokAPI:
         payload = {"model": model_id, "messages": messages, **kwargs}
 
         try:
-            response = requests.post(
-                f"{self.base_url}/chat/completions", headers=headers, json=payload
-            )
-            self._handle_error(response)
-            return response.json()
-        except requests.RequestException as e:
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(
+                    f"{self.base_url}/chat/completions", headers=headers, json=payload
+                )
+                self._handle_error(response)
+                return response.json()
+        except httpx.RequestError as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
     def vision_completion(
@@ -153,12 +154,13 @@ class GrokAPI:
         payload = {"model": model_id, "prompt": prompt, **kwargs}
 
         try:
-            response = requests.post(
-                f"{self.base_url}/images/generations", headers=headers, json=payload
-            )
-            self._handle_error(response)
-            return response.json()
-        except requests.RequestException as e:
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(
+                    f"{self.base_url}/images/generations", headers=headers, json=payload
+                )
+                self._handle_error(response)
+                return response.json()
+        except httpx.RequestError as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
     def stream_completion(
@@ -174,20 +176,22 @@ class GrokAPI:
         payload = {"model": model_id, "messages": messages, "stream": True, **kwargs}
 
         try:
-            response = requests.post(
-                f"{self.base_url}/chat/completions", headers=headers, json=payload, stream=True
-            )
-            self._handle_error(response)
+            with httpx.stream(
+                "POST",
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60.0,
+            ) as response:
+                self._handle_error(response)
 
-            for line in response.iter_lines():
-                if line:
-                    line_utf8 = line.decode("utf-8")
-                    if line_utf8.startswith("data: "):
-                        data = line_utf8[6:]
-                        if data != "[DONE]":
-                            yield json.loads(data)
-
-        except requests.RequestException as e:
+                for line in response.iter_lines():
+                    if line:
+                        if line.startswith("data: "):
+                            data = line[6:]
+                            if data != "[DONE]":
+                                yield json.loads(data)
+        except httpx.RequestError as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
 

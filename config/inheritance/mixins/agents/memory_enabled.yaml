@@ -1,0 +1,18 @@
+---
+vars:
+  memory_backend: redis
+  retention_days: 30
+---
+agent:
+  memory:
+    enabled: true
+    backend: ${vars.memory_backend}
+    retention:
+      days: ${vars.retention_days}
+      
+  tools:
+    +append:
+      - name: search_memory
+        description: "Searches long-term memory"
+      - name: store_memory
+        description: "Stores important information in memory"

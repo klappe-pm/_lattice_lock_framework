@@ -1,0 +1,11 @@
+---
+vars:
+  host: "http://localhost:11434"
+---
+model:
+  provider: local
+  api_base: ${vars.host}
+  
+  features:
+    json_mode: true
+    streaming: true

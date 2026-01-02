@@ -25,12 +25,12 @@ from sqlalchemy.pool import QueuePool
 # Environment-based configuration
 def _get_database_url(async_mode: bool = True) -> str:
     """Build database URL from environment variables.
-    
+
     Supports both Cloud SQL private IP and Unix socket connections.
-    
+
     Args:
         async_mode: If True, returns asyncpg URL; otherwise, psycopg2 URL.
-        
+
     Returns:
         Database connection URL.
     """
@@ -154,14 +154,15 @@ def _get_sync_session_factory():
 
 # Public API
 
+
 @asynccontextmanager
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Get an async database session.
-    
+
     Usage:
         async with get_async_session() as session:
             result = await session.execute(...)
-            
+
     Yields:
         AsyncSession: Database session that auto-commits on success.
     """
@@ -179,11 +180,11 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 @contextmanager
 def get_sync_session() -> Generator[Session, None, None]:
     """Get a sync database session.
-    
+
     Usage:
         with get_sync_session() as session:
             result = session.execute(...)
-            
+
     Yields:
         Session: Database session that auto-commits on success.
     """
@@ -200,9 +201,9 @@ def get_sync_session() -> Generator[Session, None, None]:
 
 async def init_database(drop_existing: bool = False) -> None:
     """Initialize the database schema.
-    
+
     Creates all tables defined in the models if they don't exist.
-    
+
     Args:
         drop_existing: If True, drops all tables before creating.
                       USE WITH CAUTION in production!
@@ -217,7 +218,7 @@ async def init_database(drop_existing: bool = False) -> None:
 
 async def check_database_health() -> dict:
     """Check database connectivity and return health status.
-    
+
     Returns:
         dict: Health status with connection info.
     """
@@ -240,7 +241,7 @@ async def check_database_health() -> dict:
 
 async def close_database() -> None:
     """Close all database connections.
-    
+
     Call this during application shutdown.
     """
     global _async_engine, _sync_engine

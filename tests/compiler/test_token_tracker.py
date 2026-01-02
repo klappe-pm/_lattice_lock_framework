@@ -11,12 +11,11 @@ PLACEHOLDER: Implementation pending Phase 2 completion.
 """
 
 import pytest
-from pathlib import Path
-
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_yaml_content():
@@ -58,6 +57,7 @@ def sample_json_content():
 # Token Counting Tests
 # =============================================================================
 
+
 class TestTokenCounting:
     """Tests for token counting accuracy."""
 
@@ -94,6 +94,7 @@ class TestTokenCounting:
 # Token Stats Tests
 # =============================================================================
 
+
 class TestTokenStats:
     """Tests for TokenStats dataclass."""
 
@@ -121,6 +122,7 @@ class TestTokenStats:
 # =============================================================================
 # Cost Estimation Tests
 # =============================================================================
+
 
 class TestCostEstimation:
     """Tests for cost estimation functionality."""
@@ -150,6 +152,7 @@ class TestCostEstimation:
 # Format Comparison Tests
 # =============================================================================
 
+
 class TestFormatComparison:
     """Tests for format comparison functionality."""
 
@@ -167,9 +170,7 @@ class TestFormatComparison:
         """Test comparison identifies most efficient format."""
         pytest.skip("Pending Phase 2 implementation")
 
-    def test_toon_shows_significant_savings(
-        self, sample_yaml_content, sample_toon_content
-    ):
+    def test_toon_shows_significant_savings(self, sample_yaml_content, sample_toon_content):
         """Test that TOON shows significant savings vs YAML."""
         pytest.skip("Pending Phase 2 implementation")
 
@@ -177,6 +178,7 @@ class TestFormatComparison:
 # =============================================================================
 # Batch Analysis Tests
 # =============================================================================
+
 
 class TestBatchAnalysis:
     """Tests for batch analysis functionality."""
@@ -201,6 +203,7 @@ class TestBatchAnalysis:
 # =============================================================================
 # Integration with Compiler Tests
 # =============================================================================
+
 
 class TestCompilerIntegration:
     """Tests for token tracker integration with compiler."""

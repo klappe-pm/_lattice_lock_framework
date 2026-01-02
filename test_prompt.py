@@ -13,7 +13,7 @@ from lattice_lock.logging_config import setup_logging
 async def main():
     # Setup logging to see what's happening
     setup_logging(level=logging.INFO, simple_format=True)
-    logger = logging.getLogger("test_prompt")
+    setup_logging(level=logging.INFO, simple_format=True)
 
     print("🚀 Initializing Lattice Lock ModelOrchestrator...")
     try:
@@ -48,6 +48,7 @@ async def main():
         print(f"\n❌ Error during request: {e}")
     finally:
         await orchestrator.shutdown()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
