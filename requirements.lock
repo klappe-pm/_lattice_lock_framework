@@ -8,12 +8,8 @@
     # via -[dev,all]
 aiofiles==25.1.0
     # via lattice-lock
-aiohappyeyeballs==2.6.1
-    # via aiohttp
-aiohttp==3.13.2
+aiosqlite==0.22.1
     # via lattice-lock
-aiosignal==1.4.0
-    # via aiohttp
 annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
@@ -21,21 +17,23 @@ annotated-types==0.7.0
 anyio==4.12.0
     # via
     #   httpx
+    #   mcp
+    #   sse-starlette
     #   starlette
 astroid==4.0.2
     # via pylint
 attrs==25.4.0
-    # via aiohttp
+    # via
+    #   jsonschema
+    #   referencing
+authlib==1.6.6
+    # via safety
+bandit==1.9.2
+    # via lattice-lock
 bcrypt==5.0.0
     # via lattice-lock
 black==25.12.0
     # via lattice-lock
-boto3==1.42.16
-    # via lattice-lock
-botocore==1.42.16
-    # via
-    #   boto3
-    #   s3transfer
 build==1.3.0
     # via pip-tools
 certifi==2025.11.12
@@ -53,28 +51,38 @@ click==8.3.1
     # via
     #   black
     #   lattice-lock
+    #   mutmut
+    #   nltk
     #   pip-tools
+    #   safety
+    #   typer
     #   uvicorn
 coverage[toml]==7.13.0
-    # via pytest-cov
+    # via
+    #   mutmut
+    #   pytest-cov
 cryptography==46.0.3
-    # via python-jose
+    # via
+    #   authlib
+    #   pyjwt
 defusedxml==0.7.1
     # via lattice-lock
 dill==0.4.0
     # via pylint
 distlib==0.4.0
     # via virtualenv
-ecdsa==0.19.1
-    # via python-jose
+dparse==0.6.4
+    # via
+    #   safety
+    #   safety-schemas
 fastapi==0.126.0
     # via lattice-lock
 filelock==3.20.1
-    # via virtualenv
-frozenlist==1.8.0
     # via
-    #   aiohttp
-    #   aiosignal
+    #   safety
+    #   virtualenv
+greenlet==3.3.0
+    # via lattice-lock
 h11==0.16.0
     # via
     #   httpcore
@@ -82,6 +90,13 @@ h11==0.16.0
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
+    # via
+    #   lattice-lock
+    #   mcp
+    #   safety
+httpx-sse==0.4.3
+    # via mcp
+hypothesis==6.148.9
     # via lattice-lock
 identify==2.6.15
     # via pre-commit
@@ -90,7 +105,6 @@ idna==3.11
     #   anyio
     #   httpx
     #   requests
-    #   yarl
 iniconfig==2.3.0
     # via pytest
 isort==7.0.0
@@ -98,38 +112,58 @@ isort==7.0.0
     #   lattice-lock
     #   pylint
 jinja2==3.1.6
-    # via lattice-lock
-jmespath==1.0.1
     # via
-    #   boto3
-    #   botocore
+    #   lattice-lock
+    #   safety
+joblib==1.5.3
+    # via nltk
+jsonschema==4.25.1
+    # via mcp
+jsonschema-specifications==2025.9.1
+    # via jsonschema
+libcst==1.8.6
+    # via mutmut
 librt==0.7.4
     # via mypy
-markdown-it-py==4.0.0
-    # via rich
+linkify-it-py==2.0.3
+    # via markdown-it-py
+markdown-it-py[linkify]==4.0.0
+    # via
+    #   mdit-py-plugins
+    #   rich
+    #   textual
 markupsafe==3.0.3
     # via jinja2
+marshmallow==4.1.2
+    # via safety
 mccabe==0.7.0
     # via pylint
+mcp==1.25.0
+    # via lattice-lock
+mdit-py-plugins==0.5.0
+    # via textual
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.7.0
-    # via
-    #   aiohttp
-    #   yarl
+mutmut==3.4.0
+    # via lattice-lock
 mypy==1.19.1
     # via lattice-lock
 mypy-extensions==1.1.0
     # via
     #   black
     #   mypy
+nltk==3.9.2
+    # via safety
 nodeenv==1.10.0
     # via pre-commit
 packaging==25.0
     # via
     #   black
     #   build
+    #   dparse
     #   pytest
+    #   safety
+    #   safety-schemas
 pathspec==0.12.1
     # via
     #   black
@@ -140,6 +174,7 @@ platformdirs==4.5.1
     # via
     #   black
     #   pylint
+    #   textual
     #   virtualenv
 pluggy==1.6.0
     # via
@@ -147,26 +182,31 @@ pluggy==1.6.0
     #   pytest-cov
 pre-commit==4.5.1
     # via lattice-lock
-propcache==0.4.1
-    # via
-    #   aiohttp
-    #   yarl
-pyasn1==0.6.1
-    # via
-    #   python-jose
-    #   rsa
+py-cpuinfo==9.0.0
+    # via pytest-benchmark
 pycparser==2.23
     # via cffi
 pydantic==2.12.5
     # via
     #   fastapi
     #   lattice-lock
+    #   mcp
+    #   pydantic-settings
+    #   safety
+    #   safety-schemas
 pydantic-core==2.41.5
     # via pydantic
+pydantic-settings==2.12.0
+    # via mcp
 pygments==2.19.2
     # via
     #   pytest
     #   rich
+    #   textual
+pyjwt[crypto]==2.10.1
+    # via
+    #   lattice-lock
+    #   mcp
 pylint==4.0.4
     # via lattice-lock
 pyproject-hooks==1.2.0
@@ -176,44 +216,94 @@ pyproject-hooks==1.2.0
 pytest==9.0.2
     # via
     #   lattice-lock
+    #   mutmut
     #   pytest-asyncio
+    #   pytest-benchmark
     #   pytest-cov
 pytest-asyncio==1.3.0
     # via lattice-lock
+pytest-benchmark==5.2.3
+    # via lattice-lock
 pytest-cov==7.0.0
     # via lattice-lock
-python-dateutil==2.9.0.post0
-    # via botocore
-python-jose[cryptography]==3.5.0
-    # via lattice-lock
+python-dotenv==1.2.1
+    # via pydantic-settings
 python-multipart==0.0.21
-    # via lattice-lock
+    # via
+    #   lattice-lock
+    #   mcp
 pytokens==0.3.0
     # via black
 pyyaml==6.0.3
     # via
+    #   bandit
     #   lattice-lock
+    #   libcst
     #   pre-commit
+    #   responses
+referencing==0.37.0
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+regex==2025.11.3
+    # via nltk
 requests==2.32.5
+    # via
+    #   responses
+    #   safety
+responses==0.25.8
     # via lattice-lock
 rich==14.2.0
-    # via lattice-lock
-rsa==4.9.1
-    # via python-jose
+    # via
+    #   bandit
+    #   lattice-lock
+    #   textual
+    #   typer
+rpds-py==0.30.0
+    # via
+    #   jsonschema
+    #   referencing
+ruamel-yaml==0.19.1
+    # via
+    #   safety
+    #   safety-schemas
 ruff==0.14.10
     # via lattice-lock
-s3transfer==0.16.0
-    # via boto3
-six==1.17.0
-    # via
-    #   ecdsa
-    #   python-dateutil
-starlette==0.50.0
-    # via fastapi
-tenacity==9.1.2
+safety==3.7.0
     # via lattice-lock
+safety-schemas==0.0.16
+    # via safety
+setproctitle==1.3.7
+    # via mutmut
+shellingham==1.5.4
+    # via typer
+sortedcontainers==2.4.0
+    # via hypothesis
+sqlalchemy==2.0.45
+    # via lattice-lock
+sse-starlette==3.1.2
+    # via mcp
+starlette==0.50.0
+    # via
+    #   fastapi
+    #   mcp
+    #   sse-starlette
+stevedore==5.6.0
+    # via bandit
+tenacity==9.1.2
+    # via
+    #   lattice-lock
+    #   safety
+textual==6.12.0
+    # via mutmut
 tomlkit==0.13.3
-    # via pylint
+    # via
+    #   pylint
+    #   safety
+tqdm==4.67.1
+    # via nltk
+typer==0.21.0
+    # via safety
 types-aiofiles==25.1.0.20251011
     # via lattice-lock
 types-pyyaml==6.0.12.20250915
@@ -223,27 +313,36 @@ types-requests==2.32.4.20250913
 typing-extensions==4.15.0
     # via
     #   fastapi
+    #   mcp
     #   mypy
     #   pydantic
     #   pydantic-core
+    #   safety
+    #   safety-schemas
+    #   sqlalchemy
+    #   textual
+    #   typer
     #   typing-inspection
 typing-inspection==0.4.2
-    # via pydantic
+    # via
+    #   mcp
+    #   pydantic
+    #   pydantic-settings
+uc-micro-py==1.0.3
+    # via linkify-it-py
 urllib3==2.6.2
     # via
-    #   botocore
     #   requests
+    #   responses
     #   types-requests
 uvicorn==0.38.0
-    # via lattice-lock
-uvloop==0.22.1
-    # via lattice-lock
+    # via
+    #   lattice-lock
+    #   mcp
 virtualenv==20.35.4
     # via pre-commit
 wheel==0.45.1
     # via pip-tools
-yarl==1.22.0
-    # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

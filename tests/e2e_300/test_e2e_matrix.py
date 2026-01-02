@@ -82,7 +82,7 @@ for model in MODELS:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("provider, model_id, scenario", TEST_CASES)
 async def test_orchestrator_e2e(
-    mock_aiohttp_session, mock_response_factory, provider, model_id, scenario
+    mock_httpx_client, mock_response_factory, provider, model_id, scenario
 ):
     """
     E2E Test validating the full orchestrator flow with mocked provider responses.
@@ -156,21 +156,21 @@ async def test_orchestrator_e2e(
     # A) For HTTP-based providers (OpenAI, Anthropic, Google, Local)
     if provider != "bedrock":
         if exception_to_raise:
-            mock_aiohttp_session.request.side_effect = exception_to_raise
+            mock_httpx_client.request.side_effect = exception_to_raise
         else:
             if "malformed_json" in scenario:
                 # Return invalid JSON text
                 mock_response = mock_response_factory(status=200, text_data="{invalid_json")
 
-                # Force .json() to fail as real aiohttp would
-                async def fail_json():
+                # Force .json() to fail as real httpx would
+                def fail_json():
                     raise ValueError("JSONDecodeError")
 
                 mock_response.json = fail_json
             else:
                 mock_response = mock_response_factory(status=status, json_data=mock_resp_payload)
 
-            mock_aiohttp_session.request.return_value = mock_response
+            mock_httpx_client.request.return_value = mock_response
 
     # B) For Bedrock (uses boto3)
     else:
