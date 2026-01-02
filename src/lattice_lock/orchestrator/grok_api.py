@@ -113,11 +113,12 @@ class GrokAPI:
         payload = {"model": model_id, "messages": messages, **kwargs}
 
         try:
-            response = httpx.post(
-                f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=60.0
-            )
-            self._handle_error(response)
-            return response.json()
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(
+                    f"{self.base_url}/chat/completions", headers=headers, json=payload
+                )
+                self._handle_error(response)
+                return response.json()
         except httpx.RequestError as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 
@@ -153,11 +154,12 @@ class GrokAPI:
         payload = {"model": model_id, "prompt": prompt, **kwargs}
 
         try:
-            response = httpx.post(
-                f"{self.base_url}/images/generations", headers=headers, json=payload, timeout=60.0
-            )
-            self._handle_error(response)
-            return response.json()
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(
+                    f"{self.base_url}/images/generations", headers=headers, json=payload
+                )
+                self._handle_error(response)
+                return response.json()
         except httpx.RequestError as e:
             raise ProviderConnectionError(f"Connection failed: {e}", provider="grok") from e
 

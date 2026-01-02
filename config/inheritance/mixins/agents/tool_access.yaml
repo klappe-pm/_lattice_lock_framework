@@ -1,0 +1,8 @@
+---
+vars:
+  tool_registry: default
+---
+agent:
+  tools_config:
+    registry: ${vars.tool_registry}
+    auto_discovery: true

@@ -1,0 +1,15 @@
+---
+vars:
+  max_depth: 2
+  allow_recursion: false
+---
+agent:
+  delegation:
+    enabled: true
+    max_depth: ${vars.max_depth}
+    allow_recursion: ${vars.allow_recursion}
+    
+  tools:
+    +append:
+      - name: delegate_task
+        description: "Delegates a task to a subagent"
