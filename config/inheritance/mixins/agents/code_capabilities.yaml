@@ -1,0 +1,17 @@
+---
+vars:
+  sandbox_type: docker
+  allowed_languages: [python, javascript]
+---
+agent:
+  capabilities:
+    code_execution:
+      enabled: true
+      sandbox: ${vars.sandbox_type}
+      languages: ${vars.allowed_languages}
+      
+  # Add tools via +append
+  tools:
+    +append:
+      - name: execute_code
+        description: "Executes code in a sandboxed environment"
