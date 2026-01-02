@@ -68,15 +68,32 @@ def get_tools() -> list[Tool]:
     ]
 
 
+from pathlib import Path
+
+def _validate_safe_path(path_str: str) -> Path:
+    """
+    Validate that a path resolves to within the current working directory.
+    Prevents path traversal attacks (e.g. ../../etc/passwd).
+    """
+    root = Path.cwd().resolve()
+    target = (root / path_str).resolve()
+    
+    if not str(target).startswith(str(root)):
+        raise ValueError(f"Path traversal detected: {path_str} resolves outside project root.")
+    
+    return target
+
+
 async def handle_tool_call(
     name: str, arguments: dict[str, Any]
 ) -> list[TextContent | ImageContent | EmbeddedResource]:
     """Handle execution of tool calls."""
 
     if name == "validate_code":
-        path = arguments.get("path", ".")
+        raw_path = arguments.get("path", ".")
         try:
-            result = run_sheriff(path, json_output=True)
+            safe_path = _validate_safe_path(raw_path)
+            result = run_sheriff(str(safe_path), json_output=True)
             # Serialize result
             json_str = json.dumps(result.to_dict(), indent=2)
             return [TextContent(type="text", text=json_str)]
@@ -95,16 +112,19 @@ async def handle_tool_call(
             return [TextContent(type="text", text=f"Error processing request: {e}")]
 
     elif name == "run_tests":
-        output_dir = arguments.get("output_dir", "tests/gauntlet")
-        lattice_file = arguments.get("lattice_file", "lattice.yaml")
+        raw_output_dir = arguments.get("output_dir", "tests/gauntlet")
+        raw_lattice_file = arguments.get("lattice_file", "lattice.yaml")
 
         try:
+            safe_output_dir = _validate_safe_path(raw_output_dir)
+            safe_lattice_file = _validate_safe_path(raw_lattice_file)
+
             # 1. Generate
-            generator = GauntletGenerator(lattice_file=lattice_file, output_dir=output_dir)
+            generator = GauntletGenerator(lattice_file=str(safe_lattice_file), output_dir=str(safe_output_dir))
             generator.generate()
 
             # 2. Run via pytest (subprocess to capture output)
-            cmd = ["pytest", output_dir, "--tb=short"]
+            cmd = ["pytest", str(safe_output_dir), "--tb=short"]
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             output = (
