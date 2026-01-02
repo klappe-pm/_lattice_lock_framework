@@ -47,6 +47,7 @@ class ClientPool:
                 # strictly speaking BaseAPIClient doesn't mandate it yet but good practice.
                 if hasattr(client, "close"):
                     import inspect
+
                     if inspect.iscoroutinefunction(client.close):
                         await client.close()
                     else:

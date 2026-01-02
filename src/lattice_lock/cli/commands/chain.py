@@ -101,7 +101,7 @@ async def _chain_async(
                 console.print(
                     "[yellow]Warning: Resuming without YAML. Assuming specific ID recovery supported by backend.[/yellow]"
                 )
-                # In real implementaiton, persistnece would load the definition
+                # In real implementation, persistence would load the definition
                 return
         else:
             if not pipeline_yaml:

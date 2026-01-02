@@ -146,14 +146,18 @@ async def update_validation_status(
         try:
             project.sheriff_status = ValidationStatus(sheriff_status)
         except ValueError as e:
-            logger.warning(f"Invalid sheriff status '{sheriff_status}' for project {project_id}: {e}")
+            logger.warning(
+                f"Invalid sheriff status '{sheriff_status}' for project {project_id}: {e}"
+            )
             pass
 
     if gauntlet_status:
         try:
             project.gauntlet_status = ValidationStatus(gauntlet_status)
         except ValueError as e:
-            logger.warning(f"Invalid gauntlet status '{gauntlet_status}' for project {project_id}: {e}")
+            logger.warning(
+                f"Invalid gauntlet status '{gauntlet_status}' for project {project_id}: {e}"
+            )
             pass
 
     if validation_errors is not None:
