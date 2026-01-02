@@ -178,6 +178,43 @@ models:
     supports_vision: true
 
   # Local Models
+  - id: "qwen3-next-80b"
+    api_name: "hf.co/Qwen/Qwen3-Next-80B-A3B-Instruct-GGUF:Q8_0"
+    provider: ollama
+    context_window: 131072
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 95.0
+    coding_score: 95.0
+    speed_rating: 4.0
+    maturity: production
+    supports_function_calling: true
+    supports_json_mode: true
+
+  - id: "deepseek-r1:70b"
+    api_name: "deepseek-r1:70b"
+    provider: ollama
+    context_window: 65536
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 95.0
+    coding_score: 90.0
+    speed_rating: 5.0
+    maturity: production
+
+  - id: "glm4"
+    api_name: "glm4"
+    provider: ollama
+    context_window: 131072
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 85.0
+    coding_score: 90.0
+    speed_rating: 8.0
+    maturity: production
+    supports_function_calling: true
+    supports_json_mode: true
+
   - id: "codellama:34b"
     api_name: "codellama:34b"
     provider: ollama
