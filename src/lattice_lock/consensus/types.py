@@ -16,6 +16,7 @@ class VoteStrategy(str, Enum):
     HIERARCHICAL = "hierarchical"
 
 
+<<<<<<< HEAD
 class StanceStrength(str, Enum):
     """Strength of the stance application."""
 
@@ -24,6 +25,8 @@ class StanceStrength(str, Enum):
     STRONG = "strong"
 
 
+=======
+>>>>>>> origin/main
 @dataclass
 class ConsensusRequest:
     """Request to reach consensus among multiple model outputs."""

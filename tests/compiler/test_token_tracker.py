@@ -11,12 +11,20 @@ PLACEHOLDER: Implementation pending Phase 2 completion.
 """
 
 import pytest
+<<<<<<< HEAD
+=======
+from pathlib import Path
+
+>>>>>>> origin/main
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 @pytest.fixture
 def sample_yaml_content():
     """Sample YAML for token counting."""
@@ -57,7 +65,10 @@ def sample_json_content():
 # Token Counting Tests
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class TestTokenCounting:
     """Tests for token counting accuracy."""
 
@@ -94,7 +105,10 @@ class TestTokenCounting:
 # Token Stats Tests
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class TestTokenStats:
     """Tests for TokenStats dataclass."""
 
@@ -123,7 +137,10 @@ class TestTokenStats:
 # Cost Estimation Tests
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class TestCostEstimation:
     """Tests for cost estimation functionality."""
 
@@ -152,7 +169,10 @@ class TestCostEstimation:
 # Format Comparison Tests
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class TestFormatComparison:
     """Tests for format comparison functionality."""
 
@@ -168,9 +188,11 @@ class TestFormatComparison:
 
     def test_comparison_identifies_best_format(self):
         """Test comparison identifies most efficient format."""
-        pytest.skip("Pending Phase 2 implementation")
+        pytest.skip("Pending Phase 0 implementation")
 
-    def test_toon_shows_significant_savings(self, sample_yaml_content, sample_toon_content):
+    def test_toon_shows_significant_savings(
+        self, sample_yaml_content, sample_toon_content
+    ):
         """Test that TOON shows significant savings vs YAML."""
         pytest.skip("Pending Phase 2 implementation")
 
@@ -179,7 +201,10 @@ class TestFormatComparison:
 # Batch Analysis Tests
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class TestBatchAnalysis:
     """Tests for batch analysis functionality."""
 
@@ -204,7 +229,10 @@ class TestBatchAnalysis:
 # Integration with Compiler Tests
 # =============================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class TestCompilerIntegration:
     """Tests for token tracker integration with compiler."""
 

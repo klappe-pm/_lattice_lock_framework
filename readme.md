@@ -14,11 +14,19 @@ Lattice Lock is a **governance-first framework** designed to enforce code qualit
 
 ### Key Features
 
+<<<<<<< HEAD
 * **🛡️ Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
 * **🥊 Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
 * **🤖 Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
 * **⚖️ Consensus:** Multi-model voting engine for high-stakes decision making.
 * **📜 Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
+=======
+*   **🛡️ Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
+*   **🥊 Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
+*   **🤖 Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
+*   **⚖️ Consensus:** Multi-model voting engine for high-stakes decision making.
+*   **📜 Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
+>>>>>>> origin/main
 
 ## 🛠️ Architecture
 
@@ -53,6 +61,7 @@ graph TD
 pip install lattice-lock
 ```
 
+<<<<<<< HEAD
 ### Windows Support
 Lattice Lock fully supports Windows. Use PowerShell for the best experience.
 
@@ -64,6 +73,8 @@ Lattice Lock fully supports Windows. Use PowerShell for the best experience.
 .\scripts\run-tests.ps1
 ```
 
+=======
+>>>>>>> origin/main
 ### 1. Initialize a Project
 
 ```bash
@@ -119,7 +130,7 @@ Lattice Lock allows you to toggle features via `LATTICE_FEATURE_PRESET` or `LATT
 Comma-separated list of features to disable (e.g., `sheriff,gauntlet`).
 Available flags: `sheriff`, `gauntlet`, `feedback`, `rollback`, `consensus`, `mcp`.
 
-## Configuration
+## 🔧 Configuration
 
 Copy `.env.example` to `.env` to configure API keys and feature flags.
 

@@ -60,16 +60,27 @@ class TestLatticeExamples(unittest.TestCase):
 # TOON Compilation Tests (Pending Phase 0-1 Implementation)
 # =============================================================================
 
+<<<<<<< HEAD
 
 class TestLatticeExamplesToonCompilation:
     """
     Tests for TOON compilation of example configurations.
 
+=======
+class TestLatticeExamplesToonCompilation:
+    """
+    Tests for TOON compilation of example configurations.
+    
+>>>>>>> origin/main
     These tests validate that all example lattice.yaml files:
     1. Compile successfully to TOON format
     2. Round-trip back to equivalent YAML
     3. Produce valid JSON hedge output
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/main
     PLACEHOLDER: Implementation pending Phase 0-1 completion.
     """
 
