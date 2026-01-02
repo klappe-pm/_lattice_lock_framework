@@ -59,7 +59,7 @@ def _get_enabled_features() -> set[str]:
 
     enabled = _PRESET_DEFINITIONS.get(preset, _PRESET_DEFINITIONS[FeaturePreset.FULL]).copy()
 
-    # 2. Apply explict disables from env var
+    # 2. Apply explicit disables from env var
     disabled_env = os.getenv("LATTICE_DISABLED_FEATURES", "")
     if disabled_env:
         for f in disabled_env.split(","):
