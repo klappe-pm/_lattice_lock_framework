@@ -1,8 +1,10 @@
 import logging
 
 import click
+from rich.table import Table
 
 from lattice_lock.cli.utils.console import get_console
+from lattice_lock.config.feature_flags import Feature, is_feature_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,39 @@ def run_dashboard(port):
         )
     except Exception as e:
         console.print(f"[error]Failed to start dashboard: {e}[/error]")
+
+
+@admin_group.command(name="features")
+def features_command():
+    """List active feature flags and presets."""
+    console = get_console()
+
+    # 1. Show Feature Preset (Env var)
+    import os
+
+    preset = os.getenv("LATTICE_FEATURE_PRESET", "standard")
+    console.print(f"Current Preset: [bold cyan]{preset}[/bold cyan]\n")
+
+    # 2. Show Table
+    table = Table(title="Feature Flags Status")
+    table.add_column("Feature", style="cyan")
+    table.add_column("Status", style="bold")
+    table.add_column("Reason", style="dim")
+
+    for feature in Feature:
+        enabled = is_feature_enabled(feature)
+        status_str = "[green]ENABLED[/green]" if enabled else "[red]DISABLED[/red]"
+
+        # Determine strict reason (env var override vs preset)
+        disabled_list = os.getenv("LATTICE_DISABLED_FEATURES", "").split(",")
+        if feature.value in disabled_list:
+            reason = "Explicitly Disabled (Env)"
+        else:
+            reason = f"Preset ({preset})"
+
+        table.add_row(feature.value, status_str, reason)
+
+    console.print(table)
 
 
 # Register subcommands

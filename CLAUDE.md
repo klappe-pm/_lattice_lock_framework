@@ -2,6 +2,10 @@
 
 ## Quick Commands
 
+- `make mcp`: Start MCP server (stdio)
+- `lattice mcp`: Start MCP server CLI
+- `./scripts/run-ci.ps1`: Run full CI on Windows
+- `./scripts/run-tests.ps1`: Run tests on Windows
 - `make lint` - Run comprehensive linting (Ruff, Black, MyPy, Lattice Validate)
 - `make test` - Run unit tests (pytest, skipping integration tests)
 - `make ci` - Run full CI check (lint, type-check, test, security)

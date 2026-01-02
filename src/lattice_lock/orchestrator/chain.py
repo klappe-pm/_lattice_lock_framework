@@ -1,7 +1,9 @@
 import logging
+import uuid
 from typing import Any
 
 import yaml
+from jinja2 import Template
 
 from lattice_lock.orchestrator.core import ModelOrchestrator
 
@@ -59,23 +61,50 @@ class ChainOrchestrator:
         return Pipeline(name, steps)
 
     async def run_pipeline(
-        self, pipeline: Pipeline, initial_inputs: dict[str, Any]
+        self,
+        pipeline: Pipeline,
+        initial_inputs: dict[str, Any],
+        start_from_step: str | None = None,
+        pipeline_id: str | None = None,
     ) -> dict[str, Any]:
         """
         Execute the pipeline steps sequentially.
 
-        Passes outputs from previous steps to subsequent steps using template rendering.
+        Args:
+            pipeline: The Pipeline definition to run.
+            initial_inputs: Dictionary of initial variables.
+            start_from_step: Name of step to resume from (skips previous steps).
+            pipeline_id: Optional ID for this execution (generated if None).
+
+        Returns:
+            Dict containing pipeline results and final context.
         """
+        pipeline_id = pipeline_id or str(uuid.uuid4())
         context = initial_inputs.copy()
         results = {}
 
-        for step in pipeline.steps:
-            logger.info(f"Running pipeline step: {step.name}")
+        # 1. Determine starting point
+        steps_to_run = pipeline.steps
+        if start_from_step:
+            logger.info(f"Resuming pipeline {pipeline_id} from step {start_from_step}")
+            try:
+                start_index = next(
+                    i for i, s in enumerate(pipeline.steps) if s.name == start_from_step
+                )
+                steps_to_run = pipeline.steps[start_index:]
+                # Note: In a real resumption scenario, we would need to load the
+                # context from the checkpoint associated with pipeline_id.
+                # For now, we assume initial_inputs contains necessary history.
+            except StopIteration:
+                raise ValueError(f"Step '{start_from_step}' not found in pipeline")
 
-            # Simple template rendering
-            rendered_prompt = step.prompt
-            for key, value in context.items():
-                rendered_prompt = rendered_prompt.replace(f"{{{{{key}}}}}", str(value))
+        # 2. Execute Steps
+        for step in steps_to_run:
+            step_id = str(uuid.uuid4())
+            logger.info(f"Running step: {step.name} (ID: {step_id})")
+
+            # Robust template rendering with Jinja2
+            rendered_prompt = Template(step.prompt).render(**context)
 
             try:
                 response = await self.orchestrator.route_request(
@@ -83,13 +112,41 @@ class ChainOrchestrator:
                 )
 
                 context[step.output_key] = response.content
+
                 results[step.name] = {
+                    "step_id": step_id,
                     "content": response.content,
                     "model": response.model,
                     "usage": response.usage,
                 }
+
+                # 3. Persist State (Stub)
+                self._save_checkpoint(pipeline_id, step.name, context)
+
             except Exception as e:
                 logger.error(f"Step {step.name} failed: {e}")
                 raise RuntimeError(f"Pipeline {pipeline.name} failed at step {step.name}: {e}")
 
-        return {"pipeline_name": pipeline.name, "final_context": context, "step_results": results}
+        return {
+            "pipeline_name": pipeline.name,
+            "pipeline_id": pipeline_id,
+            "final_context": context,
+            "step_results": results,
+        }
+
+    def _save_checkpoint(self, pipeline_id: str, step_name: str, context: dict[str, Any]):
+        """
+        Save the current execution state to allow for resumption.
+        (Stub implementation)
+        """
+        # In the future, this will write to a local DB or file.
+        # For now, we just log it.
+        logger.debug(f"Checkpoint saved for {pipeline_id} at {step_name}")
+
+    def _load_checkpoint(self, pipeline_id: str) -> dict[str, Any]:
+        """
+        Load execution state for a given pipeline ID.
+        (Stub implementation)
+        """
+        # In the future, this will read from DB.
+        return {}

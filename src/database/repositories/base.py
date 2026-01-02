@@ -18,22 +18,22 @@ T = TypeVar("T", bound=Base)
 
 class BaseRepository(Generic[T]):
     """Generic repository with common CRUD operations.
-    
+
     Subclass this to create model-specific repositories with
     additional query methods.
-    
+
     Example:
         class UserRepository(BaseRepository[User]):
             def __init__(self, session: AsyncSession):
                 super().__init__(User, session)
-            
+
             async def find_by_email(self, email: str) -> User | None:
                 return await self.find_one(email=email)
     """
 
     def __init__(self, model_class: type[T], session: AsyncSession):
         """Initialize the repository.
-        
+
         Args:
             model_class: The SQLAlchemy model class.
             session: Async database session.
@@ -43,10 +43,10 @@ class BaseRepository(Generic[T]):
 
     async def create(self, **kwargs: Any) -> T:
         """Create a new entity.
-        
+
         Args:
             **kwargs: Model field values.
-            
+
         Returns:
             The created entity.
         """
@@ -58,10 +58,10 @@ class BaseRepository(Generic[T]):
 
     async def get(self, id: str) -> T | None:
         """Get an entity by ID.
-        
+
         Args:
             id: Entity primary key.
-            
+
         Returns:
             The entity or None if not found.
         """
@@ -69,13 +69,13 @@ class BaseRepository(Generic[T]):
 
     async def get_or_raise(self, id: str) -> T:
         """Get an entity by ID or raise an exception.
-        
+
         Args:
             id: Entity primary key.
-            
+
         Returns:
             The entity.
-            
+
         Raises:
             ValueError: If entity not found.
         """
@@ -86,10 +86,10 @@ class BaseRepository(Generic[T]):
 
     async def find_one(self, **filters: Any) -> T | None:
         """Find a single entity matching filters.
-        
+
         Args:
             **filters: Field=value filters.
-            
+
         Returns:
             The entity or None if not found.
         """
@@ -106,13 +106,13 @@ class BaseRepository(Generic[T]):
         **filters: Any,
     ) -> Sequence[T]:
         """Find all entities matching filters.
-        
+
         Args:
             limit: Maximum number of results.
             offset: Number of results to skip.
             order_by: Column name to order by (prefix with - for desc).
             **filters: Field=value filters.
-            
+
         Returns:
             Sequence of matching entities.
         """
@@ -136,10 +136,10 @@ class BaseRepository(Generic[T]):
 
     async def count(self, **filters: Any) -> int:
         """Count entities matching filters.
-        
+
         Args:
             **filters: Field=value filters.
-            
+
         Returns:
             Count of matching entities.
         """
@@ -149,11 +149,11 @@ class BaseRepository(Generic[T]):
 
     async def update(self, id: str, **kwargs: Any) -> T | None:
         """Update an entity by ID.
-        
+
         Args:
             id: Entity primary key.
             **kwargs: Fields to update.
-            
+
         Returns:
             The updated entity or None if not found.
         """
@@ -170,10 +170,10 @@ class BaseRepository(Generic[T]):
 
     async def delete(self, id: str) -> bool:
         """Delete an entity by ID.
-        
+
         Args:
             id: Entity primary key.
-            
+
         Returns:
             True if deleted, False if not found.
         """
@@ -187,10 +187,10 @@ class BaseRepository(Generic[T]):
 
     async def exists(self, **filters: Any) -> bool:
         """Check if an entity exists matching filters.
-        
+
         Args:
             **filters: Field=value filters.
-            
+
         Returns:
             True if exists, False otherwise.
         """

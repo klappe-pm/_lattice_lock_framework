@@ -73,9 +73,39 @@ def calculate_total(items):
 """
 
 
+
 @pytest.fixture
 def cassette():
     """Fixture for recording/replaying API interactions."""
     import responses
+
     with responses.RequestsMock() as rsps:
         yield rsps
+
+
+@pytest.fixture
+def openai_cassette(cassette):
+    """Cassette pre-configured for OpenAI API."""
+    import re
+
+    # Allow/mock standard OpenAI endpoints
+    cassette.add_passthru(re.compile(r"https://api\.openai\.com/.*"))
+    return cassette
+
+
+@pytest.fixture
+def anthropic_cassette(cassette):
+    """Cassette pre-configured for Anthropic API."""
+    import re
+
+    cassette.add_passthru(re.compile(r"https://api\.anthropic\.com/.*"))
+    return cassette
+
+
+@pytest.fixture
+def google_cassette(cassette):
+    """Cassette pre-configured for Google AI/Vertex API."""
+    import re
+
+    cassette.add_passthru(re.compile(r"https://generativelanguage\.googleapis\.com/.*"))
+    return cassette

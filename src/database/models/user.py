@@ -50,7 +50,9 @@ class User(Base, UUIDMixin, TimestampMixin):
     avatar_url: Mapped[str | None] = mapped_column(Text)
 
     # Status
-    status: Mapped[str] = mapped_column(String(20), default="active")  # 'active', 'suspended', 'pending'
+    status: Mapped[str] = mapped_column(
+        String(20), default="active"
+    )  # 'active', 'suspended', 'pending'
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Flexible metadata
@@ -138,7 +140,9 @@ class OrganizationMember(Base, UUIDMixin):
         nullable=False,
     )
 
-    role: Mapped[str] = mapped_column(String(50), nullable=False)  # 'owner', 'admin', 'member', 'viewer'
+    role: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # 'owner', 'admin', 'member', 'viewer'
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default="now()",
@@ -205,9 +209,7 @@ class Role(Base, UUIDMixin, TimestampMixin):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (
-        UniqueConstraint("name", "organization_id", name="uq_role_name_org"),
-    )
+    __table_args__ = (UniqueConstraint("name", "organization_id", name="uq_role_name_org"),)
 
     def __repr__(self) -> str:
         return f"<Role {self.name}>"

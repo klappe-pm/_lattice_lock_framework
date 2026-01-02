@@ -14,6 +14,7 @@ class ChatSession:
     """
     Manages a multi-turn conversation session with the Lattice Lock Orchestrator.
     """
+
     def __init__(self, system_prompt: str | None = None):
         self.orchestrator = ModelOrchestrator()
         self.history: list[dict[str, str]] = []
@@ -34,8 +35,8 @@ class ChatSession:
         # but the 'messages' kwarg contains the full context for execution.
         response = await self.orchestrator.route_request(
             prompt=user_input,
-            messages=self.history, # Pass history to maintain context
-            model_id=model_id
+            messages=self.history,  # Pass history to maintain context
+            model_id=model_id,
         )
 
         # 3. Update history with assistant response
@@ -46,6 +47,7 @@ class ChatSession:
 
     async def close(self):
         await self.orchestrator.shutdown()
+
 
 async def main():
     setup_logging(level=logging.WARNING, simple_format=True)
@@ -66,6 +68,7 @@ async def main():
 
     finally:
         await session.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -18,7 +18,11 @@ import os
 # Configure logging based on LATTICE_LOG_LEVEL
 log_level = os.getenv("LATTICE_LOG_LEVEL", "INFO").upper()
 numeric_level = getattr(logging, log_level, logging.INFO)
-logging.basicConfig(level=numeric_level)
+
+# Set library logger level and null handler to avoid "No handler found" warnings
+logger = logging.getLogger("lattice_lock")
+logger.setLevel(numeric_level)
+logger.addHandler(logging.NullHandler())
 
 
 from pathlib import Path

@@ -16,6 +16,14 @@ class VoteStrategy(str, Enum):
     HIERARCHICAL = "hierarchical"
 
 
+class StanceStrength(str, Enum):
+    """Strength of the stance application."""
+
+    MILD = "mild"
+    MODERATE = "moderate"
+    STRONG = "strong"
+
+
 @dataclass
 class ConsensusRequest:
     """Request to reach consensus among multiple model outputs."""
@@ -26,3 +34,5 @@ class ConsensusRequest:
     stance: str | None = None  # Stance steering (e.g., "aggressive", "conservative")
     # Voting strategy defaults to MAJORITY
     strategy: VoteStrategy = VoteStrategy.MAJORITY
+    rounds: int = 1  # Multi-round debate support
+    strength: StanceStrength = StanceStrength.MODERATE
