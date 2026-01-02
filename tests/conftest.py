@@ -77,5 +77,6 @@ def calculate_total(items):
 def cassette():
     """Fixture for recording/replaying API interactions."""
     import responses
+
     with responses.RequestsMock() as rsps:
         yield rsps
