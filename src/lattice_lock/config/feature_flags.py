@@ -86,8 +86,11 @@ def _get_enabled_features() -> set[str]:
 
     return {f.value for f in enabled}
 
+import threading
+
 # Global dictionary for runtime overrides (feature_name -> enabled)
 _RUNTIME_OVERRIDES: dict[str, bool] = {}
+_OVERRIDE_LOCK = threading.Lock()
 
 def override_feature(feature: str | Feature, enabled: bool):
     """
@@ -98,8 +101,9 @@ def override_feature(feature: str | Feature, enabled: bool):
         enabled: Whether to enable or disable
     """
     feature_name = feature.value if isinstance(feature, Feature) else feature.lower()
-    _RUNTIME_OVERRIDES[feature_name] = enabled
-    _get_enabled_features.cache_clear()
+    with _OVERRIDE_LOCK:
+        _RUNTIME_OVERRIDES[feature_name] = enabled
+        _get_enabled_features.cache_clear()
     logger.info(f"Feature '{feature_name}' runtime override set to: {enabled}")
 
 
