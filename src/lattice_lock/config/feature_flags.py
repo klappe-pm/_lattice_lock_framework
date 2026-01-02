@@ -7,6 +7,7 @@ Centralized management of optional features via environment variables and preset
 import logging
 import os
 from enum import Enum
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ _PRESET_DEFINITIONS = {
 }
 
 
+@lru_cache(maxsize=1)
 def _get_enabled_features() -> set[str]:
     """Calculate the set of enabled features based on configuration."""
     # 1. Start with preset baseline

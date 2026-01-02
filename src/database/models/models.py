@@ -43,7 +43,9 @@ class Model(Base, UUIDMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     api_name: Mapped[str] = mapped_column(String(100), nullable=False)  # Actual API identifier
     provider: Mapped[str] = mapped_column(String(50), nullable=False)  # 'openai', 'anthropic', etc.
-    provider_type: Mapped[str] = mapped_column(String(20), nullable=False)  # 'cloud', 'local', 'self_hosted'
+    provider_type: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # 'cloud', 'local', 'self_hosted'
 
     # Versioning
     version: Mapped[str | None] = mapped_column(String(50))
@@ -58,7 +60,9 @@ class Model(Base, UUIDMixin, TimestampMixin):
     supports_json_mode: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Classification
-    category: Mapped[str | None] = mapped_column(String(50))  # 'reasoning', 'coding', 'creative', etc.
+    category: Mapped[str | None] = mapped_column(
+        String(50)
+    )  # 'reasoning', 'coding', 'creative', etc.
     best_for: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
     limitations: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
 
@@ -67,7 +71,9 @@ class Model(Base, UUIDMixin, TimestampMixin):
     output_cost_per_1k: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))
 
     # Status
-    status: Mapped[str] = mapped_column(String(20), default="active")  # 'active', 'deprecated', 'beta'
+    status: Mapped[str] = mapped_column(
+        String(20), default="active"
+    )  # 'active', 'deprecated', 'beta'
     deprecation_date: Mapped[date | None] = mapped_column(Date)
 
     # Flexible metadata
@@ -117,7 +123,9 @@ class ProviderCredential(Base, UUIDMixin, TimestampMixin):
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_validated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    validation_status: Mapped[str | None] = mapped_column(String(20))  # 'valid', 'invalid', 'pending'
+    validation_status: Mapped[str | None] = mapped_column(
+        String(20)
+    )  # 'valid', 'invalid', 'pending'
 
     # Relationships
     organization: Mapped[Organization] = relationship(back_populates="provider_credentials")
@@ -198,9 +206,7 @@ class UserQuota(Base, UUIDMixin, TimestampMixin):
     # Relationships
     user: Mapped[User] = relationship(back_populates="quotas")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "organization_id", name="uq_user_org_quota"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "organization_id", name="uq_user_org_quota"),)
 
     def __repr__(self) -> str:
         return f"<UserQuota user={self.user_id}>"

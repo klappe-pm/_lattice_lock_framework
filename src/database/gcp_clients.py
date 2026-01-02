@@ -20,10 +20,10 @@ _firestore_client = None
 
 def get_firestore_client() -> firestore.AsyncClient:
     """Get the Firestore async client.
-    
+
     Returns:
         firestore.AsyncClient: Async Firestore client instance.
-        
+
     Note:
         Uses GOOGLE_CLOUD_PROJECT environment variable or default credentials.
     """
@@ -46,7 +46,7 @@ _bigquery_client = None
 
 def get_bigquery_client() -> bigquery.Client:
     """Get the BigQuery client.
-    
+
     Returns:
         bigquery.Client: BigQuery client instance.
     """
@@ -64,7 +64,7 @@ def get_bigquery_client() -> bigquery.Client:
 @lru_cache(maxsize=1)
 def get_bigquery_dataset() -> str:
     """Get the BigQuery dataset ID.
-    
+
     Returns:
         str: Dataset ID for Lattice Lock analytics.
     """
@@ -77,10 +77,10 @@ _redis_client: Redis | None = None
 
 async def get_redis_client() -> Redis:
     """Get the Redis async client.
-    
+
     Returns:
         Redis: Async Redis client instance.
-        
+
     Note:
         Uses REDIS_HOST and REDIS_PORT environment variables.
     """
@@ -116,16 +116,17 @@ async def close_redis_client() -> None:
 
 # Health Checks
 
+
 async def check_firestore_health() -> dict:
     """Check Firestore connectivity.
-    
+
     Returns:
         dict: Health status.
     """
     try:
         client = get_firestore_client()
         # Try to get a non-existent document (fast operation)
-        doc = await client.collection("_health").document("check").get()
+        await client.collection("_health").document("check").get()
         return {"status": "healthy", "service": "firestore"}
     except Exception as e:
         return {"status": "unhealthy", "service": "firestore", "error": str(e)}
@@ -133,7 +134,7 @@ async def check_firestore_health() -> dict:
 
 async def check_redis_health() -> dict:
     """Check Redis connectivity.
-    
+
     Returns:
         dict: Health status.
     """
@@ -147,7 +148,7 @@ async def check_redis_health() -> dict:
 
 def check_bigquery_health() -> dict:
     """Check BigQuery connectivity.
-    
+
     Returns:
         dict: Health status.
     """

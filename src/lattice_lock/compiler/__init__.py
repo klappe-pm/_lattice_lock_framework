@@ -22,17 +22,22 @@ Usage:
     from lattice_lock.compiler import LatticeCompiler, CompilerConfig
 
     compiler = LatticeCompiler()
-    
+
     # Compile YAML to TOON
     toon_output = compiler.compile("config.yaml", target_format="toon")
-    
+
     # Compile TOON to JSON (hedge format)
     json_output = compiler.compile("config.toon", target_format="json")
-    
+
     # Get token usage statistics
     stats = compiler.get_token_stats("config.yaml")
 
 """
+
+from lattice_lock.compiler.token_tracker import (
+    TokenStats,
+    TokenTracker,
+)
 
 from lattice_lock.compiler.core import (
     CompilationResult,
@@ -44,12 +49,8 @@ from lattice_lock.compiler.formats import (
     detect_format,
 )
 from lattice_lock.compiler.normalizer import (
-    Normalizer,
     NormalizationStrategy,
-)
-from lattice_lock.compiler.token_tracker import (
-    TokenStats,
-    TokenTracker,
+    Normalizer,
 )
 
 __all__ = [

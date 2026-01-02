@@ -12,13 +12,14 @@ from lattice_lock import __version__
 
 # Import existing commands
 from lattice_lock.cli.commands.ask import ask_command
-from lattice_lock.cli.commands.chain import chain_command
+from lattice_lock.cli.commands.chain import chain_group
 from lattice_lock.cli.commands.compile import compile_command
 from lattice_lock.cli.commands.doctor import doctor_command
 from lattice_lock.cli.commands.feedback import feedback
 from lattice_lock.cli.commands.gauntlet import gauntlet_command
 from lattice_lock.cli.commands.handoff import handoff_group
 from lattice_lock.cli.commands.init import init_command
+from lattice_lock.cli.commands.mcp import mcp_command
 from lattice_lock.cli.commands.sheriff import sheriff_command
 from lattice_lock.cli.commands.validate import validate_command
 from lattice_lock.cli.groups.admin import admin_group
@@ -64,11 +65,12 @@ def cli(ctx, verbose: bool, json: bool, project_dir: str):
 # Register Core Commands
 cli.add_command(init_command, name="init")
 cli.add_command(ask_command, name="ask")
-cli.add_command(chain_command, name="chain")
+cli.add_command(chain_group)
 cli.add_command(validate_command, name="validate")
 cli.add_command(compile_command, name="compile")
 cli.add_command(doctor_command, name="doctor")
 cli.add_command(feedback, name="feedback")
+cli.add_command(mcp_command, name="mcp")
 
 # Alias commands for better UX
 cli.add_command(gauntlet_command, name="test")

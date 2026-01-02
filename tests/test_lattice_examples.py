@@ -60,15 +60,27 @@ class TestLatticeExamples(unittest.TestCase):
 # TOON Compilation Tests (Pending Phase 0-1 Implementation)
 # =============================================================================
 
+<<<<<<< HEAD
+
+class TestLatticeExamplesToonCompilation:
+    """
+    Tests for TOON compilation of example configurations.
+
+=======
 class TestLatticeExamplesToonCompilation:
     """
     Tests for TOON compilation of example configurations.
     
+>>>>>>> origin/main
     These tests validate that all example lattice.yaml files:
     1. Compile successfully to TOON format
     2. Round-trip back to equivalent YAML
     3. Produce valid JSON hedge output
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> origin/main
     PLACEHOLDER: Implementation pending Phase 0-1 completion.
     """
 
@@ -109,12 +121,12 @@ class TestLatticeExamplesToonCompilation:
 class TestLatticeExamplesRoundTrip:
     """
     Tests for round-trip conversion of example configurations.
-    
+
     These tests validate lossless conversion:
     - YAML → TOON → YAML (equivalent)
     - YAML → JSON → YAML (equivalent)
     - TOON → JSON (hedge format works)
-    
+
     PLACEHOLDER: Implementation pending Phase 0-1 completion.
     """
 
@@ -143,11 +155,11 @@ class TestLatticeExamplesRoundTrip:
 class TestLatticeExamplesTokenEfficiency:
     """
     Tests for token efficiency of compiled configurations.
-    
+
     These tests validate that TOON format provides token savings:
     - TOON tokens < YAML tokens
     - Savings percentage matches expectations
-    
+
     PLACEHOLDER: Implementation pending Phase 2 completion.
     """
 

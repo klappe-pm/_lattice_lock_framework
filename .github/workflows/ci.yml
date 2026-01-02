@@ -42,9 +42,10 @@ jobs:
 
   quality:
     needs: [policy]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:
@@ -97,4 +98,14 @@ jobs:
       run: |
         if [ -f scripts/check_secrets.py ]; then
           python scripts/check_secrets.py
+        fi
+
+    - name: Verify Version Sync
+      run: |
+        # Ensure __init__.py version matches pyproject.toml
+        ./scripts/update_version.sh
+        if ! git diff --quiet src/lattice_lock/__init__.py; then
+          echo "::error::Version mismatch! src/lattice_lock/__init__.py path does not match pyproject.toml"
+          echo "Run ./scripts/update_version.sh to fix."
+          exit 1
         fi

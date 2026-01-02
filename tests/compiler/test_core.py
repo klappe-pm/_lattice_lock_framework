@@ -12,13 +12,14 @@ This test module validates the core LatticeCompiler functionality including:
 PLACEHOLDER: Implementation pending Phase 0 completion.
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_yaml_content():
@@ -149,6 +150,7 @@ models:
 # Format Detection Tests
 # =============================================================================
 
+
 class TestFormatDetection:
     """Tests for format detection functionality."""
 
@@ -188,6 +190,7 @@ class TestFormatDetection:
 # Parsing Tests
 # =============================================================================
 
+
 class TestParsing:
     """Tests for format parsing functionality."""
 
@@ -224,6 +227,7 @@ class TestParsing:
 # Serialization Tests
 # =============================================================================
 
+
 class TestSerialization:
     """Tests for format serialization functionality."""
 
@@ -255,6 +259,7 @@ class TestSerialization:
 # =============================================================================
 # Round-Trip Tests
 # =============================================================================
+
 
 class TestRoundTrip:
     """Tests for round-trip conversion fidelity."""
@@ -292,6 +297,7 @@ class TestRoundTrip:
 # Metadata Tests
 # =============================================================================
 
+
 class TestMetadata:
     """Tests for compilation metadata handling."""
 
@@ -320,6 +326,7 @@ class TestMetadata:
 # Error Handling Tests
 # =============================================================================
 
+
 class TestErrorHandling:
     """Tests for error handling and fallbacks."""
 
@@ -347,6 +354,7 @@ class TestErrorHandling:
 # =============================================================================
 # Integration Tests with Existing Configs
 # =============================================================================
+
 
 class TestExistingConfigs:
     """Tests using actual Lattice Lock configuration files."""
@@ -389,6 +397,7 @@ class TestExistingConfigs:
 # =============================================================================
 # Batch Compilation Tests
 # =============================================================================
+
 
 class TestBatchCompilation:
     """Tests for batch compilation functionality."""

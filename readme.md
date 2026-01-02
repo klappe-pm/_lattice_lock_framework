@@ -14,11 +14,19 @@ Lattice Lock is a **governance-first framework** designed to enforce code qualit
 
 ### Key Features
 
+<<<<<<< HEAD
+* **🛡️ Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
+* **🥊 Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
+* **🤖 Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
+* **⚖️ Consensus:** Multi-model voting engine for high-stakes decision making.
+* **📜 Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
+=======
 *   **🛡️ Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
 *   **🥊 Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
 *   **🤖 Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
 *   **⚖️ Consensus:** Multi-model voting engine for high-stakes decision making.
 *   **📜 Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
+>>>>>>> origin/main
 
 ## 🛠️ Architecture
 
@@ -53,6 +61,20 @@ graph TD
 pip install lattice-lock
 ```
 
+<<<<<<< HEAD
+### Windows Support
+Lattice Lock fully supports Windows. Use PowerShell for the best experience.
+
+```powershell
+# Run tests
+.\scripts\run-tests.ps1
+```
+
+.\scripts\run-tests.ps1
+```
+
+=======
+>>>>>>> origin/main
 ### 1. Initialize a Project
 
 ```bash
@@ -89,10 +111,24 @@ lattice-lock ask "Explain the architecture of this project"
 
 Documentation is organized in the `docs/` directory:
 
-- **[In-Depth Guides](docs/guides/)** - Tutorials and workflows
-- **[API Reference](docs/reference/)** - Detailed API docs
-- **[Architecture](docs/architecture/)** - System design
-- **[Contributing](contributing.md)** - **READ THIS FIRST** for development
+* **[In-Depth Guides](docs/guides/)** - Tutorials and workflows
+* **[API Reference](docs/reference/)** - Detailed API docs
+* **[Architecture](docs/architecture/)** - System design
+* **[Contributing](contributing.md)** - **READ THIS FIRST** for development
+
+## Feature Flags
+
+Lattice Lock allows you to toggle features via `LATTICE_FEATURE_PRESET` or `LATTICE_DISABLED_FEATURES`.
+
+**Presets (LATTICE_FEATURE_PRESET):**
+
+* `full` (Default): All features enabled.
+* `standard`: Orchestrator, Sheriff, Gauntlet enabled.
+* `minimal`: Core Orchestrator only.
+
+**Explicit Disable (LATTICE_DISABLED_FEATURES):**
+Comma-separated list of features to disable (e.g., `sheriff,gauntlet`).
+Available flags: `sheriff`, `gauntlet`, `feedback`, `rollback`, `consensus`, `mcp`.
 
 ## 🔧 Configuration
 
