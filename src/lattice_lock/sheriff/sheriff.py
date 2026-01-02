@@ -228,6 +228,13 @@ def run_sheriff(
     Returns:
         SheriffResult with all violations found
     """
+    # Check feature flag
+    from lattice_lock.config.feature_flags import Feature, is_feature_enabled
+
+    if not is_feature_enabled(Feature.SHERIFF):
+        logger.warning("Sheriff feature is disabled via feature flags. Skipping analysis.")
+        return SheriffResult()
+
     # Create SheriffConfig object
     if config:
         sheriff_config = SheriffConfig(

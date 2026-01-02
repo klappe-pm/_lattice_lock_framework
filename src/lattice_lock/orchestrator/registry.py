@@ -1,4 +1,5 @@
 import logging
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -48,6 +49,18 @@ class ModelRegistry:
     """Centralized model registry with all model definitions"""
 
     def __init__(self, registry_path: str | None = None):
+        # Check force override flag
+        force_override = os.getenv("LATTICE_FORCE_ENV_OVERRIDE", "false").lower() == "true"
+
+        if force_override:
+            env_path = os.getenv("LATTICE_MODELS_CONFIG_PATH")
+            if env_path:
+                registry_path = env_path
+
+        if registry_path is None:
+            # Check for environment variable override
+            registry_path = os.getenv("LATTICE_MODELS_CONFIG_PATH")
+
         if registry_path is None:
             # Default to local models.yaml in the same directory
             registry_path = str(Path(__file__).parent / "models.yaml")

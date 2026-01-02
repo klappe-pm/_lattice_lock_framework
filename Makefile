@@ -12,6 +12,9 @@ format:
 test:
 	pytest tests/ -m "not integration" --tb=short
 
+test-quick:
+	pytest tests/ -m "critical" --tb=short
+
 type-check:
 	mypy src/lattice_lock
 

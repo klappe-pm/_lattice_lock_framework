@@ -6,6 +6,7 @@ This module provides:
 """
 
 import logging
+import os
 from pathlib import Path
 
 import yaml
@@ -32,6 +33,18 @@ class ModelScorer:
             config_path: Optional path to scorer config file
         """
         self.app_config = config
+
+        # Check force override flag
+        force_override = os.getenv("LATTICE_FORCE_ENV_OVERRIDE", "false").lower() == "true"
+
+        if force_override:
+            env_path = os.getenv("LATTICE_SCORER_CONFIG_PATH")
+            if env_path:
+                config_path = env_path
+
+        if config_path is None:
+            # Check for environment variable override
+            config_path = os.getenv("LATTICE_SCORER_CONFIG_PATH")
 
         if config_path is None:
             # Look for scorer_config.yaml in the parent directory (orchestrator)
