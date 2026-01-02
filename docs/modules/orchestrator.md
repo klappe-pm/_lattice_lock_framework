@@ -1,27 +1,21 @@
-# Model Orchestrator
+# Orchestrator Module
 
-The **Model Orchestrator** is the core routing engine of Lattice Lock. it intelligently directs prompts to the most suitable LLM based on cost, performance, and capability requirements.
+The Orchestrator is the core component responsible for intelligent model selection and request routing.
 
-## Key Features
+## Architecture
 
-- **Smart Routing**: Dynamically selects models based on `complexity` and `priority`.
-- **Failover**: Automatically tries fallback models if the primary provider fails.
-- **Cost Tracking**: Logs token usage and estimated costs for every request.
-- **Unified API**: Single interface (`orchestrator.route_request`) for all providers (OpenAI, Anthropic, Google, etc.).
+The Orchestrator follows a pipeline approach:
 
-## Usage
-
-```python
-from lattice_lock.orchestrator.core import ModelOrchestrator
-
-orchestrator = ModelOrchestrator()
-response = await orchestrator.route_request(
-    "Explain quantum entanglement",
-    model_id="claude-3-opus"
-)
-print(response.content)
-```
+1.  **Analysis**: The `TaskAnalyzer` evaluates the incoming user prompt to determine the `TaskType` (e.g., `CODE_GENERATION`, `REASONING`) and complexity requirements.
+2.  **Selection**: The `ModelSelector` queries the `ModelRegistry` to find models that meet the requirements (context window, cost, specialized scores) and picks the optimal candidate.
+3.  **Execution**: The `ConversationExecutor` handles the actual API interaction, managing context, token tracking, and tool execution loops.
+4.  **Fallback**: If the primary model fails (API error, rate limit), the system automatically attempts pre-configured fallback models defined in the `ModelGuide`.
 
 ## Configuration
 
-Models are defined in `src/lattice_lock/orchestrator/models.yaml`. You can override this path with `LATTICE_MODELS_CONFIG_PATH`.
+Configuration is managed via `src/lattice_lock/orchestrator/models.yaml` (default) or a custom guide.
+
+### Helper Components
+
+-   **Persistence**: Saves session state to `.lattice/sessions` to allow for multi-step workflow resumption (`--continue-from`).
+-   **Cost Tracker**: Aggregates token usage and estimated costs across all providers.

@@ -1,0 +1,15 @@
+---
+vars:
+  api_version: "2023-06-01"
+---
+model:
+  provider: anthropic
+  api_version: ${vars.api_version}
+  
+  parameters:
+    max_tokens: 4096
+    temperature: 0.7
+    
+  features:
+    caching: true
+    beta_header: "prompt-caching-2024-07-31"

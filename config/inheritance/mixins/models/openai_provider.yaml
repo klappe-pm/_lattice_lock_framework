@@ -1,0 +1,13 @@
+---
+vars:
+  api_base: "https://api.openai.com/v1"
+---
+model:
+  provider: openai
+  api_base: ${vars.api_base}
+  
+  parameters:
+    temperature: 0.7
+    top_p: 1.0
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
