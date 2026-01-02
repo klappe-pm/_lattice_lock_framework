@@ -5,6 +5,7 @@ Tool definitions for Lattice Lock MCP Server.
 import json
 import logging
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
@@ -68,8 +69,6 @@ def get_tools() -> list[Tool]:
     ]
 
 
-from pathlib import Path
-
 def _validate_safe_path(path_str: str) -> Path:
     """
     Validate that a path resolves to within the current working directory.
@@ -77,10 +76,10 @@ def _validate_safe_path(path_str: str) -> Path:
     """
     root = Path.cwd().resolve()
     target = (root / path_str).resolve()
-    
+
     if not target.is_relative_to(root):
         raise ValueError(f"Path traversal detected: {path_str} must be relative to project root.")
-    
+
     return target
 
 
@@ -120,7 +119,9 @@ async def handle_tool_call(
             safe_lattice_file = _validate_safe_path(raw_lattice_file)
 
             # 1. Generate
-            generator = GauntletGenerator(lattice_file=str(safe_lattice_file), output_dir=str(safe_output_dir))
+            generator = GauntletGenerator(
+                lattice_file=str(safe_lattice_file), output_dir=str(safe_output_dir)
+            )
             generator.generate()
 
             # 2. Run via pytest (subprocess to capture output)
