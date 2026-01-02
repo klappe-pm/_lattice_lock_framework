@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from aiohttp import ClientResponse
+from httpx import Response
 
 from lattice_lock.orchestrator.registry import ModelRegistry
 from lattice_lock.orchestrator.types import ModelCapabilities, ModelProvider
@@ -31,35 +31,31 @@ def mock_env_vars():
 
 
 @pytest.fixture
-def mock_aiohttp_session():
-    """Mock aiohttp.ClientSession to control HTTP responses."""
-    # session object itself is used as context manager "async with ClientSession() as session"
-    # request method returns a context manager "async with session.request() as resp"
-    # request method is NOT a coroutine itself, so it must be MagicMock, not AsyncMock
+def mock_httpx_client():
+    """Mock httpx.AsyncClient to control HTTP responses."""
+    mock_client = MagicMock()
 
-    mock_session = MagicMock()
-
-    # Setup async context manager for the session itself
+    # Setup async context manager for the client itself
     async def __aenter__():
-        return mock_session
+        return mock_client
 
     async def __aexit__(*args, **kwargs):
         pass
 
-    mock_session.__aenter__ = __aenter__
-    mock_session.__aexit__ = __aexit__
+    mock_client.__aenter__ = __aenter__
+    mock_client.__aexit__ = __aexit__
 
-    # close method IS a coroutine
-    mock_session.close = AsyncMock()
+    # aclose method IS a coroutine
+    mock_client.aclose = AsyncMock()
+    mock_client.is_closed = False
 
-    # request method should return the response object (which acts as context manager)
-    # It is NOT async itself.
-    # The default Child of MagicMock is MagicMock, so session.request is MagicMock.
-    # We leave it as is, to be configured by tests.
+    # request method is async in our usage (await client.request())
+    # So it should be an AsyncMock that returns the response
+    mock_client.request = AsyncMock()
 
-    # We patch aiohttp.ClientSession globally for the duration of the test
-    with unittest.mock.patch("aiohttp.ClientSession", return_value=mock_session):
-        yield mock_session
+    # We patch httpx.AsyncClient globally for the duration of the test
+    with unittest.mock.patch("httpx.AsyncClient", return_value=mock_client):
+        yield mock_client
 
 
 @pytest.fixture
@@ -67,23 +63,20 @@ def mock_response_factory():
     """Fixture that returns a helper to create mock responses."""
 
     def _create_mock_response(status=200, json_data=None, text_data=""):
-        mock_response = AsyncMock(spec=ClientResponse)
-        mock_response.status = status
+        mock_response = MagicMock(spec=Response)
+        mock_response.status_code = status
 
-        async def json():
+        def json_method():
             if json_data is not None:
                 return json_data
             return {}
 
-        async def text():
-            return text_data
-
-        mock_response.json = json
-        mock_response.text = text
-        # Mock context manager behavior for the response object itself
-        mock_response.__aenter__.return_value = mock_response
-        mock_response.__aexit__.return_value = None
-
+        mock_response.json = json_method
+        mock_response.text = text_data
+        
+        # httpx response is NOT a context manager in request() usage, only in stream()
+        # But we mocked request() to return response directly.
+        
         return mock_response
 
     return _create_mock_response
