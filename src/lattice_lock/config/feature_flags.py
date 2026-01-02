@@ -38,17 +38,18 @@ _PRESET_DEFINITIONS = {
     FeaturePreset.FULL: {
         Feature.SHERIFF,
         Feature.GAUNTLET,
-        Feature.FEEDBACK,
-        Feature.ROLLBACK,
-        Feature.CONSENSUS,
-        Feature.MCP,
-    },
-}
-
+# Add module-level cache
+_ENABLED_FEATURES_CACHE: set[str] | None = None
 
 @lru_cache(maxsize=1)
 def _get_enabled_features() -> set[str]:
     """Calculate the set of enabled features based on configuration."""
+    global _ENABLED_FEATURES_CACHE
+    
+    # Return cached value if available
+    if _ENABLED_FEATURES_CACHE is not None:
+        return _ENABLED_FEATURES_CACHE
+    
     # 1. Start with preset baseline
     preset_name = os.getenv("LATTICE_FEATURE_PRESET", "full").lower()
     try:
@@ -84,7 +85,8 @@ def _get_enabled_features() -> set[str]:
              else:
                  enabled.discard(feature_enum)
 
-    return {f.value for f in enabled}
+    _ENABLED_FEATURES_CACHE = {f.value for f in enabled}
+    return _ENABLED_FEATURES_CACHE
 
 import threading
 
