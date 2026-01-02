@@ -8,27 +8,19 @@
 
 A comprehensive governance and validation framework for software projects that keeps humans and AI agents in perfect sync.
 
-## 🚀 Overview
+## Overview
 
 Lattice Lock is a **governance-first framework** designed to enforce code quality, architecture rules, and validation policies across your codebase. It bridges the gap between static analysis and runtime testing, ensuring your project adheres to its define structure ("The Lattice").
 
 ### Key Features
 
-<<<<<<< HEAD
-* **🛡️ Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
-* **🥊 Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
-* **🤖 Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
-* **⚖️ Consensus:** Multi-model voting engine for high-stakes decision making.
-* **📜 Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
-=======
-*   **🛡️ Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
-*   **🥊 Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
-*   **🤖 Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
-*   **⚖️ Consensus:** Multi-model voting engine for high-stakes decision making.
-*   **📜 Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
->>>>>>> origin/main
+*   **Sheriff:** AST-based static analysis to catch architecture violations in milliseconds.
+*   **Gauntlet:** Runtime test generator that creates pytest suites from your governance rules.
+*   **Orchestrator:** Intelligent multi-model routing for AI agents (OpenAI, Anthropic, Google, xAI).
+*   **Consensus:** Multi-model voting engine for high-stakes decision making.
+*   **Lattice Policy:** Declarative `lattice.yaml` configuration for all project rules.
 
-## 🛠️ Architecture
+## Architecture
 
 ```mermaid
 graph TD
@@ -53,7 +45,7 @@ graph TD
     end
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Installation
 
@@ -61,20 +53,6 @@ graph TD
 pip install lattice-lock
 ```
 
-<<<<<<< HEAD
-### Windows Support
-Lattice Lock fully supports Windows. Use PowerShell for the best experience.
-
-```powershell
-# Run tests
-.\scripts\run-tests.ps1
-```
-
-.\scripts\run-tests.ps1
-```
-
-=======
->>>>>>> origin/main
 ### 1. Initialize a Project
 
 ```bash
@@ -107,7 +85,7 @@ lattice-lock validate
 lattice-lock ask "Explain the architecture of this project"
 ```
 
-## 📚 Documentation
+## Documentation
 
 Documentation is organized in the `docs/` directory:
 
@@ -130,7 +108,7 @@ Lattice Lock allows you to toggle features via `LATTICE_FEATURE_PRESET` or `LATT
 Comma-separated list of features to disable (e.g., `sheriff,gauntlet`).
 Available flags: `sheriff`, `gauntlet`, `feedback`, `rollback`, `consensus`, `mcp`.
 
-## 🔧 Configuration
+## Configuration
 
 Copy `.env.example` to `.env` to configure API keys and feature flags.
 
@@ -139,10 +117,10 @@ cp .env.example .env
 # Edit .env with your keys
 ```
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see **[contributing.md](contributing.md)** for our strict coding standards and workflow. `contributing.md` is the **SINGLE SOURCE OF TRUTH** for this project.
 
-## 📄 License
+## License
 
 This project is licensed under the terms in [LICENSE.md](LICENSE.md).

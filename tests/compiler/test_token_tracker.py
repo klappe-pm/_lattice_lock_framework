@@ -168,7 +168,7 @@ class TestFormatComparison:
 
     def test_comparison_identifies_best_format(self):
         """Test comparison identifies most efficient format."""
-        pytest.skip("Pending Phase 0 implementation")
+        pytest.skip("Pending Phase 2 implementation")
 
     def test_toon_shows_significant_savings(self, sample_yaml_content, sample_toon_content):
         """Test that TOON shows significant savings vs YAML."""
