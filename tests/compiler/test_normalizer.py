@@ -11,12 +11,11 @@ PLACEHOLDER: Implementation pending Phase 1 completion.
 """
 
 import pytest
-from pathlib import Path
-
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def nested_agent_data():
@@ -27,27 +26,20 @@ def nested_agent_data():
                 "name": "engineering_agent",
                 "version": "2.1.0",
                 "role": "Engineering Lead",
-                "status": "beta"
+                "status": "beta",
             },
             "directive": {
                 "primary_goal": "Design and implement systems",
-                "primary_use_cases": [
-                    "Feature development",
-                    "Code review",
-                    "Architecture design"
-                ]
+                "primary_use_cases": ["Feature development", "Code review", "Architecture design"],
             },
-            "scope": {
-                "can_access": ["/src", "/tests"],
-                "can_modify": ["/src"]
-            },
+            "scope": {"can_access": ["/src", "/tests"], "can_modify": ["/src"]},
             "delegation": {
                 "enabled": True,
                 "allowed_subagents": [
                     {"name": "backend_developer", "file": "subagents/backend.yaml"},
-                    {"name": "frontend_developer", "file": "subagents/frontend.yaml"}
-                ]
-            }
+                    {"name": "frontend_developer", "file": "subagents/frontend.yaml"},
+                ],
+            },
         }
     }
 
@@ -65,16 +57,16 @@ def nested_schema_data():
                 "fields": {
                     "id": {"type": "uuid", "primary_key": True},
                     "email": {"type": "str", "unique": True},
-                    "credit_limit": {"type": "decimal", "gte": 0, "lte": 100000}
+                    "credit_limit": {"type": "decimal", "gte": 0, "lte": 100000},
                 },
                 "ensures": [
                     {
                         "name": "credit_limit_max",
                         "field": "credit_limit",
                         "constraint": "lte",
-                        "value": 100000
+                        "value": 100000,
                     }
-                ]
+                ],
             },
             "Order": {
                 "description": "Order entity",
@@ -82,10 +74,10 @@ def nested_schema_data():
                 "fields": {
                     "id": {"type": "uuid", "primary_key": True},
                     "customer_id": {"type": "uuid"},
-                    "total": {"type": "decimal", "gt": 0}
-                }
-            }
-        }
+                    "total": {"type": "decimal", "gt": 0},
+                },
+            },
+        },
     }
 
 
@@ -102,7 +94,7 @@ def nested_models_data():
                 "input_cost": 5.0,
                 "output_cost": 15.0,
                 "supports_function_calling": True,
-                "supports_vision": True
+                "supports_vision": True,
             },
             {
                 "id": "claude-3-5-sonnet",
@@ -111,15 +103,16 @@ def nested_models_data():
                 "input_cost": 3.0,
                 "output_cost": 15.0,
                 "supports_function_calling": True,
-                "supports_vision": True
-            }
-        ]
+                "supports_vision": True,
+            },
+        ],
     }
 
 
 # =============================================================================
 # Base Normalizer Tests
 # =============================================================================
+
 
 class TestNormalizerBase:
     """Tests for base Normalizer functionality."""
@@ -153,6 +146,7 @@ class TestNormalizerBase:
 # Agent Normalizer Tests
 # =============================================================================
 
+
 class TestAgentNormalizer:
     """Tests for AgentNormalizer functionality."""
 
@@ -184,6 +178,7 @@ class TestAgentNormalizer:
 # =============================================================================
 # Schema Normalizer Tests
 # =============================================================================
+
 
 class TestSchemaNormalizer:
     """Tests for SchemaNormalizer functionality."""
@@ -217,6 +212,7 @@ class TestSchemaNormalizer:
 # Model Normalizer Tests
 # =============================================================================
 
+
 class TestModelNormalizer:
     """Tests for ModelNormalizer functionality."""
 
@@ -236,6 +232,7 @@ class TestModelNormalizer:
 # =============================================================================
 # Denormalization Tests
 # =============================================================================
+
 
 class TestDenormalization:
     """Tests for denormalization functionality."""
@@ -265,6 +262,7 @@ class TestDenormalization:
 # Round-Trip Tests
 # =============================================================================
 
+
 class TestNormalizationRoundTrip:
     """Tests for normalization → denormalization round-trip."""
 
@@ -292,6 +290,7 @@ class TestNormalizationRoundTrip:
 # =============================================================================
 # Edge Case Tests
 # =============================================================================
+
 
 class TestNormalizationEdgeCases:
     """Tests for edge cases in normalization."""

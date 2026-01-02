@@ -34,7 +34,9 @@ class ModelConfig(BaseModel):
     status: ModelStatus = ModelStatus.ACTIVE
 
     # Qualitative Capabilities
-    best_for: list[str] = Field(default_factory=list, description="List of tasks this model excels at")
+    best_for: list[str] = Field(
+        default_factory=list, description="List of tasks this model excels at"
+    )
     limitations: list[str] = Field(default_factory=list, description="List of known limitations")
 
     # Configuration

@@ -53,7 +53,7 @@ async def _ask_async(
         console=console,
         transient=True,
     ) as progress:
-        task = progress.add_task(description="Analyzing and routing...", total=None)
+        progress.add_task(description="Analyzing and routing...", total=None)
 
         try:
             response = await orchestrator.route_request(
