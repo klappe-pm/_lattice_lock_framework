@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from .templates import SYNTHESIS_TEMPLATE
-from .types import ConsensusRequest, VoteStrategy
+from .types import ConsensusRequest
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,7 @@ class ConsensusEngine:
             stance=request.stance or "Neutral/Objective",
             candidates=formatted_candidates,
         )
+        logger.debug(f"Synthesis prompt: {prompt}")
 
         # 2. Execute Consensus Logic
         # (Stub implementation for PR #5 - in full implementation, this calls the orchestrator)
@@ -64,8 +65,29 @@ class ConsensusEngine:
         )
 
         if self.orchestrator:
-            # TODO: Call orchestrator to run the prompt
-            # For now, return stub
-            pass
+            current_context = f"{request.context or ''}\n\nTask: {request.task}"
+
+            # Multi-round debate loop
+            for round_num in range(request.rounds):
+                logger.info(f"Consensus Round {round_num + 1}/{request.rounds}")
+
+                # 1. Update candidates based on previous round (if not first)
+                # In a full agentic implementation, we would re-query models here with the current synthesis
+                # For now, we simulate convergence by appending the synthesis to context
+
+                # 2. Synthesize
+                prompt = SYNTHESIS_TEMPLATE.format(
+                    task=request.task,
+                    context=current_context,
+                    stance=f"{request.stance} ({request.strength.value} strength)",
+                    candidates=formatted_candidates,
+                )
+
+                response = await self.orchestrator.route_request(prompt)
+                result = response.content
+
+                # Update context for next round
+                current_context += f"\n\nRound {round_num + 1} Synthesis:\n{result}"
+                msg = result  # Final result is last round
 
         return msg

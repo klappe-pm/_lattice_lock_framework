@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 from jinja2 import FileSystemLoader
 
+from lattice_lock.config.feature_flags import Feature, is_feature_enabled
 from lattice_lock.utils.jinja import get_code_environment
 
 from .parser import EnsuresClause, EntityDefinition, LatticeParser
@@ -27,14 +29,11 @@ class GauntletGenerator:
     def generate(self):
         """Generates test files for all parsed entities."""
         # Check feature flag
-        from lattice_lock.config.feature_flags import Feature, is_feature_enabled
-        import logging
-        
         if not is_feature_enabled(Feature.GAUNTLET):
-             logging.getLogger("lattice_lock.gauntlet").warning(
-                 "Gauntlet feature is disabled via feature flags. Skipping generation."
-             )
-             return
+            logging.getLogger("lattice_lock.gauntlet").warning(
+                "Gauntlet feature is disabled via feature flags. Skipping generation."
+            )
+            return
 
         entities = self.parser.parse()
         self.output_dir.mkdir(parents=True, exist_ok=True)
