@@ -34,6 +34,12 @@ This document contains all coding standards, naming conventions, workflow requir
 - Avoid branch drift and stale remote branches
 - Make it easy for humans and AI agents to contribute safely
 
+**Untracked Files Policy:**
+- ⚠️ **Commits are blocked if untracked files exist** (enforced by pre-commit hook)
+- All changes must be either committed to git or added to `.gitignore`
+- Run `make check-untracked` before committing to verify
+- To bypass (not recommended): `git commit --no-verify`
+
 ---
 
 ## Code Review Requirements

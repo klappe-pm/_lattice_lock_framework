@@ -1,0 +1,73 @@
+name: Check Untracked Files
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check-untracked:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies (if needed for compilation)
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.lock ]; then pip install -r requirements.lock; fi
+      
+      - name: Generate expected compiled files (if applicable)
+        run: |
+          # If your project auto-generates files during build, run that here
+          # Example: make compile || true
+          echo "Skipping compilation step (no auto-generation)"
+      
+      - name: Check for untracked files
+        run: |
+          echo "🔍 Checking for untracked files..."
+          
+          # Get untracked files, excluding common patterns
+          UNTRACKED=$(git ls-files --others --exclude-standard | \
+            grep -v "^node_modules/" | \
+            grep -v "^\.env" | \
+            grep -v "^\.venv/" | \
+            grep -v "^venv/" | \
+            grep -v "^\.lattice-lock/compiled/" | \
+            grep -v "^\.ruff_cache/" | \
+            grep -v "^\.pytest_cache/" | \
+            grep -v "^\.mypy_cache/" | \
+            grep -v "^\.DS_Store" | \
+            grep -v "^__pycache__/" | \
+            grep -v "\.pyc$")
+          
+          if [ -n "$UNTRACKED" ]; then
+            echo "❌ ERROR: Untracked files detected in PR"
+            echo ""
+            echo "The following files are not tracked by git:"
+            echo "$UNTRACKED" | sed 's/^/  - /'
+            echo ""
+            echo "Please add these files to git or update .gitignore"
+            exit 1
+          else
+            echo "✅ No untracked files detected"
+          fi
+      
+      - name: Verify .gitignore patterns
+        run: |
+          echo "🔍 Verifying .gitignore exists and is valid..."
+          if [ ! -f .gitignore ]; then
+            echo "❌ ERROR: .gitignore file not found"
+            exit 1
+          fi
+          echo "✅ .gitignore exists"
