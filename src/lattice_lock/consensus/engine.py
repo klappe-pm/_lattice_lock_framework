@@ -51,7 +51,6 @@ class ConsensusEngine:
             stance=request.stance or "Neutral/Objective",
             candidates=formatted_candidates,
         )
-        logger.debug(f"Synthesis prompt: {prompt}")
 
         # 2. Execute Consensus Logic
         # (Stub implementation for PR #5 - in full implementation, this calls the orchestrator)
