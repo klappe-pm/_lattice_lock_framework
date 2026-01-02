@@ -6,11 +6,7 @@ import logging
 from typing import Any
 
 from .templates import SYNTHESIS_TEMPLATE
-<<<<<<< HEAD
 from .types import ConsensusRequest
-=======
-from .types import ConsensusRequest, VoteStrategy
->>>>>>> origin/main
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +51,6 @@ class ConsensusEngine:
             stance=request.stance or "Neutral/Objective",
             candidates=formatted_candidates,
         )
-<<<<<<< HEAD
-        logger.debug(f"Synthesis prompt: {prompt}")
-=======
->>>>>>> origin/main
 
         # 2. Execute Consensus Logic
         # (Stub implementation for PR #5 - in full implementation, this calls the orchestrator)
