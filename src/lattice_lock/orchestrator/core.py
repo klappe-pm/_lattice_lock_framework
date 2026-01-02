@@ -1,4 +1,5 @@
 import logging
+import os
 from collections.abc import Callable
 
 from lattice_lock.tracing import AsyncSpanContext, generate_trace_id, get_current_trace_id
@@ -97,6 +98,17 @@ class ModelOrchestrator:
 
             # 2. Select Model
             selected_model_id = model_id
+
+            # Check for LATTICE_DEFAULT_MODEL override if no specific model requested
+            if not selected_model_id:
+                default_override = os.getenv("LATTICE_DEFAULT_MODEL")
+                if default_override and default_override.lower() != "auto":
+                    selected_model_id = default_override
+                    logger.info(
+                        f"Using default model override: {selected_model_id}",
+                        extra={"trace_id": request_trace_id},
+                    )
+
             if not selected_model_id:
                 selected_model_id = self.selector.select_best_model(requirements)
 

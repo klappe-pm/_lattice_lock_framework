@@ -187,6 +187,7 @@ WBS/
 
 # Lattice compilation artifacts (if you want to regenerate)
 # src/generated/
+.lattice-lock/compiled/
 
 # Test outputs
 test_outputs/
@@ -196,6 +197,10 @@ coverage_reports/
 *.bak
 *.backup
 *~
+
+# Node.js dependencies (frontend)
+node_modules/
+package-lock.json
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md

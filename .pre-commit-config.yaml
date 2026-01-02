@@ -61,3 +61,11 @@ repos:
         language: script
         files: ^\.mcp/.*\.(json|yaml|yml|md)$
         stages: [pre-commit]
+
+      - id: check-untracked-files
+        name: Check for untracked files
+        entry: bash -c 'UNTRACKED=$(git ls-files --others --exclude-standard | grep -v "^node_modules/" | grep -v "^\.env" | grep -v "^\.venv/" | grep -v "^venv/" | grep -v "^\.lattice-lock/compiled/" | grep -v "^\.ruff_cache/" | grep -v "^\.pytest_cache/" | grep -v "^\.mypy_cache/" | grep -v "^\.DS_Store" | grep -v "^__pycache__/" | grep -v "\.pyc$"); if [ -n "$UNTRACKED" ]; then echo "❌ Untracked files exist:"; echo "$UNTRACKED"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

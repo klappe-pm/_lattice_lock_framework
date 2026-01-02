@@ -71,3 +71,11 @@ def calculate_total(items):
         total += item['price']  # KeyError if items empty
     return total
 """
+
+
+@pytest.fixture
+def cassette():
+    """Fixture for recording/replaying API interactions."""
+    import responses
+    with responses.RequestsMock() as rsps:
+        yield rsps

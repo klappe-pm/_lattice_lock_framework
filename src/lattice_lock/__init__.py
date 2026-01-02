@@ -12,6 +12,15 @@ Usage:
     response = await orchestrator.route_request(prompt="...", task_type=TaskType.CODE_GENERATION)
 """
 
+import logging
+import os
+
+# Configure logging based on LATTICE_LOG_LEVEL
+log_level = os.getenv("LATTICE_LOG_LEVEL", "INFO").upper()
+numeric_level = getattr(logging, log_level, logging.INFO)
+logging.basicConfig(level=numeric_level)
+
+
 from pathlib import Path
 
 from lattice_lock.compile import CompilationResult, compile_lattice
