@@ -78,8 +78,8 @@ def _validate_safe_path(path_str: str) -> Path:
     root = Path.cwd().resolve()
     target = (root / path_str).resolve()
     
-    if not str(target).startswith(str(root)):
-        raise ValueError(f"Path traversal detected: {path_str} resolves outside project root.")
+    if not target.is_relative_to(root):
+        raise ValueError(f"Path traversal detected: {path_str} must be relative to project root.")
     
     return target
 
