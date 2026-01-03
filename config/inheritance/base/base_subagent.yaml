@@ -1,0 +1,18 @@
+---
+abstract: true
+vars:
+  role: "Subagent"
+---
+subagent:
+  identity:
+    role: ${vars.role}
+    
+  goals: []
+  
+  constraints:
+    max_turns: 10
+    allowed_tools: []
+    
+  _required:
+    - identity.name
+    - identity.provider_model_ref
