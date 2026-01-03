@@ -1,36 +1,34 @@
-# Lattice Lock Agents
+# AI Agent Capabilities
 
-Catalog of available agents and tools within the framework.
+Lattice Lock is designed to be fully navigable and operable by AI agents (like Claude, ChatGPT, etc.). This document outlines the capabilities and interfaces exposed specifically for agents.
 
-## Sheriff (`validate_code`)
+## Core Interfaces
 
-**Role**: Governance Enforcer
 
-The Sheriff agent enforces coding standards, security policies, and architectural consistency. It acts as a gatekeeper, preventing non-compliant code from entering the repository.
+### 1. Lattice CLI
+The primary interface for agents is the terminal CLI. All commands support JSON output for machine parsing.
 
-**Capabilities**:
-- Static analysis via `bandit` and custom rules.
-- Policy enforcement (imports, structure, types).
-- Auto-fix suggestions for common violations.
+- **Status Check**: `lattice doctor --json`
+- **Configuration**: `lattice init` (interactive, avoid for agents unless scripting inputs)
+- **Validation**: `lattice validate --json`
 
-## Gauntlet (`run_tests`)
+### 2. MCP Server
+Lattice Lock exposes a Model Context Protocol (MCP) server.
 
-**Role**: Quality Assurance
+- **Tools**: `validate_code`, `ask_orchestrator`, `run_tests`
+- **Prompts**: `governance-check`, `code-review`
+- **Transport**: stdio (over stdin/stdout)
 
-The Gauntlet agent manages the testing lifecycle. It executes test suites, measures coverage, and ensures functional correctness.
+## Agent Workflows
 
-**Capabilities**:
-- Unit test execution (`pytest`).
-- Integration testing.
-- Test generation (via MCP templates).
+### Code Review
+Agents should use `lattice validate` or the `validate_code` MCP tool to check compliance before submitting code.
 
-## Orchestrator (`ask_orchestrator`)
+### Architecture Decisions
+Use `lattice ask` or `ask_orchestrator` to consult the Lattice Lock internal knowledge base for architectural guidance.
 
-**Role**: System Coordinator
+## Context Files
 
-The Orchestrator agent is the central nervous system, routing requests to the most appropriate underlying model (LLM) based on task complexity, cost, and specific capabilities.
-
-**Capabilities**:
-- **Semantic Routing**: Analyzes prompts to select the best model (e.g., Claude 3.5 Sonnet for coding, GPT-4o for reasoning).
-- **Fallback Chains**: Automatically retries with alternative models if the primary fails.
-- **Consensus**: Runs multi-model voting or debate strategies for critical decisions.
+- `CLAUDE.md`: High-level instructions for AI assistants.
+- `lattice.yaml`: Project governance definitions.
+- `models.yaml`: Model registry configuration.

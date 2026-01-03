@@ -23,7 +23,7 @@ This document contains all identified issues prioritized from P0 (blocker) to P4
 **Impact:** CI pipeline fails on coverage check
 
 **Description:**
-Current test coverage is 67.31%, failing the 70% minimum requirement configured in `pyproject.toml` (coverage section).
+Current test coverage is 67.31%, failing the 70% minimum requirement configured in `pyproject.toml:96`.
 
 **Remediation Steps:**
 1. Run `pytest --cov=src/lattice_lock --cov-report=html` to generate coverage report
@@ -123,34 +123,22 @@ Ruff reports 125 lint errors, 107 of which are auto-fixable.
 
 **Estimated Effort:** 1 hour
 
-### P1-003: Frontend Dependency Version Conflicts
+### P1-003: Frontend Dependency Lockfile Sync
 **Status:** Open  
 **Category:** Dependencies  
 **Location:** `frontend/package.json`  
-**Impact:** Frontend build may fail, testing unreliable
+**Impact:** Frontend build may fail if lockfile is stale
 
 **Description:**
-npm reports invalid versions for multiple packages:
-- vitest: installed 2.1.9, required ^4.0.16
-- @vitest/coverage-v8: installed 2.1.9, required ^4.0.16
-- @vitest/ui: installed 2.1.9, required ^4.0.16
-- globals: installed 16.5.0, required ^17.0.0
-- jsdom: installed 25.0.1, required ^27.4.0
+The `frontend/package.json` specifies recent major versions for testing dependencies (vitest ^4.0.16, globals ^17.0.0, jsdom ^27.4.0). If the lockfile is stale or missing, npm install may produce inconsistent results.
 
 **Remediation Steps:**
 1. Delete `frontend/node_modules` and `frontend/package-lock.json`
-2. Update `frontend/package.json` to use compatible versions:
-   ```json
-   "vitest": "^2.1.9",
-   "@vitest/coverage-v8": "^2.1.9",
-   "@vitest/ui": "^2.1.9",
-   "globals": "^16.5.0",
-   "jsdom": "^25.0.1"
-   ```
-3. Run `npm install` in frontend directory
-4. Run `npm test` to verify tests pass
+2. Run `npm install` in frontend directory to regenerate lockfile
+3. Run `npm test` to verify tests pass
+4. Commit the updated `package-lock.json`
 
-**Estimated Effort:** 1 hour
+**Estimated Effort:** 30 minutes
 
 ### P1-004: Missing Dependencies
 **Status:** Open  
