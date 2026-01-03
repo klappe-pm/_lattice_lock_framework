@@ -1,0 +1,20 @@
+---
+abstract: true
+vars:
+  provider: openai
+  context: 128000
+---
+model:
+  provider: ${vars.provider}
+  context_window: ${vars.context}
+  
+  parameters:
+    temperature: 0.7
+    top_p: 1.0
+    
+  costs:
+    input: 0.0
+    output: 0.0
+    
+  _required:
+    - id

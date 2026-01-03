@@ -1,0 +1,28 @@
+---
+abstract: true
+vars:
+  version: 2.2.0
+  status: beta
+  default_timeout: 30
+---
+agent:
+  identity:
+    version: ${vars.version}
+    status: ${vars.status}
+    
+  directive:
+    primary_use_cases: []
+    
+  capabilities:
+    parallel_execution: true
+    max_retries: 3
+    timeout: ${vars.default_timeout}
+    
+  monitoring:
+    log_level: INFO
+    metrics_enabled: true
+    
+  _required:
+    - identity.name
+    - identity.description
+    - directive.primary_goal
