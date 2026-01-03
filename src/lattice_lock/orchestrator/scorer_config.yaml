@@ -1,0 +1,40 @@
+# Scorer Weights and Configuration
+
+# Priority weights
+priority_weights:
+  quality:
+    reasoning: 0.3
+    coding: 0.2
+    base: 0.5
+  speed:
+    speed: 0.5
+    base: 0.5
+  cost:
+    cost: 0.5
+    base: 0.5
+  balanced:
+    reasoning: 0.2
+    coding: 0.2
+    speed: 0.1
+    base: 0.5
+
+# Multi-label scoring weights
+analysis_weights:
+  base: 0.5
+  primary_task: 0.3
+  secondary_task: 0.1
+  complexity_boost: 0.1
+
+# Task specific boosts
+task_boosts:
+  CODE_GENERATION:
+    coding: 0.2
+  DEBUGGING:
+    coding: 0.2
+  REASONING:
+    reasoning: 0.2
+  ARCHITECTURAL_DESIGN:
+    reasoning: 0.2
+
+# Cost normalization factor
+max_blended_cost: 60.0

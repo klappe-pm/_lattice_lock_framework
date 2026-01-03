@@ -1,32 +1,32 @@
-from typing import Dict, Any
 import hashlib
+from typing import Any
 
 
 class JSONNormalizer:
     """Normalizes configuration dictionary into relational JSON structure."""
 
-    def normalize(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def normalize(self, data: dict[str, Any]) -> dict[str, Any]:
         """Main entry point for normalization."""
         normalized = data.copy()
-        
+
         if 'agents' in normalized and isinstance(normalized['agents'], list):
             self._normalize_agents(normalized)
-            
+
         return normalized
 
-    def _normalize_agents(self, data: Dict[str, Any]):
+    def _normalize_agents(self, data: dict[str, Any]):
         """Relational Normalization for Agents."""
         agents = data['agents']
         all_prefs = []
         all_sub_refs = []
-        
+
         for agent in agents:
             if not isinstance(agent, dict):
                 continue
-                
+
             agent_id = agent.get('id') or self._generate_id(agent.get('name', 'unknown'))
             agent['id'] = agent_id
-            
+
             if 'provider_preferences' in agent and isinstance(agent['provider_preferences'], list):
                 pref_ids = []
                 for idx, pref in enumerate(agent['provider_preferences']):

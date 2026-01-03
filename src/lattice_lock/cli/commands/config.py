@@ -38,14 +38,14 @@ def compile_config(ctx: click.Context, config_path: Path, output: Path | None, b
     """Compile a YAML config file with inheritance to JSON."""
     verbose = ctx.obj.get("VERBOSE", False) if ctx.obj else False
     console.set_verbose(verbose)
-    
+
     try:
         compiler = _get_compiler(str(base_path) if base_path else str(config_path.parent))
         result = compiler.compile(str(config_path))
-        
+
         indent = 2 if pretty else None
         json_output = json.dumps(result, indent=indent, default=str)
-        
+
         if output:
             output.write_text(json_output)
             console.success(f"Compiled config written to {output}")
@@ -65,11 +65,11 @@ def validate_config(ctx: click.Context, config_path: Path, base_path: Path | Non
     """Validate a YAML config file for inheritance errors."""
     verbose = ctx.obj.get("VERBOSE", False) if ctx.obj else False
     console.set_verbose(verbose)
-    
+
     try:
         compiler = _get_compiler(str(base_path) if base_path else str(config_path.parent))
         result = compiler.compile(str(config_path))
-        
+
         frontmatter = result.get('_meta', {}).get('frontmatter', {})
         console.success(f"Configuration is valid: {config_path}")
         console.info(f"  Extends: {frontmatter.get('extends', 'None')}")
@@ -92,20 +92,20 @@ def inspect_config(ctx: click.Context, config_path: Path, show_inheritance: bool
     """Inspect a YAML config file and show its structure."""
     verbose = ctx.obj.get("VERBOSE", False) if ctx.obj else False
     console.set_verbose(verbose)
-    
+
     try:
         compiler = _get_compiler(str(base_path) if base_path else str(config_path.parent))
         result = compiler.compile(str(config_path))
-        
+
         meta = result.get('_meta', {})
         frontmatter = meta.get('frontmatter', {})
-        
+
         console.info(f"Configuration: {config_path}")
         console.internal_console.print()
         console.internal_console.print("[bold]Metadata:[/bold]")
         console.internal_console.print(f"  Source: {meta.get('source', 'N/A')}")
         console.internal_console.print(f"  Version: {meta.get('version', 'N/A')}")
-        
+
         if show_inheritance:
             console.internal_console.print()
             console.internal_console.print("[bold]Inheritance Chain:[/bold]")
@@ -117,7 +117,7 @@ def inspect_config(ctx: click.Context, config_path: Path, show_inheritance: bool
                 for mixin in frontmatter['mixins']:
                     mixins_node.add(f"[dim]{mixin}[/dim]")
             console.internal_console.print(tree)
-        
+
         if frontmatter.get('vars'):
             console.internal_console.print()
             console.internal_console.print("[bold]Variables:[/bold]")

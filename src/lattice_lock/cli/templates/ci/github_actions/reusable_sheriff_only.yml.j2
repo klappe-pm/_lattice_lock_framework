@@ -1,0 +1,20 @@
+# Lattice Lock Sheriff-Only Workflow (Using Reusable Workflow)
+# Generated for: {{ project_name }}
+# This workflow uses the reusable sheriff workflow from the Lattice Lock Framework
+
+name: Lattice Lock Sheriff Check
+
+"on":
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  sheriff:
+    uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-sheriff.yml@main
+    with:
+      source-directory: "{{ source_directory | default('src/') }}"
+      python-version: "3.11"
+      format: "github"
+      enable-cache: true

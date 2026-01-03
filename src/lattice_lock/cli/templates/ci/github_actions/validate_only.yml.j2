@@ -1,0 +1,41 @@
+# Lattice Lock Validate-Only Workflow
+# Generated for: {{ project_name }}
+#
+# Alternative: Use the reusable workflow for simpler configuration:
+#   jobs:
+#     validate:
+#       uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-validate.yml@main
+
+name: Lattice Lock Quick Validation
+
+"on":
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install lattice-lock
+          pip install -e ".[dev]"
+
+      - name: Run Lattice Lock validation
+        run: |
+          lattice-lock validate
+
+      - name: Run Sheriff AST validation
+        run: |
+          lattice-lock sheriff src/
