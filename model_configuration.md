@@ -139,7 +139,7 @@ lattice-lock models list
 lattice-lock-framework/
 ├── src/lattice_lock/orchestrator/models.yaml  [UPDATED]
 ├── MODELS.md                                  [UPDATED]
-└── MODEL_CONFIGURATION_UPDATE.md              [NEW]
+└── model_configuration.md                     [NEW]
 
 pal-mcp-server/
 ├── conf/custom_models.json                    [UPDATED]
