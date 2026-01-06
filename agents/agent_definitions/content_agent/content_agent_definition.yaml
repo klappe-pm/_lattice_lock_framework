@@ -42,6 +42,16 @@ agent:
         file: subagents/operations_specialist.yaml
       - name: analyst
         file: subagents/analyst.yaml
+      - name: technical_writer
+        file: subagents/content_agent_technical_writer_definition.yaml
+      - name: copywriter
+        file: subagents/content_agent_copywriter_definition.yaml
+      - name: editor
+        file: subagents/content_agent_editor_definition.yaml
+      - name: style_guide_reviewer
+        file: subagents/content_agent_style_guide_reviewer_definition.yaml
+      - name: content_strategist
+        file: subagents/content_agent_content_strategist_definition.yaml
 
   examples:
     - name: SEO Content Loop

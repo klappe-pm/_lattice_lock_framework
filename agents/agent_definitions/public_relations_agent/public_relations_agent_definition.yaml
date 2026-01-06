@@ -22,6 +22,8 @@ agent:
     allowed_subagents:
       - name: press_release_writer
         file: subagents/press_release_writer.yaml
+      - name: advertising_specialist
+        file: subagents/public_relations_agent_advertising_specialist_definition.yaml
 
   examples:
     - name: Release Announcement

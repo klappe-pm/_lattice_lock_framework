@@ -39,6 +39,18 @@ agent:
         file: subagents/metrics_analyst.yaml
       - name: interaction_designer
         file: subagents/interaction_designer.yaml
+      - name: information_architect
+        file: subagents/ux_agent_information_architect_definition.yaml
+      - name: diagram_designer
+        file: subagents/ux_agent_diagram_designer_definition.yaml
+      - name: jtbd_researcher
+        file: subagents/ux_agent_jtbd_researcher_definition.yaml
+      - name: service_blueprinter
+        file: subagents/ux_agent_service_blueprinter_definition.yaml
+      - name: ux_strategist
+        file: subagents/ux_agent_ux_strategist_definition.yaml
+      - name: flow_architect
+        file: subagents/ux_agent_flow_architect_definition.yaml
 
   examples:
     - name: Design Sprint
