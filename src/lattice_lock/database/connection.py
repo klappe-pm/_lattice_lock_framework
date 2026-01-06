@@ -10,7 +10,7 @@ import os
 from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -114,7 +114,7 @@ _sync_engine = None
 _sync_session_factory = None
 
 
-def _get_sync_engine():
+def _get_sync_engine() -> Engine:
     """Get or create the sync database engine."""
     global _sync_engine
 
@@ -140,7 +140,7 @@ def _get_sync_engine():
     return _sync_engine
 
 
-def _get_sync_session_factory():
+def _get_sync_session_factory() -> sessionmaker[Session]:
     """Get or create the sync session factory."""
     global _sync_session_factory
 
@@ -218,11 +218,11 @@ async def init_database(drop_existing: bool = False) -> None:
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def check_database_health() -> dict:
+async def check_database_health() -> dict[str, str]:
     """Check database connectivity and return health status.
 
     Returns:
-        dict: Health status with connection info.
+        dict[str, str]: Health status with connection info.
     """
     try:
         async with get_async_session() as session:
