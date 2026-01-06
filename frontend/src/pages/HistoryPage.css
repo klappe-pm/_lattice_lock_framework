@@ -1,0 +1,141 @@
+.history-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+}
+
+/* Filters */
+.history-filters {
+  padding: var(--spacing-md);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.search-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-field input {
+  width: 100%;
+}
+
+.filter-chips {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.filter-chips .chip {
+  cursor: pointer;
+  border: none;
+}
+
+.btn.danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.btn.danger:hover {
+  background: rgba(229, 115, 115, 0.1);
+}
+
+/* History List */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.history-item {
+  padding: var(--spacing-md);
+}
+
+.history-item.user-message {
+  border-left: 3px solid var(--md-sys-color-secondary);
+}
+
+.history-item.assistant-message {
+  border-left: 3px solid var(--md-sys-color-primary);
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.role-badge {
+  font-weight: 500;
+}
+
+.timestamp {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-outline);
+  margin-left: auto;
+}
+
+.message-content {
+  font: var(--md-sys-typescale-body-large);
+  color: var(--md-sys-color-on-surface);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+/* Empty State */
+.empty-state {
+  padding: var(--spacing-xxl);
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.empty-state h3 {
+  font: var(--md-sys-typescale-title-large);
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-state p {
+  font: var(--md-sys-typescale-body-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Stats */
+.history-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: var(--spacing-md);
+}
+
+.history-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.history-stats .stat-value {
+  font: var(--md-sys-typescale-headline-medium);
+  color: var(--md-sys-color-primary);
+}
+
+.history-stats .stat-label {
+  font: var(--md-sys-typescale-label-medium);
+  color: var(--md-sys-color-on-surface-variant);
+}
