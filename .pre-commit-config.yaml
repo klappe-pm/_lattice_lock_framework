@@ -69,3 +69,11 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+
+      - id: validate-models-md
+        name: Validate MODELS.md against registry
+        entry: python scripts/validate_models_md.py
+        language: system
+        files: ^(MODELS\.md|src/lattice_lock/orchestrator/models\.yaml)$
+        pass_filenames: false
+        stages: [pre-commit]
