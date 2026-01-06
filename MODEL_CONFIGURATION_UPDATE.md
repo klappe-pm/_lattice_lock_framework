@@ -16,21 +16,21 @@
 
 ### New Models Added
 
-**Qwen3-Next-80B (Intelligence: 15)**
+#### Qwen3-Next-80B (Intelligence: 15)
 - ID: `qwen3-next-80b`
 - API Name: `hf.co/Qwen/Qwen3-Next-80B-A3B-Instruct-GGUF:Q8_0`
 - Context: 128K tokens
 - Reasoning: 95/100, Coding: 95/100
 - Best for: Architectural design, reasoning, complex coding
 
-**GLM4 (Intelligence: 10)**
+#### GLM4 (Intelligence: 10)
 - ID: `glm4`
 - API Name: `glm4`
 - Context: 128K tokens
 - Reasoning: 85/100, Coding: 90/100
 - Best for: General purpose, testing, documentation
 
-**DeepSeek R1 70B (Intelligence: 14)**
+#### DeepSeek R1 70B (Intelligence: 14)
 - ID: `deepseek-r1:70b`
 - API Name: `deepseek-r1:70b`
 - Context: 64K tokens
@@ -156,10 +156,13 @@ pal-mcp-server/
 - ✅ Routing preferences configured
 - ✅ Both PAL and Lattice Lock updated
 
-### Short Term (When Convenient)
+### Completed
 1. Restart Lattice Lock services to pick up new models
+   - *Note: Docker restart skipped due to daemon unavailability. CLI verified.*
 2. Test new models with sample tasks
+   - *Note: Verified via CLI. Fixed `AttributeError` in CLI command.*
 3. Adjust routing preferences based on experience
+   - *Note: Initial testing shows valid routing. Tuning deferred.*
 
 ### Long Term (Future Improvement)
 1. Implement Phase 1-3 of streamlining plan

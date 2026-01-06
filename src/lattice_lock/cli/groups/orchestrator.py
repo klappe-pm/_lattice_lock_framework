@@ -180,7 +180,7 @@ async def _route_async(prompt, mode, strategy):
     console.print(f"\n[bold]Routing request with mode: {mode}, strategy: {strategy}[/bold]\n")
 
     # Select model
-    model_id = orchestrator._select_best_model(orchestrator.analyzer.analyze(prompt))
+    model_id = orchestrator.selector.select_best_model(orchestrator.analyzer.analyze(prompt))
     model = orchestrator.registry.get_model(model_id)
 
     console.print(f"[green]Selected model:[/green] {model_id}")
