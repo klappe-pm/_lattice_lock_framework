@@ -1,0 +1,66 @@
+# Lattice Lock CI/CD Workflow
+# Generated for: {{ project_name }}
+
+name: Lattice Lock Validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ "{{" }} matrix.python-version {{ "}}" }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ "{{" }} matrix.python-version {{ "}}" }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install lattice-lock
+          pip install -e ".[dev]"
+
+      - name: Run Lattice Lock validation
+        run: |
+          lattice-lock validate
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy
+
+      - name: Run ruff
+        run: |
+          ruff check .
+
+      - name: Run mypy
+        run: |
+          mypy src/

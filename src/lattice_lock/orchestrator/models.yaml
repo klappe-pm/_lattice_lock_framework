@@ -1,0 +1,239 @@
+version: "1.0"
+models:
+  # xAI Grok Models
+  - id: grok-4-fast-reasoning
+    api_name: grok-4-fast-reasoning
+    provider: xai
+    context_window: 2000000
+    input_cost: 2.0
+    output_cost: 6.0
+    reasoning_score: 95.0
+    coding_score: 85.0
+    speed_rating: 7.0
+    maturity: beta
+    supports_function_calling: true
+
+  - id: grok-code-fast-1
+    api_name: grok-code-fast-1
+    provider: xai
+    context_window: 256000
+    input_cost: 1.5
+    output_cost: 4.5
+    reasoning_score: 85.0
+    coding_score: 90.0
+    speed_rating: 8.0
+    maturity: beta
+
+  - id: grok-3
+    api_name: grok-3
+    provider: xai
+    context_window: 131072
+    input_cost: 1.0
+    output_cost: 3.0
+    reasoning_score: 80.0
+    coding_score: 75.0
+    speed_rating: 6.0
+    maturity: beta
+
+  # OpenAI Models
+  - id: o1-pro
+    api_name: o1-pro
+    provider: openai
+    context_window: 200000
+    input_cost: 60.0
+    output_cost: 240.0
+    reasoning_score: 99.0
+    coding_score: 98.0
+    speed_rating: 3.0
+    maturity: production
+
+  - id: gpt-4o
+    api_name: gpt-4o
+    provider: openai
+    context_window: 128000
+    input_cost: 5.0
+    output_cost: 15.0
+    reasoning_score: 90.0
+    coding_score: 85.0
+    speed_rating: 8.0
+    maturity: production
+    supports_function_calling: true
+    supports_vision: true
+
+  - id: gpt-4o-mini
+    api_name: gpt-4o-mini
+    provider: openai
+    context_window: 128000
+    input_cost: 0.15
+    output_cost: 0.6
+    reasoning_score: 85.0
+    coding_score: 80.0
+    speed_rating: 9.0
+    maturity: production
+    supports_function_calling: true
+    supports_vision: true
+
+  - id: o1-mini
+    api_name: o1-mini
+    provider: openai
+    context_window: 128000
+    input_cost: 3.0
+    output_cost: 12.0
+    reasoning_score: 96.0
+    coding_score: 95.0
+    speed_rating: 5.0
+    maturity: production
+
+  # Google Gemini Models
+  - id: gemini-2.5-pro
+    api_name: gemini-2.5-pro
+    provider: google
+    context_window: 1000000
+    input_cost: 1.25
+    output_cost: 5.0
+    reasoning_score: 85.0
+    coding_score: 85.0
+    speed_rating: 7.0
+    maturity: beta
+    supports_function_calling: true
+    supports_vision: true
+
+  - id: gemini-2.5-flash
+    api_name: gemini-2.5-flash
+    provider: google
+    context_window: 1000000
+    input_cost: 0.075
+    output_cost: 0.3
+    reasoning_score: 80.0
+    coding_score: 80.0
+    speed_rating: 9.0
+    maturity: beta
+    supports_function_calling: true
+    supports_vision: true
+
+  # Anthropic Claude Models
+  # Anthropic Claude Models
+  - id: claude-4-5-sonnet
+    api_name: claude-sonnet-4-5-20250929
+    provider: anthropic
+    context_window: 500000
+    input_cost: 5.0
+    output_cost: 20.0
+    reasoning_score: 98.0
+    coding_score: 98.0
+    speed_rating: 8.0
+    maturity: production
+    supports_function_calling: true
+    supports_vision: true
+
+  - id: claude-4-sonnet
+    api_name: claude-sonnet-4-20250514
+    provider: anthropic
+    context_window: 300000
+    input_cost: 4.0
+    output_cost: 16.0
+    reasoning_score: 96.0
+    coding_score: 96.0
+    speed_rating: 8.0
+    maturity: production
+    supports_function_calling: true
+    supports_vision: true
+
+  - id: claude-3-7-sonnet
+    api_name: claude-3-7-sonnet-20250219
+    provider: anthropic
+    context_window: 250000
+    input_cost: 3.0
+    output_cost: 15.0
+    reasoning_score: 95.0
+    coding_score: 95.0
+    speed_rating: 7.0
+    maturity: production
+    supports_function_calling: true
+    supports_vision: true
+
+  - id: claude-3-5-haiku
+    api_name: claude-3-5-haiku-20241022
+    provider: anthropic
+    context_window: 200000
+    input_cost: 0.25
+    output_cost: 1.25
+    reasoning_score: 88.0
+    coding_score: 85.0
+    speed_rating: 9.0
+    maturity: production
+    supports_function_calling: true
+
+  - id: claude-4-5-opus
+    api_name: claude-opus-4-5-20251101
+    provider: anthropic
+    context_window: 500000
+    input_cost: 20.0
+    output_cost: 80.0
+    reasoning_score: 99.5
+    coding_score: 99.0
+    speed_rating: 5.0
+    maturity: production
+    supports_function_calling: true
+    supports_vision: true
+
+  # Local Models
+  - id: "qwen3-next-80b"
+    api_name: "hf.co/Qwen/Qwen3-Next-80B-A3B-Instruct-GGUF:Q8_0"
+    provider: ollama
+    context_window: 131072
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 95.0
+    coding_score: 95.0
+    speed_rating: 4.0
+    maturity: production
+    supports_function_calling: true
+    supports_json_mode: true
+
+  - id: "deepseek-r1:70b"
+    api_name: "deepseek-r1:70b"
+    provider: ollama
+    context_window: 65536
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 95.0
+    coding_score: 90.0
+    speed_rating: 5.0
+    maturity: production
+
+  - id: "glm4"
+    api_name: "glm4"
+    provider: ollama
+    context_window: 131072
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 85.0
+    coding_score: 90.0
+    speed_rating: 8.0
+    maturity: production
+    supports_function_calling: true
+    supports_json_mode: true
+
+  - id: "codellama:34b"
+    api_name: "codellama:34b"
+    provider: ollama
+    context_window: 16384
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 85.0
+    coding_score: 95.0
+    speed_rating: 5.0
+    maturity: production
+
+  - id: "qwen2.5:32b"
+    api_name: "qwen2.5:32b-instruct-q4_K_M"
+    provider: ollama
+    context_window: 32768
+    input_cost: 0.0
+    output_cost: 0.0
+    reasoning_score: 88.0
+    coding_score: 85.0
+    speed_rating: 6.0
+    maturity: production
+    supports_function_calling: true

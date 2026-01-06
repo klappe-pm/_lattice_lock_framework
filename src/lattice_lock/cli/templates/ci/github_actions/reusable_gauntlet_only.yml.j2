@@ -1,0 +1,20 @@
+# Lattice Lock Gauntlet-Only Workflow (Using Reusable Workflow)
+# Generated for: {{ project_name }}
+# This workflow uses the reusable gauntlet workflow from the Lattice Lock Framework
+
+name: Lattice Lock Gauntlet Tests
+
+"on":
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  gauntlet:
+    uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-gauntlet.yml@main
+    with:
+      test-directory: "{{ test_directory | default('tests/') }}"
+      python-version: "3.11"
+      coverage-enabled: {{ coverage_enabled | default('true') }}
+      coverage-threshold: {{ coverage_threshold | default(80) }}

@@ -1,6 +1,6 @@
-import os
 import datetime
-from typing import Dict, Any
+import os
+from typing import Any
 
 from lattice_lock.config.frontmatter import FrontmatterParser
 from lattice_lock.config.inheritance import InheritanceResolver
@@ -16,12 +16,12 @@ class YAMLCompiler:
         self.normalizer = JSONNormalizer()
         self.base_path = base_path or os.getcwd()
 
-    def compile(self, file_path: str) -> Dict[str, Any]:
+    def compile(self, file_path: str) -> dict[str, Any]:
         """Compiles a single YAML file."""
         abs_path = self._resolve_path(file_path)
-        
+
         frontmatter, content = self.parser.parse(abs_path)
-        
+
         base_config = {}
         if 'extends' in frontmatter:
             parent_path = frontmatter['extends']
@@ -37,17 +37,17 @@ class YAMLCompiler:
                 base_config = self.resolver.deep_merge(base_config, mixin_config)
 
         final_config = self.resolver.deep_merge(base_config, content)
-        
+
         if frontmatter.get('compile', {}).get('normalize'):
             final_config = self.normalizer.normalize(final_config)
-            
+
         final_config['_meta'] = {
             'source': abs_path,
             'compiled_at': datetime.datetime.utcnow().isoformat(),
             'frontmatter': frontmatter,
             'version': frontmatter.get('vars', {}).get('version', 'unknown')
         }
-        
+
         return final_config
 
     def _resolve_path(self, path: str) -> str:

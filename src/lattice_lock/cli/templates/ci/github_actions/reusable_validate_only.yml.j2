@@ -1,0 +1,16 @@
+# Lattice Lock Validate-Only Workflow (Using Reusable Workflow)
+# Generated for: {{ project_name }}
+# This workflow uses the reusable validate workflow from the Lattice Lock Framework
+
+name: Lattice Lock Quick Validation
+
+"on":
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    uses: klappe-pm/lattice-lock-framework/.github/workflows/reusable-validate.yml@main
+    with:
+      python-version: "3.11"
+      working-directory: "."

@@ -1,0 +1,70 @@
+"""
+Central Application Configuration.
+Aggregates specific configs from Auth, Analysis, and Execution modules.
+"""
+
+import os
+import re
+
+
+class AppConfig:
+    def __init__(self):
+        self.env = os.environ.get("LATTICE_ENV", "dev")
+
+        # Analyzer Configuration
+        self.analyzer_cache_size: int = self._parse_int("ANALYZER_CACHE_SIZE", 1024)
+
+        # Executor Configuration
+        self.max_function_calls: int = self._parse_int("MAX_FUNCTION_CALLS", 10)
+        self.background_task_timeout: float = float(
+            os.environ.get("BACKGROUND_TASK_TIMEOUT", "5.0")
+        )
+
+        # Auth Configuration
+        self.token_expiry_minutes: int = self._parse_int("TOKEN_EXPIRY_MINUTES", 30)
+
+        # Security Configuration
+        self.jwt_algorithm = "HS256"
+        self.secret_key = os.environ.get("LATTICE_LOCK_SECRET_KEY")
+
+        # Validation logic for production security
+        if self.env == "production" and not self.secret_key:
+            raise ValueError("LATTICE_LOCK_SECRET_KEY must be set in production")
+
+        # Database Configuration (future use)
+        self.database_url: str = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
+        self.database_pool_size: int = self._parse_int("DATABASE_POOL_SIZE", 5)
+        self.database_max_overflow: int = self._parse_int("DATABASE_MAX_OVERFLOW", 10)
+        self.database_echo: bool = os.environ.get("DATABASE_ECHO", "false").lower() == "true"
+
+    def _parse_int(self, var: str, default: int) -> int:
+        """Safely parse integer environment variables."""
+        value = os.environ.get(var)
+        if value is not None:
+            if re.match(r"^\d+$", value):
+                return int(value)
+            raise ValueError(f"Environment variable {var} must be an integer, got: {value}")
+        return default
+
+    @classmethod
+    def load(cls) -> "AppConfig":
+        """Load configuration from environment."""
+        return cls()
+
+
+# Global config instance
+_config: AppConfig | None = None
+
+
+def get_config() -> AppConfig:
+    """Get the global configuration instance."""
+    global _config
+    if _config is None:
+        _config = AppConfig.load()
+    return _config
+
+
+def reset_config() -> None:
+    """Reset configuration for testing."""
+    global _config
+    _config = None

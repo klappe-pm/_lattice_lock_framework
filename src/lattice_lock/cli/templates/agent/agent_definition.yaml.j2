@@ -1,0 +1,53 @@
+# Agent Definition
+# Generated for: {{ project_name }}
+# This file defines the AI agent configuration for Lattice Lock
+
+agent:
+  name: {{ project_name }}
+  version: "1.0.0"
+  description: "{{ description | default('An AI agent managed by Lattice Lock') }}"
+
+  # Agent capabilities
+  capabilities:
+    - code_generation
+    - code_review
+    - documentation
+
+  # Model preferences
+  model_preferences:
+    primary:
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+    fallback:
+      provider: openai
+      model: gpt-4o
+
+  # Task routing rules
+  routing:
+    code_generation:
+      complexity_threshold: 0.7
+      preferred_models:
+        - claude-sonnet-4-20250514
+        - gpt-4o
+    code_review:
+      complexity_threshold: 0.5
+      preferred_models:
+        - claude-sonnet-4-20250514
+    documentation:
+      complexity_threshold: 0.3
+      preferred_models:
+        - gpt-4o-mini
+        - claude-3-haiku
+
+  # Governance constraints
+  constraints:
+    max_tokens_per_request: 4096
+    max_requests_per_minute: 60
+    allowed_file_extensions:
+      - .py
+      - .yaml
+      - .json
+      - .md
+    forbidden_operations:
+      - file_deletion
+      - system_commands
