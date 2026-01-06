@@ -14,7 +14,10 @@ from pathlib import Path
 from typing import Any
 
 from lattice_lock.agents.prompt_architect.agent import GenerationResult, PromptArchitectAgent
-from lattice_lock.agents.prompt_architect.subagents.tool_profiles import Task
+from lattice_lock.agents.prompt_architect.subagents.models import SpecificationAnalysis
+from lattice_lock.agents.prompt_architect.subagents.parsers.roadmap_parser import RoadmapStructure
+from lattice_lock.agents.prompt_architect.subagents.prompt_generator import GeneratedPrompt
+from lattice_lock.agents.prompt_architect.subagents.tool_profiles import Task, ToolAssignment
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +45,7 @@ class PipelineStage:
     status: str = "pending"  # pending, running, completed, failed, skipped
     start_time: datetime | None = None
     end_time: datetime | None = None
-    result: Any = None
+    result: GenerationResult | SpecificationAnalysis | RoadmapStructure | list[ToolAssignment] | list[GeneratedPrompt] | None = None
     error: str | None = None
     retries: int = 0
 
@@ -52,10 +55,10 @@ class OrchestrationState:
     """State of the orchestration pipeline."""
 
     stages: dict[str, PipelineStage] = field(default_factory=dict)
-    spec_analysis: Any = None
-    roadmap_structure: Any = None
-    tool_assignments: list[Any] = field(default_factory=list)
-    generated_prompts: list[Any] = field(default_factory=list)
+    spec_analysis: SpecificationAnalysis | None = None
+    roadmap_structure: RoadmapStructure | None = None
+    tool_assignments: list[ToolAssignment] = field(default_factory=list)
+    generated_prompts: list[GeneratedPrompt] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     start_time: datetime | None = None
     end_time: datetime | None = None
@@ -350,7 +353,7 @@ class PromptOrchestrator:
 
     def _build_task_list(self, config: OrchestrationConfig) -> list[Task]:
         """Build a list of tasks from the roadmap structure."""
-        tasks = []
+        tasks: list[Task] = []
 
         if not self.state.roadmap_structure:
             return tasks
@@ -372,7 +375,7 @@ class PromptOrchestrator:
 
         return tasks
 
-    def _build_context_data(self, assignment: Any) -> dict[str, Any]:
+    def _build_context_data(self, assignment: ToolAssignment) -> dict[str, Any]:
         """Build context data for prompt generation."""
         context_data: dict[str, Any] = {
             "task_id": assignment.task_id,

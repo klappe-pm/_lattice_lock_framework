@@ -82,7 +82,7 @@ def validate_agent_manifest(file_path: str) -> ValidationResult:
     return result
 
 
-def _validate_identity(identity: Any, result: ValidationResult):
+def _validate_identity(identity: dict[str, Any], result: ValidationResult):
     """Validates the agent identity section."""
     if not isinstance(identity, dict):
         result.add_error("agent.identity must be a dictionary")
@@ -103,7 +103,7 @@ def _validate_identity(identity: Any, result: ValidationResult):
             )
 
 
-def _validate_directive(directive: Any, result: ValidationResult):
+def _validate_directive(directive: dict[str, Any], result: ValidationResult):
     """Validates the agent directive section."""
     if not isinstance(directive, dict):
         result.add_error("directive section must be a dictionary")
@@ -119,7 +119,7 @@ def _validate_directive(directive: Any, result: ValidationResult):
             result.add_error("Field 'directive.constraints' must be a list")
 
 
-def _validate_responsibilities(responsibilities: Any, result: ValidationResult):
+def _validate_responsibilities(responsibilities: list[dict[str, Any]], result: ValidationResult):
     """Validates the agent responsibilities section."""
     if not isinstance(responsibilities, list):
         result.add_error("responsibilities section must be a list")
@@ -136,7 +136,7 @@ def _validate_responsibilities(responsibilities: Any, result: ValidationResult):
             result.add_error(f"Responsibility item #{i+1} missing required field: description")
 
 
-def _validate_scope(scope: Any, result: ValidationResult):
+def _validate_scope(scope: dict[str, Any], result: ValidationResult):
     """Validates the agent scope section."""
     if not isinstance(scope, dict):
         result.add_error("scope section must be a dictionary")
