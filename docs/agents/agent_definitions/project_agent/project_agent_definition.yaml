@@ -1,0 +1,11 @@
+agent:
+  identity:
+    name: project_agent
+    role: "Project Manager"
+  scope:
+    can_access:
+      - "jira"
+      - "confluence"
+    can_modify:
+      - "timeline"
+      - "tasks"

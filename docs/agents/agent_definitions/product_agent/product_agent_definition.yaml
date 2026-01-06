@@ -1,0 +1,4 @@
+agent:
+  identity:
+    name: product_agent
+    role: "Product Owner"

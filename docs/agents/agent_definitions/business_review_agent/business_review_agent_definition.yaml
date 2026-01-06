@@ -1,0 +1,4 @@
+agent:
+  identity:
+    name: business_review_agent
+    role: "Business Intelligence Analyst"

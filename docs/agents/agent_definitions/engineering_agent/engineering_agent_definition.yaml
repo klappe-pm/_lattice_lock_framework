@@ -1,0 +1,9 @@
+agent:
+  identity:
+    name: engineering_agent
+    role: "Engineering Manager"
+  delegation:
+    enabled: true
+    allowed_subagents:
+      - "code_review_agent"
+      - "security_agent"

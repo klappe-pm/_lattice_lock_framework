@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from collections.abc import AsyncIterator, Iterator
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
@@ -157,7 +158,7 @@ def _get_sync_session_factory():
 
 
 @asynccontextmanager
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_async_session() -> AsyncIterator[AsyncSession]:
     """Get an async database session.
 
     Usage:
@@ -179,7 +180,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @contextmanager
-def get_sync_session() -> Generator[Session, None, None]:
+def get_sync_session() -> Iterator[Session]:
     """Get a sync database session.
 
     Usage:
