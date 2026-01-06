@@ -109,3 +109,6 @@ jobs:
           echo "Run ./scripts/update_version.sh to fix."
           exit 1
         fi
+
+    - name: Validate MODELS.md
+      run: python scripts/validate_models_md.py

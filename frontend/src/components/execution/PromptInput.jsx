@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useExecutionStore, useProgressStore } from '../../store';
+import { useExecutionStore } from '../../store';
 import './PromptInput.css';
 
 const SendIcon = () => (
@@ -33,6 +33,7 @@ export default function PromptInput({ onSubmit }) {
       prompt: prompt.trim(),
       systemInstructions: systemInstructions.trim(),
     });
+    setPrompt('');
   };
 
   const handleKeyDown = (e) => {
