@@ -12,7 +12,7 @@ agent:
       manages file indexes, and coordinates sub-agents for systematic quality control.
     role: Quality Approval Authority
     status: active
-    inherits_from: base_agent_v2.1.yaml
+    inherits_from: base_agent.yaml
     settings:
       enabled: true  # ON BY DEFAULT - configurable in agent_settings.yaml
       toggle_path: "settings.agents.approver_agent.enabled"
