@@ -52,12 +52,16 @@ def extract_model_references(models_md_path: Path) -> dict[str, set[str]]:
     }
 
     # Extract from Code Tasks section (uses > delimiter)
-    code_tasks_match = re.search(r"### Code Tasks(.*?)(?:###|---|\Z)", content, re.DOTALL)
+    # Match heading at start of line (not inside backticks)
+    code_tasks_match = re.search(
+        r"^### Code Tasks\s*\n(.*?)(?=\n##|\n---|\Z)", content, re.DOTALL | re.MULTILINE
+    )
     if code_tasks_match:
         section = code_tasks_match.group(1)
         for line in section.split("\n"):
+            line = line.strip()
             if "**" in line and ":" in line and ">" in line:
-                match = re.match(r"- \*\*(.+?)\*\*: (.+)", line)
+                match = re.match(r"-\s*\*\*(.+?)\*\*:\s*(.+)", line)
                 if match:
                     models = [m.strip() for m in match.group(2).split(">")]
                     references["code_tasks"].update(models)
@@ -98,6 +102,11 @@ def validate_models(
     warnings: list[str] = []
 
     for section_name, model_ids in references.items():
+        # Skip validation for blocked models - they may be blocked precisely
+        # because they don't exist or shouldn't be used
+        if section_name == "blocked_models":
+            continue
+
         for model_id in model_ids:
             if not model_id:
                 continue
