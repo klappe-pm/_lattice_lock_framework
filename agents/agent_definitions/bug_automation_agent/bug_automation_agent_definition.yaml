@@ -14,7 +14,7 @@ agent:
       Manages execution automation for bug reproduction and verification.
     role: Bug Automation Specialist
     status: active
-    inherits_from: base_agent_v2.1.yaml
+    inherits_from: base_agent.yaml
     can_run_as: [standalone, subagent]
     parent_agents: [approver_agent]  # When running as subagent
 
