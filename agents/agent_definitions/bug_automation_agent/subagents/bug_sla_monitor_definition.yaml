@@ -1,0 +1,67 @@
+---
+# Bug SLA Monitor Sub-Agent
+# Owned by: bug_automation_agent
+---
+agent:
+  identity:
+    name: sla_monitor
+    version: 1.0.0
+    description: >
+      Monitors SLA compliance for all open bugs and triggers
+      escalations when deadlines approach or are breached.
+    role: SLA Monitoring Specialist
+    status: active
+    parent_agent: bug_automation_agent
+
+  directive:
+    primary_goal: >
+      Ensure all bugs are resolved within SLA timelines and
+      proactively escalate at-risk issues.
+    primary_use_cases:
+      - "Monitor open bug SLA status"
+      - "Send warnings for approaching deadlines"
+      - "Trigger escalations for breaches"
+      - "Generate SLA compliance reports"
+
+  scope:
+    can_access:
+      - /.bug_tracking
+      - /docs/testing/bug_dashboard.md
+    can_modify:
+      - /docs/testing/bug_dashboard.md
+
+  sla_definitions:
+    critical:
+      response: 1h
+      resolution: 24h
+    high:
+      response: 4h
+      resolution: 72h
+    medium:
+      response: 24h
+      resolution: 168h
+    low:
+      response: 48h
+      resolution: 336h
+
+  monitoring:
+    check_frequency: 1h
+    warning_threshold: 0.75  # 75% of SLA time elapsed
+    escalation_levels:
+      - level: 1
+        at: 100%
+        notify: [assignee, team_lead]
+      - level: 2
+        at: 150%
+        notify: [team_lead, manager]
+      - level: 3
+        at: 200%
+        notify: [manager, director]
+
+  outputs:
+    sla_report:
+      includes:
+        - bugs_at_risk
+        - bugs_breached
+        - compliance_rate
+        - average_resolution_time

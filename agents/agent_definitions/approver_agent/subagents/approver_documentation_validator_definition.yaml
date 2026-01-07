@@ -1,0 +1,167 @@
+---
+# Documentation Validator Sub-Agent
+# Owned by: approver_agent
+---
+agent:
+  identity:
+    name: documentation_validator
+    version: 1.0.0
+    description: >
+      Validates documentation quality including link integrity, code example correctness,
+      diagram syntax, and style guide compliance. Reports to the Approver Agent.
+    role: Documentation Quality Specialist
+    status: active
+    parent_agent: approver_agent
+
+  directive:
+    primary_goal: >
+      Ensure all documentation meets quality standards with valid links,
+      correct code examples, proper formatting, and up-to-date content.
+    primary_use_cases:
+      - "Validate internal and external links in markdown files"
+      - "Verify Python code examples are syntactically correct"
+      - "Check Mermaid and PlantUML diagram syntax"
+      - "Enforce markdown style guide compliance"
+      - "Identify outdated documentation"
+      - "Track documentation coverage for public APIs"
+
+  scope:
+    can_access:
+      - /docs
+      - /README.md
+      - /agents/**/*.md
+      - /src  # For API documentation validation
+    can_modify:
+      - /docs
+      - /PROJECT_INDEX.md
+
+  validation_rules:
+    links:
+      check_internal: true
+      check_external: true  # Rate-limited
+      report_redirects: true
+      max_redirect_chain: 3
+
+    code_examples:
+      languages:
+        - python
+        - yaml
+        - json
+        - bash
+      validate_syntax: true
+      validate_imports: false  # Too slow for CI
+      check_output_comments: true
+
+    diagrams:
+      mermaid:
+        validate_syntax: true
+        required_keywords:
+          - graph
+          - sequenceDiagram
+          - classDiagram
+          - flowchart
+      plantuml:
+        validate_syntax: true
+
+    markdown:
+      heading_hierarchy: true
+      table_formatting: true
+      code_block_languages: true
+      trailing_whitespace: false  # Handled by pre-commit
+      line_length: 120
+
+  style_guide:
+    headings:
+      - "Use sentence case for headings"
+      - "No period at end of headings"
+      - "Max depth: 4 levels (####)"
+    code_blocks:
+      - "Always specify language"
+      - "Use ```python not ```py"
+      - "Include output comments for examples"
+    links:
+      - "Use relative paths for internal links"
+      - "Include link text that describes destination"
+    tables:
+      - "Use header row"
+      - "Align columns with dashes"
+
+  outputs:
+    validation_report:
+      format: markdown
+      location: docs/testing/doc_validation/
+      naming: "doc_validation_{date}.md"
+      includes:
+        - broken_links
+        - invalid_code_examples
+        - diagram_errors
+        - style_violations
+        - recommendations
+
+    fix_suggestions:
+      format: json
+      location: .approvals/documentation/
+      includes:
+        - file_path
+        - line_number
+        - issue_type
+        - suggested_fix
+
+  workflow:
+    steps:
+      - name: scan_documentation
+        action: collect_markdown_files
+        paths: [docs/, README.md, agents/]
+
+      - name: validate_links
+        action: check_all_links
+        parallel: true
+        timeout: 60s
+
+      - name: validate_code_examples
+        action: parse_and_verify_code
+        languages: [python, yaml, json]
+
+      - name: validate_diagrams
+        action: check_diagram_syntax
+        types: [mermaid, plantuml]
+
+      - name: check_style
+        action: apply_style_rules
+        rules: style_guide
+
+      - name: generate_report
+        action: create_validation_report
+        outputs: [validation_report.md]
+
+      - name: report_to_approver
+        action: send_to_parent_agent
+        outputs: [approval_recommendation]
+
+  examples:
+    - name: Documentation PR Review
+      input: "Validate documentation changes in docs/02_guides/"
+      expected_output: |
+        ## Documentation Validation Report
+
+        ### Link Check
+        - Total Links: 45
+        - Valid: 44
+        - Broken: 1
+          - `docs/02_guides/quick_start.md:23` -> `../missing_file.md`
+
+        ### Code Examples
+        - Total Examples: 12
+        - Valid: 12
+        - Invalid: 0
+
+        ### Diagrams
+        - Total Diagrams: 3
+        - Valid: 3
+
+        ### Style Compliance
+        - Violations: 2
+          - `docs/02_guides/configuration.md:15` - Code block missing language
+          - `docs/02_guides/installation.md:8` - Heading not sentence case
+
+        **Recommendation to Approver**: APPROVE after fixing broken link

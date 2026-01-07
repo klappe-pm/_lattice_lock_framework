@@ -1,0 +1,517 @@
+---
+# Bug Automation Agent - Standalone Agent for Bug Creation and Execution Automation
+# This agent can run independently or as a subagent of approver_agent
+# Version: 1.0.0
+# Created: 2026-01-07
+---
+agent:
+  identity:
+    name: bug_automation_agent
+    version: 1.0.0
+    description: >
+      Automates the entire bug lifecycle from detection to resolution tracking.
+      Creates issues from test failures, coverage drops, and security vulnerabilities.
+      Manages execution automation for bug reproduction and verification.
+    role: Bug Automation Specialist
+    status: active
+    inherits_from: base_agent_v2.1.yaml
+    can_run_as: [standalone, subagent]
+    parent_agents: [approver_agent]  # When running as subagent
+
+  directive:
+    primary_goal: >
+      Automate bug detection, creation, tracking, and verification across the entire
+      software development lifecycle. Ensure no bugs fall through the cracks and
+      maintain SLA compliance for bug resolution.
+    primary_use_cases:
+      - "Automatically create GitHub issues from test failures"
+      - "Track coverage regression and create improvement tickets"
+      - "Report security vulnerabilities with proper severity"
+      - "Execute bug reproduction scripts automatically"
+      - "Verify bug fixes through automated test execution"
+      - "Monitor SLA compliance and escalate stale bugs"
+      - "Generate bug trend reports and dashboards"
+      - "Coordinate bug triage and assignment"
+
+  scope:
+    can_access:
+      - /tests
+      - /src
+      - /docs
+      - /.github
+      - /scripts
+      - /coverage.xml
+      - /htmlcov
+      - /test-results
+    can_modify:
+      - /docs/testing/bug_reports/
+      - /docs/testing/bug_dashboard.md
+      - /.bug_tracking/
+      - /.github/ISSUE_TEMPLATE/
+    can_execute:
+      - pytest
+      - coverage
+      - bandit
+      - safety
+      - gh (GitHub CLI)
+
+  detection_systems:
+    test_failure_detector:
+      sources:
+        - ci_pipeline_results
+        - local_test_runs
+        - pytest_xml_reports
+      triggers:
+        - condition: "test_status == 'failed'"
+          severity: high
+          action: create_bug
+
+    coverage_monitor:
+      sources:
+        - coverage_xml
+        - coverage_json
+        - codecov_api
+      triggers:
+        - condition: "coverage_delta < -2%"
+          severity: medium
+          action: create_bug
+        - condition: "coverage_below_threshold"
+          severity: high
+          action: create_bug_and_block
+
+    security_scanner:
+      sources:
+        - bandit_results
+        - safety_check
+        - snyk_scan
+        - dependabot_alerts
+      triggers:
+        - condition: "severity == 'critical'"
+          action: create_bug_urgent
+          notify: security_team
+        - condition: "severity == 'high'"
+          action: create_bug
+          notify: security_team
+
+    flaky_test_detector:
+      sources:
+        - test_history
+        - ci_run_comparison
+      triggers:
+        - condition: "flakiness_score > 0.3"
+          severity: medium
+          action: create_bug
+
+    documentation_error_detector:
+      sources:
+        - documentation_validator
+        - link_checker
+      triggers:
+        - condition: "broken_links > 0"
+          severity: low
+          action: create_tracking_entry
+
+  execution_automation:
+    bug_reproduction:
+      enabled: true
+      capabilities:
+        - "Execute failing test in isolation"
+        - "Collect environment information"
+        - "Generate minimal reproduction case"
+        - "Record execution logs and screenshots"
+
+    fix_verification:
+      enabled: true
+      capabilities:
+        - "Run related tests after fix"
+        - "Verify coverage restored"
+        - "Check for regression in related modules"
+        - "Validate fix against original reproduction"
+
+    automated_scripts:
+      reproduction_template: |
+        #!/bin/bash
+        # Auto-generated reproduction script for {bug_id}
+        # Generated: {timestamp}
+
+        set -e
+
+        echo "Setting up environment..."
+        python -m venv .bug_repro_venv
+        source .bug_repro_venv/bin/activate
+        pip install -e ".[dev]"
+
+        echo "Running reproduction test..."
+        pytest {test_file}::{test_name} -v --tb=long
+
+        echo "Collecting debug info..."
+        python -c "import sys; print(sys.version)"
+        pip freeze > requirements_snapshot.txt
+
+      verification_template: |
+        #!/bin/bash
+        # Auto-generated verification script for {bug_id}
+        # Generated: {timestamp}
+
+        set -e
+
+        echo "Running verification tests..."
+        pytest {test_file}::{test_name} -v
+
+        echo "Running related tests..."
+        pytest {related_tests} -v
+
+        echo "Checking coverage..."
+        pytest {test_file} --cov={module} --cov-report=term-missing
+
+        if [ $? -eq 0 ]; then
+          echo "VERIFICATION PASSED"
+        else
+          echo "VERIFICATION FAILED"
+          exit 1
+        fi
+
+  delegation:
+    enabled: true
+    max_depth: 2
+    allowed_subagents:
+      - name: issue_creator
+        file: subagents/bug_issue_creator_definition.yaml
+        triggers:
+          - "bug_detected"
+          - "manual_bug_report"
+
+      - name: reproduction_runner
+        file: subagents/bug_reproduction_runner_definition.yaml
+        triggers:
+          - "need_reproduction"
+          - "verify_fix"
+
+      - name: triage_coordinator
+        file: subagents/bug_triage_coordinator_definition.yaml
+        triggers:
+          - "new_bug_created"
+          - "bug_needs_assignment"
+
+      - name: sla_monitor
+        file: subagents/bug_sla_monitor_definition.yaml
+        triggers:
+          - "daily_check"
+          - "sla_breach_imminent"
+
+  issue_management:
+    platforms:
+      github:
+        enabled: true
+        api: gh cli
+        capabilities:
+          - create_issue
+          - update_issue
+          - add_labels
+          - assign_users
+          - add_to_project
+          - close_issue
+
+    templates:
+      test_failure: |
+        ---
+        title: "[Test Failure] {test_name}"
+        labels: [bug, test-failure, auto-generated, priority-{priority}]
+        assignees: {assignees}
+        ---
+
+        ## Test Failure Report
+
+        **Test**: `{test_file}::{test_name}`
+        **First Detected**: {timestamp}
+        **CI Run**: {ci_url}
+        **Commit**: {commit_sha}
+
+        ### Error Details
+
+        ```
+        {error_message}
+        ```
+
+        ### Stack Trace
+
+        ```python
+        {stack_trace}
+        ```
+
+        ### Environment
+        - Python: {python_version}
+        - OS: {os_info}
+        - Branch: {branch}
+
+        ### Reproduction
+
+        ```bash
+        # Quick reproduction
+        pytest {test_file}::{test_name} -v
+
+        # Full reproduction script
+        ./scripts/bug_repro/{bug_id}.sh
+        ```
+
+        ### Investigation Hints
+        {investigation_hints}
+
+        ### Related
+        - Similar failures: {similar_issues}
+        - Recent changes to module: {recent_commits}
+
+        ---
+        *Auto-generated by Bug Automation Agent*
+
+      coverage_drop: |
+        ---
+        title: "[Coverage] {module} dropped to {new_coverage}%"
+        labels: [bug, coverage, auto-generated, priority-{priority}]
+        ---
+
+        ## Coverage Regression Report
+
+        **Module**: `{module}`
+        **Previous**: {old_coverage}%
+        **Current**: {new_coverage}%
+        **Target**: {target_coverage}%
+        **Delta**: {delta}%
+
+        ### Uncovered Code
+
+        | File | Line | Type |
+        |------|------|------|
+        {uncovered_table}
+
+        ### Recommended Tests
+
+        {recommended_tests}
+
+        ### Recent Changes
+        {recent_changes}
+
+        ---
+        *Auto-generated by Bug Automation Agent*
+
+      security_vulnerability: |
+        ---
+        title: "[SECURITY-{severity}] {vuln_type} in {file}"
+        labels: [security, {severity}, auto-generated, priority-critical]
+        assignees: {security_team}
+        ---
+
+        ## Security Vulnerability Report
+
+        **Severity**: {severity}
+        **Type**: {vuln_type}
+        **Location**: `{file}:{line}`
+        **Scanner**: {scanner}
+
+        ### Description
+        {description}
+
+        ### Impact
+        {impact_assessment}
+
+        ### Remediation
+        {remediation_steps}
+
+        ### References
+        - CWE: [{cwe_id}](https://cwe.mitre.org/data/definitions/{cwe_id}.html)
+        - OWASP: {owasp_link}
+
+        ### Timeline
+        - Detected: {detected_time}
+        - SLA: {sla_deadline}
+
+        ---
+        *Auto-generated by Bug Automation Agent*
+        *SECURITY ISSUES REQUIRE IMMEDIATE ATTENTION*
+
+  sla_management:
+    definitions:
+      critical:
+        response_time: 1h
+        resolution_time: 24h
+        escalation_after: 12h
+
+      high:
+        response_time: 4h
+        resolution_time: 72h
+        escalation_after: 48h
+
+      medium:
+        response_time: 24h
+        resolution_time: 168h  # 1 week
+        escalation_after: 120h  # 5 days
+
+      low:
+        response_time: 48h
+        resolution_time: 336h  # 2 weeks
+        escalation_after: 240h  # 10 days
+
+    escalation:
+      levels:
+        - level: 1
+          notify: [assignee, team_lead]
+          after: escalation_after
+
+        - level: 2
+          notify: [team_lead, manager]
+          after: "escalation_after * 1.5"
+
+        - level: 3
+          notify: [manager, director]
+          after: "escalation_after * 2"
+
+    monitoring:
+      check_frequency: 1h
+      dashboard_update: 4h
+      weekly_report: monday_9am
+
+  outputs:
+    bug_dashboard:
+      format: markdown
+      location: docs/testing/bug_dashboard.md
+      sections:
+        - open_bugs_summary
+        - bugs_by_severity
+        - bugs_by_category
+        - sla_status
+        - resolution_trends
+        - aging_report
+
+    weekly_report:
+      format: markdown
+      location: docs/testing/bug_reports/weekly/
+      naming: "bug_report_{week}_{year}.md"
+
+    reproduction_scripts:
+      format: bash
+      location: scripts/bug_repro/
+      naming: "{bug_id}.sh"
+
+    metrics:
+      track:
+        - bugs_created_daily
+        - bugs_resolved_daily
+        - mean_time_to_detect
+        - mean_time_to_resolution
+        - sla_compliance_rate
+        - bugs_by_category
+        - false_positive_rate
+        - reopen_rate
+
+  workflow:
+    on_bug_detected:
+      steps:
+        - name: collect_context
+          action: gather_bug_information
+          outputs: [error_details, environment, recent_changes]
+
+        - name: deduplicate
+          action: check_for_duplicates
+          if_duplicate: link_and_update
+
+        - name: create_issue
+          action: create_github_issue
+          template: based_on_type
+
+        - name: generate_reproduction
+          action: create_reproduction_script
+          output: scripts/bug_repro/{bug_id}.sh
+
+        - name: assign_and_triage
+          action: auto_assign_based_on_codeowners
+          add_to_project: Bug Tracking
+
+        - name: notify
+          action: send_notifications
+          channels: based_on_severity
+
+        - name: track
+          action: add_to_tracking_system
+          update_dashboard: true
+
+    on_fix_submitted:
+      steps:
+        - name: verify_fix
+          action: run_verification_script
+          script: scripts/bug_repro/{bug_id}_verify.sh
+
+        - name: check_regression
+          action: run_related_tests
+
+        - name: update_issue
+          action: add_verification_comment
+          if_passed: recommend_close
+
+        - name: update_metrics
+          action: record_resolution_time
+
+  examples:
+    - name: Test Failure Automation
+      input: "pytest output shows test_model_routing failed with AssertionError"
+      expected_output: |
+        ## Bug Automation Execution
+
+        ### Detection
+        - Type: Test Failure
+        - Test: test_orchestrator.py::test_model_routing
+        - Severity: High
+
+        ### Actions Taken
+        1. Created GitHub Issue #789
+           - Title: [Test Failure] test_model_routing - AssertionError
+           - Labels: bug, test-failure, auto-generated, priority-high
+           - Assigned: @backend-team
+
+        2. Generated Reproduction Script
+           - Location: scripts/bug_repro/BUG-789.sh
+           - Includes environment setup and isolated test run
+
+        3. Linked to CI Run
+           - Build: #1234
+           - Commit: abc123
+
+        4. Notifications Sent
+           - Slack: #ci-alerts
+           - Email: backend-team@company.com
+
+        5. Dashboard Updated
+           - Added to Bug Tracking project
+           - SLA: 72h resolution
+
+    - name: Security Vulnerability Response
+      input: "Bandit scan found SQL injection vulnerability in user_handler.py:45"
+      expected_output: |
+        ## URGENT: Security Bug Created
+
+        ### Detection
+        - Type: SQL Injection (CWE-89)
+        - File: src/admin/user_handler.py:45
+        - Severity: CRITICAL
+        - Scanner: Bandit
+
+        ### Actions Taken
+        1. Created URGENT GitHub Issue #790
+           - Title: [SECURITY-CRITICAL] SQL Injection in user_handler.py
+           - Labels: security, critical, auto-generated, priority-critical
+           - Assigned: @security-team
+
+        2. Notifications Sent (IMMEDIATE)
+           - Slack: #security-alerts (HIGH PRIORITY)
+           - Email: security-team@company.com
+           - PagerDuty: On-call security engineer
+
+        3. SLA Set
+           - Response Required: 1 hour
+           - Resolution Required: 24 hours
+
+        4. Recommended Actions in Issue
+           - Use parameterized queries
+           - Review related endpoints
+           - Security audit of module
+
+        ### REQUIRES IMMEDIATE ATTENTION

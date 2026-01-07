@@ -1,0 +1,247 @@
+---
+# Agent Settings Configuration
+# This file controls agent behavior, enabling/disabling agents, and global settings
+# Version: 1.0.0
+# Last Updated: 2026-01-07
+---
+
+settings:
+  # Global agent settings
+  global:
+    # Default timeout for agent operations (seconds)
+    default_timeout: 300
+
+    # Maximum delegation depth for all agents
+    max_delegation_depth: 3
+
+    # Enable/disable all agent metrics collection
+    metrics_enabled: true
+
+    # Log level for agent operations
+    log_level: INFO
+
+    # Enable parallel agent execution where supported
+    parallel_execution: true
+
+  # Individual agent toggles and configurations
+  agents:
+    # ============================================
+    # APPROVER AGENT - The Single Approver
+    # ============================================
+    approver_agent:
+      # ENABLED BY DEFAULT - This agent is on by default
+      # Set to false to disable approval workflows
+      enabled: true
+
+      # Approval workflow settings
+      auto_approve_quality_gates: true
+      block_merge_on_failure: true
+
+      # Coverage enforcement
+      coverage:
+        enabled: true
+        target: 90
+        warning_threshold: 85
+        critical_threshold: 80
+        enforcement_mode: strict  # strict | warn | disabled
+
+      # Sub-agent settings
+      subagents:
+        coverage_analyst:
+          enabled: true
+          auto_spawn: true
+
+        documentation_validator:
+          enabled: true
+          auto_spawn: true
+
+        index_manager:
+          enabled: true
+          auto_spawn: true
+          update_on_file_change: true
+
+        test_reviewer:
+          enabled: true
+          auto_spawn: true
+          minimum_quality_score: 70
+
+        bug_automation_agent:
+          enabled: true
+          auto_spawn: true
+          auto_create_issues: true
+          notify_on_critical: true
+
+        requirements_tracker:
+          enabled: true
+          auto_spawn: false  # Manual trigger only
+
+      # Notification settings
+      notifications:
+        slack_webhook: ""  # Set via environment variable
+        email_recipients: []
+        on_approval: true
+        on_rejection: true
+        on_coverage_drop: true
+
+    # ============================================
+    # ENGINEERING AGENT
+    # ============================================
+    engineering_agent:
+      enabled: true
+      subagents:
+        system_architect:
+          enabled: true
+        api_designer:
+          enabled: true
+        backend_developer:
+          enabled: true
+        frontend_developer:
+          enabled: true
+        database_administrator:
+          enabled: true
+        devops_engineer:
+          enabled: true
+        security_engineer:
+          enabled: true
+        testing_qa_specialist:
+          enabled: true
+
+    # ============================================
+    # PRODUCT AGENT
+    # ============================================
+    product_agent:
+      enabled: true
+
+    # ============================================
+    # PROJECT AGENT
+    # ============================================
+    project_agent:
+      enabled: true
+
+    # ============================================
+    # RESEARCH AGENT
+    # ============================================
+    research_agent:
+      enabled: true
+
+    # ============================================
+    # PROMPT ARCHITECT AGENT
+    # ============================================
+    prompt_architect_agent:
+      enabled: true
+
+    # ============================================
+    # BUG AUTOMATION AGENT (Standalone)
+    # TODO: Extend from approver subagent to full agent
+    # ============================================
+    bug_automation_agent:
+      enabled: true
+      standalone_mode: false  # Currently runs as approver subagent
+      auto_create_issues: true
+      sla_monitoring: true
+      escalation_enabled: true
+
+  # Quality gates configuration
+  quality_gates:
+    # Pre-commit checks
+    pre_commit:
+      lint: true
+      format: true
+      type_check: true
+      structure_validation: true
+
+    # CI/CD checks
+    ci:
+      unit_tests: true
+      integration_tests: true
+      coverage_check: true
+      security_scan: true
+      documentation_validation: true
+
+    # Merge requirements
+    merge:
+      require_approver_approval: true
+      require_passing_tests: true
+      require_coverage_threshold: true
+      require_review: true
+
+  # Testing configuration
+  testing:
+    # Coverage thresholds
+    coverage:
+      line: 90
+      branch: 85
+      function: 95
+
+    # Test execution settings
+    execution:
+      parallel: true
+      timeout_per_test: 60
+      retry_flaky: 2
+      fail_fast: false
+
+    # Test markers
+    markers:
+      critical_first: true
+      skip_slow_in_quick: true
+
+  # Documentation configuration
+  documentation:
+    # Validation settings
+    validation:
+      check_links: true
+      check_code_examples: true
+      check_diagrams: true
+      check_style: true
+
+    # Auto-update settings
+    auto_update:
+      project_index: true
+      api_docs: false  # Requires manual trigger
+      changelog: false
+
+  # File tracking configuration
+  file_tracking:
+    enabled: true
+    index_location: PROJECT_INDEX.md
+    tracking_directory: .file_tracking/
+    ignore_patterns:
+      - "*.pyc"
+      - "__pycache__/"
+      - ".git/"
+      - ".venv/"
+      - "node_modules/"
+      - "*.egg-info/"
+
+  # Bug tracking configuration
+  bug_tracking:
+    enabled: true
+    auto_create_issues: true
+    platform: github
+    labels:
+      default:
+        - auto-generated
+      by_type:
+        test_failure:
+          - bug
+          - test-failure
+        coverage_drop:
+          - bug
+          - coverage
+        security:
+          - security
+          - priority-critical
+    sla:
+      critical: 24h
+      high: 72h
+      medium: 168h  # 1 week
+      low: 336h     # 2 weeks
+
+# Environment variable overrides
+# These can be set to override YAML settings
+env_overrides:
+  LATTICE_APPROVER_ENABLED: settings.agents.approver_agent.enabled
+  LATTICE_COVERAGE_TARGET: settings.agents.approver_agent.coverage.target
+  LATTICE_COVERAGE_MODE: settings.agents.approver_agent.coverage.enforcement_mode
+  LATTICE_AUTO_CREATE_BUGS: settings.bug_tracking.auto_create_issues
+  LATTICE_METRICS_ENABLED: settings.global.metrics_enabled

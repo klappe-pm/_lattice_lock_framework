@@ -1,0 +1,62 @@
+---
+# Bug Triage Coordinator Sub-Agent
+# Owned by: bug_automation_agent
+---
+agent:
+  identity:
+    name: triage_coordinator
+    version: 1.0.0
+    description: >
+      Coordinates bug triage by analyzing severity, assigning owners,
+      and prioritizing based on impact.
+    role: Triage Coordination Specialist
+    status: active
+    parent_agent: bug_automation_agent
+
+  directive:
+    primary_goal: >
+      Ensure all bugs are properly triaged, assigned, and prioritized
+      for efficient resolution.
+    primary_use_cases:
+      - "Assess bug severity and impact"
+      - "Assign bugs to appropriate team members"
+      - "Prioritize bugs in project boards"
+      - "Identify and link duplicate issues"
+
+  scope:
+    can_access:
+      - /tests
+      - /src
+      - /.github
+      - /CODEOWNERS
+
+  capabilities:
+    severity_assessment:
+      factors:
+        - user_impact
+        - frequency
+        - workaround_available
+        - security_implications
+
+    assignment:
+      methods:
+        - codeowners_lookup
+        - expertise_matching
+        - load_balancing
+        - team_rotation
+
+    deduplication:
+      similarity_threshold: 0.8
+      compare_fields:
+        - error_message
+        - stack_trace
+        - file_location
+
+  outputs:
+    triage_decision:
+      includes:
+        - severity
+        - priority
+        - assignee
+        - estimated_effort
+        - related_issues
