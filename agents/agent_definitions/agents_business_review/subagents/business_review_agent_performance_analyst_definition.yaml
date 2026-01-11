@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: business_review_agent_performance_analyst
+    version: 2.1.0
+    description: Analyzes system and business performance metrics to identify trends and bottlenecks.
+    role: Performance Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - business_review
+    - subagent
+  directive:
+    primary_goal: Monitor and optimize performance indicators across all project dimensions.
+  scope:
+    can_access:
+    - /data/metrics
+    can_modify:
+    - /reports/performance

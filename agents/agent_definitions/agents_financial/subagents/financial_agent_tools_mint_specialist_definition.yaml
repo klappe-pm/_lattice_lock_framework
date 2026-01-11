@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tools_mint_specialist
+    version: 1.0.0
+    description: Specializes in Mint/Credit Karma integration for account aggregation and financial tracking.
+    role: Subagent - Tools & Automation - Mint Specialist
+    tags:
+      - subagent
+      - financial
+      - tools
+      - mint
+      - aggregation
+  directive:
+    primary_goal: Manage Mint integration for comprehensive account aggregation and financial overview.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/financial/integrations/mint
+      - /data/accounts/aggregated
+      - /data/transactions
+  inheritance:
+    extends: base_agent_v2.1

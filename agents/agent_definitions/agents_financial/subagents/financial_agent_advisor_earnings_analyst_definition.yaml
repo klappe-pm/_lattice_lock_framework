@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_advisor_earnings_analyst
+    version: 1.0.0
+    description: Specialist in analyzing company earnings reports and forecasts.
+    role: Earnings Analyst
+    tags:
+    - financial
+    - advisor
+    - research
+    - earnings
+    - subagent
+  directive:
+    primary_goal: Evaluate corporate earnings performance, guidance, and historical trends to inform valuation models.
+  scope:
+    can_access:
+    - /data/financial/markets/filings/earnings
+    can_modify:
+    - /data/financial/advisor/analysis/earnings
+  inheritance:
+    extends: base_agent_v2.1

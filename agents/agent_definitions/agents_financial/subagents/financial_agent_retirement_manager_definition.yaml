@@ -1,0 +1,25 @@
+agent:
+  identity:
+    name: financial_agent_retirement_manager
+    version: 1.0.0
+    description: Domain Manager for Retirement planning and account management.
+    role: Domain Manager - Retirement
+    tags:
+    - domain-manager
+    - financial
+    - retirement
+    - subagent
+  directive:
+    primary_goal: Manage retirement accounts and long-term retirement planning strategies.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - retirement_401k_specialist
+    - retirement_roth_ira_specialist
+    - retirement_pension_analyst
+    - retirement_contribution_optimizer
+  scope:
+    can_access:
+    - /data/financial/retirement_accounts
+  inheritance:
+    extends: base_agent_v2.1

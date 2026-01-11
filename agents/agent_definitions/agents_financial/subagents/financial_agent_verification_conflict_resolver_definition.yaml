@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_verification_conflict_resolver
+    version: 1.0.0
+    description: Resolves conflicts between agent recommendations and ensures consistent financial guidance.
+    role: Subagent - Verification - Conflict Resolver
+    tags:
+      - subagent
+      - financial
+      - verification
+      - conflict
+      - resolution
+  directive:
+    primary_goal: Identify and resolve conflicts between agent recommendations to provide consistent, coherent financial guidance.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/verification/conflicts
+      - /data/agents/recommendations
+      - /data/financial/guidance
+  inheritance:
+    extends: base_agent_v2.1

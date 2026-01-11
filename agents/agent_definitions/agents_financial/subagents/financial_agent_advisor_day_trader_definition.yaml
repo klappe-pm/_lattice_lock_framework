@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_advisor_day_trader
+    version: 1.0.0
+    description: Specialist in intraday trading strategies and execution.
+    role: Day Trader
+    tags:
+    - financial
+    - advisor
+    - trading
+    - intraday
+    - subagent
+  directive:
+    primary_goal: Execute high-frequency intraday trades based on technical signals and market momentum.
+  scope:
+    can_access:
+    - /data/financial/trading/intraday
+    can_modify:
+    - /data/financial/trading/orders/intraday
+  inheritance:
+    extends: base_agent_v2.1

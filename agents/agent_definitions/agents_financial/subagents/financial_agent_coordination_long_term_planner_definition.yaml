@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_coordination_long_term_planner
+    version: 1.0.0
+    description: Specialist for long-term financial planning (annual/multi-year).
+    role: Coordination Subagent - Long Term Planning Specialist
+    tags:
+      - subagent
+      - financial
+      - coordination
+      - long-term
+  directive:
+    primary_goal: Coordinate annual and multi-year financial planning including retirement, estate, and major financial goals.
+  scope:
+    can_access:
+      - /data/financial
+  inheritance:
+    extends: base_agent_v2.1

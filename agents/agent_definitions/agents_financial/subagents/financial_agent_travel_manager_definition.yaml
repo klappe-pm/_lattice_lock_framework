@@ -1,0 +1,35 @@
+agent:
+  identity:
+    name: financial_agent_travel_manager
+    version: 1.0.0
+    description: Domain Manager for Travel planning, budgeting, and expense management.
+    role: Domain Manager - Travel
+    status: active
+    tags:
+    - domain-manager
+    - financial
+    - travel
+    - subagent
+  directive:
+    primary_goal: Plan travel logistics and manage travel-related expenses through specialized subagents.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - travel_budget_analyst
+    - travel_trip_planner
+    - travel_flight_search_specialist
+    - travel_hotel_search_specialist
+    - travel_car_rental_specialist
+    - travel_vacation_rental_specialist
+    - travel_insurance_specialist
+    - travel_expense_tracker
+    - travel_reimbursement_specialist
+  scope:
+    can_access:
+    - /data/financial/travel_plans
+    - /data/financial/loyalty_programs
+    - /data/financial/travel_expenses
+    can_modify:
+    - /data/financial/travel_plans
+  inheritance:
+    extends: base_agent_v2.1

@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tools_ynab_specialist
+    version: 1.0.0
+    description: Specializes in You Need A Budget (YNAB) integration, API connectivity, and budget synchronization.
+    role: Subagent - Tools & Automation - YNAB Specialist
+    tags:
+      - subagent
+      - financial
+      - tools
+      - ynab
+      - budgeting
+  directive:
+    primary_goal: Manage YNAB integration for seamless budget tracking and transaction synchronization.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/financial/integrations/ynab
+      - /data/budgets
+      - /data/transactions
+  inheritance:
+    extends: base_agent_v2.1

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_verification_data_validator
+    version: 2.1.0
+    description: Data validator ensuring accuracy of all financial data.
+    role: Data Validator
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Validate accuracy of financial data across all systems.
+  scope:
+    can_access:
+    - /financial
+    can_modify:
+    - /financial/verification/validation

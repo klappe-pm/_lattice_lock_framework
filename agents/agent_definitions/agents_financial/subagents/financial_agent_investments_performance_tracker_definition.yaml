@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_investments_performance_tracker
+    version: 2.1.0
+    description: Investment performance tracker measuring returns against benchmarks.
+    role: Performance Tracker
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track and report investment performance against appropriate benchmarks.
+  scope:
+    can_access:
+    - /financial/investments
+    can_modify:
+    - /financial/investments/performance-tracking

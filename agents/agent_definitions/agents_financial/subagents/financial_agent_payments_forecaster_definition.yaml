@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_payments_forecaster
+    version: 2.1.0
+    description: Payment forecaster predicting upcoming bills and cash flow needs.
+    role: Payment Forecaster
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Forecast upcoming payments and cash flow requirements.
+  scope:
+    can_access:
+    - /financial/payments
+    can_modify:
+    - /financial/payments/forecasts

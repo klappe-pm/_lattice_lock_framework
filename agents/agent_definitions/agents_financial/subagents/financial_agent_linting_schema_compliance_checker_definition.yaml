@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_linting_schema_compliance_checker
+    version: 1.0.0
+    description: Validates agent definitions against the required schema, ensuring all mandatory fields are present and correctly typed.
+    role: Subagent - Linting - Schema Compliance Checker
+    tags:
+      - subagent
+      - financial
+      - linting
+      - schema
+      - compliance
+  directive:
+    primary_goal: Verify all agent definitions comply with the framework's agent schema requirements.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /agents/definitions
+      - /schemas/agent
+      - /validation/schema_errors
+  inheritance:
+    extends: base_agent_v2.1

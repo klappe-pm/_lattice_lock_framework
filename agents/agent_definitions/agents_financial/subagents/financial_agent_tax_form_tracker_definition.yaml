@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_tax_form_tracker
+    version: 2.1.0
+    description: Tax form tracker monitoring arrival and completeness of all tax forms (W-2, 1099s, K-1s, etc.).
+    role: Tax Form Tracker
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track and ensure receipt of all required tax forms.
+  scope:
+    can_access:
+    - /financial/tax/documents
+    can_modify:
+    - /financial/tax/form-tracking

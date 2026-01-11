@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_investments_municipal_bond_specialist
+    version: 2.1.0
+    description: Municipal bond specialist optimizing tax-exempt municipal bond holdings.
+    role: Municipal Bond Specialist
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Select and manage municipal bonds for tax-efficient income.
+  scope:
+    can_access:
+    - /financial/investments/municipal-bonds
+    can_modify:
+    - /financial/investments/muni-portfolio

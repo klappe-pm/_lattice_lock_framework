@@ -1,0 +1,70 @@
+agent:
+  identity:
+    name: financial_agent_statements_manager
+    version: 1.0.0
+    description: Domain Manager for Statements, overseeing paperless billing processing and analysis.
+    role: Statements Domain Manager
+    tags:
+    - manager
+    - statements
+    - financial
+    - subagent
+  configuration:
+    language: en-US
+    timezone: UTC
+    log_level: INFO
+    max_steps: 100
+  directive:
+    primary_goal: Process, categorize, and analyze all financial statements and bills.
+    primary_use_cases:
+    - Parse incoming statements automatically
+    - Categorize transactions across all accounts
+    - Detect anomalies and unusual charges
+    constraints:
+    - Maintain data accuracy
+    - Protect sensitive financial information
+  responsibilities:
+  - Delegate to specialized statement subagents
+  - Aggregate statement data for reporting
+  - Coordinate with other domains for reconciliation
+  scope:
+    can_access:
+    - /data/financial/statements
+    - /data/financial/bills
+    can_modify:
+    - /data/financial/statements/parsed
+    - /data/financial/reports/statements
+  planning:
+    enabled: true
+    default_strategy: hierarchical
+  delegation:
+    enabled: true
+    max_depth: 2
+    allowed_subagents:
+    - financial_agent_statements_parser
+    - financial_agent_statements_categorizer
+    - financial_agent_statements_data_extractor
+    - financial_agent_statements_ocr_specialist
+    - financial_agent_statements_reconciliation_specialist
+    - financial_agent_statements_electric_specialist
+    - financial_agent_statements_gas_specialist
+    - financial_agent_statements_water_sewer_specialist
+    - financial_agent_statements_garbage_specialist
+    - financial_agent_statements_internet_specialist
+    - financial_agent_statements_cell_phone_specialist
+    - financial_agent_statements_cable_streaming_specialist
+    - financial_agent_statements_credit_card_specialist
+    - financial_agent_statements_bank_specialist
+    - financial_agent_statements_brokerage_specialist
+    - financial_agent_statements_loan_specialist
+    - financial_agent_statements_mortgage_specialist
+    - financial_agent_statements_insurance_specialist
+    - financial_agent_statements_medical_bills_specialist
+    - financial_agent_statements_eob_specialist
+    - financial_agent_statements_subscription_tracker
+    - financial_agent_statements_recurring_charge_detector
+    - financial_agent_statements_usage_trend_analyst
+    - financial_agent_statements_cost_comparison_specialist
+    - financial_agent_statements_anomaly_detector
+  inheritance:
+    extends: base_agent_v2.1

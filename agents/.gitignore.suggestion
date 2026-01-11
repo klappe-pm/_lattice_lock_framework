@@ -1,0 +1,18 @@
+# Add these lines to your project's .gitignore
+# to exclude generated agent files
+
+# Generated Claude Code agents (can be regenerated from YAML sources)
+.claude/agents/
+
+# Generated Lattice Lock markdown archive
+# Option A: Exclude from git (can be regenerated)
+agents/markdown/
+
+# Option B: Commit to git for versioned documentation
+# (Comment out the line above if you want to track these files)
+
+# Python cache files from sync scripts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

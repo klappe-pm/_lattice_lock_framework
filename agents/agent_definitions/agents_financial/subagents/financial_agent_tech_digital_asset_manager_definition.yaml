@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tech_digital_asset_manager
+    version: 1.0.0
+    description: Manages digital assets including cryptocurrency wallets, NFTs, and digital account credentials securely.
+    role: Subagent - Tech & Security - Digital Asset Manager
+    tags:
+      - subagent
+      - financial
+      - technology
+      - digital_assets
+      - crypto
+  directive:
+    primary_goal: Securely manage and organize digital assets including cryptocurrencies, digital accounts, and related credentials.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/financial/digital_assets
+      - /data/crypto/wallets
+      - /data/security/digital_credentials
+  inheritance:
+    extends: base_agent_v2.1

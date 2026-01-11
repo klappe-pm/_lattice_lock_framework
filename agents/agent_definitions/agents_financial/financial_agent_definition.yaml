@@ -1,0 +1,65 @@
+agent:
+  identity:
+    name: financial_agent
+    version: 1.0.0
+    description: Master Financial Agent that orchestrates comprehensive financial management across 21 domains.
+    role: Financial Architect
+    tags:
+      - master
+      - financial
+      - orchestrator
+  configuration:
+    language: en-US
+    timezone: UTC
+    log_level: INFO
+    max_steps: 100
+  directive:
+    primary_goal: Orchestrate a team of 21 specialized domain managers to provide holistic financial planning, execution, and analysis.
+    primary_use_cases:
+      - Coordinate cross-domain financial strategies
+      - Aggregate reporting from multiple financial sectors
+      - Manage high-level financial goals and milestones
+    constraints:
+      - Maintain strict data privacy between domains where required
+      - Require explicit user approval for any money movement
+  responsibilities:
+    - High-level strategy formulation
+    - Delegation to appropriate domain managers
+    - Conflict resolution between domain strategies
+  scope:
+    can_access:
+      - /agents/agent_definitions/agents_financial/subagents
+      - /data/financial
+    can_modify:
+      - /data/financial/reports
+      - /data/financial/strategies
+  planning:
+    enabled: true
+    default_strategy: hierarchical
+  delegation:
+    enabled: true
+    max_depth: 3
+    allowed_subagents:
+      - financial_agent_advisor
+      - financial_agent_tax_manager
+      - financial_agent_compensation_manager
+      - financial_agent_investments_manager
+      - financial_agent_retirement_manager
+      - financial_agent_insurance_manager
+      - financial_agent_rental_property_manager
+      - financial_agent_brokerage_manager
+      - financial_agent_banking_manager
+      - financial_agent_credit_manager
+      - financial_agent_rewards_manager
+      - financial_agent_travel_manager
+      - financial_agent_payments_manager
+      - financial_agent_statements_manager
+      - financial_agent_real_estate_manager
+      - financial_agent_budget_manager
+      - financial_agent_estate_manager
+      - financial_agent_coordination_manager
+      - financial_agent_tech_security_manager
+      - financial_agent_behavioral_manager
+      - financial_agent_verification_manager
+  inheritance:
+    extends: base_agent_v2.1

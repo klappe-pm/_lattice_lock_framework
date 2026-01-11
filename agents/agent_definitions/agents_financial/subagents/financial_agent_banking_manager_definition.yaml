@@ -1,0 +1,25 @@
+agent:
+  identity:
+    name: financial_agent_banking_manager
+    version: 1.0.0
+    description: Domain Manager for Bank accounts and liquid assets.
+    role: Domain Manager - Banking
+    tags:
+    - domain-manager
+    - financial
+    - banking
+    - subagent
+  directive:
+    primary_goal: Manage checking, savings, and other bank accounts.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - banking_checking_specialist
+    - banking_savings_specialist
+    - banking_cd_specialist
+    - banking_wire_transfer_specialist
+  scope:
+    can_access:
+    - /data/financial/bank_accounts
+  inheritance:
+    extends: base_agent_v2.1

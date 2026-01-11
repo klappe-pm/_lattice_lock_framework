@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_premium_optimizer
+    version: 2.1.0
+    description: Insurance premium optimizer finding ways to reduce insurance costs.
+    role: Premium Optimizer
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Identify opportunities to reduce insurance premiums across all policies.
+  scope:
+    can_access:
+    - /financial/insurance
+    can_modify:
+    - /financial/insurance/premium-analysis
