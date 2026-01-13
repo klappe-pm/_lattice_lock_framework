@@ -53,27 +53,33 @@ class ModelGuideParser:
                         models = [m.strip() for m in match.group(2).split(">")]
                         rules["task_mappings"][task] = models
 
-        # Parse blocked models
+        # Parse blocked models (handles both single and double ### headers)
         blocked_section = re.search(
-            r"^### Blocked Models(.*?)^##", content, re.DOTALL | re.MULTILINE
+            r"### Blocked Models(.*?)(?:^##|^---|\Z)", content, re.DOTALL | re.MULTILINE
         )
         if blocked_section:
             lines = blocked_section.group(1).strip().split("\n")
             for line in lines:
-                if line.startswith("- "):
-                    model = line.split(":")[0].replace("- ", "").strip()
-                    rules["blocked_models"].append(model)
+                line = line.strip()
+                if line.startswith("- ") and not line.startswith("- **"):
+                    # Handle model names that may contain colons (e.g., codellama:34b)
+                    model = line[2:].strip()  # Remove "- " prefix
+                    if model and not model.startswith("#"):
+                        rules["blocked_models"].append(model)
 
-        # Parse fallback chains
-        fallback_section = re.search(r"### Fallback Chains(.*?)###", content, re.DOTALL)
+        # Parse fallback chains (supports both → and -> delimiters)
+        fallback_section = re.search(r"### Fallback Chains(.*?)(?:###|---|\Z)", content, re.DOTALL)
         if fallback_section:
             lines = fallback_section.group(1).strip().split("\n")
             for line in lines:
-                if "→" in line:
-                    parts = line.split(":")
+                # Support both → and -> as delimiters
+                if "→" in line or "->" in line:
+                    parts = line.split(":", 1)  # Split only on first colon
                     if len(parts) == 2:
                         task = parts[0].replace("- ", "").strip().lower()
-                        chain = [m.strip() for m in parts[1].split("→")]
+                        # Use appropriate delimiter
+                        delimiter = "→" if "→" in parts[1] else "->"
+                        chain = [m.strip() for m in parts[1].split(delimiter)]
                         rules["fallback_chains"][task] = chain
 
         return rules
