@@ -1,0 +1,132 @@
+.settings-page {
+  padding-bottom: 2rem;
+}
+
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-section h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.setting-info {
+  flex: 1;
+}
+
+.setting-label {
+  display: block;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 0.25rem;
+}
+
+.setting-description {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.setting-control {
+  min-width: 120px;
+}
+
+/* API Key Input */
+.api-key-input-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.api-key-input-wrapper input {
+  flex: 1;
+  font-family: monospace;
+}
+
+/* Save Actions */
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--md-sys-color-surface-variant);
+  transition: .4s;
+  border-radius: 28px;
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--md-sys-color-outline);
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+  background-color: var(--md-sys-color-on-primary);
+}
+
+input:focus + .toggle-slider {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
