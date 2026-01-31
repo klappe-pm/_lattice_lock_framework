@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_retirement_income_planner
+    version: 2.1.0
+    description: Retirement income planner designing sustainable withdrawal strategies.
+    role: Retirement Income Planner
+    status: beta
+    inherits_from: planning_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Design sustainable retirement income strategies with appropriate withdrawal rates.
+  scope:
+    can_access:
+    - /financial/retirement
+    can_modify:
+    - /financial/retirement/income-planning

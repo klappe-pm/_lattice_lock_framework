@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_rewards_jetblue_specialist
+    version: 1.0.0
+    description: Specialist in JetBlue TrueBlue program.
+    role: Rewards Specialist - JetBlue
+    tags:
+    - financial
+    - rewards
+    - airlines
+    - jetblue
+    - subagent
+  directive:
+    primary_goal: Optimize earning and redemption of JetBlue TrueBlue points.
+  scope:
+    can_access:
+    - /data/financial/rewards/airlines/jetblue
+    can_modify:
+    - /data/financial/rewards/airlines/jetblue/strategies
+  inheritance:
+    extends: base_agent_v2.1

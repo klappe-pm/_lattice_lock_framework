@@ -1,0 +1,29 @@
+agent:
+  identity:
+    name: financial_agent_linting_manager
+    version: 1.0.0
+    description: Orchestrates agent quality assurance, consistency checking, and rule applicability review across all financial agents.
+    role: Domain Manager - Agent Quality & Linting
+    tags:
+      - manager
+      - financial
+      - linting
+      - quality
+      - validation
+  directive:
+    primary_goal: Ensure all financial agents meet quality standards, follow conventions, and comply with framework rules.
+  delegation:
+    enabled: true
+    can_delegate_to:
+      - financial_agent_linting_*
+  scope:
+    can_access:
+      - /agents/definitions
+      - /agents/templates
+      - /rules
+      - /standards
+    can_modify:
+      - /agents/validation_reports
+      - /agents/quality_scores
+  inheritance:
+    extends: base_agent_v2.1

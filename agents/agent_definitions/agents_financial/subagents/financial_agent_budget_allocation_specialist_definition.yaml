@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_budget_allocation_specialist
+    version: 1.0.0
+    description: Specializes in allocating funds across budget categories.
+    role: Allocation Specialist
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize fund distribution across essential, discretionary, and savings categories.
+  scope:
+    can_access:
+    - /data/financial/budget/raw_data
+    can_modify:
+    - /data/financial/budget/allocations
+  inheritance:
+    extends: base_agent_v2.1

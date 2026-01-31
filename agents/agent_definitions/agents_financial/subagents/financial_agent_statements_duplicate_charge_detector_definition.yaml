@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_statements_duplicate_charge_detector
+    version: 1.0.0
+    description: Specializes in identifying duplicate or erroneous charges across statements.
+    role: Duplicate Charge Detector
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Flag potential double-billing or erroneous transactions for review.
+  scope:
+    can_access:
+    - /data/financial/statements/parsed
+    can_modify:
+    - /data/financial/statements/disputes
+  inheritance:
+    extends: base_agent_v2.1

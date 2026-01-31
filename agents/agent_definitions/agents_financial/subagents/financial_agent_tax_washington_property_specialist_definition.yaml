@@ -1,0 +1,22 @@
+agent:
+  identity:
+    name: financial_agent_tax_washington_property_specialist
+    version: 1.0.0
+    description: Specialist in Washington State property taxes.
+    role: Tax Specialist - WA Property
+    tags:
+    - financial
+    - tax
+    - state
+    - washington
+    - property
+    - subagent
+  directive:
+    primary_goal: Monitor and manage Washington state property tax assessments.
+  scope:
+    can_access:
+    - /data/financial/tax/state/wa_property
+    can_modify:
+    - /data/financial/tax/state/wa_property/records
+  inheritance:
+    extends: base_agent_v2.1

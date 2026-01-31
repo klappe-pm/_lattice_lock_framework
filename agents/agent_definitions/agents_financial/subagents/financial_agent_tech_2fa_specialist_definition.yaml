@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tech_2fa_specialist
+    version: 1.0.0
+    description: Manages two-factor authentication across financial accounts including hardware keys, authenticator apps, and backup codes.
+    role: Subagent - Tech & Security - Two Factor Authentication Specialist
+    tags:
+      - subagent
+      - financial
+      - technology
+      - security
+      - 2fa
+  directive:
+    primary_goal: Ensure comprehensive two-factor authentication protection for all financial accounts using industry-best methods.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/security/2fa
+      - /data/security/hardware_keys
+      - /data/financial/account_security
+  inheritance:
+    extends: base_agent_v2.1

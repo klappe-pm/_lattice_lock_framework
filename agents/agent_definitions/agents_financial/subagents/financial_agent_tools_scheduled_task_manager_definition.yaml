@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tools_scheduled_task_manager
+    version: 1.0.0
+    description: Manages scheduled financial tasks including recurring imports, syncs, reports, and maintenance operations.
+    role: Subagent - Tools & Automation - Scheduled Task Manager
+    tags:
+      - subagent
+      - financial
+      - tools
+      - scheduler
+      - tasks
+  directive:
+    primary_goal: Reliably execute scheduled financial tasks with proper error handling and retry logic.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/scheduler/tasks
+      - /data/scheduler/logs
+      - /data/scheduler/failures
+  inheritance:
+    extends: base_agent_v2.1

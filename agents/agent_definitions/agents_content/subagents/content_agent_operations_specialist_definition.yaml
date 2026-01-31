@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: content_agent_operations_specialist
+    version: 2.1.0
+    description: Coordinates content publishing schedules and team workflows.
+    role: Content Ops
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - content
+    - subagent
+  directive:
+    primary_goal: Maintain a steady content output through rigorous calendar management.
+  scope:
+    can_access:
+    - /content/calendar
+    can_modify:
+    - /content/calendar/published
+Sync: true

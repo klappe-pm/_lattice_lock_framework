@@ -1,0 +1,34 @@
+agent:
+  identity:
+    name: financial_agent_advisor
+    version: 1.0.0
+    description: Domain Manager for Financial Advisory services, including investment review, trading, calling analysts, and
+      strategy.
+    role: Domain Manager - Financial Advisor
+    tags:
+    - domain-manager
+    - financial
+    - advisory
+    - subagent
+  directive:
+    primary_goal: Manage specialized accounts and subagents related to investment advice, market analysis, and trading execution.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - advisor_investment_reviewer
+    - advisor_portfolio_reviewer
+    - advisor_day_trader
+    - advisor_stock_analyst
+    - advisor_strategy_architect
+    - advisor_research_analyst
+    - advisor_report_designer
+    - advisor_business_money_reviewer
+    - advisor_implementation_specialist
+    - advisor_financial_program_manager
+    - advisor_qa_specialist
+  scope:
+    can_access:
+    - /data/financial/investments
+    - /data/market_data
+  inheritance:
+    extends: base_agent_v2.1

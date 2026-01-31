@@ -1,0 +1,25 @@
+agent:
+  identity:
+    name: financial_agent_rental_property_manager
+    version: 1.0.0
+    description: Domain Manager for Rental Property management and financials.
+    role: Domain Manager - Rental Property
+    tags:
+    - domain-manager
+    - financial
+    - rental-property
+    - subagent
+  directive:
+    primary_goal: Oversee rental property operations, tenant management, and financial performance.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - rental_property_manager_liaison
+    - rental_tenant_screening_specialist
+    - rental_income_tracker
+    - rental_tax_specialist
+  scope:
+    can_access:
+    - /data/financial/rental_properties
+  inheritance:
+    extends: base_agent_v2.1

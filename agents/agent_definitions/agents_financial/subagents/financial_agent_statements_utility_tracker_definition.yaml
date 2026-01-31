@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_statements_utility_tracker
+    version: 2.1.0
+    description: Utility bill tracker managing electric, gas, water, and other utility statements.
+    role: Utility Tracker
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track utility bills and identify usage optimization opportunities.
+  scope:
+    can_access:
+    - /financial/statements/utilities
+    can_modify:
+    - /financial/statements/utility-tracking

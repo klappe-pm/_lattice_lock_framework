@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_retirement_401k_manager
+    version: 2.1.0
+    description: 401k manager overseeing employer 401k contributions, allocations, and optimization.
+    role: 401k Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize 401k contributions and investment allocations.
+  scope:
+    can_access:
+    - /financial/retirement/401k
+    can_modify:
+    - /financial/retirement/401k-planning

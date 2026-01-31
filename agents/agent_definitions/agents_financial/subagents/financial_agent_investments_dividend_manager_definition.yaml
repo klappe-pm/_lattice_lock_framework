@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_investments_dividend_manager
+    version: 2.1.0
+    description: Dividend manager optimizing dividend income and DRIP strategies.
+    role: Dividend Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Maximize dividend income and optimize reinvestment strategies.
+  scope:
+    can_access:
+    - /financial/investments/dividends
+    can_modify:
+    - /financial/investments/dividend-strategy

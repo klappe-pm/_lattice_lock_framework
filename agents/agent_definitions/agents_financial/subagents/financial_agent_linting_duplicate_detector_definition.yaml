@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_linting_duplicate_detector
+    version: 1.0.0
+    description: Detects duplicate or overlapping agent definitions, identifying redundant functionality and naming conflicts.
+    role: Subagent - Linting - Duplicate Detector
+    tags:
+      - subagent
+      - financial
+      - linting
+      - duplicates
+      - detection
+  directive:
+    primary_goal: Identify and report duplicate, overlapping, or redundant agent definitions across the framework.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /agents/definitions
+      - /validation/duplicate_reports
+      - /agents/similarity_index
+  inheritance:
+    extends: base_agent_v2.1

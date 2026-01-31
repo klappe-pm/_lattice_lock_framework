@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_comp_total_comp_analyst
+    version: 2.1.0
+    description: Total compensation analyst calculating complete compensation value across all components.
+    role: Total Compensation Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Calculate and analyze total compensation including salary, equity, benefits, and bonuses.
+  scope:
+    can_access:
+    - /financial/compensation
+    can_modify:
+    - /financial/compensation/total-analysis
