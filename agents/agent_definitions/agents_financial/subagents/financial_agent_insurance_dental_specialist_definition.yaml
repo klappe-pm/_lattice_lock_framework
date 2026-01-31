@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_dental_specialist
+    version: 1.0.0
+    description: Manages dental insurance coverage and claims.
+    role: Dental Insurance Specialist
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize dental coverage utilization and benefits maximization.
+  scope:
+    can_access:
+    - /data/financial/insurance/dental
+    can_modify:
+    - /data/financial/insurance/dental/recommendations

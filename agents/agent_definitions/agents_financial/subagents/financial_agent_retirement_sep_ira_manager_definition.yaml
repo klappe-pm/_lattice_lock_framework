@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_retirement_sep_ira_manager
+    version: 2.1.0
+    description: SEP IRA manager handling self-employment retirement contributions.
+    role: SEP IRA Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize SEP IRA contributions for self-employment income.
+  scope:
+    can_access:
+    - /financial/retirement/sep
+    - /financial/income/self-employment
+    can_modify:
+    - /financial/retirement/sep-ira

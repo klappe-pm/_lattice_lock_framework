@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_credit_card_manager
+    version: 2.1.0
+    description: Credit card manager overseeing all credit card accounts and strategies.
+    role: Credit Card Manager
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize credit card usage for rewards and cost management.
+  scope:
+    can_access:
+    - /financial/credit/cards
+    can_modify:
+    - /financial/credit/card-management

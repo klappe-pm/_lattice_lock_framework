@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: research_agent_data_analyst
+    version: 2.1.0
+    description: Processes and analyzes large research datasets to extract statistical patterns and insights.
+    role: Research Data Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - research
+    - subagent
+  directive:
+    primary_goal: Turn raw research data into statistically significant insights that validate hypotheses.
+  scope:
+    can_access:
+    - /research/datasets
+    can_modify:
+    - /research/analysis
+Sync: true

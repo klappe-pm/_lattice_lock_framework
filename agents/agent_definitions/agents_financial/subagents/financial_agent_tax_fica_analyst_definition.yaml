@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_tax_fica_analyst
+    version: 2.1.0
+    description: FICA analyst tracking Social Security and Medicare taxes across all income sources.
+    role: FICA Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track and optimize FICA tax obligations across employment.
+  scope:
+    can_access:
+    - /financial/payroll
+    - /financial/tax
+    can_modify:
+    - /financial/tax/fica-analysis

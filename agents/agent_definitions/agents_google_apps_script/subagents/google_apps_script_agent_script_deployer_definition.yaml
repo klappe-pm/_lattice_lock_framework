@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: google_apps_script_agent_script_deployer
+    version: 2.1.0
+    description: Handles the automated deployment of Google Apps Script projects to production environments.
+    role: Deployment Manager
+    status: beta
+    inherits_from: infrastructure_subagent_v2.1.yaml
+    tags:
+    - google_apps_script
+    - subagent
+  directive:
+    primary_goal: Ensure safe and reliable script deployments with automatic rollbacks.
+  scope:
+    can_access:
+    - /scripts/google_apps_script/releases
+    can_modify:
+    - /scripts/google_apps_script/deployments
+Sync: true

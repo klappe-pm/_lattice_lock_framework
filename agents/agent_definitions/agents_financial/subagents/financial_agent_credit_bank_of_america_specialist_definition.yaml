@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_credit_bank_of_america_specialist
+    version: 1.0.0
+    description: Specializes in Bank of America credit cards and Preferred Rewards.
+    role: Bank of America Specialist
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Maximize value from Bank of America products and Preferred Rewards bonuses.
+  scope:
+    can_access:
+    - /data/financial/credit/cards/bofa
+    can_modify:
+    - /data/financial/credit/cards/bofa/recommendations

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_coverage_gap_analyst
+    version: 2.1.0
+    description: Coverage gap analyst identifying gaps and overlaps in insurance coverage.
+    role: Coverage Gap Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Identify coverage gaps and redundancies across all insurance policies.
+  scope:
+    can_access:
+    - /financial/insurance
+    can_modify:
+    - /financial/insurance/gap-analysis

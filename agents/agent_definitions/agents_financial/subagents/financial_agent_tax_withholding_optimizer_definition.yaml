@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_tax_withholding_optimizer
+    version: 2.1.0
+    description: Withholding optimizer adjusting W-4 settings for optimal tax withholding.
+    role: Withholding Optimizer
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize tax withholding to avoid underpayment penalties and excessive refunds.
+  scope:
+    can_access:
+    - /financial/payroll
+    - /financial/tax
+    can_modify:
+    - /financial/tax/withholding

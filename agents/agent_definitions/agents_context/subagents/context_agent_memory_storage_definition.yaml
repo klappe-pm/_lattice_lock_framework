@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: context_agent_memory_storage
+    version: 2.1.0
+    description: Manages physical and virtual storage backends for agent memory and conversation logs.
+    role: Storage Administrator
+    status: beta
+    inherits_from: memory_subagent_v2.1.yaml
+    tags:
+    - context
+    - subagent
+  directive:
+    primary_goal: Ensure data persistence, backup integrity, and fast I/O for memory files.
+  scope:
+    can_access:
+    - /docs
+    - /src
+Sync: true

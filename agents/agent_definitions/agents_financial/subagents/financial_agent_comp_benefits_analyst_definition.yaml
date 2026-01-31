@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_comp_benefits_analyst
+    version: 2.1.0
+    description: Benefits analyst evaluating employer benefits value and optimization.
+    role: Benefits Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Analyze and optimize employer-provided benefits utilization.
+  scope:
+    can_access:
+    - /financial/compensation/benefits
+    can_modify:
+    - /financial/compensation/benefits-analysis

@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_statements_streaming_specialist
+    version: 1.0.0
+    description: Specializes in analyzing streaming service and digital content statements.
+    role: Streaming Specialist
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track subscription costs and plan changes for streaming services.
+  scope:
+    can_access:
+    - /data/financial/statements/utilities/streaming
+    can_modify:
+    - /data/financial/statements/utilities/streaming/analysis
+  inheritance:
+    extends: base_agent_v2.1

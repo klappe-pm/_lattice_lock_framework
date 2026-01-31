@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_statements_medical_bill_specialist
+    version: 1.0.0
+    description: Specializes in analyzing medical and healthcare facility statements.
+    role: Medical Bill Specialist
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Extract service dates, CPT codes, and billing amounts from medical statements.
+  scope:
+    can_access:
+    - /data/financial/statements/medical
+    can_modify:
+    - /data/financial/statements/medical/analysis
+  inheritance:
+    extends: base_agent_v2.1

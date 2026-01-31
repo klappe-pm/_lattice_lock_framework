@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_banking_fee_minimizer
+    version: 2.1.0
+    description: Banking fee minimizer identifying and eliminating unnecessary fees.
+    role: Fee Minimizer
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Identify and eliminate unnecessary banking fees.
+  scope:
+    can_access:
+    - /financial/banking
+    can_modify:
+    - /financial/banking/fee-analysis

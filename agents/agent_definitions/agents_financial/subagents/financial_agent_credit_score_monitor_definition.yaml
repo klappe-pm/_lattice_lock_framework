@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_credit_score_monitor
+    version: 2.1.0
+    description: Credit score monitor tracking credit scores across all bureaus.
+    role: Credit Score Monitor
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Monitor and protect credit scores across all credit bureaus.
+  scope:
+    can_access:
+    - /financial/credit/scores
+    can_modify:
+    - /financial/credit/score-monitoring

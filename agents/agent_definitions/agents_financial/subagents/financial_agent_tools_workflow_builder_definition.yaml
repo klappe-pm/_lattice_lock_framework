@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tools_workflow_builder
+    version: 1.0.0
+    description: Creates and manages custom financial automation workflows with conditional logic and multi-step processes.
+    role: Subagent - Tools & Automation - Workflow Builder
+    tags:
+      - subagent
+      - financial
+      - tools
+      - workflow
+      - builder
+  directive:
+    primary_goal: Design and implement custom financial workflows that automate complex multi-step processes.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/workflows/definitions
+      - /data/workflows/executions
+      - /data/automation/rules
+  inheritance:
+    extends: base_agent_v2.1

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_retirement_401k_specialist
+    version: 1.0.0
+    description: Specialist for 401k account management and optimization.
+    role: Retirement Subagent - 401k Specialist
+    tags:
+      - subagent
+      - financial
+      - retirement
+      - 401k
+  directive:
+    primary_goal: Manage 401k accounts, track contributions, and optimize investment selections within employer plans.
+  scope:
+    can_access:
+      - /data/financial/retirement_accounts/401k
+  inheritance:
+    extends: base_agent_v2.1

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_life_policy_summarizer
+    version: 1.0.0
+    description: Creates concise summaries of life insurance policies.
+    role: Life Policy Summarizer
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Generate easy-to-understand policy summaries for quick reference.
+  scope:
+    can_access:
+    - /data/financial/insurance/life
+    can_modify:
+    - /data/financial/insurance/life/summaries

@@ -1,0 +1,187 @@
+{
+  "project": {
+    "name": "Lattice Lock Framework - Agents",
+    "generated": "2026-01-10",
+    "version": "2.1",
+    "purpose": "AI agent definition and sync system for Claude Code"
+  },
+  "stats": {
+    "total_agents": 762,
+    "domains": 16,
+    "python_scripts": 2,
+    "documentation_files": 28,
+    "yaml_config_files": 9
+  },
+  "entry_points": {
+    "cli": {
+      "file": "sync_agents_to_claude.py",
+      "purpose": "Convert YAML agents to Claude Code markdown format",
+      "usage": "python3 sync_agents_to_claude.py"
+    },
+    "watcher": {
+      "file": "watch_and_sync.py",
+      "purpose": "Auto-sync on file changes",
+      "usage": "python3 watch_and_sync.py"
+    },
+    "makefile": {
+      "commands": ["install", "sync", "watch", "clean"]
+    }
+  },
+  "domains": {
+    "agents_financial": {
+      "count": 645,
+      "description": "Trading, analysis, insurance, advisors",
+      "has_subagents": true
+    },
+    "agents_product_management": {
+      "count": 23,
+      "description": "Strategists, analysts, designers",
+      "has_subagents": true
+    },
+    "agents_ux": {
+      "count": 16,
+      "description": "Designers, testers, accessibility",
+      "has_subagents": true
+    },
+    "agents_content": {
+      "count": 14,
+      "description": "Writers, editors, SEO, localization",
+      "has_subagents": true
+    },
+    "agents_engineering": {
+      "count": 9,
+      "description": "Frontend, backend, DevOps, security",
+      "has_subagents": true
+    },
+    "agents_business_review": {
+      "count": 9,
+      "description": "OKR, risk, competitive intel",
+      "has_subagents": true
+    },
+    "agents_google_apps_script": {
+      "count": 9,
+      "description": "Script development, deployment, testing",
+      "has_subagents": true
+    },
+    "agents_research": {
+      "count": 8,
+      "description": "Market, user, competitive research",
+      "has_subagents": true
+    },
+    "agents_context": {
+      "count": 7,
+      "description": "Memory, synthesis, validation",
+      "has_subagents": true
+    },
+    "agents_project_management": {
+      "count": 5,
+      "description": "Planning, status, tasks",
+      "has_subagents": true
+    },
+    "agents_prompt_architect": {
+      "count": 5,
+      "description": "Spec analysis, tool matching",
+      "has_subagents": true
+    },
+    "agents_cloud": {
+      "count": 4,
+      "description": "AWS, Azure, GCP specialists",
+      "has_subagents": true
+    },
+    "agents_education": {
+      "count": 4,
+      "description": "Curriculum, training",
+      "has_subagents": true
+    },
+    "agents_public_relations": {
+      "count": 3,
+      "description": "Press, advertising",
+      "has_subagents": true
+    },
+    "agents_model_orchestration": {
+      "count": 1,
+      "description": "LLM routing and selection",
+      "has_subagents": false
+    },
+    "agents_glossary": {
+      "count": 0,
+      "description": "Specifications and format documentation",
+      "has_subagents": false
+    }
+  },
+  "core_modules": {
+    "AgentConverter": {
+      "file": "sync_agents_to_claude.py",
+      "lines": "50-238",
+      "methods": ["to_claude_code_format", "to_lattice_lock_format"]
+    },
+    "AgentSyncer": {
+      "file": "sync_agents_to_claude.py",
+      "lines": "259-370",
+      "purpose": "Orchestrates sync across targets"
+    },
+    "SyncTarget": {
+      "file": "sync_agents_to_claude.py",
+      "lines": "25-47",
+      "purpose": "Dataclass for sync destinations"
+    }
+  },
+  "directories": {
+    "agent_definitions": "Source YAML agent files",
+    "agent_diagrams": "Mermaid workflow diagrams",
+    "agent_memory": "Memory directive specifications",
+    "agent_workflows": "Execution patterns",
+    "agents_config": "Inheritance and mixins",
+    "templates_agents": "Base templates and guides"
+  },
+  "documentation": {
+    "quickstart": "QUICKSTART.md",
+    "full_docs": "SYNC_README.md",
+    "extending": "EXTENDING.md",
+    "architecture": "SYSTEM_OVERVIEW.md",
+    "glossary": "glossary.md",
+    "agent_spec": "agent_definitions/agents_glossary/agent_instructions_file_format.md"
+  },
+  "dependencies": {
+    "pyyaml": ">=6.0",
+    "watchdog": ">=3.0"
+  },
+  "agent_yaml_structure": {
+    "sections": [
+      "identity",
+      "configuration",
+      "directive",
+      "responsibilities",
+      "scope",
+      "context",
+      "planning",
+      "estimation",
+      "model_selection",
+      "delegation",
+      "sub_agents",
+      "workflow",
+      "output",
+      "error_handling",
+      "interaction",
+      "metrics",
+      "guardrails",
+      "examples",
+      "metadata"
+    ],
+    "version": "2.1"
+  },
+  "sync_targets": {
+    "claude_project": {
+      "path": "../.claude/agents/",
+      "format": "claude_code"
+    },
+    "claude_user": {
+      "path": "~/.claude/agents/",
+      "format": "claude_code"
+    },
+    "lattice_lock": {
+      "path": "markdown/",
+      "format": "documentation"
+    }
+  }
+}

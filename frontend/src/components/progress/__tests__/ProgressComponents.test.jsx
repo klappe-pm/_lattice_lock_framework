@@ -1,75 +1,64 @@
-import { describe, it, expect } from 'vitest';
-import { createMockTask } from '../../../test/utils';
+import { describe, it, expect, vi } from 'vitest';
+import { createMockTask, renderWithProviders, screen } from '../../../test/utils';
+import TaskList from '../TaskList';
+import { useProgressStore } from '../../../store';
 
-/**
- * Example test template for Progress components
- * 
- * This serves as a template for testing progress-related components.
- * Adapt this structure for actual components as they are created.
- */
-
-describe('ProgressBar Component (Template)', () => {
-  it('should render progress bar with percentage', () => {
-    // Template: Render progress bar
-    // renderWithProviders(<ProgressBar progress={50} />);
-    // expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
-    expect(true).toBe(true); // Placeholder
-  });
-
-  it('should update progress smoothly', async () => {
-    // Template: Test progress updates
-    expect(true).toBe(true); // Placeholder
-  });
-
-  it('should show completion state', () => {
-    // Template: Test 100% completion state
-    expect(true).toBe(true); // Placeholder
-  });
+vi.mock('../../../store', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useProgressStore: vi.fn(),
+  };
 });
 
-describe('TaskProgress Component (Template)', () => {
-  const mockTask = createMockTask({
-    id: '1',
-    name: 'Test Task',
-    status: 'running',
-    progress: 45,
+describe('TaskList', () => {
+  it('should render empty state when no tasks', () => {
+    // Mock empty store
+    useProgressStore.mockReturnValue({
+      tasks: [],
+      tokenUsage: { total: 0 },
+      cost: 0
+    });
+    
+    renderWithProviders(<TaskList />);
+    expect(screen.getByText(/No tasks yet/i)).toBeInTheDocument();
   });
 
-  it('should render task name and progress', () => {
-    // Template: Verify task details are displayed
-    expect(true).toBe(true); // Placeholder
+  it('should render list of tasks', () => {
+    const tasks = [
+      createMockTask({ id: '1', name: 'Task 1', status: 'completed' }),
+      createMockTask({ id: '2', name: 'Task 2', status: 'running' }),
+    ];
+
+    useProgressStore.mockReturnValue({
+      tasks,
+      tokenUsage: { total: 100 },
+      cost: 0.001
+    });
+
+    renderWithProviders(<TaskList />);
+    
+    expect(screen.getByText('Task 1')).toBeInTheDocument();
+    expect(screen.getByText('Task 2')).toBeInTheDocument();
   });
 
-  it('should update in real-time', async () => {
-    // Template: Test real-time progress updates (with mocked WebSocket/SSE)
-    expect(true).toBe(true); // Placeholder
-  });
+  it('should show progress bar for running tasks', () => {
+    const task = createMockTask({ status: 'running', progress: 50 });
+    
+    useProgressStore.mockReturnValue({
+      tasks: [task],
+      tokenUsage: { total: 50 },
+      cost: 0.0005
+    });
 
-  it('should show different states (pending, running, completed, failed)', () => {
-    // Template: Test all task states
-    expect(true).toBe(true); // Placeholder
-  });
-});
-
-describe('ProgressTimeline Component (Template)', () => {
-  const mockSteps = [
-    { id: '1', name: 'Initialize', status: 'completed', timestamp: '2024-01-01T00:00:00Z' },
-    { id: '2', name: 'Process', status: 'running', timestamp: '2024-01-01T00:01:00Z' },
-    { id: '3', name: 'Finalize', status: 'pending', timestamp: null },
-  ];
-
-  it('should render timeline steps', () => {
-    // Template: Verify timeline rendering
-    expect(true).toBe(true); // Placeholder
-  });
-
-  it('should highlight current step', () => {
-    // Template: Verify active step is highlighted
-    expect(true).toBe(true); // Placeholder
-  });
-
-  it('should show step duration', () => {
-    // Template: Verify duration is calculated and displayed
-    expect(true).toBe(true); // Placeholder
+    renderWithProviders(<TaskList />);
+    
+    // TaskList calculates overall progress based on completed/total count, 
+    // so 1 running task = 0% overall progress.
+    // Individual task component shows indeterminate bar for running state, no text percentage.
+    expect(screen.getByText('Test Task')).toBeInTheDocument();
+    // Verify progress bar container exists
+    const progressBars = document.getElementsByClassName('progress-linear-indeterminate');
+    expect(progressBars.length).toBeGreaterThan(0); 
   });
 });

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_retirement_pension_specialist
+    version: 2.1.0
+    description: Pension specialist evaluating pension benefits, options, and payout strategies.
+    role: Pension Specialist
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Analyze pension options and optimize payout election decisions.
+  scope:
+    can_access:
+    - /financial/retirement/pension
+    can_modify:
+    - /financial/retirement/pension-planning

@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_compensation_bonus_forecaster
+    version: 2.1.0
+    description: Bonus forecaster projecting expected bonus payments and timing.
+    role: Bonus Forecaster
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Forecast bonus payments for financial planning purposes.
+  scope:
+    can_access:
+    - /financial/compensation/bonus
+    can_modify:
+    - /financial/compensation/bonus-forecasts

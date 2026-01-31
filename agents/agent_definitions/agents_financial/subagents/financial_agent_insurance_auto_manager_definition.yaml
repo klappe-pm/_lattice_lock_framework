@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_auto_manager
+    version: 2.1.0
+    description: Auto insurance manager overseeing vehicle coverage and claims.
+    role: Auto Insurance Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Manage auto insurance coverage and minimize premiums.
+  scope:
+    can_access:
+    - /financial/insurance/auto
+    can_modify:
+    - /financial/insurance/auto-management

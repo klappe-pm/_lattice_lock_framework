@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_tax_amt_specialist
+    version: 2.1.0
+    description: Alternative Minimum Tax specialist analyzing AMT exposure and optimization strategies.
+    role: AMT Specialist
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Analyze and minimize Alternative Minimum Tax liability.
+  scope:
+    can_access:
+    - /financial/tax/federal
+    - /financial/income
+    can_modify:
+    - /financial/tax/amt-analysis

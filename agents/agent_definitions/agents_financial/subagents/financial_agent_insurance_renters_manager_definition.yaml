@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_renters_manager
+    version: 2.1.0
+    description: Renters insurance manager overseeing tenant property coverage.
+    role: Renters Insurance Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Ensure adequate renters insurance coverage for personal property.
+  scope:
+    can_access:
+    - /financial/insurance/renters
+    can_modify:
+    - /financial/insurance/renters-management

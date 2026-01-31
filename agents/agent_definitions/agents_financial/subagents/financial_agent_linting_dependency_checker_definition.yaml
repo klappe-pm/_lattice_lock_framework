@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_linting_dependency_checker
+    version: 1.0.0
+    description: Checks cross-agent dependencies ensuring delegation targets exist and circular dependencies are avoided.
+    role: Subagent - Linting - Dependency Checker
+    tags:
+      - subagent
+      - financial
+      - linting
+      - dependencies
+      - validation
+  directive:
+    primary_goal: Validate inter-agent dependencies ensuring all referenced agents exist and no circular dependencies occur.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /agents/definitions
+      - /agents/dependency_graph
+      - /validation/dependency_errors
+  inheritance:
+    extends: base_agent_v2.1

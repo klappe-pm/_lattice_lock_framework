@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_statements_internet_tracker
+    version: 2.1.0
+    description: Internet bill tracker managing broadband and internet statements.
+    role: Internet Tracker
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track internet bills and optimize service plans.
+  scope:
+    can_access:
+    - /financial/statements/internet
+    can_modify:
+    - /financial/statements/internet-tracking
