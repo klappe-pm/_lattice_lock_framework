@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_rental_property_income_tracker
+    version: 2.1.0
+    description: Rental income tracker monitoring rent payments and income streams.
+    role: Rental Income Tracker
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track all rental income and identify payment issues.
+  scope:
+    can_access:
+    - /financial/rental-property/income
+    can_modify:
+    - /financial/rental-property/income-tracking

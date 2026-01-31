@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_statements_data_extractor
+    version: 1.0.0
+    description: Specializes in extracting specific data points (dates, amounts, account info) from statements.
+    role: Statement Data Extractor
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Identify and extract high-value data fields from diverse statement formats.
+  scope:
+    can_access:
+    - /data/financial/statements/parsed
+    can_modify:
+    - /data/financial/statements/extracted
+  inheritance:
+    extends: base_agent_v2.1

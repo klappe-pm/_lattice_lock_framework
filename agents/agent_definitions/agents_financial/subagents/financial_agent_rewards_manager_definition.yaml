@@ -1,0 +1,59 @@
+agent:
+  identity:
+    name: financial_agent_rewards_manager
+    version: 1.0.0
+    description: Domain Manager for Rewards programs including transferable points, airlines, and hotels.
+    role: Domain Manager - Rewards
+    tags:
+    - domain-manager
+    - financial
+    - rewards
+    - subagent
+  directive:
+    primary_goal: Manage and optimize loyalty program portfolios across transferable points, airlines, and hotel programs.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - rewards_amex_mr_specialist
+    - rewards_chase_ur_specialist
+    - rewards_citi_thankyou_specialist
+    - rewards_capital_one_miles_specialist
+    - rewards_bilt_specialist
+    - rewards_wells_fargo_specialist
+    - rewards_alaska_specialist
+    - rewards_delta_specialist
+    - rewards_united_specialist
+    - rewards_american_specialist
+    - rewards_southwest_specialist
+    - rewards_jetblue_specialist
+    - rewards_british_airways_specialist
+    - rewards_virgin_atlantic_specialist
+    - rewards_flying_blue_specialist
+    - rewards_aeroplan_specialist
+    - rewards_singapore_specialist
+    - rewards_emirates_specialist
+    - rewards_marriott_specialist
+    - rewards_hilton_specialist
+    - rewards_hyatt_specialist
+    - rewards_ihg_specialist
+    - rewards_wyndham_specialist
+    - rewards_choice_specialist
+    - rewards_radisson_specialist
+    - rewards_points_valuation_specialist
+    - rewards_transfer_optimizer
+    - rewards_redemption_strategist
+    - rewards_sweet_spot_finder
+    - rewards_status_match_specialist
+    - rewards_elite_status_tracker
+    - rewards_expiration_tracker
+    - rewards_earning_optimizer
+    - rewards_award_booking_specialist
+    - rewards_program_researcher
+  scope:
+    can_access:
+    - /data/financial/rewards
+    - /data/financial/travel
+    can_modify:
+    - /data/financial/rewards/reports
+  inheritance:
+    extends: base_agent_v2.1

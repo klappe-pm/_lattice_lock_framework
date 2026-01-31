@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_insurance_life_needs_calculator
+    version: 1.0.0
+    description: Calculates life insurance coverage needs based on financial situation.
+    role: Life Needs Calculator
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Determine appropriate life insurance coverage levels for protection needs.
+  scope:
+    can_access:
+    - /data/financial/income
+    - /data/financial/debts
+    - /data/financial/dependents
+    can_modify:
+    - /data/financial/insurance/life/needs_analysis

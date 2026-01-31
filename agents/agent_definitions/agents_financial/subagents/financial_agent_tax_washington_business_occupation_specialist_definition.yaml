@@ -1,0 +1,22 @@
+agent:
+  identity:
+    name: financial_agent_tax_washington_business_occupation_specialist
+    version: 1.0.0
+    description: Specialist in Washington State Business & Occupation (B&O) tax.
+    role: Tax Specialist - WA B&O
+    tags:
+    - financial
+    - tax
+    - state
+    - washington
+    - business
+    - subagent
+  directive:
+    primary_goal: Manage B&O tax obligations for business income in Washington.
+  scope:
+    can_access:
+    - /data/financial/tax/state/wa_business
+    can_modify:
+    - /data/financial/tax/state/wa_business/filings
+  inheritance:
+    extends: base_agent_v2.1

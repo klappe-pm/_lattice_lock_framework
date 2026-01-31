@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_budget_rule_based_specialist
+    version: 1.0.0
+    description: Specializes in defining and enforcing rule-based budgeting (e.g. 50/30/20).
+    role: Rule-Based Specialist
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Automate budget adjustments based on pre-defined financial rules.
+  scope:
+    can_access:
+    - /data/financial/budget/strategy
+    can_modify:
+    - /data/financial/budget/rules
+  inheritance:
+    extends: base_agent_v2.1

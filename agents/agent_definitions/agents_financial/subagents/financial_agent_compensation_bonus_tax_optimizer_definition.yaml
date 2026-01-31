@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_compensation_bonus_tax_optimizer
+    version: 2.1.0
+    description: Bonus tax optimizer managing supplemental wage withholding and 401k optimization.
+    role: Bonus Tax Optimizer
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize bonus tax treatment through withholding elections and retirement contributions.
+  scope:
+    can_access:
+    - /financial/compensation/bonus
+    - /financial/tax
+    can_modify:
+    - /financial/compensation/bonus-tax

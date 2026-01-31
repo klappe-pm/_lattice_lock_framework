@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_advisor_research_analyst
+    version: 1.0.0
+    description: Specialist in primary research and due diligence for investment opportunities.
+    role: Research Analyst
+    tags:
+    - financial
+    - advisor
+    - research
+    - subagent
+  directive:
+    primary_goal: Conduct thorough primary research and synthesis of market data to support investment decisions.
+  scope:
+    can_access:
+    - /data/financial/advisor/analysis
+    - /data/financial/markets/reports
+    can_modify:
+    - /data/financial/advisor/research/primary
+  inheritance:
+    extends: base_agent_v2.1

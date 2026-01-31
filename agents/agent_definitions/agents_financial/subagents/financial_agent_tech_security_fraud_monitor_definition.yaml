@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_tech_security_fraud_monitor
+    version: 2.1.0
+    description: Fraud monitor watching for suspicious financial activity.
+    role: Fraud Monitor
+    status: beta
+    inherits_from: operational_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Monitor accounts for fraudulent activity and alert on suspicious transactions.
+  scope:
+    can_access:
+    - /financial/security/fraud
+    can_modify:
+    - /financial/security/fraud-monitoring

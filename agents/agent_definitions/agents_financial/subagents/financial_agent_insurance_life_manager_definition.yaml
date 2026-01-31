@@ -1,0 +1,24 @@
+agent:
+  identity:
+    name: financial_agent_insurance_life_manager
+    version: 1.0.0
+    description: Oversees all life insurance policies and coordinates life insurance subagents.
+    role: Life Insurance Manager
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Ensure adequate life insurance coverage aligned with financial goals and family needs.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - insurance_life_term_specialist
+    - insurance_life_whole_specialist
+    - insurance_life_universal_specialist
+  scope:
+    can_access:
+    - /data/financial/insurance/life
+    can_modify:
+    - /data/financial/insurance/life/strategy

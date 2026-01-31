@@ -1,0 +1,22 @@
+agent:
+  identity:
+    name: financial_agent_tax_california_franchise_specialist
+    version: 1.0.0
+    description: Specialist in California Franchise Tax Board matters.
+    role: Tax Specialist - CA Franchise
+    tags:
+    - financial
+    - tax
+    - state
+    - california
+    - franchise
+    - subagent
+  directive:
+    primary_goal: Handle business-related franchise taxes and dealings with the FTB.
+  scope:
+    can_access:
+    - /data/financial/tax/state/ca_franchise
+    can_modify:
+    - /data/financial/tax/state/ca_franchise/filings
+  inheritance:
+    extends: base_agent_v2.1

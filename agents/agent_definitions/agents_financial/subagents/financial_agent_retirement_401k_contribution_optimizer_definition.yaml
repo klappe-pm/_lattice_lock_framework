@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_retirement_401k_contribution_optimizer
+    version: 2.1.0
+    description: 401k contribution optimizer maximizing contributions and employer match.
+    role: 401k Contribution Optimizer
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Maximize 401k contributions while optimizing employer match capture.
+  scope:
+    can_access:
+    - /financial/retirement/401k
+    - /financial/compensation
+    can_modify:
+    - /financial/retirement/contribution-strategy

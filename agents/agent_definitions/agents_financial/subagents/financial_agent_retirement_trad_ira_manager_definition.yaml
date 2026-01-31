@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_retirement_trad_ira_manager
+    version: 2.1.0
+    description: Traditional IRA manager handling contributions, deductions, and distributions.
+    role: Traditional IRA Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize traditional IRA contributions and deductibility.
+  scope:
+    can_access:
+    - /financial/retirement/ira
+    can_modify:
+    - /financial/retirement/traditional-ira

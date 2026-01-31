@@ -1,0 +1,22 @@
+agent:
+  identity:
+    name: financial_agent_advisor_commodity_analyst
+    version: 1.0.0
+    description: Specialist in commodities market analysis.
+    role: Commodity Analyst
+    tags:
+    - financial
+    - advisor
+    - analyst
+    - commodities
+    - subagent
+  directive:
+    primary_goal: Monitor and analyze commodity markets (gold, oil, agriculture) for investment opportunities and inflationary
+      signals.
+  scope:
+    can_access:
+    - /data/financial/markets/commodities
+    can_modify:
+    - /data/financial/advisor/analysis/commodities
+  inheritance:
+    extends: base_agent_v2.1

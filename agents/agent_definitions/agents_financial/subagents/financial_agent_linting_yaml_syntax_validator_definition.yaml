@@ -1,0 +1,22 @@
+agent:
+  identity:
+    name: financial_agent_linting_yaml_syntax_validator
+    version: 1.0.0
+    description: Validates YAML syntax in agent definition files, detecting parsing errors and formatting issues.
+    role: Subagent - Linting - YAML Syntax Validator
+    tags:
+      - subagent
+      - financial
+      - linting
+      - yaml
+      - syntax
+  directive:
+    primary_goal: Ensure all agent definition files contain valid, well-formed YAML syntax.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /agents/definitions
+      - /validation/yaml_errors
+  inheritance:
+    extends: base_agent_v2.1
