@@ -33,6 +33,8 @@ def create_project_structure(
     output_dir: Path,
     verbose: bool = False,
     ci_provider: str | None = None,
+    github_repo: str | None = None,
+    with_agents: bool = False,
 ) -> list[Path]:
     """Create the project directory structure.
 
@@ -42,6 +44,8 @@ def create_project_structure(
         output_dir: Base directory to create project in.
         verbose: Whether to print verbose output.
         ci_provider: Optional CI provider ('aws' or 'github'). Defaults to 'github'.
+        github_repo: Optional GitHub repository URL.
+        with_agents: Whether to include agent scaffolding.
 
     Returns:
         List of created file paths.
@@ -54,6 +58,7 @@ def create_project_structure(
         "project_name": project_name,
         "project_type": project_type,
         "description": f"A {project_type} project managed by Lattice Lock Framework",
+        "github_repo": github_repo or "",
     }
 
     # Create directory structure
@@ -61,7 +66,13 @@ def create_project_structure(
         project_dir,
         project_dir / "src" / "shared",
         project_dir / "src" / "services",
-        project_dir / "tests",
+        project_dir / "tests" / "unit",
+        project_dir / "tests" / "integration",
+        project_dir / "tests" / "fixtures",
+        project_dir / "docs" / "01_concepts",
+        project_dir / "docs" / "03_technical",
+        project_dir / "docs" / "04_meta",
+        project_dir / "scripts",
         project_dir / ".github" / "workflows",
     ]
 
@@ -136,6 +147,19 @@ def create_project_structure(
             ]
         )
 
+    # Add agent scaffolding if requested
+    if with_agents:
+        agent_dirs = [
+            project_dir / "agents" / "agent_definitions" / "agents_custom",
+            project_dir / "agents" / "agent_diagrams",
+            project_dir / "agents" / "agent_workflows",
+            project_dir / "agents" / "agents_config",
+        ]
+        for agent_dir in agent_dirs:
+            agent_dir.mkdir(parents=True, exist_ok=True)
+            if verbose:
+                click.echo(f"  Created directory: {agent_dir.relative_to(output_dir)}")
+
     # Render and write templates
     for template_name, output_path in file_mappings:
         content = render_template(template_name, context)
@@ -186,11 +210,146 @@ def test_project_name_valid() -> None:
     services_init.write_text('"""Service implementations."""\n')
     created_files.append(services_init)
 
+    # Create docs/README.md
+    docs_readme = project_dir / "docs" / "README.md"
+    docs_content = f'''# Documentation
+
+This directory contains project documentation for {project_name}.
+
+## Structure
+
+- `01_concepts/` - Conceptual documentation, features, and architecture
+- `03_technical/` - Technical documentation, API references, CLI docs
+- `04_meta/` - Meta documentation about documentation standards
+
+## Naming Convention
+
+All documentation files must follow `lowercase_with_underscores.md` naming.
+'''
+    docs_readme.write_text(docs_content)
+    created_files.append(docs_readme)
+    if verbose:
+        click.echo(f"  Created file: {docs_readme.relative_to(output_dir)}")
+
+    # Create subdirectory READMEs
+    concepts_readme = project_dir / "docs" / "01_concepts" / "README.md"
+    concepts_readme.write_text(f"# Concepts\n\nConceptual documentation for {project_name}.\n")
+    created_files.append(concepts_readme)
+
+    technical_readme = project_dir / "docs" / "03_technical" / "README.md"
+    technical_readme.write_text(f"# Technical Documentation\n\nTechnical references for {project_name}.\n")
+    created_files.append(technical_readme)
+
+    meta_readme = project_dir / "docs" / "04_meta" / "README.md"
+    meta_readme.write_text(f"# Meta Documentation\n\nDocumentation standards for {project_name}.\n")
+    created_files.append(meta_readme)
+
+    # Create scripts/README.md
+    scripts_readme = project_dir / "scripts" / "README.md"
+    scripts_content = f'''# Scripts
+
+This directory contains utility scripts for {project_name}.
+
+## Naming Convention
+
+All scripts must follow `lowercase_with_underscores` naming:
+- ✓ `deploy_app.sh`
+- ✓ `run_tests.py`
+- ✗ `deployApp.sh`
+- ✗ `run-tests.py`
+
+## Common Scripts
+
+- Build scripts
+- Deployment automation
+- Development utilities
+- Database migrations
+'''
+    scripts_readme.write_text(scripts_content)
+    created_files.append(scripts_readme)
+    if verbose:
+        click.echo(f"  Created file: {scripts_readme.relative_to(output_dir)}")
+
+    # Create agent scaffolding files if requested
+    if with_agents:
+        agents_readme = project_dir / "agents" / "README.md"
+        agents_content = f'''# Agents
+
+This directory contains agent definitions and configurations for {project_name}.
+
+## Structure
+
+- `agent_definitions/` - Agent YAML definitions organized by category
+- `agent_diagrams/` - Agent workflow diagrams and visualizations
+- `agent_workflows/` - Agent workflow specifications
+- `agents_config/` - Agent configuration files
+
+## Creating New Agents
+
+1. Create a new category directory under `agent_definitions/`
+2. Add your agent definition YAML file following the pattern: `{{category}}_{{name}}_definition.yaml`
+3. Document workflows in `agent_workflows/`
+4. Add diagrams to `agent_diagrams/`
+
+## Validation
+
+Run `lattice-lock validate` to ensure agent definitions are properly formatted.
+'''
+        agents_readme.write_text(agents_content)
+        created_files.append(agents_readme)
+        if verbose:
+            click.echo(f"  Created file: {agents_readme.relative_to(output_dir)}")
+
+        # Create example agent definition
+        example_agent = project_dir / "agents" / "agent_definitions" / "agents_custom" / "agents_custom_example_agent_definition.yaml"
+        agent_yaml_content = f'''# Example Agent Definition for {project_name}
+agent:
+  identity:
+    name: custom_example_agent
+    version: 1.0.0
+    description: Example agent for {project_name} - customize as needed
+    role: Custom Agent
+    status: beta
+    tags:
+    - custom
+    - example
+
+directive:
+  primary_goal: Assist with project-specific tasks following governance rules
+  constraints:
+  - Must follow project conventions
+  - Must validate inputs  
+  - Must provide clear error messages
+
+responsibilities:
+- name: task_assistance
+  description: Assist with project tasks and workflows
+- name: governance_enforcement
+  description: Ensure governance rules are followed
+- name: guidance_provision
+  description: Provide clear, actionable guidance to users
+
+scope:
+  can_access:
+  - /src
+  - /docs
+  - /tests
+  can_modify:
+  - /docs
+  cannot_access:
+  - /.env
+  - /secrets
+'''
+        example_agent.write_text(agent_yaml_content)
+        created_files.append(example_agent)
+        if verbose:
+            click.echo(f"  Created file: {example_agent.relative_to(output_dir)}")
+
     return created_files
 
 
 @click.command()
-@click.argument("project_name")
+@click.argument("project_name", required=False)
 @click.option(
     "--template",
     "-t",
@@ -202,7 +361,7 @@ def test_project_name_valid() -> None:
     "--output-dir",
     "-o",
     type=click.Path(file_okay=False, resolve_path=True, path_type=Path),
-    default=".",
+    default=None,
     help="Output directory for the project",
 )
 @click.option(
@@ -211,19 +370,61 @@ def test_project_name_valid() -> None:
     default="github",
     help="CI/CD provider (github, aws, or gcp)",
 )
+@click.option(
+    "--github-repo",
+    "-g",
+    type=str,
+    default=None,
+    help="GitHub repository URL (e.g., https://github.com/user/repo)",
+)
+@click.option(
+    "--with-agents",
+    is_flag=True,
+    default=False,
+    help="Include agent scaffolding (agent_definitions, workflows, etc.)",
+)
 @click.pass_context
 def init_command(
     ctx: click.Context,
-    project_name: str,
+    project_name: str | None,
     template: str,
-    output_dir: Path,
+    output_dir: Path | None,
     ci: str,
+    github_repo: str | None,
+    with_agents: bool,
 ) -> None:
     """Initialize a new Lattice Lock project.
 
     PROJECT_NAME should be in snake_case format (e.g., my_project).
+    If not provided, you will be prompted for it.
     """
     verbose = ctx.obj.get("VERBOSE", False) if ctx.obj else False
+
+    # Interactive prompts if arguments not provided
+    if not project_name:
+        project_name = click.prompt(
+            "Project name (snake_case)",
+            type=str,
+        )
+    
+    if output_dir is None:
+        default_path = Path.cwd()
+        output_dir_str = click.prompt(
+            "Project directory path",
+            default=str(default_path),
+            type=str,
+        )
+        output_dir = Path(output_dir_str).expanduser().resolve()
+    
+    if not github_repo:
+        github_repo = click.prompt(
+            "GitHub repository URL (optional, press Enter to skip)",
+            default="",
+            show_default=False,
+            type=str,
+        )
+        if not github_repo:
+            github_repo = None
 
     # Validate project name
     if not validate_project_name(project_name):
@@ -251,6 +452,8 @@ def init_command(
             output_dir=output_dir,
             verbose=verbose,
             ci_provider=ci if ci != "github" else None,
+            github_repo=github_repo,
+            with_agents=with_agents,
         )
 
         click.echo()

@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_insurance_home_coverage_analyst
+    version: 1.0.0
+    description: Analyzes home insurance coverage against property values and risks.
+    role: Home Coverage Analyst
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Ensure coverage limits are adequate for property replacement costs.
+  scope:
+    can_access:
+    - /data/financial/insurance/home
+    - /data/financial/real_estate
+    can_modify:
+    - /data/financial/insurance/home/analysis

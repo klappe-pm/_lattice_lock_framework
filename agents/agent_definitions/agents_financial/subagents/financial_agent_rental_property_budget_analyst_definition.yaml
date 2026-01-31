@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_rental_property_budget_analyst
+    version: 2.1.0
+    description: Rental property budget analyst managing property-level budgets.
+    role: Property Budget Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Create and monitor budgets for each rental property.
+  scope:
+    can_access:
+    - /financial/rental-property
+    can_modify:
+    - /financial/rental-property/budgets

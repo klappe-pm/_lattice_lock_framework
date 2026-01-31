@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_comp_salary_tracker
+    version: 2.1.0
+    description: Salary tracker monitoring base compensation, raises, and market comparisons.
+    role: Salary Tracker
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track salary progression and analyze total compensation value.
+  scope:
+    can_access:
+    - /financial/compensation/salary
+    can_modify:
+    - /financial/compensation/salary-analysis

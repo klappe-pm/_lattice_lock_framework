@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_tax_california_deduction_analyst
+    version: 2.1.0
+    description: California deduction analyst identifying CA-specific deductions and credits.
+    role: California Deduction Analyst
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Maximize California-specific tax deductions and credits.
+  scope:
+    can_access:
+    - /financial/tax/california
+    - /financial/expenses
+    can_modify:
+    - /financial/tax/california-deductions

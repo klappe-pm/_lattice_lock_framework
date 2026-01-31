@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_rewards_marriott_specialist
+    version: 1.0.0
+    description: Specialist in Marriott Bonvoy program.
+    role: Rewards Specialist - Marriott
+    tags:
+    - financial
+    - rewards
+    - hotels
+    - marriott
+    - subagent
+  directive:
+    primary_goal: Optimize earning and redemption of Marriott Bonvoy points.
+  scope:
+    can_access:
+    - /data/financial/rewards/hotels/marriott
+    can_modify:
+    - /data/financial/rewards/hotels/marriott/strategies
+  inheritance:
+    extends: base_agent_v2.1

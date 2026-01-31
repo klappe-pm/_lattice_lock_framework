@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_life_premium_optimizer
+    version: 1.0.0
+    description: Optimizes life insurance premium payments for cost efficiency.
+    role: Life Premium Optimizer
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Identify strategies to reduce premiums while maintaining adequate coverage.
+  scope:
+    can_access:
+    - /data/financial/insurance/life
+    can_modify:
+    - /data/financial/insurance/life/premium_strategy

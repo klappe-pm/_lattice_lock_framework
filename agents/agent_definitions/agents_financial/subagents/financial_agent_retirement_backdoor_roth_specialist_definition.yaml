@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_retirement_backdoor_roth_specialist
+    version: 1.0.0
+    description: Specialist for Backdoor Roth IRA conversion strategies for high earners.
+    role: Retirement Subagent - Backdoor Roth Specialist
+    tags:
+      - subagent
+      - financial
+      - retirement
+      - backdoor-roth
+  directive:
+    primary_goal: Execute Backdoor Roth strategies by converting non-deductible Traditional IRA contributions to Roth IRA for income-ineligible investors.
+  scope:
+    can_access:
+      - /data/financial/retirement_accounts/traditional_ira
+      - /data/financial/retirement_accounts/roth_ira
+  inheritance:
+    extends: base_agent_v2.1

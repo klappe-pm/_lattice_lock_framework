@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_life_policy_document_analyzer
+    version: 1.0.0
+    description: Analyzes life insurance policy documents for key terms and conditions.
+    role: Life Policy Document Analyzer
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Extract and summarize critical information from complex life insurance documents.
+  scope:
+    can_access:
+    - /data/financial/insurance/life/documents
+    can_modify:
+    - /data/financial/insurance/life/analysis

@@ -1,0 +1,22 @@
+agent:
+  identity:
+    name: financial_agent_compensation_total_comp_calculator
+    version: 1.0.0
+    description: Calculator that aggregates salary, equity, bonus, and benefits into a single Total Compensation (TC) figure.
+    role: Subagent - Compensation - Total Comp Calculator
+    tags:
+      - subagent
+      - financial
+      - compensation
+      - total_comp
+      - calculation
+  directive:
+    primary_goal: Calculate and track accurate Total Compensation (TC) figures including all monetary and non-monetary components.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/financial/employment
+      - /data/financial/equity
+  inheritance:
+    extends: base_agent_v2.1

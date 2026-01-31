@@ -1,0 +1,27 @@
+agent:
+  identity:
+    name: financial_agent_budget_manager
+    version: 1.0.0
+    description: Domain Manager for Budgeting, expense tracking, and financial goals.
+    role: Domain Manager - Budgeting
+    tags:
+    - domain-manager
+    - financial
+    - budgeting
+    - subagent
+  directive:
+    primary_goal: Maintain accurate budgets, track spending against goals, and forecast future savings.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - budget_research_discovery
+    - budget_strategy_design
+    - budget_analysis_tracking
+    - budget_visualization_reporting
+    - budget_goals_fire
+  scope:
+    can_access:
+    - /data/financial/budgets
+    - /data/financial/transactions
+  inheritance:
+    extends: base_agent_v2.1

@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_tools_personal_capital_specialist
+    version: 1.0.0
+    description: Specializes in Empower/Personal Capital integration for investment tracking and retirement planning.
+    role: Subagent - Tools & Automation - Personal Capital Specialist
+    tags:
+      - subagent
+      - financial
+      - tools
+      - empower
+      - investments
+  directive:
+    primary_goal: Manage Personal Capital/Empower integration for comprehensive investment and net worth tracking.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /data/financial/integrations/personal_capital
+      - /data/investments
+      - /data/net_worth
+  inheritance:
+    extends: base_agent_v2.1
