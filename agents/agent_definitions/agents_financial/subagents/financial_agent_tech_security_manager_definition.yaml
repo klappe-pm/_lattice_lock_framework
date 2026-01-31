@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_tech_security_manager
+    version: 1.0.0
+    description: Domain Manager for Financial technology and security.
+    role: Domain Manager - Tech & Security
+    tags:
+    - domain-manager
+    - financial
+    - security
+    - subagent
+  directive:
+    primary_goal: Ensure the security of financial data and manage financial software/tools.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+    - /config/security
+    - /data/financial
+  inheritance:
+    extends: base_agent_v2.1

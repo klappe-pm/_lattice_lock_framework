@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_comp_perks_specialist
+    version: 2.1.0
+    description: Perks specialist tracking and optimizing employee perks and fringe benefits.
+    role: Perks Specialist
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Track and maximize utilization of employer perks and fringe benefits.
+  scope:
+    can_access:
+    - /financial/compensation/perks
+    can_modify:
+    - /financial/compensation/perks-tracking

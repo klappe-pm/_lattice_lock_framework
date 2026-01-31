@@ -1,0 +1,40 @@
+agent:
+  identity:
+    name: financial_agent_brokerage_manager
+    version: 1.0.0
+    description: Domain Manager for Brokerage platform-specific guidance and integration.
+    role: Domain Manager - Brokerage
+    tags:
+    - domain-manager
+    - financial
+    - brokerage
+    - subagent
+  directive:
+    primary_goal: Provide platform-specific guidance for various brokerage and crypto exchange platforms.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - brokerage_vanguard_specialist
+    - brokerage_fidelity_specialist
+    - brokerage_schwab_specialist
+    - brokerage_morgan_stanley_specialist
+    - brokerage_stock_plan_connect_specialist
+    - brokerage_etrade_specialist
+    - brokerage_td_ameritrade_specialist
+    - brokerage_interactive_brokers_specialist
+    - brokerage_merrill_edge_specialist
+    - brokerage_ally_invest_specialist
+    - brokerage_robinhood_specialist
+    - brokerage_webull_specialist
+    - brokerage_coinbase_specialist
+    - brokerage_kraken_specialist
+    - brokerage_gemini_specialist
+    - brokerage_binance_us_specialist
+  scope:
+    can_access:
+    - /data/financial/brokerage
+    - /data/financial/accounts
+    can_modify:
+    - /data/financial/brokerage/reports
+  inheritance:
+    extends: base_agent_v2.1

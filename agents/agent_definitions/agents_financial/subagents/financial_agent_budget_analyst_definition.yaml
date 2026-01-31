@@ -1,0 +1,20 @@
+agent:
+  identity:
+    name: financial_agent_budget_analyst
+    version: 1.0.0
+    description: Specializes in overall budget performance analysis and health checks.
+    role: Budget Analyst
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Provide a high-level overview of budget health and identify broad performance trends.
+  scope:
+    can_access:
+    - /data/financial/budget/performance
+    can_modify:
+    - /data/financial/reports/budget_summary
+  inheritance:
+    extends: base_agent_v2.1

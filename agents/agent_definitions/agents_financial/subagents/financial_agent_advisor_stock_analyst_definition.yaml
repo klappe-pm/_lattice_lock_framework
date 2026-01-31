@@ -1,0 +1,21 @@
+agent:
+  identity:
+    name: financial_agent_advisor_stock_analyst
+    version: 1.0.0
+    description: Specialist in individual stock analysis and recommendations.
+    role: Stock Analyst
+    tags:
+    - financial
+    - advisor
+    - analyst
+    - stocks
+    - subagent
+  directive:
+    primary_goal: Perform fundamental and quantitative analysis on individual stocks to provide buy/sell/hold recommendations.
+  scope:
+    can_access:
+    - /data/financial/markets/stocks
+    can_modify:
+    - /data/financial/advisor/analysis/stocks
+  inheritance:
+    extends: base_agent_v2.1

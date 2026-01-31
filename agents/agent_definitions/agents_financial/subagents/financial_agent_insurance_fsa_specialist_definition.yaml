@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_fsa_specialist
+    version: 2.1.0
+    description: FSA specialist managing Flexible Spending Account elections and usage.
+    role: FSA Specialist
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize FSA contributions and ensure full utilization.
+  scope:
+    can_access:
+    - /financial/insurance/health
+    can_modify:
+    - /financial/insurance/fsa-planning

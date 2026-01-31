@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_insurance_life_beneficiary_manager
+    version: 1.0.0
+    description: Manages life insurance beneficiary designations and updates.
+    role: Life Beneficiary Manager
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Ensure beneficiary designations are current and aligned with estate plans.
+  scope:
+    can_access:
+    - /data/financial/insurance/life/beneficiaries
+    - /data/financial/estate
+    can_modify:
+    - /data/financial/insurance/life/beneficiaries

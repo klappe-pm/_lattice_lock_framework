@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_credit_score_analyst
+    version: 1.0.0
+    description: Analyzes credit scores across bureaus and identifies improvement opportunities.
+    role: Credit Score Analyst
+    status: active
+    inherits_from: base_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Monitor and analyze credit scores to optimize creditworthiness.
+  scope:
+    can_access:
+    - /data/financial/credit/scores
+    can_modify:
+    - /data/financial/credit/analysis

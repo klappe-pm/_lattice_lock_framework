@@ -1,0 +1,23 @@
+agent:
+  identity:
+    name: financial_agent_linting_scope_consistency_checker
+    version: 1.0.0
+    description: Validates scope definitions ensuring can_access and can_modify paths are consistent and appropriate for agent roles.
+    role: Subagent - Linting - Scope Consistency Checker
+    tags:
+      - subagent
+      - financial
+      - linting
+      - scope
+      - consistency
+  directive:
+    primary_goal: Ensure agent scope definitions are consistent, valid, and appropriately restricted for each role.
+  delegation:
+    enabled: false
+  scope:
+    can_access:
+      - /agents/definitions
+      - /standards/scopes
+      - /validation/scope_errors
+  inheritance:
+    extends: base_agent_v2.1

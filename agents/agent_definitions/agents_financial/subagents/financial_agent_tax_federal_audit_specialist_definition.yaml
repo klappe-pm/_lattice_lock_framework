@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_tax_federal_audit_specialist
+    version: 2.1.0
+    description: Federal audit specialist managing IRS audits and maintaining audit-ready documentation.
+    role: Federal Audit Specialist
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Maintain audit-ready records and manage IRS audit responses.
+  scope:
+    can_access:
+    - /financial/tax/federal
+    - /financial/tax/documents
+    can_modify:
+    - /financial/tax/audit-records

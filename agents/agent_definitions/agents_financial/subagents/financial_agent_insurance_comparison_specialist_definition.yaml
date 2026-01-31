@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_insurance_comparison_specialist
+    version: 2.1.0
+    description: Insurance comparison specialist evaluating competing quotes and options.
+    role: Comparison Specialist
+    status: beta
+    inherits_from: analytics_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Compare insurance options to find best coverage and value.
+  scope:
+    can_access:
+    - /financial/insurance
+    can_modify:
+    - /financial/insurance/comparisons

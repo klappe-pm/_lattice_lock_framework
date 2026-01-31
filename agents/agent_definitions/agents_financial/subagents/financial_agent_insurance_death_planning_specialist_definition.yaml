@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_insurance_death_planning_specialist
+    version: 2.1.0
+    description: Death planning specialist coordinating end-of-life financial preparation.
+    role: Death Planning Specialist
+    status: beta
+    inherits_from: planning_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Prepare comprehensive end-of-life financial documentation and plans.
+  scope:
+    can_access:
+    - /financial/insurance/life
+    - /financial/estate
+    can_modify:
+    - /financial/insurance/death-planning

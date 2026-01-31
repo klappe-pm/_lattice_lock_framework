@@ -1,0 +1,25 @@
+agent:
+  identity:
+    name: financial_agent_insurance_manager
+    version: 1.0.0
+    description: Domain Manager for Insurance coverage and claims.
+    role: Domain Manager - Insurance
+    tags:
+    - domain-manager
+    - financial
+    - insurance
+    - subagent
+  directive:
+    primary_goal: Manage insurance policies, coverage analysis, and claims processing.
+  delegation:
+    enabled: true
+    allowed_subagents:
+    - insurance_health_specialist
+    - insurance_life_manager
+    - insurance_auto_specialist
+    - insurance_home_specialist
+  scope:
+    can_access:
+    - /data/financial/insurance_policies
+  inheritance:
+    extends: base_agent_v2.1

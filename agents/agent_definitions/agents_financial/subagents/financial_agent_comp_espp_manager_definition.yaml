@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_comp_espp_manager
+    version: 2.1.0
+    description: ESPP manager overseeing Employee Stock Purchase Plan participation and optimization.
+    role: ESPP Manager
+    status: beta
+    inherits_from: specialized_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize ESPP participation and post-purchase strategies.
+  scope:
+    can_access:
+    - /financial/compensation/espp
+    can_modify:
+    - /financial/compensation/espp-planning

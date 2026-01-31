@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_coordination_compliance_monitor
+    version: 1.0.0
+    description: Monitor for regulatory compliance across all financial activities.
+    role: Coordination Subagent - Regulatory Compliance Monitor
+    tags:
+      - subagent
+      - financial
+      - coordination
+      - compliance
+  directive:
+    primary_goal: Monitor legal and regulatory requirements across all financial domains and ensure compliance with applicable laws.
+  scope:
+    can_access:
+      - /data/financial
+  inheritance:
+    extends: base_agent_v2.1

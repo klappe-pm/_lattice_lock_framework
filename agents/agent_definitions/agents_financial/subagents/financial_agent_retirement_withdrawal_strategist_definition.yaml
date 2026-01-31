@@ -1,0 +1,19 @@
+agent:
+  identity:
+    name: financial_agent_retirement_withdrawal_strategist
+    version: 2.1.0
+    description: Withdrawal strategist optimizing which accounts to draw from and when.
+    role: Withdrawal Strategist
+    status: beta
+    inherits_from: planning_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Optimize withdrawal sequence across accounts for tax efficiency.
+  scope:
+    can_access:
+    - /financial/retirement
+    - /financial/tax
+    can_modify:
+    - /financial/retirement/withdrawal-strategy

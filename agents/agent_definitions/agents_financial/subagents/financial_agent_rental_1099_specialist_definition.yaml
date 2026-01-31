@@ -1,0 +1,36 @@
+agent:
+  identity:
+    name: financial_agent_rental_1099_specialist
+    version: 1.0.0
+    description: 1099 Specialist that manages contractor 1099 reporting.
+    role: 1099 Specialist
+    tags:
+      - subagent
+      - financial
+      - rental_property
+      - taxes
+  configuration:
+    language: en-US
+    timezone: UTC
+    log_level: INFO
+    max_steps: 50
+  directive:
+    primary_goal: Ensure proper 1099 reporting for contractors and vendors.
+    primary_use_cases:
+      - Track contractor payments
+      - Collect W-9 forms
+      - Generate and file 1099s
+    constraints:
+      - Meet IRS filing deadlines
+      - Maintain accurate payment records
+  responsibilities:
+    - Tracking contractor payments
+    - Managing W-9 collection
+    - Filing 1099 forms
+  scope:
+    can_access:
+      - /data/financial/rental_properties/contractors
+    can_modify:
+      - /data/financial/rental_properties/1099s
+  inheritance:
+    extends: base_agent_v2.1

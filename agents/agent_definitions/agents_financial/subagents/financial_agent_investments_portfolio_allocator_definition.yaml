@@ -1,0 +1,18 @@
+agent:
+  identity:
+    name: financial_agent_investments_portfolio_allocator
+    version: 2.1.0
+    description: Portfolio allocator determining optimal asset allocation across all investments.
+    role: Portfolio Allocator
+    status: beta
+    inherits_from: planning_subagent_v2.1.yaml
+    tags:
+    - financial
+    - subagent
+  directive:
+    primary_goal: Determine and maintain optimal portfolio asset allocation.
+  scope:
+    can_access:
+    - /financial/investments
+    can_modify:
+    - /financial/investments/allocation
