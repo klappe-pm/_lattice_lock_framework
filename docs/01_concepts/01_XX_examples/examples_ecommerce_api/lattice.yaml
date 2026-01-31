@@ -1,0 +1,97 @@
+# Lattice Lock Schema Definition for API Service Pilot Project
+# This schema defines the entities for a REST API service with
+# user authentication, product inventory, orders, and payments.
+
+version: v2.1
+generated_module: api_service_types
+
+database:
+  backend: postgresql
+  connection_string: ${DATABASE_URL}
+
+entities:
+  User:
+    description: "User account with authentication credentials"
+    fields:
+      id: {type: int, primary_key: true}
+      email: {type: str, unique: true}
+      password_hash: {type: str}
+      first_name: {type: str}
+      last_name: {type: str}
+      is_active: {type: bool, default: true}
+      is_verified: {type: bool, default: false}
+      created_at: {type: str}
+      updated_at: {type: str}
+    indexes:
+      - {fields: [email], unique: true}
+      - {fields: [is_active]}
+
+  Product:
+    description: "Product in the inventory catalog"
+    fields:
+      id: {type: int, primary_key: true}
+      sku: {type: str, unique: true}
+      name: {type: str}
+      description: {type: str}
+      price_cents: {type: int, gte: 0}
+      quantity_in_stock: {type: int, gte: 0}
+      category: {type: str}
+      is_available: {type: bool, default: true}
+      created_at: {type: str}
+      updated_at: {type: str}
+    indexes:
+      - {fields: [sku], unique: true}
+      - {fields: [category]}
+      - {fields: [is_available]}
+
+  Order:
+    description: "Customer order with status workflow"
+    fields:
+      id: {type: int, primary_key: true}
+      user_id: {type: int}
+      status: {enum: [pending, confirmed, processing, shipped, delivered, cancelled], default: pending}
+      total_cents: {type: int, gte: 0}
+      shipping_address: {type: str}
+      billing_address: {type: str}
+      notes: {type: str, nullable: true}
+      created_at: {type: str}
+      updated_at: {type: str}
+    indexes:
+      - {fields: [user_id]}
+      - {fields: [status]}
+      - {fields: [created_at]}
+
+  OrderItem:
+    description: "Line item in an order"
+    fields:
+      id: {type: int, primary_key: true}
+      order_id: {type: int}
+      product_id: {type: int}
+      quantity: {type: int, gt: 0}
+      unit_price_cents: {type: int, gte: 0}
+      created_at: {type: str}
+    indexes:
+      - {fields: [order_id]}
+      - {fields: [product_id]}
+
+  Payment:
+    description: "Payment transaction for an order"
+    fields:
+      id: {type: int, primary_key: true}
+      order_id: {type: int}
+      amount_cents: {type: int, gt: 0}
+      currency: {enum: [USD, EUR, GBP, CAD], default: USD}
+      status: {enum: [pending, processing, completed, failed, refunded], default: pending}
+      payment_method: {enum: [credit_card, debit_card, paypal, bank_transfer]}
+      transaction_id: {type: str, unique: true}
+      created_at: {type: str}
+      processed_at: {type: str, nullable: true}
+    indexes:
+      - {fields: [order_id]}
+      - {fields: [transaction_id], unique: true}
+      - {fields: [status]}
+
+validation:
+  strict_mode: true
+  fail_fast: false
+  generate_contracts: true

@@ -94,12 +94,22 @@ where = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "--cov=src/lattice_lock --cov-report=term-missing --cov-fail-under=70"
+addopts = "--cov=src/lattice_lock --cov-report=term-missing --cov-fail-under=75"
 testpaths = ["tests"]
 markers = [
-    "critical: Critical path tests for quick verification",
+    "critical: Critical path tests for quick verification - run first",
+    "unit: Isolated unit tests with mocked dependencies",
+    "integration: Component integration tests",
+    "e2e: End-to-end system tests",
     "cross_module: Tests that span multiple modules",
-    "integration: Integration tests",
+    "slow: Tests taking longer than 5 seconds",
+    "security: Security-focused tests",
+    "documentation: Documentation validation tests",
+    "agent: Agent definition and workflow tests",
+    "approver: Tests managed by Approver Agent",
+    "performance: Performance benchmark tests",
+    "smoke: Quick smoke tests for basic functionality",
+    "regression: Regression tests for fixed bugs",
 ]
 norecursedirs = [
     "scripts/tests",
@@ -110,6 +120,38 @@ norecursedirs = [
     "build",
     "dist",
 ]
+
+# Coverage configuration - 75% target for phased rollout (will increase to 90%)
+[tool.coverage.run]
+source = ["src/lattice_lock"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/__main__.py",
+    "*/conftest.py",
+    "*/migrations/*",
+    "*/_version.py",
+]
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
 
 # Black configuration
 [tool.black]

@@ -1,0 +1,527 @@
+# JSON Schema for Agent Definition v3.0
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://lattice-lock.com/schemas/agent-v3.0.json",
+  "title": "Agent Definition Schema v3.0",
+  "description": "Schema for validating agent definition files in the Lattice Lock Framework",
+  "type": "object",
+  "required": ["version", "metadata", "agent"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^3\\.\\d+$",
+      "description": "Schema version (must start with 3.)"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["id", "name", "description", "author", "created", "modified", "tags"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for the agent"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "minLength": 3,
+          "maxLength": 50,
+          "description": "Human-readable agent name"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500,
+          "description": "Comprehensive description of the agent's purpose"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or organization email/identifier"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 creation timestamp"
+        },
+        "modified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 last modification timestamp"
+        },
+        "version_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["version", "date", "changes"],
+            "properties": {
+              "version": {
+                "type": "string",
+                "pattern": "^\\d+\\.\\d+\\.\\d+$"
+              },
+              "date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "changes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["agent_id", "version"],
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["role", "capabilities", "constraints", "context"],
+      "properties": {
+        "role": {
+          "type": "object",
+          "required": ["primary_function"],
+          "properties": {
+            "primary_function": {
+              "type": "string",
+              "minLength": 10
+            },
+            "personality_traits": {
+              "type": "object",
+              "properties": {
+                "tone": {
+                  "type": "string"
+                },
+                "formality_level": {
+                  "type": "string",
+                  "enum": ["very_formal", "formal", "moderate", "casual", "very_casual"]
+                },
+                "verbosity": {
+                  "type": "string",
+                  "enum": ["minimal", "concise", "moderate", "detailed", "comprehensive"]
+                },
+                "emotional_intelligence": {
+                  "type": "string",
+                  "enum": ["minimal", "low", "moderate", "high", "exceptional"]
+                }
+              }
+            },
+            "expertise_areas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["domain", "proficiency"],
+                "properties": {
+                  "domain": {
+                    "type": "string"
+                  },
+                  "proficiency": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            },
+            "response_style": {
+              "type": "object",
+              "properties": {
+                "preferred_format": {
+                  "type": "string",
+                  "enum": ["structured", "narrative", "conversational", "technical"]
+                },
+                "use_examples": {
+                  "type": "boolean"
+                },
+                "include_reasoning": {
+                  "type": "boolean"
+                },
+                "max_response_length": {
+                  "type": "integer",
+                  "minimum": 50,
+                  "maximum": 10000
+                }
+              }
+            }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "required": ["core_capabilities"],
+          "properties": {
+            "core_capabilities": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["id", "description", "required_inputs", "expected_outputs"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "required_inputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "type", "required"],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["string", "number", "boolean", "object", "array"]
+                        },
+                        "required": {
+                          "type": "boolean"
+                        },
+                        "description": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "expected_outputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "type"],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": ["string", "number", "boolean", "object", "array"]
+                        },
+                        "description": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "error_handling": {
+                    "type": "string",
+                    "enum": ["fail_fast", "retry_with_backoff", "fallback", "escalate"]
+                  }
+                }
+              }
+            },
+            "conditional_capabilities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "description", "trigger_conditions"],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "trigger_conditions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "learning_capabilities": {
+              "type": "object",
+              "properties": {
+                "can_learn_from_interactions": {
+                  "type": "boolean"
+                },
+                "memory_type": {
+                  "type": "string",
+                  "enum": ["episodic", "semantic", "procedural", "working"]
+                },
+                "retention_period": {
+                  "type": "string"
+                },
+                "update_frequency": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "constraints": {
+          "type": "object",
+          "required": ["operational_boundaries"],
+          "properties": {
+            "operational_boundaries": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ethical_guidelines": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["principle", "rules"],
+                "properties": {
+                  "principle": {
+                    "type": "string"
+                  },
+                  "rules": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "resource_limits": {
+              "type": "object",
+              "properties": {
+                "max_tokens_per_response": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000
+                },
+                "max_api_calls_per_minute": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000
+                },
+                "max_sub_agent_depth": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10
+                },
+                "timeout_seconds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3600
+                }
+              }
+            },
+            "safety_rules": {
+              "type": "object",
+              "properties": {
+                "content_filtering": {
+                  "type": "string",
+                  "enum": ["none", "minimal", "moderate", "strict"]
+                },
+                "prohibited_topics": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "escalation_required": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "context": {
+          "type": "object",
+          "required": ["initial_context", "memory_management"],
+          "properties": {
+            "initial_context": {
+              "type": "object",
+              "properties": {
+                "system_prompts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "memory_management": {
+              "type": "object",
+              "properties": {
+                "working_memory": {
+                  "type": "object",
+                  "properties": {
+                    "capacity": {
+                      "type": "string"
+                    },
+                    "retention_strategy": {
+                      "type": "string",
+                      "enum": ["sliding_window", "importance_based", "time_decay", "hybrid"]
+                    }
+                  }
+                },
+                "long_term_memory": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "storage_backend": {
+                      "type": "string",
+                      "enum": ["vector_database", "key_value", "graph", "hybrid"]
+                    },
+                    "retrieval_method": {
+                      "type": "string",
+                      "enum": ["semantic_similarity", "keyword", "temporal", "hybrid"]
+                    },
+                    "relevance_threshold": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                }
+              }
+            },
+            "context_injection": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["source", "trigger"],
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "trigger": {
+                    "type": "string",
+                    "enum": ["automatic", "on_demand", "conditional"]
+                  },
+                  "max_items": {
+                    "type": "integer"
+                  },
+                  "lookback_period": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "behaviors": {
+          "type": "object",
+          "properties": {
+            "greeting_protocol": {
+              "type": "object"
+            },
+            "problem_solving_approach": {
+              "type": "object"
+            },
+            "escalation_behavior": {
+              "type": "object"
+            },
+            "error_handling": {
+              "type": "object"
+            }
+          }
+        },
+        "tools": {
+          "type": "object",
+          "properties": {
+            "available_tools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["tool_id", "type", "endpoint"],
+                "properties": {
+                  "tool_id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "endpoint": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "authentication": {
+                    "type": "string"
+                  },
+                  "parameters": {
+                    "type": "array"
+                  },
+                  "response_format": {
+                    "type": "string"
+                  },
+                  "error_handling": {
+                    "type": "string"
+                  },
+                  "rate_limit": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tool_selection_strategy": {
+              "type": "object"
+            }
+          }
+        },
+        "sub_agents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["agent_id", "trigger_conditions", "handoff_protocol"],
+            "properties": {
+              "agent_id": {
+                "type": "string"
+              },
+              "agent_file": {
+                "type": "string"
+              },
+              "trigger_conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "handoff_protocol": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "evaluation": {
+          "type": "object"
+        },
+        "adaptation": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
+```
