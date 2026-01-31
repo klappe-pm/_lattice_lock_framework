@@ -1,27 +1,36 @@
 # Lattice Lock Configuration
 # Generated for: {{ project_name }}
 # Documentation: https://github.com/klappe-pm/lattice-lock-framework
+{% if github_repo %}
+# Repository: {{ github_repo }}
+{% endif %}
 
-version: "1.0"
-
-# Project metadata
-project:
-  name: {{ project_name }}
-  description: "{{ description | default('A Lattice Lock managed project') }}"
-
-# Module definitions
-modules:
-  - name: {{ project_name }}
-    path: src/{{ project_name }}
-    type: {{ project_type | default('service') }}
+version: v2.1
+generated_module: types_{{ project_name }}
 
 # Entity definitions (contracts, services, etc.)
 entities:
   # Example entity - customize as needed
-  - name: example_service
-    type: service
-    module: {{ project_name }}
-    description: "Example service entity"
+  ExampleService:
+    description: "Example service entity for {{ project_name }}"
+    fields:
+      id:
+        type: uuid
+        primary_key: true
+      name:
+        type: str
+      description:
+        type: str
+        nullable: true
+      status:
+        type: enum
+        enum: [active, inactive, pending]
+        default: pending
+      priority:
+        type: int
+        gte: 1
+        lte: 10
+        default: 5
 
 # Governance rules
 config:
