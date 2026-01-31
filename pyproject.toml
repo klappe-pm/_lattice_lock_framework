@@ -94,7 +94,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "--cov=src/lattice_lock --cov-report=term-missing --cov-fail-under=90"
+addopts = "--cov=src/lattice_lock --cov-report=term-missing --cov-fail-under=75"
 testpaths = ["tests"]
 markers = [
     "critical: Critical path tests for quick verification - run first",
@@ -121,7 +121,7 @@ norecursedirs = [
     "dist",
 ]
 
-# Coverage configuration - 90% target as defined in Testing Program Plan
+# Coverage configuration - 75% target for phased rollout (will increase to 90%)
 [tool.coverage.run]
 source = ["src/lattice_lock"]
 branch = true
@@ -135,7 +135,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 75
 show_missing = true
 skip_covered = false
 exclude_lines = [

@@ -1,8 +1,8 @@
 ---
-# Bug Automation Agent - Standalone Agent for Bug Creation and Execution Automation
-# This agent can run independently or as a subagent of approver_agent
+# Bug Automation Agent - Subagent for Bug Creation and Execution Automation
+# This agent runs as a subagent of approver_agent
 # Version: 1.0.0
-# Created: 2026-01-07
+# Created: 2025-01-07
 ---
 agent:
   identity:
@@ -15,8 +15,7 @@ agent:
     role: Bug Automation Specialist
     status: active
     inherits_from: base_agent.yaml
-    can_run_as: [standalone, subagent]
-    parent_agents: [approver_agent]  # When running as subagent
+    # Runs as subagent of approver_agent (configured in approver's subagents list)
 
   directive:
     primary_goal: >

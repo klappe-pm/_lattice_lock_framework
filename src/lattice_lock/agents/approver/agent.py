@@ -107,27 +107,42 @@ class ApproverAgent:
 
         for package in root.findall(".//package"):
             for cls in package.findall(".//class"):
-                filename = cls.get("filename", "")
-                file_line_rate = float(cls.get("line-rate", 0)) * 100
+                try:
+                    filename = cls.get("filename")
+                    if not filename:
+                        continue  # Skip if no filename attribute
+                    
+                    file_line_rate = float(cls.get("line-rate", "0")) * 100
 
-                if file_line_rate < self.coverage_target:
-                    uncovered_files.append(f"{filename} ({file_line_rate:.1f}%)")
+                    if file_line_rate < self.coverage_target:
+                        uncovered_files.append(f"{filename} ({file_line_rate:.1f}%)")
 
-                # Track uncovered lines
-                file_uncovered = []
-                for line in cls.findall(".//line"):
-                    if line.get("hits") == "0":
-                        file_uncovered.append(int(line.get("number", 0)))
+                    # Track uncovered lines
+                    file_uncovered = []
+                    for line in cls.findall(".//line"):
+                        try:
+                            if line.get("hits") == "0":
+                                line_num = int(line.get("number", "0"))
+                                if line_num > 0:
+                                    file_uncovered.append(line_num)
+                        except (ValueError, TypeError):
+                            continue  # Skip malformed line entries
 
-                if file_uncovered:
-                    uncovered_lines[filename] = file_uncovered[:10]  # Limit to 10
+                    if file_uncovered:
+                        uncovered_lines[filename] = file_uncovered[:10]  # Limit to 10
 
-                # Count methods
-                for method in cls.findall(".//method"):
-                    total_functions += 1
-                    method_line_rate = float(method.get("line-rate", 0))
-                    if method_line_rate > 0:
-                        covered_functions += 1
+                    # Count methods
+                    for method in cls.findall(".//method"):
+                        try:
+                            total_functions += 1
+                            method_line_rate = float(method.get("line-rate", "0"))
+                            if method_line_rate > 0:
+                                covered_functions += 1
+                        except (ValueError, TypeError):
+                            continue  # Skip malformed method entries
+                except (ValueError, TypeError) as e:
+                    # Skip malformed class entries but continue processing
+                    continue
 
         function_coverage = (
             (covered_functions / total_functions * 100) if total_functions > 0 else 0.0

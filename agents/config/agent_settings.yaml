@@ -2,7 +2,7 @@
 # Agent Settings Configuration
 # This file controls agent behavior, enabling/disabling agents, and global settings
 # Version: 1.0.0
-# Last Updated: 2026-01-07
+# Last Updated: 2025-01-07
 ---
 
 settings:
@@ -131,12 +131,12 @@ settings:
       enabled: true
 
     # ============================================
-    # BUG AUTOMATION AGENT (Standalone)
-    # TODO: Extend from approver subagent to full agent
+    # BUG AUTOMATION AGENT (Subagent)
+    # Runs as a subagent of approver_agent
     # ============================================
     bug_automation_agent:
       enabled: true
-      standalone_mode: false  # Currently runs as approver subagent
+      # This agent runs as a subagent, configured in approver_agent.subagents
       auto_create_issues: true
       sla_monitoring: true
       escalation_enabled: true

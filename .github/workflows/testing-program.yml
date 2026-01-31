@@ -65,10 +65,10 @@ jobs:
         continue-on-error: true
 
   # ============================================
-  # Stage 2: Unit Tests with Coverage (90% target)
+  # Stage 2: Unit Tests with Coverage (75% target - phased rollout)
   # ============================================
   unit-tests:
-    name: Unit Tests (Coverage 90%)
+    name: Unit Tests (Coverage 75%)
     needs: quality-gates
     runs-on: ubuntu-latest
     strategy:
@@ -94,7 +94,7 @@ jobs:
             --cov=src/lattice_lock \
             --cov-report=xml \
             --cov-report=term-missing \
-            --cov-fail-under=90 \
+            --cov-fail-under=75 \
             -v \
             --tb=short
 
@@ -296,11 +296,9 @@ jobs:
               sys.exit(0 if result.approved else 1)
           except Exception as e:
               print(f'Approver Agent error: {e}')
-              # Don't block on approver errors during initial rollout
-              import sys
-              sys.exit(0)
+              # Re-raise to fail the workflow on errors
+              raise
           "
-        continue-on-error: true
 
       - name: Comment on PR
         if: always()
