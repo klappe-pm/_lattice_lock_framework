@@ -1,9 +1,0 @@
-# Development environment
-project_id  = "lattice-lock-dev"
-environment = "development"
-region      = "us-central1"
-
-sql_tier      = "db-custom-1-3840"  # 1 vCPU, 3.75GB RAM
-sql_disk_size = 10
-
-redis_memory_gb = 1
