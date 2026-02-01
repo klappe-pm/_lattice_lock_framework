@@ -33,9 +33,9 @@ class TestAgentSettingsConfiguration:
         reset_settings()
         settings = load_settings()
 
-        assert settings.agents.approver_agent.enabled is True, (
-            "Approver Agent should be enabled by default"
-        )
+        assert (
+            settings.agents.approver_agent.enabled is True
+        ), "Approver Agent should be enabled by default"
 
     def test_coverage_target_is_90(self):
         """Coverage target should be 90%."""
@@ -44,9 +44,7 @@ class TestAgentSettingsConfiguration:
         reset_settings()
         settings = load_settings()
 
-        assert settings.agents.approver_agent.coverage.target == 90, (
-            "Coverage target should be 90%"
-        )
+        assert settings.agents.approver_agent.coverage.target == 90, "Coverage target should be 90%"
 
     def test_env_override_approver_enabled(self):
         """Environment variable should override approver enabled setting."""

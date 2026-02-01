@@ -22,14 +22,14 @@ def normalize_project_name(name: str) -> str:
         Project name in snake_case format.
     """
     # Replace spaces and hyphens with underscores
-    normalized = re.sub(r'[\s-]+', '_', name.strip())
+    normalized = re.sub(r"[\s-]+", "_", name.strip())
     # Convert to lowercase
     normalized = normalized.lower()
     # Remove any non-alphanumeric/underscore characters
-    normalized = re.sub(r'[^a-z0-9_]', '', normalized)
+    normalized = re.sub(r"[^a-z0-9_]", "", normalized)
     # Ensure it starts with a letter
     if normalized and not normalized[0].isalpha():
-        normalized = 'p_' + normalized
+        normalized = "p_" + normalized
     return normalized
 
 
@@ -249,10 +249,10 @@ def init_command(
     # Auto-format project name to snake_case
     original_name = project_name
     project_name = normalize_project_name(project_name)
-    
+
     if original_name != project_name:
         click.echo(f"Project name formatted: '{original_name}' → '{project_name}'")
-    
+
     # Validate project name (should always pass after normalization)
     if not validate_project_name(project_name):
         raise click.ClickException(

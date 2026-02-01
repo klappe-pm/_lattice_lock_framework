@@ -13,7 +13,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from lattice_lock.database.models.base import Base, TimestampMixin, UUIDMixin
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -26,6 +25,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from lattice_lock.database.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
     from lattice_lock.database.models.models import ProviderCredential, UserQuota

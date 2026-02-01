@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -112,9 +112,7 @@ class GlobalSettings(BaseModel):
 class AgentSettings(BaseModel):
     """Root settings model."""
 
-    global_settings: GlobalSettings = Field(
-        default_factory=GlobalSettings, alias="global"
-    )
+    global_settings: GlobalSettings = Field(default_factory=GlobalSettings, alias="global")
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
     quality_gates: QualityGatesConfig = Field(default_factory=QualityGatesConfig)
     testing: TestingConfig = Field(default_factory=TestingConfig)
@@ -124,16 +122,15 @@ class AgentSettings(BaseModel):
 
 
 # Global settings instance
-_settings: Optional[AgentSettings] = None
+_settings: AgentSettings | None = None
 
 
-def _find_settings_file() -> Optional[Path]:
+def _find_settings_file() -> Path | None:
     """Find the agent settings file."""
     candidates = [
         Path("agents/config/agent_settings.yaml"),
         Path("../agents/config/agent_settings.yaml"),
-        Path(__file__).parent.parent.parent.parent.parent
-        / "agents/config/agent_settings.yaml",
+        Path(__file__).parent.parent.parent.parent.parent / "agents/config/agent_settings.yaml",
     ]
     for candidate in candidates:
         if candidate.exists():
@@ -183,7 +180,7 @@ def _apply_env_overrides(settings: AgentSettings) -> AgentSettings:
     return settings
 
 
-def load_settings(config_path: Optional[Path] = None) -> AgentSettings:
+def load_settings(config_path: Path | None = None) -> AgentSettings:
     """
     Load settings from YAML with environment overrides.
 

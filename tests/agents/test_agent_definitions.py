@@ -3,17 +3,21 @@ from pathlib import Path
 import pytest
 import yaml
 
+AGENT_CATEGORY_MAP = {
+    "engineering_agent": "agents_engineering",
+    "project_agent": "agents_project_management",
+    "product_agent": "agents_product_management",
+    "research_agent": "agents_research",
+    "business_review_agent": "agents_business_review",
+}
+
 
 def get_agent_definition(agent_name: str) -> dict:
     """Helper to load agent definition."""
     repo_root = Path(__file__).parents[2]
+    category = AGENT_CATEGORY_MAP.get(agent_name, agent_name)
     def_path = (
-        repo_root
-        / "docs"
-        / "agents"
-        / "agent_definitions"
-        / agent_name
-        / f"{agent_name}_definition.yaml"
+        repo_root / "agents" / "agent_definitions" / category / f"{agent_name}_definition.yaml"
     )
     if not def_path.exists():
         pytest.fail(f"Definition not found: {def_path}")

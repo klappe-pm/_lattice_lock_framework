@@ -21,7 +21,7 @@ class FrontmatterParser:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Configuration file not found: {file_path}")
 
-        with open(file_path, encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             raw_content = f.read()
 
         frontmatter: dict[str, Any] = {}
@@ -37,7 +37,7 @@ class FrontmatterParser:
             except yaml.YAMLError as e:
                 raise ValueError(f"Invalid YAML in frontmatter of {file_path}: {e}")
 
-        variables = frontmatter.get('vars', {})
+        variables = frontmatter.get("vars", {})
         resolved_content_str = self._resolve_variables(content_str, variables)
 
         try:
@@ -49,6 +49,7 @@ class FrontmatterParser:
 
     def _resolve_variables(self, content: str, variables: dict[str, Any]) -> str:
         """Substitutes variables in the content string."""
+
         def replace(match):
             var_name = match.group(1)
             default_val = match.group(2)

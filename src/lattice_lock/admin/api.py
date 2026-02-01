@@ -207,6 +207,7 @@ All errors follow the Lattice Lock error code format:
     app.include_router(router)
 
     from lattice_lock.admin.ui import router as ui_router
+
     app.include_router(ui_router)
 
     # Root endpoint

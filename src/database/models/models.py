@@ -12,7 +12,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from lattice_lock.database.models.base import Base, TimestampMixin, UUIDMixin
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -29,6 +28,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from lattice_lock.database.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
     from lattice_lock.database.models.user import Organization, User

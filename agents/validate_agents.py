@@ -27,13 +27,10 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
 
 try:
     import yaml
@@ -47,33 +44,95 @@ except ImportError:
 # =============================================================================
 
 VALID_DOMAINS = {
-    "business_review", "cloud", "content", "context", "education",
-    "engineering", "financial", "google_apps_script", "model_orchestration",
-    "product", "product_management", "project", "project_management",
-    "prompt_architect", "public_relations", "research", "ux"
+    "business_review",
+    "cloud",
+    "content",
+    "context",
+    "education",
+    "engineering",
+    "financial",
+    "google_apps_script",
+    "model_orchestration",
+    "product",
+    "product_management",
+    "project",
+    "project_management",
+    "prompt_architect",
+    "public_relations",
+    "research",
+    "ux",
 }
 
-VALID_BASE_TEMPLATES = {
-    "base_agent", "base_agent_v2.1", "base_subagent", "base_model"
-}
+VALID_BASE_TEMPLATES = {"base_agent", "base_agent_v2.1", "base_subagent", "base_model"}
 
 REQUIRED_SECTIONS = ["identity", "directive", "scope"]
 REQUIRED_IDENTITY_FIELDS = ["name", "version", "description", "role"]
 
 SEMVER_PATTERN = re.compile(r'^"?\d+\.\d+\.\d+"?$')
-KEBAB_SNAKE_PATTERN = re.compile(r'^[a-z][a-z0-9_-]*$')
+KEBAB_SNAKE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]*$")
 
 ACTION_VERBS = {
-    "analyze", "audit", "build", "calculate", "check", "configure",
-    "coordinate", "create", "debug", "define", "deploy", "design",
-    "detect", "develop", "document", "enforce", "ensure", "establish",
-    "evaluate", "execute", "extract", "facilitate", "generate", "handle",
-    "identify", "implement", "improve", "integrate", "investigate",
-    "maintain", "manage", "monitor", "optimize", "orchestrate", "organize",
-    "perform", "plan", "prepare", "process", "produce", "provide",
-    "research", "resolve", "review", "route", "run", "scan", "schedule",
-    "secure", "select", "standardize", "streamline", "support", "sync",
-    "test", "track", "transform", "translate", "update", "validate", "verify"
+    "analyze",
+    "audit",
+    "build",
+    "calculate",
+    "check",
+    "configure",
+    "coordinate",
+    "create",
+    "debug",
+    "define",
+    "deploy",
+    "design",
+    "detect",
+    "develop",
+    "document",
+    "enforce",
+    "ensure",
+    "establish",
+    "evaluate",
+    "execute",
+    "extract",
+    "facilitate",
+    "generate",
+    "handle",
+    "identify",
+    "implement",
+    "improve",
+    "integrate",
+    "investigate",
+    "maintain",
+    "manage",
+    "monitor",
+    "optimize",
+    "orchestrate",
+    "organize",
+    "perform",
+    "plan",
+    "prepare",
+    "process",
+    "produce",
+    "provide",
+    "research",
+    "resolve",
+    "review",
+    "route",
+    "run",
+    "scan",
+    "schedule",
+    "secure",
+    "select",
+    "standardize",
+    "streamline",
+    "support",
+    "sync",
+    "test",
+    "track",
+    "transform",
+    "translate",
+    "update",
+    "validate",
+    "verify",
 }
 
 
@@ -81,13 +140,14 @@ ACTION_VERBS = {
 # Data Classes
 # =============================================================================
 
+
 @dataclass
 class ValidationIssue:
     rule: str
     severity: str  # "error", "warning", "info"
     message: str
-    fix: Optional[str] = None
-    line: Optional[int] = None
+    fix: str | None = None
+    line: int | None = None
     auto_fixable: bool = False
 
 
@@ -96,10 +156,10 @@ class ValidationResult:
     file: str
     valid: bool
     score: int
-    errors: List[ValidationIssue] = field(default_factory=list)
-    warnings: List[ValidationIssue] = field(default_factory=list)
-    info: List[ValidationIssue] = field(default_factory=list)
-    passed_checks: List[str] = field(default_factory=list)
+    errors: list[ValidationIssue] = field(default_factory=list)
+    warnings: list[ValidationIssue] = field(default_factory=list)
+    info: list[ValidationIssue] = field(default_factory=list)
+    passed_checks: list[str] = field(default_factory=list)
 
     @property
     def summary(self) -> str:
@@ -111,7 +171,7 @@ class ValidationResult:
         parts.append(f"{len(self.passed_checks)} checks passed")
         return ", ".join(parts)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "file": self.file,
             "valid": self.valid,
@@ -120,7 +180,7 @@ class ValidationResult:
             "warnings": [vars(w) for w in self.warnings],
             "info": [vars(i) for i in self.info],
             "passed_checks": self.passed_checks,
-            "summary": self.summary
+            "summary": self.summary,
         }
 
 
@@ -132,10 +192,10 @@ class BatchResult:
     total_errors: int
     total_warnings: int
     average_score: float
-    results: List[ValidationResult] = field(default_factory=list)
-    common_issues: Dict[str, List[str]] = field(default_factory=dict)
+    results: list[ValidationResult] = field(default_factory=list)
+    common_issues: dict[str, list[str]] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "batch_summary": {
                 "total_files": self.total_files,
@@ -143,13 +203,13 @@ class BatchResult:
                 "invalid": self.invalid,
                 "total_errors": self.total_errors,
                 "total_warnings": self.total_warnings,
-                "average_score": round(self.average_score, 1)
+                "average_score": round(self.average_score, 1),
             },
             "common_issues": [
                 {"rule": rule, "count": len(files), "affected_files": files}
                 for rule, files in sorted(self.common_issues.items(), key=lambda x: -len(x[1]))
             ],
-            "results": [r.to_dict() for r in self.results]
+            "results": [r.to_dict() for r in self.results],
         }
 
 
@@ -157,15 +217,16 @@ class BatchResult:
 # Validators
 # =============================================================================
 
+
 class AgentValidator:
     """Validates a single agent YAML file."""
 
-    def __init__(self, file_path: Path, base_dir: Path, all_agents: Set[str] = None):
+    def __init__(self, file_path: Path, base_dir: Path, all_agents: set[str] = None):
         self.file_path = file_path
         self.base_dir = base_dir
         self.relative_path = str(file_path.relative_to(base_dir))
         self.all_agents = all_agents or set()
-        self.data: Optional[Dict] = None
+        self.data: dict | None = None
         self.result = ValidationResult(file=self.relative_path, valid=True, score=100)
 
     def validate(self) -> ValidationResult:
@@ -220,7 +281,7 @@ class AgentValidator:
     def _check_yaml_syntax(self) -> bool:
         """Check if YAML is valid."""
         try:
-            with open(self.file_path, 'r') as f:
+            with open(self.file_path) as f:
                 self.data = yaml.safe_load(f)
 
             if self.data is None:
@@ -249,7 +310,7 @@ class AgentValidator:
             self._add_error(
                 "schema_compliance",
                 "Missing 'agent' root section",
-                fix="Add 'agent:' as the root element"
+                fix="Add 'agent:' as the root element",
             )
             return
 
@@ -258,7 +319,7 @@ class AgentValidator:
             self._add_error(
                 "schema_compliance",
                 f"Missing required sections: {', '.join(missing)}",
-                fix=f"Add missing sections: {', '.join(missing)}"
+                fix=f"Add missing sections: {', '.join(missing)}",
             )
         else:
             self.result.passed_checks.append("required_sections")
@@ -274,7 +335,7 @@ class AgentValidator:
             self._add_error(
                 "schema_compliance",
                 f"Missing required identity fields: {', '.join(missing)}",
-                fix=f"Add: {', '.join([f'{f}: \"value\"' for f in missing])}"
+                fix=f"Add: {', '.join([f'{f}: \"value\"' for f in missing])}",
             )
         else:
             self.result.passed_checks.append("identity_fields")
@@ -285,7 +346,7 @@ class AgentValidator:
             self._add_warning(
                 "naming_convention",
                 f"Agent name should be lowercase with underscores/hyphens: '{name}'",
-                fix="Use snake_case or kebab-case"
+                fix="Use snake_case or kebab-case",
             )
 
     def _check_naming_convention(self):
@@ -304,7 +365,7 @@ class AgentValidator:
             self._add_warning(
                 "naming_convention",
                 f"Filename '{filename}' doesn't match identity.name '{name}'",
-                fix=f"Rename file to '{expected_filename}.yaml' or change name to '{filename.replace('_definition', '')}'"
+                fix=f"Rename file to '{expected_filename}.yaml' or change name to '{filename.replace('_definition', '')}'",
             )
         else:
             self.result.passed_checks.append("naming_convention")
@@ -327,7 +388,7 @@ class AgentValidator:
                 "version_format",
                 f"Version must be semver format (X.Y.Z): got '{version}'",
                 fix='Use format like version: "1.0.0"',
-                auto_fixable=True
+                auto_fixable=True,
             )
         else:
             self.result.passed_checks.append("version_format")
@@ -338,7 +399,7 @@ class AgentValidator:
                 "version_format",
                 "Version should be a quoted string",
                 fix=f'Change to: version: "{version}"',
-                auto_fixable=True
+                auto_fixable=True,
             )
 
     def _check_directive_format(self):
@@ -352,17 +413,17 @@ class AgentValidator:
             self._add_error(
                 "directive_format",
                 "Missing primary_goal in directive section",
-                fix="Add primary_goal with action verb"
+                fix="Add primary_goal with action verb",
             )
             return
 
         # Check starts with action verb
-        first_word = primary_goal.split()[0].lower().rstrip('s')  # Handle plurals
+        first_word = primary_goal.split()[0].lower().rstrip("s")  # Handle plurals
         if first_word not in ACTION_VERBS:
             self._add_warning(
                 "directive_format",
                 f"primary_goal should start with action verb, got: '{first_word}'",
-                fix=f"Rewrite to start with verb like: Manage, Analyze, Execute..."
+                fix="Rewrite to start with verb like: Manage, Analyze, Execute...",
             )
         else:
             self.result.passed_checks.append("directive_format")
@@ -378,7 +439,7 @@ class AgentValidator:
             self._add_warning(
                 "scope_consistency",
                 "scope.can_access is empty or missing",
-                fix="Add list of accessible paths"
+                fix="Add list of accessible paths",
             )
         else:
             # Check for overly broad access
@@ -388,7 +449,7 @@ class AgentValidator:
                     self._add_warning(
                         "scope_consistency",
                         f"Overly broad access pattern: '{path}'",
-                        fix="Limit to specific directories"
+                        fix="Limit to specific directories",
                     )
 
             self.result.passed_checks.append("scope_validity")
@@ -404,7 +465,7 @@ class AgentValidator:
                 self._add_info(
                     "scope_consistency",
                     f"can_modify paths not in can_access: {extra}",
-                    fix="Add these paths to can_access or remove from can_modify"
+                    fix="Add these paths to can_access or remove from can_modify",
                 )
 
     def _check_tag_consistency(self):
@@ -416,9 +477,7 @@ class AgentValidator:
         tags = identity.get("tags", [])
         if not tags:
             self._add_warning(
-                "tag_consistency",
-                "No tags defined",
-                fix="Add relevant tags including domain"
+                "tag_consistency", "No tags defined", fix="Add relevant tags including domain"
             )
             return
 
@@ -439,7 +498,7 @@ class AgentValidator:
                 self._add_warning(
                     "tag_consistency",
                     f"Missing domain tag '{domain}'",
-                    fix=f"Add '{domain}' to tags"
+                    fix=f"Add '{domain}' to tags",
                 )
 
         # Check for subagent tag if in subagents directory
@@ -448,7 +507,7 @@ class AgentValidator:
                 self._add_warning(
                     "tag_consistency",
                     "Subagent missing 'subagent' tag",
-                    fix="Add 'subagent' to tags"
+                    fix="Add 'subagent' to tags",
                 )
 
         # Check tag format
@@ -458,13 +517,13 @@ class AgentValidator:
                 self._add_warning(
                     "tag_consistency",
                     f"Tag should be lowercase: '{tag}'",
-                    fix=f"Change to '{tag_str.lower()}'"
+                    fix=f"Change to '{tag_str.lower()}'",
                 )
             if " " in tag_str:
                 self._add_error(
                     "tag_consistency",
                     f"Tag cannot contain spaces: '{tag}'",
-                    fix=f"Use underscore or hyphen: '{tag_str.replace(' ', '_')}'"
+                    fix=f"Use underscore or hyphen: '{tag_str.replace(' ', '_')}'",
                 )
 
         self.result.passed_checks.append("tag_format")
@@ -480,17 +539,13 @@ class AgentValidator:
 
         if enabled:
             # Must have targets
-            targets = (
-                delegation.get("allowed_subagents") or
-                delegation.get("can_delegate_to") or
-                []
-            )
+            targets = delegation.get("allowed_subagents") or delegation.get("can_delegate_to") or []
 
             if not targets:
                 self._add_error(
                     "delegation_rules",
                     "Delegation enabled but no allowed_subagents defined",
-                    fix="Add allowed_subagents list or set enabled: false"
+                    fix="Add allowed_subagents list or set enabled: false",
                 )
             else:
                 # Check targets exist (if we have all_agents context)
@@ -509,7 +564,7 @@ class AgentValidator:
                             self._add_warning(
                                 "dependency_check",
                                 f"Delegation target not found: '{target_name}'",
-                                fix="Create subagent or remove from list"
+                                fix="Create subagent or remove from list",
                             )
 
                 self.result.passed_checks.append("delegation_rules")
@@ -522,7 +577,7 @@ class AgentValidator:
             self._add_info(
                 "inheritance",
                 "No inheritance section - consider extending base_agent_v2.1",
-                fix="Add: inheritance:\n  extends: base_agent_v2.1"
+                fix="Add: inheritance:\n  extends: base_agent_v2.1",
             )
             return
 
@@ -531,7 +586,7 @@ class AgentValidator:
             self._add_warning(
                 "inheritance",
                 f"Unknown base template: '{extends}'",
-                fix=f"Use one of: {', '.join(sorted(VALID_BASE_TEMPLATES))}"
+                fix=f"Use one of: {', '.join(sorted(VALID_BASE_TEMPLATES))}",
             )
         else:
             self.result.passed_checks.append("inheritance")
@@ -547,7 +602,7 @@ class AgentValidator:
             self._add_info(
                 "subagent_rules",
                 "Subagent has delegation enabled - typically subagents don't delegate",
-                fix="Set delegation.enabled: false unless intentional"
+                fix="Set delegation.enabled: false unless intentional",
             )
 
         self.result.passed_checks.append("subagent_rules")
@@ -557,15 +612,15 @@ class AgentValidator:
         content = self.file_path.read_text()
 
         placeholders = [
-            r'\[TODO\]',
-            r'\[FILL[_ ]?IN\]',
-            r'\[PLACEHOLDER\]',
-            r'\[INSERT\]',
-            r'\[CHANGE[_ ]?ME\]',
-            r'\[YOUR[_ ]\w+\]',
-            r'<PLACEHOLDER>',
-            r'TBD',
-            r'TODO:',
+            r"\[TODO\]",
+            r"\[FILL[_ ]?IN\]",
+            r"\[PLACEHOLDER\]",
+            r"\[INSERT\]",
+            r"\[CHANGE[_ ]?ME\]",
+            r"\[YOUR[_ ]\w+\]",
+            r"<PLACEHOLDER>",
+            r"TBD",
+            r"TODO:",
         ]
 
         for pattern in placeholders:
@@ -573,7 +628,7 @@ class AgentValidator:
                 self._add_warning(
                     "placeholder_detection",
                     f"Found placeholder text matching: {pattern}",
-                    fix="Replace placeholder with actual content"
+                    fix="Replace placeholder with actual content",
                 )
                 return
 
@@ -583,39 +638,44 @@ class AgentValidator:
     # Helpers
     # -------------------------------------------------------------------------
 
-    def _get_section(self, name: str) -> Optional[Dict]:
+    def _get_section(self, name: str) -> dict | None:
         """Get a section from agent data."""
         if not self.data:
             return None
         return self.data.get("agent", {}).get(name, {})
 
     def _add_error(self, rule: str, message: str, fix: str = None, auto_fixable: bool = False):
-        self.result.errors.append(ValidationIssue(
-            rule=rule, severity="error", message=message, fix=fix, auto_fixable=auto_fixable
-        ))
+        self.result.errors.append(
+            ValidationIssue(
+                rule=rule, severity="error", message=message, fix=fix, auto_fixable=auto_fixable
+            )
+        )
 
     def _add_warning(self, rule: str, message: str, fix: str = None, auto_fixable: bool = False):
-        self.result.warnings.append(ValidationIssue(
-            rule=rule, severity="warning", message=message, fix=fix, auto_fixable=auto_fixable
-        ))
+        self.result.warnings.append(
+            ValidationIssue(
+                rule=rule, severity="warning", message=message, fix=fix, auto_fixable=auto_fixable
+            )
+        )
 
     def _add_info(self, rule: str, message: str, fix: str = None):
-        self.result.info.append(ValidationIssue(
-            rule=rule, severity="info", message=message, fix=fix
-        ))
+        self.result.info.append(
+            ValidationIssue(rule=rule, severity="info", message=message, fix=fix)
+        )
 
 
 # =============================================================================
 # Batch Validation
 # =============================================================================
 
-def validate_batch(files: List[Path], base_dir: Path) -> BatchResult:
+
+def validate_batch(files: list[Path], base_dir: Path) -> BatchResult:
     """Validate multiple files and aggregate results."""
     # First pass: collect all agent names
     all_agents = set()
     for f in files:
         try:
-            with open(f, 'r') as fp:
+            with open(f) as fp:
                 data = yaml.safe_load(fp)
                 name = data.get("agent", {}).get("identity", {}).get("name")
                 if name:
@@ -636,7 +696,7 @@ def validate_batch(files: List[Path], base_dir: Path) -> BatchResult:
     avg_score = sum(r.score for r in results) / len(results) if results else 0
 
     # Find common issues
-    common_issues: Dict[str, List[str]] = {}
+    common_issues: dict[str, list[str]] = {}
     for r in results:
         for e in r.errors + r.warnings:
             if e.rule not in common_issues:
@@ -652,13 +712,14 @@ def validate_batch(files: List[Path], base_dir: Path) -> BatchResult:
         total_warnings=total_warnings,
         average_score=avg_score,
         results=results,
-        common_issues=common_issues
+        common_issues=common_issues,
     )
 
 
 # =============================================================================
 # Output Formatting
 # =============================================================================
+
 
 def print_result(result: ValidationResult, verbose: bool = False):
     """Print a single validation result."""
@@ -711,7 +772,8 @@ def print_batch_summary(batch: BatchResult):
 # Main
 # =============================================================================
 
-def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]:
+
+def find_agent_files(base_dir: Path, domain: str | None = None) -> list[Path]:
     """Find agent YAML files."""
     agent_defs = base_dir / "agent_definitions"
 
@@ -728,7 +790,7 @@ def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]
 def main():
     parser = argparse.ArgumentParser(
         description="Validate agent YAML files against v2.1 spec",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument("file", nargs="?", help="Single YAML file to validate")
@@ -736,7 +798,9 @@ def main():
     parser.add_argument("--all", "-a", action="store_true", help="Validate all agents")
     parser.add_argument("--json", "-j", action="store_true", help="Output as JSON")
     parser.add_argument("--output", "-o", help="Output file for JSON report")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Show all checks including passed")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show all checks including passed"
+    )
     parser.add_argument("--quiet", "-q", action="store_true", help="Only show errors")
     parser.add_argument("--list-domains", "-l", action="store_true", help="List available domains")
 

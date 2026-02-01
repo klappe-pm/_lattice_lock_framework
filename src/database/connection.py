@@ -10,7 +10,6 @@ import os
 from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 
-from lattice_lock.database.models.base import Base
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -20,6 +19,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
+
+from lattice_lock.database.models.base import Base
 
 
 # Environment-based configuration

@@ -1,8 +1,6 @@
 """Validate code passes linting checks."""
 
 import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
@@ -26,8 +24,7 @@ class TestRuffLinting:
             # Show first 20 lines of errors
             error_lines = result.stdout.strip().split("\n")[:20]
             pytest.fail(
-                f"Ruff linting failed with {len(error_lines)} issues:\n"
-                + "\n".join(error_lines)
+                f"Ruff linting failed with {len(error_lines)} issues:\n" + "\n".join(error_lines)
             )
 
     def test_ruff_available(self):
@@ -57,9 +54,7 @@ class TestBlackFormatting:
 
         if result.returncode != 0:
             # Show which files would be reformatted
-            pytest.fail(
-                f"Code is not Black formatted:\n{result.stderr[:500]}"
-            )
+            pytest.fail(f"Code is not Black formatted:\n{result.stderr[:500]}")
 
     def test_black_available(self):
         """Black should be installed."""
@@ -87,9 +82,7 @@ class TestIsortImports:
         )
 
         if result.returncode != 0:
-            pytest.fail(
-                f"Imports are not sorted:\n{result.stderr[:500]}"
-            )
+            pytest.fail(f"Imports are not sorted:\n{result.stderr[:500]}")
 
 
 @pytest.mark.quality

@@ -69,22 +69,23 @@ def _get_enabled_features() -> set[str]:
             for feature in Feature:
                 if feature.value == f_clean:
                     enabled.discard(feature)
-    
+
     # 3. Apply runtime overrides
     for feature_name, is_enabled in _RUNTIME_OVERRIDES.items():
         feature_enum = None
         for f in Feature:
-             if f.value == feature_name:
-                 feature_enum = f
-                 break
-        
+            if f.value == feature_name:
+                feature_enum = f
+                break
+
         if feature_enum:
-             if is_enabled:
-                 enabled.add(feature_enum)
-             else:
-                 enabled.discard(feature_enum)
+            if is_enabled:
+                enabled.add(feature_enum)
+            else:
+                enabled.discard(feature_enum)
 
     return {f.value for f in enabled}
+
 
 import threading
 
@@ -92,10 +93,11 @@ import threading
 _RUNTIME_OVERRIDES: dict[str, bool] = {}
 _OVERRIDE_LOCK = threading.Lock()
 
+
 def override_feature(feature: str | Feature, enabled: bool):
     """
     Override a feature flag at runtime.
-    
+
     Args:
         feature: Feature to override
         enabled: Whether to enable or disable
@@ -110,10 +112,10 @@ def override_feature(feature: str | Feature, enabled: bool):
 def is_feature_enabled(feature: str | Feature) -> bool:
     """
     Check if a feature is enabled.
-    
+
     Args:
         feature: Feature enum or string name
-    
+
     Returns:
         bool: True if feature is enabled
     """

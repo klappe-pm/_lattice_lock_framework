@@ -2,7 +2,6 @@
 
 import ast
 import re
-from pathlib import Path
 
 import pytest
 import yaml
@@ -79,10 +78,7 @@ class TestYAMLCodeExamples:
 
         # YAML errors are less critical
         if len(errors) > 10:
-            pytest.fail(
-                f"Many invalid YAML examples ({len(errors)}):\n"
-                + "\n".join(errors[:5])
-            )
+            pytest.fail(f"Many invalid YAML examples ({len(errors)}):\n" + "\n".join(errors[:5]))
 
 
 @pytest.mark.documentation

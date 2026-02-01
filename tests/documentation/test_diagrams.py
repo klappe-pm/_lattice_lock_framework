@@ -1,7 +1,6 @@
 """Validate diagrams in documentation."""
 
 import re
-from pathlib import Path
 
 import pytest
 
@@ -43,8 +42,7 @@ class TestMermaidDiagrams:
 
                 # Check if diagram starts with valid type
                 has_valid_type = any(
-                    first_line.lower().startswith(dtype.lower())
-                    for dtype in self.MERMAID_TYPES
+                    first_line.lower().startswith(dtype.lower()) for dtype in self.MERMAID_TYPES
                 )
 
                 if not has_valid_type and diagram:
@@ -72,7 +70,7 @@ class TestMermaidDiagrams:
                 if not diagram:
                     empty_blocks.append(f"{md_file}: empty mermaid block {i+1}")
 
-        assert not empty_blocks, f"Found empty mermaid blocks:\n" + "\n".join(empty_blocks)
+        assert not empty_blocks, "Found empty mermaid blocks:\n" + "\n".join(empty_blocks)
 
 
 @pytest.mark.documentation

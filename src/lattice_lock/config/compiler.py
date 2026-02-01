@@ -23,29 +23,29 @@ class YAMLCompiler:
         frontmatter, content = self.parser.parse(abs_path)
 
         base_config = {}
-        if 'extends' in frontmatter:
-            parent_path = frontmatter['extends']
+        if "extends" in frontmatter:
+            parent_path = frontmatter["extends"]
             base_config = self.compile(parent_path)
-            if '_meta' in base_config:
-                del base_config['_meta']
+            if "_meta" in base_config:
+                del base_config["_meta"]
 
-        if 'mixins' in frontmatter:
-            for mixin_path in frontmatter['mixins']:
+        if "mixins" in frontmatter:
+            for mixin_path in frontmatter["mixins"]:
                 mixin_config = self.compile(mixin_path)
-                if '_meta' in mixin_config:
-                    del mixin_config['_meta']
+                if "_meta" in mixin_config:
+                    del mixin_config["_meta"]
                 base_config = self.resolver.deep_merge(base_config, mixin_config)
 
         final_config = self.resolver.deep_merge(base_config, content)
 
-        if frontmatter.get('compile', {}).get('normalize'):
+        if frontmatter.get("compile", {}).get("normalize"):
             final_config = self.normalizer.normalize(final_config)
 
-        final_config['_meta'] = {
-            'source': abs_path,
-            'compiled_at': datetime.datetime.utcnow().isoformat(),
-            'frontmatter': frontmatter,
-            'version': frontmatter.get('vars', {}).get('version', 'unknown')
+        final_config["_meta"] = {
+            "source": abs_path,
+            "compiled_at": datetime.datetime.utcnow().isoformat(),
+            "frontmatter": frontmatter,
+            "version": frontmatter.get("vars", {}).get("version", "unknown"),
         }
 
         return final_config

@@ -35,9 +35,7 @@ class TestCoverageConfiguration:
         pytest_opts = pyproject_config.get("tool", {}).get("pytest", {}).get("ini_options", {})
         addopts = pytest_opts.get("addopts", "")
 
-        assert "--cov-fail-under=90" in addopts, (
-            "pytest addopts should include --cov-fail-under=90"
-        )
+        assert "--cov-fail-under=90" in addopts, "pytest addopts should include --cov-fail-under=90"
 
     def test_branch_coverage_enabled(self, pyproject_config):
         """Branch coverage should be enabled."""
@@ -52,9 +50,9 @@ class TestCoverageConfiguration:
         source = coverage_run.get("source", [])
 
         assert source, "Coverage source should be configured"
-        assert any("lattice_lock" in s for s in source), (
-            "Coverage source should include lattice_lock"
-        )
+        assert any(
+            "lattice_lock" in s for s in source
+        ), "Coverage source should include lattice_lock"
 
 
 @pytest.mark.quality

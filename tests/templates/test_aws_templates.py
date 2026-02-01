@@ -395,6 +395,7 @@ class TestInitCommandWithAWSCI:
                 "--output-dir",
                 str(tmp_path),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -414,6 +415,7 @@ class TestInitCommandWithAWSCI:
                 "--output-dir",
                 str(tmp_path),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -436,6 +438,7 @@ class TestInitCommandWithAWSCI:
                 "--output-dir",
                 str(tmp_path),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -460,6 +463,7 @@ class TestInitCommandWithAWSCI:
                 "--output-dir",
                 str(tmp_path),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -480,6 +484,7 @@ class TestInitCommandWithAWSCI:
                 "--output-dir",
                 str(tmp_path),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -514,6 +519,7 @@ class TestInitCommandWithAWSCI:
                 "--output-dir",
                 str(tmp_path),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0

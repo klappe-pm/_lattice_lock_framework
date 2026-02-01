@@ -7,7 +7,7 @@ optimized for Cloud SQL with connection pooling and health checks.
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 
 from sqlalchemy import Engine, create_engine, event, text
@@ -17,7 +17,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from collections.abc import AsyncIterator, Iterator
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 

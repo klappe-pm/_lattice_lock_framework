@@ -1,7 +1,6 @@
 """Validate all markdown links in documentation."""
 
 import re
-from pathlib import Path
 
 import pytest
 
@@ -37,9 +36,8 @@ class TestMarkdownLinks:
                 if not target_path.exists():
                     broken_links.append(f"{md_file}:{link_path}")
 
-        assert not broken_links, (
-            f"Found {len(broken_links)} broken internal links:\n"
-            + "\n".join(broken_links[:20])
+        assert not broken_links, f"Found {len(broken_links)} broken internal links:\n" + "\n".join(
+            broken_links[:20]
         )
 
     def test_readme_exists(self, readme_file):
