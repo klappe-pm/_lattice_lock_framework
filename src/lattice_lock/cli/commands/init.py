@@ -12,6 +12,27 @@ import click
 from ..templates import render_template
 
 
+def normalize_project_name(name: str) -> str:
+    """Convert project name to snake_case format.
+
+    Args:
+        name: Project name to normalize.
+
+    Returns:
+        Project name in snake_case format.
+    """
+    # Replace spaces and hyphens with underscores
+    normalized = re.sub(r'[\s-]+', '_', name.strip())
+    # Convert to lowercase
+    normalized = normalized.lower()
+    # Remove any non-alphanumeric/underscore characters
+    normalized = re.sub(r'[^a-z0-9_]', '', normalized)
+    # Ensure it starts with a letter
+    if normalized and not normalized[0].isalpha():
+        normalized = 'p_' + normalized
+    return normalized
+
+
 def validate_project_name(name: str) -> bool:
     """Validate project name follows snake_case convention.
 
@@ -426,7 +447,14 @@ def init_command(
         if not github_repo:
             github_repo = None
 
-    # Validate project name
+    # Auto-format project name to snake_case
+    original_name = project_name
+    project_name = normalize_project_name(project_name)
+    
+    if original_name != project_name:
+        click.echo(f"Project name formatted: '{original_name}' → '{project_name}'")
+    
+    # Validate project name (should always pass after normalization)
     if not validate_project_name(project_name):
         raise click.ClickException(
             f"Invalid project name '{project_name}'. "

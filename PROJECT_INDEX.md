@@ -185,19 +185,19 @@ pytest -m critical              # Critical path only
 
 ## Key Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `httpx` | >=0.25.0 | HTTP client |
-| `pydantic` | >=2.0.0 | Data validation |
-| `click` | >=8.0.0 | CLI framework |
-| `fastapi` | >=0.100.0 | API framework |
-| `rich` | >=13.0.0 | Terminal formatting |
-| `tenacity` | >=8.2.0 | Retry logic |
-| `Jinja2` | >=3.1.0 | Templating |
-| `mcp` | >=0.1.0 | MCP protocol |
-| `sqlalchemy` | >=2.0.0 | Database ORM |
-| `bcrypt` | >=4.0.1 | Password hashing |
-| `PyJWT` | >=2.8.0 | JWT tokens |
+| Package      | Version   | Purpose             |     |
+| ------------ | --------- | ------------------- | --- |
+| `httpx`      | >=0.25.0  | HTTP client         |     |
+| `pydantic`   | >=2.0.0   | Data validation     |     |
+| `click`      | >=8.0.0   | CLI framework       |     |
+| `fastapi`    | >=0.100.0 | API framework       |     |
+| `rich`       | >=13.0.0  | Terminal formatting |     |
+| `tenacity`   | >=8.2.0   | Retry logic         |     |
+| `Jinja2`     | >=3.1.0   | Templating          |     |
+| `mcp`        | >=0.1.0   | MCP protocol        |     |
+| `sqlalchemy` | >=2.0.0   | Database ORM        |     |
+| `bcrypt`     | >=4.0.1   | Password hashing    |     |
+| `PyJWT`      | >=2.8.0   | JWT tokens          |     |
 
 ---
 

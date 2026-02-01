@@ -13,7 +13,7 @@
 We take security seriously. If you discover a security vulnerability within the Lattice Lock Framework, please follow these steps:
 
 1. **Do NOT create a public GitHub issue.** This allows us to assess the risk and create a fix before the vulnerability is made public.
-2. Email our security team at **security@lattice-lock.io**.
+2. Email our security team at security@lattice-lock.io
 3. Include as much detail as possible:
    - Description of the vulnerability.
    - Steps to reproduce.
@@ -37,6 +37,3 @@ Lattice Lock includes several built-in security features:
 - **Dependency Scanning:** We use Snyk and dependabot to monitor dependencies.
 - **Secret Detection:** Pre-commit hooks prevent accidental commit of API keys.
 
-## Contact
-
-For non-vulnerability security questions, please open a discussion on GitHub or contact the maintainers directly.
