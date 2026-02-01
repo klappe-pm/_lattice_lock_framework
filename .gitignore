@@ -1,15 +1,59 @@
-# Lattice Lock Framework .gitignore
+# =============================================================================
+# LATTICE LOCK FRAMEWORK - SECURITY-HARDENED .GITIGNORE
+# =============================================================================
+# Principle: LEAST PRIVILEGE - Only track what is absolutely necessary
+# For personal exclusions, use: .git/info/exclude
+# Last Updated: 2026-01-31
+# =============================================================================
 
 # =============================================================================
-# CREDENTIALS & SECRETS (CRITICAL - NEVER COMMIT)
+# 🔐 SECRETS & CREDENTIALS (CRITICAL - NEVER COMMIT)
 # =============================================================================
-credentials/
+
+# Environment files (may contain API keys, secrets)
+.env
+.env.*
+!.env.example
+.envrc
+*.local
+.local/
+
+# API Keys and Secrets
 *.pem
 *.key
+*.crt
 *.p12
 *.pfx
 *.jks
 *.keystore
+secrets/
+.secrets/
+**/secrets/
+**/.secrets/
+credentials/
+.credentials/
+**/credentials/
+**/.credentials/
+
+# AWS
+.aws/
+aws-credentials
+aws_credentials
+*.aws
+
+# Cloud Provider Credentials
+.gcp/
+.azure/
+gcp-credentials.json
+service-account*.json
+*-service-account.json
+
+# SSH Keys (if accidentally placed in repo)
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.ppk
 *_rsa
 *_rsa.pub
 *_dsa
@@ -19,31 +63,66 @@ credentials/
 *_ed25519
 *_ed25519.pub
 
-# API Keys and Environment Files
-docs/credentials/.env
-.env
-.env.*
-!.env.example
-*.secret
-secrets.yaml
-secrets.json
-api_keys.txt
-*keychain*.txt
-*security-report*.txt
-# NOTE: See CREDENTIALS_SETUP.md for instructions on using global Keychain credentials
-
-# AWS Credentials
-.aws/credentials
-.aws/config
+# JWT/Auth Tokens
+*.token
+*.tokens
+jwt_secret*
+auth_tokens/
 
 # =============================================================================
-# PYTHON
+# 🗄️ DATABASES & DATA FILES
 # =============================================================================
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+lattice.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Database dumps
+*.sql
+*.dump
+*.bak
+db_backup/
+database_backup/
+
+# Data directories
+data/
+*.data/
+local_data/
+user_data/
+
+# =============================================================================
+# 🐍 PYTHON
+# =============================================================================
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
 *.so
 .Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+.python-version
+.pyenv/
+virtualenv/
+.virtualenvs/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
 build/
 develop-eggs/
 dist/
@@ -63,44 +142,222 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual Environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-.venv/
+# PyInstaller
+*.manifest
+*.spec
 
-# PyTest
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
-# MyPy
+# Type checkers
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Pyre
+.pytype/
 .pyre/
 
+# Pytest
+.pytest_cache/
+.cache/
+pytest_cache/
+.hypothesis/
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage/
+coverage.xml
+*.cover
+*.py,cover
+.tox/
+.nox/
+
+# Ruff
+.ruff_cache/
+
+# Profiling
+*.prof
+*.lprof
+
 # =============================================================================
-# IDEs & EDITORS
+# 📦 NODE.JS / FRONTEND
 # =============================================================================
-.vscode/
-.idea/
+
+# Dependencies
+node_modules/
+**/node_modules/
+jspm_packages/
+bower_components/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.nuxt/
+frontend/.output/
+frontend/.cache/
+
+# Package manager files (keep lock files for reproducibility)
+# Uncomment below if you want to exclude lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Parcel cache
+.parcel-cache/
+
+# Vite
+frontend/.vite/
+
+# ESLint & Prettier
+.eslintcache
+.stylelintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# =============================================================================
+# 🏗️ TERRAFORM / INFRASTRUCTURE
+# =============================================================================
+
+# Local .terraform directories
+**/.terraform/
+.terraform/
+.terraform.lock.hcl
+
+# State files (SENSITIVE - contains infrastructure details)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+terraform.tfstate.d/
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Plan files
+*.tfplan
+*.tfplan.json
+tfplan
+tfplan.*
+
+# Variable files with secrets
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+terraform.auto.tfvars
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terragrunt
+.terragrunt-cache/
+terragrunt-debug.tfvars.json
+
+# =============================================================================
+# 🐳 DOCKER
+# =============================================================================
+
+# Docker build context (if large)
+.docker/
+
+# Docker compose override (may contain secrets)
+docker-compose.override.yml
+docker-compose.override.yaml
+docker-compose.local.yml
+docker-compose.local.yaml
+
+# =============================================================================
+# 📝 LOGS & TEMPORARY FILES
+# =============================================================================
+
+# Logs
+logs/
+*.log
+log/
+*.logs
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
 *.swp
 *.swo
 *~
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
 
-# Obsidian (exclude entire directory)
+# Backup files
+*.bak
+*.backup
+*.old
+
+# =============================================================================
+# 💻 IDE & EDITOR CONFIGURATIONS
+# =============================================================================
+
+# VS Code
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+tags
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# TextMate
+*.tmproj
+*.tmproject
+tmtags
+
+# Cursor IDE
+.cursor/
+
+# Obsidian
 .obsidian/
 
 # Trash directories
@@ -108,121 +365,242 @@ dmypy.json
 .Trash/
 
 # =============================================================================
-# AI/LLM SPECIFIC
+# 🍎 OS-SPECIFIC FILES
 # =============================================================================
-# MCP local overrides (user-specific configs)
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+.fseventsd/
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# 🤖 AI/ML & MODEL FILES
+# =============================================================================
+
+# Large model files
+*.bin
+*.h5
+*.hdf5
+*.onnx
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+*.pkl
+*.pickle
+models/
+model_cache/
+.model_cache/
+
+# Embeddings and vectors
+*.npy
+*.npz
+embeddings/
+vectors/
+
+# Hugging Face
+.cache/huggingface/
+
+# Model cache
+*.gguf.tmp
+*.gguf.part
+
+# =============================================================================
+# 📊 MCP (Model Context Protocol)
+# =============================================================================
+
+# MCP runtime data (keep config, exclude runtime)
+.mcp/cache/
+.mcp/logs/
+.mcp/tmp/
+.mcp/*.log
 .mcp/local/
 
 # Claude and Claude Flow
 .claude/
 .claude-flow/
 
-# Agent Memory State (optional - decide per project)
-# agent_memory/agents/*_memory.md
+# =============================================================================
+# 🔧 PROJECT-SPECIFIC EXCLUSIONS
+# =============================================================================
 
-# Model Cache
-model_cache/
-*.gguf.tmp
-*.gguf.part
+# Design files and working directories
+_gitignore_folders/
+*/_gitignore_folders/
+
+# Money automation sensitive data
+money_automation/data/
+money_automation/credentials/
+money_automation/*.csv
+money_automation/*.xlsx
+money_automation/reports/
+
+# Project management sensitive files
+project_management/private/
+project_management/*.private.*
+.project-management/
+
+# Shared configuration overrides
+shared/local/
+shared/*.local.*
+
+# Generated test outputs
+tests/output/
+tests/reports/
+tests/.pytest_output/
+tests/coverage/
+test_outputs/
+coverage_reports/
+
+# Scripts output
+scripts/output/
+scripts/logs/
+
+# Infrastructure secrets
+infrastructure/secrets/
+infrastructure/*.tfvars
+infrastructure/kubeconfig*
+
+# Agent runtime data
+agents/cache/
+agents/logs/
+agents/output/
+agents/.runtime/
+
+# Documentation build artifacts
+docs/_build/
+docs/.doctrees/
+docs/generated/
+
+# Lattice compilation artifacts
+.lattice-lock/compiled/
+
+# Work Breakdown Structure (local working copies)
+WBS/
+
+# Implementation artifacts and prototypes
+implementation/
+
+# Construction/development artifacts
+.construction/
+
+# Documentation TODOs
+.documentation-todos/
+
+# Refactoring audit artifacts (temporary)
+.refactor_audit/
+
+# Snyk Security Extension
+.github/instructions/snyk_rules.instructions.md
+snyk
 
 # =============================================================================
-# LOGS & TEMPORARY FILES
+# 📁 BUILD & COMPILATION ARTIFACTS
 # =============================================================================
-*.log
-logs/
-*.tmp
-*.temp
-tmp/
-temp/
 
-# =============================================================================
-# DATABASE
-# =============================================================================
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
+# General build directories
+build/
+_build/
+out/
+output/
+target/
 
-# =============================================================================
-# COMPILED & GENERATED FILES
-# =============================================================================
-*.pyc
-*.pyo
+# Compiled assets
+*.min.js
+*.min.css
+*.bundle.js
+*.bundle.css
+
+# Source maps (may reveal source structure)
+*.map
+*.js.map
+*.css.map
+
+# Compiled binaries
 *.class
 *.o
 *.obj
 *.exe
 *.dll
 *.dylib
-
-# Alembic (keep migrations in git)
-# alembic/versions/*.py  # Uncomment if you want to exclude migrations
-
-# =============================================================================
-# OS SPECIFIC
-# =============================================================================
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-.Spotlight-V100
-.Trashes
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-.directory
-.Trash-*
+*.pyc
+*.pyo
 
 # =============================================================================
-# PROJECT SPECIFIC
+# 🔒 ADDITIONAL SECURITY EXCLUSIONS
 # =============================================================================
-# Work Breakdown Structure tracking files (local working copies)
-WBS/
 
-# Lattice compilation artifacts (if you want to regenerate)
-# src/generated/
-.lattice-lock/compiled/
+# Sensitive configuration files
+config.local.yaml
+config.local.yml
+config.local.json
+*.secret
+*.secret.*
+*.private
+*.private.*
+secrets.yaml
+secrets.json
+api_keys.txt
+*keychain*.txt
+*security-report*.txt
 
-# Test outputs
-test_outputs/
-coverage_reports/
+# Audit and security scan results
+audit/
+security_reports/
+*.sarif
+*.sarif.json
 
-# Backup files
-*.bak
-*.backup
-*~
+# Penetration testing artifacts
+pentest/
 
-# Node.js dependencies (frontend)
-node_modules/
-package-lock.json
+# Session files
+sessions/
+*.session
 
-# Snyk Security Extension - AI Rules (auto-generated)
-.github/instructions/snyk_rules.instructions.md
-snyk
+# User-specific files
+.user/
+*.user
 
-# Implementation artifacts and prototypes
-implementation/
+# Local overrides
+local/
+**/local/
 
-# Construction/development artifacts (non-essential files)
-.construction/
+# Backup directories
+backups/
+.backups/
 
-# Documentation TODOs (pre-refactor docs pending cleanup)
-.documentation-todos/
-
-# Project management artifacts
-.project-management/
-
-# Ruff cache
-.ruff_cache/
+# Archives that might contain sensitive data
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
 
 # =============================================================================
-# DEPRECATED PACKAGES (Post-Consolidation)
+# 🚫 DEPRECATED PACKAGES (Post-Consolidation)
 # =============================================================================
 # These packages have been consolidated into lattice_lock/
 src/lattice_lock_cli/
@@ -232,3 +610,46 @@ src/lattice_lock_sheriff/
 src/lattice_lock_gauntlet/
 src/lattice_lock_agents/
 src/lattice_lock_dashboard/
+
+# =============================================================================
+# ✅ WHITELIST - FILES TO EXPLICITLY TRACK
+# =============================================================================
+# Use ! prefix to negate patterns and INCLUDE files
+
+# Keep example/template files
+!.env.example
+!*.example
+!*.template
+!*.sample
+
+# Keep documentation
+!docs/**/*.md
+!docs/**/*.rst
+!README.md
+!CONTRIBUTING.md
+!LICENSE.md
+!SECURITY.md
+!CHANGELOG.md
+
+# Keep essential configs
+!pyproject.toml
+!requirements.in
+!requirements.lock
+!requirements-dev.lock
+!Makefile
+!Dockerfile
+!docker-compose.yml
+!.pre-commit-config.yaml
+!lattice.yaml
+
+# Keep GitHub workflows and configs
+!.github/**
+!.githooks/**
+
+# Keep .gitkeep files
+!.gitkeep
+!**/.gitkeep
+
+# =============================================================================
+# END OF .GITIGNORE
+# =============================================================================
