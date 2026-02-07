@@ -73,10 +73,10 @@ def mock_response_factory():
 
         mock_response.json = json_method
         mock_response.text = text_data
-        
+
         # httpx response is NOT a context manager in request() usage, only in stream()
         # But we mocked request() to return response directly.
-        
+
         return mock_response
 
     return _create_mock_response

@@ -7,6 +7,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from lattice_lock.database.models.user import (
     APIKey,
     Organization,
@@ -14,9 +18,6 @@ from lattice_lock.database.models.user import (
     User,
 )
 from lattice_lock.database.repositories.base import BaseRepository
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 
 class UserRepository(BaseRepository[User]):

@@ -5,12 +5,13 @@ MCP Server implementation for Lattice Lock.
 import logging
 from typing import Any
 
-from lattice_lock.config.feature_flags import Feature, is_feature_enabled
-from lattice_lock.mcp.templates import GOVERNANCE_CHECK_PROMPT, MCP_PROMPTS
-from lattice_lock.mcp.tools import get_tools, handle_tool_call
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import EmbeddedResource, GetPromptResult, ImageContent, Prompt, TextContent, Tool
+
+from lattice_lock.config.feature_flags import Feature, is_feature_enabled
+from lattice_lock.mcp.templates import GOVERNANCE_CHECK_PROMPT, MCP_PROMPTS
+from lattice_lock.mcp.tools import get_tools, handle_tool_call
 
 logger = logging.getLogger(__name__)
 

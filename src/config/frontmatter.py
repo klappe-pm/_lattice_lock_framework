@@ -1,7 +1,9 @@
-import re
-import yaml
-from typing import Dict, Any, Tuple, Optional
 import os
+import re
+from typing import Any
+
+import yaml
+
 
 class FrontmatterParser:
     """Parses YAML frontmatter and handles variable interpolation."""
@@ -16,7 +18,7 @@ class FrontmatterParser:
     # Regex for variable substitution: ${vars.VARIABLE_NAME} or ${vars.VARIABLE_NAME:-default}
     _VAR_PATTERN = re.compile(r"\$\{vars\.([a-zA-Z0-9_]+)(?::-([^}]+))?\}")
 
-    def parse(self, file_path: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    def parse(self, file_path: str) -> tuple[dict[str, Any], dict[str, Any]]:
         """
         Parses a YAML file with potential frontmatter.
 
@@ -30,10 +32,10 @@ class FrontmatterParser:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Configuration file not found: {file_path}")
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             raw_content = f.read()
 
-        frontmatter: Dict[str, Any] = {}
+        frontmatter: dict[str, Any] = {}
         content_str: str = raw_content
 
         # Check for frontmatter
@@ -41,7 +43,7 @@ class FrontmatterParser:
         if match:
             frontmatter_str = match.group(1)
             content_str = match.group(2)
-            
+
             try:
                 frontmatter = yaml.safe_load(frontmatter_str) or {}
             except yaml.YAMLError as e:
@@ -49,7 +51,7 @@ class FrontmatterParser:
 
         # Resolve variables in content BEFORE parsing content YAML
         # Variables come from frontmatter 'vars' section
-        variables = frontmatter.get('vars', {})
+        variables = frontmatter.get("vars", {})
         resolved_content_str = self._resolve_variables(content_str, variables)
 
         try:
@@ -59,10 +61,10 @@ class FrontmatterParser:
 
         return frontmatter, content
 
-    def _resolve_variables(self, content: str, variables: Dict[str, Any]) -> str:
+    def _resolve_variables(self, content: str, variables: dict[str, Any]) -> str:
         """
         Substitutes variables in the content string.
-        
+
         Args:
             content: The raw string of the content section.
             variables: Dictionary of variable names to values.
@@ -70,10 +72,11 @@ class FrontmatterParser:
         Returns:
             The content string with variables replaced.
         """
+
         def replace(match):
             var_name = match.group(1)
             default_val = match.group(2)
-            
+
             if var_name in variables:
                 return str(variables[var_name])
             elif default_val is not None:

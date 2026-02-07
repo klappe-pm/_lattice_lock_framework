@@ -8,10 +8,11 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
+
 from lattice_lock.gauntlet.generator import GauntletGenerator
 from lattice_lock.orchestrator.core import ModelOrchestrator
 from lattice_lock.sheriff.sheriff import run_sheriff
-from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
 logger = logging.getLogger(__name__)
 

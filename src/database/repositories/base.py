@@ -9,9 +9,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Generic, TypeVar
 
-from lattice_lock.database.models.base import Base
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from lattice_lock.database.models.base import Base
 
 T = TypeVar("T", bound=Base)
 

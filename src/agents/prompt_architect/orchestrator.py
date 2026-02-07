@@ -45,7 +45,14 @@ class PipelineStage:
     status: str = "pending"  # pending, running, completed, failed, skipped
     start_time: datetime | None = None
     end_time: datetime | None = None
-    result: GenerationResult | SpecificationAnalysis | RoadmapStructure | list[ToolAssignment] | list[GeneratedPrompt] | None = None
+    result: (
+        GenerationResult
+        | SpecificationAnalysis
+        | RoadmapStructure
+        | list[ToolAssignment]
+        | list[GeneratedPrompt]
+        | None
+    ) = None
     error: str | None = None
     retries: int = 0
 

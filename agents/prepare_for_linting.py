@@ -25,10 +25,7 @@ Usage:
 """
 
 import argparse
-import os
 from pathlib import Path
-from typing import List, Optional
-
 
 SYSTEM_PROMPT = """You are the Agent Linting Manager for the Lattice Lock Framework. Your role is to validate agent definition YAML files against the v2.1 specification and report violations.
 
@@ -68,7 +65,7 @@ Return JSON with: file, valid, score, errors[], warnings[], passed_checks[], sum
 """
 
 
-def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]:
+def find_agent_files(base_dir: Path, domain: str | None = None) -> list[Path]:
     """Find all agent YAML files, optionally filtered by domain."""
     agent_defs = base_dir / "agent_definitions"
 
@@ -81,7 +78,7 @@ def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]
 
         if not domain_dir.exists():
             print(f"Error: Domain directory not found: {domain}")
-            print(f"Available domains:")
+            print("Available domains:")
             for d in sorted(agent_defs.iterdir()):
                 if d.is_dir():
                     print(f"  - {d.name.replace('agents_', '')}")
@@ -96,7 +93,7 @@ def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]
 def read_file_content(file_path: Path) -> str:
     """Read and return file content."""
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             return f.read()
     except Exception as e:
         return f"# Error reading file: {e}"
@@ -118,11 +115,15 @@ File path: {relative_path}
 Return JSON validation report with errors, warnings, and passed_checks."""
 
 
-def format_batch(files: List[Path], base_dir: Path, quick: bool = False) -> str:
+def format_batch(files: list[Path], base_dir: Path, quick: bool = False) -> str:
     """Format multiple files for batch validation."""
     parts = []
 
-    mode = "Quick check - only report errors (skip warnings):" if quick else "Validate these agent definitions and provide a batch summary:"
+    mode = (
+        "Quick check - only report errors (skip warnings):"
+        if quick
+        else "Validate these agent definitions and provide a batch summary:"
+    )
     parts.append(mode)
     parts.append("")
     parts.append("<agent_files>")
@@ -136,7 +137,9 @@ def format_batch(files: List[Path], base_dir: Path, quick: bool = False) -> str:
 
     parts.append("</agent_files>")
     parts.append("")
-    parts.append("Return JSON batch summary with total_files, valid, invalid, common_issues, and individual results array.")
+    parts.append(
+        "Return JSON batch summary with total_files, valid, invalid, common_issues, and individual results array."
+    )
 
     return "\n".join(parts)
 
@@ -176,13 +179,17 @@ Examples:
   python3 prepare_for_linting.py --domain engineering
   python3 prepare_for_linting.py --domain financial --batch-size 15 --output batches/
   python3 prepare_for_linting.py --all --quick
-        """
+        """,
     )
 
     parser.add_argument("file", nargs="?", help="Single YAML file to validate")
-    parser.add_argument("--domain", "-d", help="Validate entire domain (e.g., engineering, financial)")
+    parser.add_argument(
+        "--domain", "-d", help="Validate entire domain (e.g., engineering, financial)"
+    )
     parser.add_argument("--all", "-a", action="store_true", help="Validate all agents")
-    parser.add_argument("--batch-size", "-b", type=int, default=10, help="Files per batch (default: 10)")
+    parser.add_argument(
+        "--batch-size", "-b", type=int, default=10, help="Files per batch (default: 10)"
+    )
     parser.add_argument("--quick", "-q", action="store_true", help="Quick mode - errors only")
     parser.add_argument("--output", "-o", help="Output file or directory")
     parser.add_argument("--no-rules", action="store_true", help="Skip rules reference in output")
@@ -237,7 +244,7 @@ Examples:
         output = create_full_prompt(user_content, include_rules=not args.no_rules)
 
         if args.output:
-            with open(args.output, 'w') as f:
+            with open(args.output, "w") as f:
                 f.write(output)
             print(f"Wrote prompt to: {args.output}")
         else:
@@ -245,7 +252,7 @@ Examples:
 
     else:
         # Batch mode
-        batches = [files[i:i + args.batch_size] for i in range(0, len(files), args.batch_size)]
+        batches = [files[i : i + args.batch_size] for i in range(0, len(files), args.batch_size)]
         print(f"Created {len(batches)} batches of up to {args.batch_size} files each")
 
         if args.output:
@@ -258,14 +265,14 @@ Examples:
                     output = create_full_prompt(user_content, include_rules=(i == 1))
 
                     batch_file = output_path / f"batch_{i:03d}.txt"
-                    with open(batch_file, 'w') as f:
+                    with open(batch_file, "w") as f:
                         f.write(output)
                     print(f"Wrote: {batch_file} ({len(batch)} files)")
             else:
                 # Single file mode - combine all
                 user_content = format_batch(files, base_dir, quick=args.quick)
                 output = create_full_prompt(user_content, include_rules=not args.no_rules)
-                with open(output_path, 'w') as f:
+                with open(output_path, "w") as f:
                     f.write(output)
                 print(f"Wrote prompt to: {output_path}")
         else:

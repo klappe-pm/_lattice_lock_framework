@@ -22,14 +22,14 @@ def normalize_project_name(name: str) -> str:
         Project name in snake_case format.
     """
     # Replace spaces and hyphens with underscores
-    normalized = re.sub(r'[\s-]+', '_', name.strip())
+    normalized = re.sub(r"[\s-]+", "_", name.strip())
     # Convert to lowercase
     normalized = normalized.lower()
     # Remove any non-alphanumeric/underscore characters
-    normalized = re.sub(r'[^a-z0-9_]', '', normalized)
+    normalized = re.sub(r"[^a-z0-9_]", "", normalized)
     # Ensure it starts with a letter
     if normalized and not normalized[0].isalpha():
-        normalized = 'p_' + normalized
+        normalized = "p_" + normalized
     return normalized
 
 
@@ -233,7 +233,7 @@ def test_project_name_valid() -> None:
 
     # Create docs/README.md
     docs_readme = project_dir / "docs" / "README.md"
-    docs_content = f'''# Documentation
+    docs_content = f"""# Documentation
 
 This directory contains project documentation for {project_name}.
 
@@ -246,7 +246,7 @@ This directory contains project documentation for {project_name}.
 ## Naming Convention
 
 All documentation files must follow `lowercase_with_underscores.md` naming.
-'''
+"""
     docs_readme.write_text(docs_content)
     created_files.append(docs_readme)
     if verbose:
@@ -258,7 +258,9 @@ All documentation files must follow `lowercase_with_underscores.md` naming.
     created_files.append(concepts_readme)
 
     technical_readme = project_dir / "docs" / "03_technical" / "README.md"
-    technical_readme.write_text(f"# Technical Documentation\n\nTechnical references for {project_name}.\n")
+    technical_readme.write_text(
+        f"# Technical Documentation\n\nTechnical references for {project_name}.\n"
+    )
     created_files.append(technical_readme)
 
     meta_readme = project_dir / "docs" / "04_meta" / "README.md"
@@ -267,7 +269,7 @@ All documentation files must follow `lowercase_with_underscores.md` naming.
 
     # Create scripts/README.md
     scripts_readme = project_dir / "scripts" / "README.md"
-    scripts_content = f'''# Scripts
+    scripts_content = f"""# Scripts
 
 This directory contains utility scripts for {project_name}.
 
@@ -285,7 +287,7 @@ All scripts must follow `lowercase_with_underscores` naming:
 - Deployment automation
 - Development utilities
 - Database migrations
-'''
+"""
     scripts_readme.write_text(scripts_content)
     created_files.append(scripts_readme)
     if verbose:
@@ -294,7 +296,7 @@ All scripts must follow `lowercase_with_underscores` naming:
     # Create agent scaffolding files if requested
     if with_agents:
         agents_readme = project_dir / "agents" / "README.md"
-        agents_content = f'''# Agents
+        agents_content = f"""# Agents
 
 This directory contains agent definitions and configurations for {project_name}.
 
@@ -315,15 +317,21 @@ This directory contains agent definitions and configurations for {project_name}.
 ## Validation
 
 Run `lattice-lock validate` to ensure agent definitions are properly formatted.
-'''
+"""
         agents_readme.write_text(agents_content)
         created_files.append(agents_readme)
         if verbose:
             click.echo(f"  Created file: {agents_readme.relative_to(output_dir)}")
 
         # Create example agent definition
-        example_agent = project_dir / "agents" / "agent_definitions" / "agents_custom" / "agents_custom_example_agent_definition.yaml"
-        agent_yaml_content = f'''# Example Agent Definition for {project_name}
+        example_agent = (
+            project_dir
+            / "agents"
+            / "agent_definitions"
+            / "agents_custom"
+            / "agents_custom_example_agent_definition.yaml"
+        )
+        agent_yaml_content = f"""# Example Agent Definition for {project_name}
 agent:
   identity:
     name: custom_example_agent
@@ -360,7 +368,7 @@ scope:
   cannot_access:
   - /.env
   - /secrets
-'''
+"""
         example_agent.write_text(agent_yaml_content)
         created_files.append(example_agent)
         if verbose:
@@ -427,7 +435,7 @@ def init_command(
             "Project name (snake_case)",
             type=str,
         )
-    
+
     if output_dir is None:
         default_path = Path.cwd()
         output_dir_str = click.prompt(
@@ -436,7 +444,7 @@ def init_command(
             type=str,
         )
         output_dir = Path(output_dir_str).expanduser().resolve()
-    
+
     if not github_repo:
         github_repo = click.prompt(
             "GitHub repository URL (optional, press Enter to skip)",
@@ -450,10 +458,10 @@ def init_command(
     # Auto-format project name to snake_case
     original_name = project_name
     project_name = normalize_project_name(project_name)
-    
+
     if original_name != project_name:
         click.echo(f"Project name formatted: '{original_name}' → '{project_name}'")
-    
+
     # Validate project name (should always pass after normalization)
     if not validate_project_name(project_name):
         raise click.ClickException(

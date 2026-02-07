@@ -73,7 +73,6 @@ def calculate_total(items):
 """
 
 
-
 @pytest.fixture
 def cassette():
     """Fixture for recording/replaying API interactions."""

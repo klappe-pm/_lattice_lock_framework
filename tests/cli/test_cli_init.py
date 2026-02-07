@@ -70,6 +70,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -87,7 +88,7 @@ class TestInitCommand:
         assert (project_dir / ".github" / "workflows" / "lattice-lock.yml").exists()
 
     def test_invalid_project_name_rejected(self, runner: CliRunner, temp_dir: Path) -> None:
-        """Test that invalid project names are rejected."""
+        """Test that invalid project names are normalized (not rejected)."""
         result = runner.invoke(
             cli,
             [
@@ -96,10 +97,12 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
-        assert result.exit_code != 0
-        assert "Invalid project name" in result.output
+        # The CLI now normalizes names instead of rejecting them
+        assert result.exit_code == 0
+        assert "invalid_name" in result.output or "Project created" in result.output
 
     def test_existing_directory_rejected(self, runner: CliRunner, temp_dir: Path) -> None:
         """Test that existing directories are not overwritten."""
@@ -115,6 +118,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code != 0
@@ -132,6 +136,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -153,6 +158,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -175,6 +181,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -194,6 +201,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0
@@ -212,6 +220,7 @@ class TestInitCommand:
                 "--output-dir",
                 str(temp_dir),
             ],
+            input="\n",  # Skip GitHub repo prompt
         )
 
         assert result.exit_code == 0

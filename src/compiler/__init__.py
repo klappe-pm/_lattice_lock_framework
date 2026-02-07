@@ -34,11 +34,6 @@ Usage:
 
 """
 
-from lattice_lock.compiler.token_tracker import (
-    TokenStats,
-    TokenTracker,
-)
-
 from lattice_lock.compiler.core import (
     CompilationResult,
     CompilerConfig,
@@ -51,6 +46,10 @@ from lattice_lock.compiler.formats import (
 from lattice_lock.compiler.normalizer import (
     NormalizationStrategy,
     Normalizer,
+)
+from lattice_lock.compiler.token_tracker import (
+    TokenStats,
+    TokenTracker,
 )
 
 __all__ = [

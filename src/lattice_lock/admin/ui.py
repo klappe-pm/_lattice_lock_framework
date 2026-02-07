@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -14,24 +13,25 @@ router = APIRouter(prefix="", tags=["Admin UI"])
 templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
 
+
 class ToggleRequest(BaseModel):
     enabled: bool
+
 
 @router.get("/admin/flags", response_class=HTMLResponse)
 async def flags_ui(request: Request):
     """Serve the feature flags UI."""
     return templates.TemplateResponse("flags.html", {"request": request})
 
+
 @router.get("/api/v1/flags")
 async def list_flags():
     """List all feature flags and their status."""
     features = []
     for f in Feature:
-        features.append({
-            "name": f.value,
-            "enabled": is_feature_enabled(f)
-        })
+        features.append({"name": f.value, "enabled": is_feature_enabled(f)})
     return {"features": features}
+
 
 @router.post("/api/v1/flags/{feature}/toggle")
 async def toggle_flag(feature: str, request: ToggleRequest):
@@ -51,5 +51,5 @@ async def toggle_flag(feature: str, request: ToggleRequest):
     return {
         "name": feature,
         "enabled": is_feature_enabled(target_feature),
-        "message": f"Feature '{feature}' set to {request.enabled}"
+        "message": f"Feature '{feature}' set to {request.enabled}",
     }

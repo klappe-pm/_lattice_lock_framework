@@ -2,18 +2,19 @@
 """Migrates legacy YAML configuration files to the inheritance-based format."""
 
 import argparse
-import yaml
-from pathlib import Path
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 
 @dataclass
 class MigrationConfig:
     base_template: str = "base/base_agent.yaml"
-    mixins: List[str] = None
-    vars: Dict[str, Any] = None
-    
+    mixins: list[str] = None
+    vars: dict[str, Any] = None
+
     def __post_init__(self):
         if self.mixins is None:
             self.mixins = []
@@ -21,76 +22,81 @@ class MigrationConfig:
             self.vars = {}
 
 
-def load_yaml(file_path: Path) -> Dict[str, Any]:
-    with open(file_path, 'r', encoding='utf-8') as f:
+def load_yaml(file_path: Path) -> dict[str, Any]:
+    with open(file_path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
-def detect_appropriate_mixins(content: Dict[str, Any]) -> List[str]:
+def detect_appropriate_mixins(content: dict[str, Any]) -> list[str]:
     mixins = []
-    if content.get('agent', {}).get('capabilities', {}).get('code_execution'):
+    if content.get("agent", {}).get("capabilities", {}).get("code_execution"):
         mixins.append("mixins/agents/code_capabilities.yaml")
-    if content.get('agent', {}).get('delegation', {}).get('enabled'):
+    if content.get("agent", {}).get("delegation", {}).get("enabled"):
         mixins.append("mixins/agents/delegation_enabled.yaml")
-    if content.get('agent', {}).get('memory', {}).get('enabled'):
+    if content.get("agent", {}).get("memory", {}).get("enabled"):
         mixins.append("mixins/agents/memory_enabled.yaml")
-    if content.get('agent', {}).get('tools_config'):
+    if content.get("agent", {}).get("tools_config"):
         mixins.append("mixins/agents/tool_access.yaml")
     return mixins
 
 
-def extract_vars(content: Dict[str, Any]) -> Dict[str, Any]:
+def extract_vars(content: dict[str, Any]) -> dict[str, Any]:
     vars_dict = {}
-    agent = content.get('agent', {})
-    identity = agent.get('identity', {})
-    if 'version' in identity:
-        vars_dict['version'] = identity['version']
-    if 'status' in identity:
-        vars_dict['status'] = identity['status']
+    agent = content.get("agent", {})
+    identity = agent.get("identity", {})
+    if "version" in identity:
+        vars_dict["version"] = identity["version"]
+    if "status" in identity:
+        vars_dict["status"] = identity["status"]
     return vars_dict
 
 
 def generate_frontmatter(config: MigrationConfig) -> str:
     fm = {}
     if config.base_template:
-        fm['extends'] = config.base_template
+        fm["extends"] = config.base_template
     if config.mixins:
-        fm['mixins'] = config.mixins
+        fm["mixins"] = config.mixins
     if config.vars:
-        fm['vars'] = config.vars
+        fm["vars"] = config.vars
     if not fm:
         return "---\n---\n"
     return "---\n" + yaml.dump(fm, default_flow_style=False) + "---\n"
 
 
-def remove_inherited_fields(content: Dict[str, Any], mixins: List[str]) -> Dict[str, Any]:
-    agent = content.get('agent', {})
-    identity = agent.get('identity', {})
-    identity.pop('version', None)
-    identity.pop('status', None)
+def remove_inherited_fields(content: dict[str, Any], mixins: list[str]) -> dict[str, Any]:
+    agent = content.get("agent", {})
+    identity = agent.get("identity", {})
+    identity.pop("version", None)
+    identity.pop("status", None)
     return content
 
 
-def migrate_file(input_path: Path, output_path: Path, config: Optional[MigrationConfig] = None, dry_run: bool = False) -> str:
+def migrate_file(
+    input_path: Path,
+    output_path: Path,
+    config: MigrationConfig | None = None,
+    dry_run: bool = False,
+) -> str:
     content = load_yaml(input_path)
-    
+
     if config is None:
         config = MigrationConfig()
         config.mixins = detect_appropriate_mixins(content)
         config.vars = extract_vars(content)
-    
+
     content = remove_inherited_fields(content, config.mixins)
     frontmatter = generate_frontmatter(config)
     content_str = yaml.dump(content, default_flow_style=False, sort_keys=False)
-    
+
     result = frontmatter + content_str
-    
+
     if not dry_run:
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(result)
         print(f"Migrated: {input_path} -> {output_path}")
-    
+
     return result
 
 
@@ -101,7 +107,7 @@ def main():
     parser.add_argument("--base", type=str, default="base/base_agent.yaml")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    
+
     if args.input.is_file():
         output = args.output or args.input
         config = MigrationConfig(base_template=args.base)

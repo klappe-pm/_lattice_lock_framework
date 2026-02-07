@@ -7,7 +7,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class ApprovalStatus(Enum):
@@ -93,8 +92,8 @@ class BlockingIssue:
 
     message: str
     severity: Severity
-    file_path: Optional[str] = None
-    line_number: Optional[int] = None
+    file_path: str | None = None
+    line_number: int | None = None
     category: str = "general"
 
 
@@ -107,9 +106,9 @@ class ApprovalResult:
     timestamp: datetime = field(default_factory=datetime.now)
 
     # Sub-results
-    coverage_result: Optional[CoverageResult] = None
-    documentation_result: Optional[DocumentationResult] = None
-    test_review_result: Optional[TestReviewResult] = None
+    coverage_result: CoverageResult | None = None
+    documentation_result: DocumentationResult | None = None
+    test_review_result: TestReviewResult | None = None
 
     # Issues and recommendations
     blocking_issues: list[BlockingIssue] = field(default_factory=list)
@@ -117,8 +116,8 @@ class ApprovalResult:
     recommendations: list[str] = field(default_factory=list)
 
     # Metadata
-    pr_number: Optional[int] = None
-    commit_sha: Optional[str] = None
+    pr_number: int | None = None
+    commit_sha: str | None = None
     reviewed_by: str = "ApproverAgent"
 
     @property

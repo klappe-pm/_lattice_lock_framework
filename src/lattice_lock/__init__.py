@@ -25,6 +25,8 @@ else:
         __version__ = "2.1.0"
 
 # Core orchestrator exports
+# Types module
+from lattice_lock import types
 from lattice_lock.orchestrator import (
     APIResponse,
     ModelOrchestrator,
@@ -34,9 +36,6 @@ from lattice_lock.orchestrator import (
     TaskAnalyzer,
     TaskType,
 )
-
-# Types module
-from lattice_lock import types
 
 __all__ = [
     "__version__",

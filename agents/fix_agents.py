@@ -25,13 +25,11 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 try:
     import yaml
@@ -79,6 +77,7 @@ DEFAULT_MAIN_AGENT_SCOPE = {
 # Data Classes
 # =============================================================================
 
+
 @dataclass
 class Fix:
     file: str
@@ -95,9 +94,9 @@ class FixReport:
     files_modified: int = 0
     fixes_applied: int = 0
     fixes_skipped: int = 0
-    fixes: List[Fix] = field(default_factory=list)
+    fixes: list[Fix] = field(default_factory=list)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "summary": {
                 "total_files": self.total_files,
@@ -113,7 +112,7 @@ class FixReport:
                     "applied": f.applied,
                 }
                 for f in self.fixes
-            ]
+            ],
         }
 
 
@@ -121,35 +120,43 @@ class FixReport:
 # YAML Handling (preserve formatting)
 # =============================================================================
 
+
 class PreservingDumper(yaml.SafeDumper):
     """Custom YAML dumper that preserves formatting."""
+
     pass
 
 
 def str_representer(dumper, data):
     """Handle multiline strings properly."""
-    if '\n' in data:
-        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    if "\n" in data:
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 
 PreservingDumper.add_representer(str, str_representer)
 
 
-def load_yaml(file_path: Path) -> Tuple[Optional[Dict], Optional[str]]:
+def load_yaml(file_path: Path) -> tuple[dict | None, str | None]:
     """Load YAML file and return data and raw content."""
     try:
         content = file_path.read_text()
         data = yaml.safe_load(content)
         return data, content
-    except Exception as e:
+    except Exception:
         return None, None
 
 
-def save_yaml(file_path: Path, data: Dict):
+def save_yaml(file_path: Path, data: dict):
     """Save YAML file with proper formatting."""
-    content = yaml.dump(data, Dumper=PreservingDumper, default_flow_style=False,
-                       allow_unicode=True, sort_keys=False, width=120)
+    content = yaml.dump(
+        data,
+        Dumper=PreservingDumper,
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+        width=120,
+    )
     file_path.write_text(content)
 
 
@@ -157,7 +164,8 @@ def save_yaml(file_path: Path, data: Dict):
 # Fix Functions
 # =============================================================================
 
-def extract_domain(file_path: Path) -> Optional[str]:
+
+def extract_domain(file_path: Path) -> str | None:
     """Extract domain from file path."""
     parts = str(file_path).split("/")
     for part in parts:
@@ -171,7 +179,7 @@ def is_subagent(file_path: Path) -> bool:
     return "/subagents/" in str(file_path)
 
 
-def fix_tags(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
+def fix_tags(data: dict, file_path: Path, dry_run: bool = True) -> list[Fix]:
     """Fix missing or incorrect tags."""
     fixes = []
     agent = data.get("agent", {})
@@ -221,7 +229,7 @@ def fix_tags(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
     return fixes
 
 
-def fix_names(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
+def fix_names(data: dict, file_path: Path, dry_run: bool = True) -> list[Fix]:
     """Fix identity.name to match filename pattern."""
     fixes = []
     agent = data.get("agent", {})
@@ -250,7 +258,7 @@ def fix_names(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
     return fixes
 
 
-def fix_version(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
+def fix_version(data: dict, file_path: Path, dry_run: bool = True) -> list[Fix]:
     """Fix version format to be quoted semver."""
     fixes = []
     agent = data.get("agent", {})
@@ -279,7 +287,7 @@ def fix_version(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
     elif not isinstance(current_version, str):
         # Convert to string
         new_version = str(current_version)
-        if not re.match(r'^\d+\.\d+\.\d+$', new_version):
+        if not re.match(r"^\d+\.\d+\.\d+$", new_version):
             new_version = "1.0.0"
 
         fix = Fix(
@@ -299,7 +307,7 @@ def fix_version(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
     return fixes
 
 
-def fix_scope(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
+def fix_scope(data: dict, file_path: Path, dry_run: bool = True) -> list[Fix]:
     """Add missing scope section."""
     fixes = []
     agent = data.get("agent", {})
@@ -311,7 +319,7 @@ def fix_scope(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
         fix = Fix(
             file=str(file_path),
             fix_type="scope",
-            description=f"Added default scope section",
+            description="Added default scope section",
             before=None,
             after=default_scope,
         )
@@ -325,7 +333,7 @@ def fix_scope(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
     return fixes
 
 
-def fix_directive(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
+def fix_directive(data: dict, file_path: Path, dry_run: bool = True) -> list[Fix]:
     """Add missing directive section."""
     fixes = []
     agent = data.get("agent", {})
@@ -336,9 +344,7 @@ def fix_directive(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix
         domain = extract_domain(file_path) or "domain"
         default_goal = f"Manage {domain.replace('_', ' ')} operations as {role}."
 
-        default_directive = {
-            "primary_goal": default_goal
-        }
+        default_directive = {"primary_goal": default_goal}
 
         fix = Fix(
             file=str(file_path),
@@ -357,7 +363,7 @@ def fix_directive(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix
     return fixes
 
 
-def fix_inheritance(data: Dict, file_path: Path, dry_run: bool = True) -> List[Fix]:
+def fix_inheritance(data: dict, file_path: Path, dry_run: bool = True) -> list[Fix]:
     """Add missing inheritance section."""
     fixes = []
     agent = data.get("agent", {})
@@ -386,16 +392,17 @@ def fix_inheritance(data: Dict, file_path: Path, dry_run: bool = True) -> List[F
 # Main Fixer
 # =============================================================================
 
+
 class AgentFixer:
     """Applies fixes to agent files."""
 
-    def __init__(self, base_dir: Path, dry_run: bool = True, fix_types: List[str] = None):
+    def __init__(self, base_dir: Path, dry_run: bool = True, fix_types: list[str] = None):
         self.base_dir = base_dir
         self.dry_run = dry_run
         self.fix_types = fix_types or ["tags", "names", "version", "scope", "directive"]
         self.report = FixReport()
 
-    def fix_file(self, file_path: Path) -> List[Fix]:
+    def fix_file(self, file_path: Path) -> list[Fix]:
         """Apply fixes to a single file."""
         data, _ = load_yaml(file_path)
         if data is None:
@@ -428,7 +435,7 @@ class AgentFixer:
 
         return all_fixes
 
-    def fix_all(self, files: List[Path]) -> FixReport:
+    def fix_all(self, files: list[Path]) -> FixReport:
         """Apply fixes to multiple files."""
         self.report.total_files = len(files)
         modified_files = set()
@@ -452,7 +459,8 @@ class AgentFixer:
 # CLI
 # =============================================================================
 
-def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]:
+
+def find_agent_files(base_dir: Path, domain: str | None = None) -> list[Path]:
     """Find agent YAML files."""
     agent_defs = base_dir / "agent_definitions"
 
@@ -466,7 +474,7 @@ def find_agent_files(base_dir: Path, domain: Optional[str] = None) -> List[Path]
     return sorted(agent_defs.rglob("*.yaml"))
 
 
-def print_fixes(fixes: List[Fix], verbose: bool = False):
+def print_fixes(fixes: list[Fix], verbose: bool = False):
     """Print fix summary."""
     if not fixes:
         print("No fixes needed.")
@@ -494,15 +502,21 @@ def print_fixes(fixes: List[Fix], verbose: bool = False):
 def main():
     parser = argparse.ArgumentParser(
         description="Fix agent YAML validation issues",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument("file", nargs="?", help="Single YAML file to fix")
     parser.add_argument("--domain", "-d", help="Fix entire domain")
     parser.add_argument("--all", "-a", action="store_true", help="Fix all agents")
-    parser.add_argument("--dry-run", "-n", action="store_true", help="Preview changes without applying")
-    parser.add_argument("--fix", action="append", choices=["tags", "names", "version", "scope", "directive", "inheritance"],
-                       help="Specific fix types to apply (can use multiple)")
+    parser.add_argument(
+        "--dry-run", "-n", action="store_true", help="Preview changes without applying"
+    )
+    parser.add_argument(
+        "--fix",
+        action="append",
+        choices=["tags", "names", "version", "scope", "directive", "inheritance"],
+        help="Specific fix types to apply (can use multiple)",
+    )
     parser.add_argument("--report", "-r", help="Output JSON report to file")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed output")
     parser.add_argument("--list-domains", "-l", action="store_true", help="List available domains")

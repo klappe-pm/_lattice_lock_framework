@@ -16,7 +16,6 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional
 
 from lattice_lock.agents.approver.models import (
     ApprovalResult,
@@ -39,7 +38,7 @@ class ApproverAgent:
     - Environment: LATTICE_APPROVER_ENABLED=false
     """
 
-    def __init__(self, settings: Optional[AgentSettings] = None):
+    def __init__(self, settings: AgentSettings | None = None):
         """
         Initialize the Approver Agent.
 
@@ -68,7 +67,7 @@ class ApproverAgent:
         """Check if approver is enabled."""
         return self._config.enabled
 
-    def analyze_coverage(self, coverage_xml: Optional[Path] = None) -> CoverageResult:
+    def analyze_coverage(self, coverage_xml: Path | None = None) -> CoverageResult:
         """
         Analyze code coverage from coverage.xml.
 
@@ -111,7 +110,7 @@ class ApproverAgent:
                     filename = cls.get("filename")
                     if not filename:
                         continue  # Skip if no filename attribute
-                    
+
                     file_line_rate = float(cls.get("line-rate", "0")) * 100
 
                     if file_line_rate < self.coverage_target:
@@ -140,7 +139,7 @@ class ApproverAgent:
                                 covered_functions += 1
                         except (ValueError, TypeError):
                             continue  # Skip malformed method entries
-                except (ValueError, TypeError) as e:
+                except (ValueError, TypeError):
                     # Skip malformed class entries but continue processing
                     continue
 
@@ -156,9 +155,7 @@ class ApproverAgent:
                 f"Increase line coverage from {line_rate:.1f}% to {self.coverage_target}%"
             )
         if uncovered_files:
-            recommendations.append(
-                f"Focus on: {', '.join(uncovered_files[:3])}"
-            )
+            recommendations.append(f"Focus on: {', '.join(uncovered_files[:3])}")
 
         return CoverageResult(
             line_coverage=line_rate,
@@ -171,7 +168,7 @@ class ApproverAgent:
             recommendations=recommendations,
         )
 
-    def validate_documentation(self, docs_path: Optional[Path] = None) -> DocumentationResult:
+    def validate_documentation(self, docs_path: Path | None = None) -> DocumentationResult:
         """
         Validate documentation quality.
 
@@ -241,7 +238,7 @@ class ApproverAgent:
             files_checked=files_checked,
         )
 
-    def review_tests(self, tests_path: Optional[Path] = None) -> TestReviewResult:
+    def review_tests(self, tests_path: Path | None = None) -> TestReviewResult:
         """
         Review test quality and patterns.
 
@@ -319,8 +316,8 @@ class ApproverAgent:
 
     def review(
         self,
-        pr_number: Optional[int] = None,
-        commit_sha: Optional[str] = None,
+        pr_number: int | None = None,
+        commit_sha: str | None = None,
     ) -> ApprovalResult:
         """
         Perform a complete review and return approval decision.
