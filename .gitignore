@@ -3,7 +3,7 @@
 # =============================================================================
 # Principle: LEAST PRIVILEGE - Only track what is absolutely necessary
 # For personal exclusions, use: .git/info/exclude
-# Last Updated: 2026-01-31
+# Last Updated: 2026-02-01
 # =============================================================================
 
 # =============================================================================
@@ -83,14 +83,17 @@ lattice.db
 *.db-wal
 
 # Database dumps
-*.sql
 *.dump
-*.bak
 db_backup/
 database_backup/
 
-# Data directories
-data/
+# SQL files (allow migrations)
+*.sql
+!**/migrations/*.sql
+!**/alembic/**/*.sql
+
+# Data directories (project root only - not submodule data/)
+/data/
 *.data/
 local_data/
 user_data/
@@ -302,11 +305,8 @@ temp/
 .temp/
 *.tmp
 *.temp
-*.swp
-*.swo
-*~
 
-# Backup files
+# Backup files (*.swp, *.swo, *~ consolidated in IDE section)
 *.bak
 *.backup
 *.old
@@ -329,14 +329,10 @@ temp/
 out/
 
 # Vim
-*.swp
-*.swo
-*~
 .vim/
 tags
 
 # Emacs
-*~
 \#*\#
 /.emacs.desktop
 /.emacs.desktop.lock
@@ -344,6 +340,11 @@ tags
 auto-save-list
 tramp
 .\#*
+
+# Swap/backup files (Vim, Emacs, etc.)
+*.swp
+*.swo
+*~
 
 # Sublime Text
 *.sublime-project
@@ -356,6 +357,9 @@ tmtags
 
 # Cursor IDE
 .cursor/
+
+# OpenAI Codex
+.codex/
 
 # Obsidian
 .obsidian/
@@ -400,7 +404,6 @@ $RECYCLE.BIN/
 # =============================================================================
 
 # Large model files
-*.bin
 *.h5
 *.hdf5
 *.onnx
@@ -410,9 +413,15 @@ $RECYCLE.BIN/
 *.ckpt
 *.pkl
 *.pickle
-models/
+
+# ML model directories (root level only - not ORM models/)
+/models/
 model_cache/
 .model_cache/
+
+# Binary model files (be specific to avoid conflicts)
+*.bin
+!**/*.bin.example
 
 # Embeddings and vectors
 *.npy
@@ -483,6 +492,13 @@ infrastructure/secrets/
 infrastructure/*.tfvars
 infrastructure/kubeconfig*
 
+# Kubernetes configs (anywhere in repo)
+**/kubeconfig
+**/kubeconfig.*
+*.kubeconfig
+**/kube/config
+**/.kube/
+
 # Agent runtime data
 agents/cache/
 agents/logs/
@@ -521,11 +537,10 @@ snyk
 # =============================================================================
 
 # General build directories
-build/
 _build/
-out/
 output/
 target/
+# Note: build/ and out/ covered in Python and IDE sections
 
 # Compiled assets
 *.min.js
@@ -600,55 +615,26 @@ backups/
 *.7z
 
 # =============================================================================
-# 🚫 DEPRECATED PACKAGES (Post-Consolidation)
+# ✅ WHITELIST - NEGATIONS FOR PATTERNS ABOVE
 # =============================================================================
-# These packages have been consolidated into lattice_lock/
-src/lattice_lock_cli/
-src/lattice_lock_orchestrator/
-src/lattice_lock_validator/
-src/lattice_lock_sheriff/
-src/lattice_lock_gauntlet/
-src/lattice_lock_agents/
-src/lattice_lock_dashboard/
+# These override patterns that would otherwise exclude important files
 
-# =============================================================================
-# ✅ WHITELIST - FILES TO EXPLICITLY TRACK
-# =============================================================================
-# Use ! prefix to negate patterns and INCLUDE files
-
-# Keep example/template files
+# Allow example/template files (overrides *.local, secrets/, etc.)
 !.env.example
 !*.example
 !*.template
 !*.sample
 
-# Keep documentation
-!docs/**/*.md
-!docs/**/*.rst
-!README.md
-!CONTRIBUTING.md
-!LICENSE.md
-!SECURITY.md
-!CHANGELOG.md
-
-# Keep essential configs
-!pyproject.toml
-!requirements.in
-!requirements.lock
-!requirements-dev.lock
-!Makefile
-!Dockerfile
-!docker-compose.yml
-!.pre-commit-config.yaml
-!lattice.yaml
-
-# Keep GitHub workflows and configs
-!.github/**
-!.githooks/**
-
-# Keep .gitkeep files
+# Allow .gitkeep placeholder files
 !.gitkeep
 !**/.gitkeep
+
+# Allow detect-secrets baseline
+!.secrets.baseline
+
+# Allow SQL migrations (overrides *.sql above)
+!**/migrations/*.sql
+!**/alembic/**/*.sql
 
 # =============================================================================
 # END OF .GITIGNORE
